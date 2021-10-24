@@ -4,8 +4,8 @@
     "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
     "main": "main.js",
     "scripts": {
-        "dev": "esbuild main.ts --bundle --external:obsidian --outdir=.  --target=es2016 --format=cjs --sourcemap=inline --watch",
-        "build": "esbuild main.ts --bundle --external:obsidian --outdir=.  --target=es2016 --format=cjs"
+    	"dev": "node esbuild.config.mjs",
+    	"build": "node esbuild.config.mjs production"
     },
     "keywords": [],
     "author": "",
