@@ -18,7 +18,6 @@ esbuild.build({
     bundle: true,
     external: ['obsidian'],
     format: 'cjs',
-    minify: prod,
     watch: !prod,
     target: 'es2016',
     logLevel: "info",
