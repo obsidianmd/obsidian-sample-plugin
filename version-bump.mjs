@@ -13,13 +13,13 @@ const targetVersion = process.env.npm_package_version;
 	let menifest = JSON.parse((await readFile("manifest.json")).toString());
 	const { minAppVersion } = menifest;
 	menifest.version = targetVersion;
-	await writeFile("manifest.json", JSON.stringify(menifest, null, 2));
+	await writeFile("manifest.json", JSON.stringify(menifest, null, "\t"));
 
 	// update versions.json with target version and minAppVersion from manifest.json
 	let versions = JSON.parse((await readFile("versions.json")).toString());
 	versions[targetVersion] = minAppVersion;
-	await writeFile("versions.json", JSON.stringify(versions, null, 2));
+	await writeFile("versions.json", JSON.stringify(versions, null, "\t"));
 
-  // save changes in git
+	// save changes in git
 	await exec("git add manifest.json versions.json");
 })().catch(() => process.exit(1));
