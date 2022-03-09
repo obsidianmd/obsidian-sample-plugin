@@ -98,7 +98,7 @@ export default class NovelWordCountPlugin extends Plugin {
 	// FUNCTIONALITY
 
 	private async getFileExplorerLeaf(): Promise<WorkspaceLeaf> {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			let foundLeaf: WorkspaceLeaf | null = null;
 			this.app.workspace.iterateAllLeaves((leaf) => {
 				if (foundLeaf) {
@@ -115,7 +115,7 @@ export default class NovelWordCountPlugin extends Plugin {
 			});
 
 			if (!foundLeaf) {
-				throw new Error("Could not find file explorer leaf.");
+				reject(Error("Could not find file explorer leaf."));
 			}
 		});
 	}
