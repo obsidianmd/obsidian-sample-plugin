@@ -51,15 +51,16 @@ export class FileHelper {
 		abstractFile: TAbstractFile,
 		counts: CountsByFile
 	): Promise<void> {
-		if ((abstractFile as TFolder).children) {
+		if (abstractFile instanceof TFolder) {
 			Object.assign(counts, this.getAllFileCounts());
 			return;
 		}
 
-		const file = abstractFile as TFile;
-		const contents = await this.vault.cachedRead(file);
-		const wordCount = this.countWords(contents);
-		this.setCounts(counts, file.path, wordCount);
+		if (abstractFile instanceof TFile) {
+			const contents = await this.vault.cachedRead(abstractFile);
+			const wordCount = this.countWords(contents);
+			this.setCounts(counts, abstractFile.path, wordCount);
+		}
 	}
 
 	private countWords(content: string): number {
