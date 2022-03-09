@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.1",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "novel-word-count",
+	"version": "1.0.0",
+	"description": "Displays a word or page count for each file, folder and vault in the file pane.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
@@ -9,7 +9,7 @@
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "Isaac Lyman",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",

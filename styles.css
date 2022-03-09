@@ -1,4 +1,11 @@
-/* Sets all the text color to red! */
-body {
-    color: red;
+.nav-files-container .nav-folder-title::after, .nav-files-container .nav-file-title::after {
+    align-items: center;
+    content: attr(data-novel-word-count-plugin);
+    display: flex;
+    flex-direction: row;
+    font-size: 0.8em;
+    opacity: 0.75;
+    padding-left: 3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

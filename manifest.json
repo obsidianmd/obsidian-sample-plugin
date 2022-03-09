@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.1",
-	"minAppVersion": "0.12.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
+	"id": "novel-word-count",
+	"name": "Novel word count",
+	"version": "1.0.0",
+	"minAppVersion": "0.13.31",
+	"description": "Displays a word or page count for each file, folder and vault in the file pane.",
+	"author": "Isaac Lyman",
+	"authorUrl": "https://isaaclyman.com",
 	"isDesktopOnly": false
 }
