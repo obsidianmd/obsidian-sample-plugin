@@ -64,9 +64,10 @@ export default class NovelWordCountPlugin extends Plugin {
 			await this.loadData()
 		) as NovelWordCountSavedData;
 		const settings: NovelWordCountSettings | null = this.savedData
-			? this.savedData.settings
-			: null;
+		? this.savedData.settings
+		: null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, settings);
+		this.savedData.settings = this.settings;
 	}
 
 	async saveSettings() {
