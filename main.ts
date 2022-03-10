@@ -86,7 +86,15 @@ export default class NovelWordCountPlugin extends Plugin {
 
 	public async initialize() {
 		await this.refreshAllCounts();
-		await this.updateDisplayedCounts();
+
+		try {
+			await this.updateDisplayedCounts();
+		} catch (err) {
+			// File Explorer pane may not be loaded yet
+			setTimeout(() => {
+				this.updateDisplayedCounts();
+			}, 1000);
+		}
 	}
 
 	public async updateDisplayedCounts() {
@@ -151,13 +159,6 @@ export default class NovelWordCountPlugin extends Plugin {
 	}
 
 	private handleEvents(): void {
-		this.registerEvent(
-			this.app.workspace.on("file-open", async () => {
-				await this.loadSettings();
-				await this.updateDisplayedCounts();
-			})
-		);
-
 		this.registerEvent(
 			this.app.vault.on("modify", async (file) => {
 				await this.fileHelper.updateFileCounts(
@@ -226,7 +227,7 @@ class NovelWordCountSettingTab extends PluginSettingTab {
 						await this.plugin.initialize();
 						button.setButtonText("Done");
 						button.removeCta();
-						
+
 						setTimeout(() => {
 							button.setButtonText("Recount");
 							button.setCta();
