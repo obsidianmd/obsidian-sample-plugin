@@ -32,7 +32,9 @@ interface FileItem {
 
 export default class NovelWordCountPlugin extends Plugin {
 	savedData: NovelWordCountSavedData;
-	settings: NovelWordCountSettings;
+	get settings(): NovelWordCountSettings {
+		return this.savedData.settings;
+	}
 	fileHelper: FileHelper;
 
 	constructor(app: App, manifest: PluginManifest) {
@@ -46,10 +48,16 @@ export default class NovelWordCountPlugin extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new NovelWordCountSettingTab(this.app, this));
 
-		this.handleEvents();
+		this.addCommand({
+			id: "recount-vault",
+			name: "Recount all documents in vault",
+			callback: async () => {
+				await this.initialize();
+			},
+		});
 
-		await this.refreshAllCounts();
-		await this.updateDisplayedCounts();
+		this.handleEvents();
+		this.initialize();
 	}
 
 	async onunload() {
@@ -63,11 +71,11 @@ export default class NovelWordCountPlugin extends Plugin {
 			{},
 			await this.loadData()
 		) as NovelWordCountSavedData;
-		const settings: NovelWordCountSettings | null = this.savedData
-		? this.savedData.settings
-		: null;
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, settings);
-		this.savedData.settings = this.settings;
+		this.savedData.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			this.savedData.settings
+		);
 	}
 
 	async saveSettings() {
@@ -76,7 +84,16 @@ export default class NovelWordCountPlugin extends Plugin {
 
 	// PUBLIC
 
+	public async initialize() {
+		await this.refreshAllCounts();
+		await this.updateDisplayedCounts();
+	}
+
 	public async updateDisplayedCounts() {
+		if (!this.savedData.cachedCounts.hasOwnProperty("/")) {
+			await this.refreshAllCounts();
+		}
+
 		const fileExplorerLeaf = await this.getFileExplorerLeaf();
 		const fileItems: { [path: string]: FileItem } = (
 			fileExplorerLeaf.view as any
@@ -135,6 +152,13 @@ export default class NovelWordCountPlugin extends Plugin {
 
 	private handleEvents(): void {
 		this.registerEvent(
+			this.app.workspace.on("file-open", async () => {
+				await this.loadSettings();
+				await this.updateDisplayedCounts();
+			})
+		);
+
+		this.registerEvent(
 			this.app.vault.on("modify", async (file) => {
 				await this.fileHelper.updateFileCounts(
 					file,
@@ -154,6 +178,7 @@ export default class NovelWordCountPlugin extends Plugin {
 
 	private async refreshAllCounts() {
 		this.savedData.cachedCounts = await this.fileHelper.getAllFileCounts();
+		await this.saveSettings();
 	}
 }
 
@@ -184,6 +209,29 @@ class NovelWordCountSettingTab extends PluginSettingTab {
 						this.plugin.settings.countType = value;
 						await this.plugin.saveSettings();
 						await this.plugin.updateDisplayedCounts();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Recount all documents")
+			.setDesc(
+				"If changes have occurred outside of Obsidian, you may need to trigger a manual recount"
+			)
+			.addButton((button) =>
+				button
+					.setButtonText("Recount")
+					.setCta()
+					.onClick(async () => {
+						button.disabled = true;
+						await this.plugin.initialize();
+						button.setButtonText("Done");
+						button.removeCta();
+						
+						setTimeout(() => {
+							button.setButtonText("Recount");
+							button.setCta();
+							button.disabled = false;
+						}, 1000);
 					})
 			);
 	}
