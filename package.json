@@ -17,6 +17,7 @@
 		"@typescript-eslint/parser": "^5.2.0",
 		"builtin-modules": "^3.2.0",
 		"esbuild": "0.13.12",
+		"highlight.js": "^11.5.1",
 		"obsidian": "latest",
 		"tslib": "2.3.1",
 		"typescript": "4.4.4"
