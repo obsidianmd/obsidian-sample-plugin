@@ -1,11 +1,17 @@
-import { App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, Plugin, PluginSettingTab, Setting } from 'obsidian';
+
+const hljs = require('highlight.js/lib/common');
 
 interface CodeBlockPluginSettings {
-	mySetting: string;
+	languages: string[];
+}
+
+function getDefaultLanguages() {
+	return hljs.listLanguages();
 }
 
 const DEFAULT_SETTINGS: CodeBlockPluginSettings = {
-	mySetting: 'default'
+	languages: getDefaultLanguages()
 }
 
 export default class CodeBlockPlugin extends Plugin {
@@ -16,39 +22,31 @@ export default class CodeBlockPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'Code block',
-			name: 'Toggle code block',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(this.settings);
+			name: 'Add code block',
+			editorCallback: (editor: Editor) => {
 				const selection = editor.getSelection();
 				if (selection.length == 0) {
-					editor.replaceSelection('```\n\n```\n');
+					const pos = editor.getCursor();
+					editor.replaceRange( '```\n\n```\n', pos);
+					editor.setCursor(pos.line + 1);
 					return;
 				}
-
-				const hljs = require('highlight.js/lib/common');
-				const highlight = hljs.highlightAuto(selection, ["java", "javascript", "sql", "kotlin", "python", "groovy", "xml", "html", "yaml", "typescript"]);
-				const language = highlight.language;
-				console.log(highlight);
-				console.log(selection);
-				console.log(language);
-
-				editor.replaceSelection('```' + language + '\n' + selection + '\n```' + '\n');
+				editor.replaceSelection(CodeBlockPlugin.addCodeBlock(this.getLanguage(selection), selection));
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new CodeBlockTab(this.app, this));
+	}
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'paste', (event: ClipboardEvent) => {
-			const paste = (event.clipboardData).getData('text');
-			console.log('paste', paste);
-		});
+	private static addCodeBlock(language: string, selection: string) {
+		return '```' + language + '\n' + selection + '\n```' + '\n';
+	}
+
+	private getLanguage(selection: string) {
+		return hljs.highlightAuto(selection, this.settings.languages).language;
 	}
 
 	onunload() {
-
 	}
 
 	async loadSettings() {
@@ -70,22 +68,26 @@ class CodeBlockTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
-
+		const { containerEl } = this;
 		containerEl.empty();
+		containerEl.createEl('h2', { text: 'Settings for code-block plugin' });
 
-		containerEl.createEl('h2', {text: 'Settings for code-block plugin.'});
+		hljs.listLanguages().sort().forEach((language: string) => {
+			const index = this.plugin.settings.languages.indexOf(language);
+			const active = index !== -1;
 
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+			return new Setting(containerEl)
+				.setName(language)
+				.addToggle(toggle => toggle
+					.setValue(active)
+					.onChange(async () => {
+						if (active) {
+							this.plugin.settings.languages.splice(index, 1);
+						} else {
+							this.plugin.settings.languages.push(language);
+						}
+						await this.plugin.saveSettings();
+					}));
+		});
 	}
 }
