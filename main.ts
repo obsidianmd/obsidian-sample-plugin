@@ -70,7 +70,7 @@ class CodeBlockTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.createEl('h2', { text: 'Settings for code-block plugin' });
+		containerEl.createEl('h2', { text: 'Select active programming languages' });
 
 		hljs.listLanguages().sort().forEach((language: string) => {
 			const index = this.plugin.settings.languages.indexOf(language);

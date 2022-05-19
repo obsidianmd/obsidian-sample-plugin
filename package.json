@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.1",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "code-block-plugin",
+	"version": "1.0.0",
+	"description": "This plugin converts selected text into code blocks with automatic language detection.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
