@@ -21,17 +21,27 @@ export default class CodeBlockPlugin extends Plugin {
 		await this.loadSettings();
 
 		this.addCommand({
-			id: 'Code block',
+			id: 'Add code block',
 			name: 'Add code block',
 			editorCallback: (editor: Editor) => {
 				const selection = editor.getSelection();
 				if (selection.length == 0) {
 					const pos = editor.getCursor();
-					editor.replaceRange( '```\n\n```\n', pos);
+					editor.replaceRange('```\n\n```\n', pos);
 					editor.setCursor(pos.line + 1);
 					return;
 				}
 				editor.replaceSelection(CodeBlockPlugin.addCodeBlock(this.getLanguage(selection), selection));
+			}
+		});
+
+		this.addCommand({
+			id: 'Paste code block',
+			name: 'Paste code block',
+			editorCallback: (editor: Editor) => {
+				navigator.clipboard.readText().then(text => {
+					editor.replaceSelection(CodeBlockPlugin.addCodeBlock(this.getLanguage(text), text));
+				});
 			}
 		});
 
