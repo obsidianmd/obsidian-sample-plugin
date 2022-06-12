@@ -8,4 +8,3 @@ perfect, but it works most of the time. If it guesses wrong, remove that languag
   <source src="Screen Recording 2022-06-12 at 21.19.25.webm" type="video/webm">
 Your browser does not support the video tag.
 </video>
-<img height="600" src="usage.gif" width="800"/>
