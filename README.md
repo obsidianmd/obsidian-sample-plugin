@@ -11,6 +11,25 @@ Take full control of the order of your notes and folders in File Explorer
 
 ## Table of contents
 
+- [TL;DR Usage](#tldr-usage)
+  - [Simple case 1: in root folder sort items by a rule, intermixing folders and files](#simple-case-1-in-root-folder-sort-items-by-a-rule-intermixing-folders-and-files)
+  -	[Simple case 2: impose manual order of some items in root folder](#simple-case-2-impose-manual-order-of-some-items-in-root-folder)
+  - [Example 3: In root folder, let files go first and folders get pushed to the bottom](#example-3-in-root-folder-let-files-go-first-and-folders-get-pushed-to-the-bottom)
+  - [Example 4: In root folder, pin a focus note, then Inbox folder, and push archive to the bottom](#example-4-in-root-folder-pin-a-focus-note-then-inbox-folder-and-push-archive-to-the-bottom)
+  - [Example 5: P.A.R.A. method example](#example-5-para-method-example)
+  - [Example 6: P.A.R.A. example with smart syntax](#example-6-para-example-with-smart-syntax)
+  - [Example 7: Apply the same sorting rules to two folders](#example-7-apply-the-same-sorting-rules-to-two-folders)
+  - [Example 8: Specify rules for multiple folders](#example-8-specify-rules-for-multiple-folders)
+  - [Example 9: Sort by numerical suffix](#example-9-sort-by-numerical-suffix)
+  - [Example 10: Sample book structure with Roman numbered chapters](#example-10-sample-book-structure-with-roman-numbered-chapters)
+  - [Example 11: Sample book structure with compound Roman number suffixes](#example-11-sample-book-structure-with-compound-roman-number-suffixes)
+- [Location of sorting specification YAML entry](#location-of-sorting-specification-yaml-entry) 
+- [Ribbon icon](#ribbon-icon)
+- [Installing the plugin](#installing-the-plugin)
+  - [Installing the plugin using BRAT](#installing-the-plugin-using-brat)
+  - [Manually installing the plugin](#manually-installing-the-plugin)
+- [Credits](#credits)
+
 ## TL;DR Usage
 
 For full version of the manual go to [./docs/manual.md]() and [./docs/syntax-reference.md]()
