@@ -5,6 +5,11 @@ Take full control of the order of your notes and folders in File Explorer
 - folder-level configuration
 	- each folder can have its own order or use the global Obsidian setting
 - use sorting and grouping rules or direct order specification or mixed
+  - Roman numbers support, also compound numbers
+  - sorting by full name, prefix, suffix or infix
+  - list note titles in the desired order, if you like
+    - wildcard names matching supported
+  - treat folder and files equally or distinctively
 - versatile configuration options
 - order configuration stored directly in your note(s) front matter
 	- use a dedicated key in YAML
