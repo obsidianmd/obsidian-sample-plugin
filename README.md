@@ -9,6 +9,8 @@ Take full control of the order of your notes and folders in File Explorer
 - order configuration stored directly in your note(s) front matter
 	- use a dedicated key in YAML
 
+## Table of contents
+
 ## TL;DR Usage
 
 For full version of the manual go to [./docs/manual.md]() and [./docs/syntax-reference.md]()
@@ -246,6 +248,48 @@ alphanumerical ascending.
 The effect is:
 
 ![Order by numerical suffix](./docs/svg/by-suffix.svg)
+
+### Example 10: Sample book structure with Roman numbered chapters
+
+Roman numbers are also supported. This example uses the `\R+` token in connection with the wildcard `...`
+
+The line `Chapter \.R+ ...` says: notes (or folders) with a name starting with 'Chapter ' followed by a Roman number (e.g. I, or iii or x) should be grouped.
+Then ` < a-z` (the leading space indentation is important) tells to use ascending order by that number (alphabetical is equivalent to ascending for numbers)
+
+```yaml
+---
+sorting-spec: |
+    target-folder: Book
+    Preface
+    Chapter \R+ ...
+     < a-z
+    Epi...
+---
+```
+
+it gives:
+
+![Book - Roman chapters](./docs/svg/roman-chapters.svg)
+
+### Example 11: Sample book structure with compound Roman number suffixes
+
+Roman compound numbers are also supported. This example uses the `\.R+` token (a Roman compound number with '.' as separator) in connection with the wildcard `...` (and the important SPACE inbetween).
+
+The line `... \.R+` says: notes (or folders) with a name ending with a compound Roman number (e.g. I, or i.iii or iv.vii.x) should be grouped with ascending order by that compound number (no additional specification of sorting defaults to alphabetical or ascending for numbers)
+
+```yaml
+---
+sorting-spec: |
+    target-folder: Research pub
+    Summ...
+    ... \.R+
+    Final...
+---
+```
+
+the result is:
+
+![Book - Roman compond suffixes](./docs/svg/roman-suffix.svg)
 
 ## Location of sorting specification YAML entry
 
