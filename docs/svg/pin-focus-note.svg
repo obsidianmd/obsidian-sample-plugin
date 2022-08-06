@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink"
+	 xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="-.5 -.5 166 159.5" width="166" height="159.5">
+	<defs/>
+	<metadata>Produced by OmniGraffle 7.20\n2022-08-05 23:01:43 +0000</metadata>
+	<g id="Pin_focus_note" stroke-opacity="1" fill-opacity="1" stroke="none" fill="none" stroke-dasharray="none">
+		<title>Pin focus note</title>
+		<g id="Pin_focus_note_Layer_1">
+			<title>Layer 1</title>
+			<g id="Graphic_8">
+				<rect x="0" y="27" width="165" height="132" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_2">
+				<text transform="translate(18 29.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">Focus note XYZ</tspan>
+				</text>
+			</g>
+			<g id="Graphic_4">
+				<text transform="translate(18 51.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">Inbox</tspan>
+				</text>
+			</g>
+			<g id="Graphic_5">
+				<text transform="translate(18 73.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">Some note</tspan>
+				</text>
+			</g>
+			<g id="Graphic_6">
+				<text transform="translate(18 95.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">Yet another note
+					</tspan>
+				</text>
+			</g>
+			<g id="Graphic_7">
+				<text transform="translate(18 117.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">Archive</tspan>
+				</text>
+			</g>
+			<g id="Graphic_9">
+				<rect x="0" y="0" width="165" height="27" fill="white"/>
+				<rect x="0" y="0" width="165" height="27" stroke="black" stroke-linecap="round" stroke-linejoin="round"
+					  stroke-width="1"/>
+				<text transform="translate(5 2.753441)" fill="black">
+					<tspan font-family="Helvetica Neue" font-weight="bold" font-size="17" fill="black" x="0" y="17">My
+						Vault
+					</tspan>
+				</text>
+			</g>
+			<g id="Graphic_27">
+				<text transform="translate(18 139.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">sortspec</tspan>
+				</text>
+			</g>
+			<g id="Graphic_28">
+				<path d="M 4.5 57.5 L 9.5 60 L 4.5 62.5 Z" fill="black"/>
+			</g>
+			<g id="Graphic_30">
+				<path d="M 4.5 123.34254 L 9.5 125.84254 L 4.5 128.34254 Z" fill="black"/>
+			</g>
+		</g>
+	</g>
+</svg>

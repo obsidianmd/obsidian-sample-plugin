@@ -1,23 +1,31 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.1",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "obsidian-custom-sort",
+	"version": "0.5.188",
+	"description": "Custom Sort plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"test": "jest"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": [
+		"obsidian",
+		"custom sorting"
+	],
+	"author": "SebastianMC <SebastianMC.github@gmail.com>",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/jest": "^28.1.2",
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "^5.2.0",
 		"@typescript-eslint/parser": "^5.2.0",
 		"builtin-modules": "^3.2.0",
 		"esbuild": "0.13.12",
-		"obsidian": "latest",
+		"jest": "^28.1.1",
+		"monkey-around": "^2.3.0",
+		"obsidian": "^0.15.4",
+		"ts-jest": "^28.0.5",
 		"tslib": "2.3.1",
 		"typescript": "4.4.4"
 	}
