@@ -58,7 +58,7 @@ the [ribbon icon](#ribbon_icon) section for details
 
 The specified rule is to sort items alphabetically
 
-> IMPORTANT: indentation matters in all of the examples
+> IMPORTANT: indentation matters in all the examples
 
 ```yaml
 ---
@@ -67,6 +67,7 @@ sorting-spec: |
     < a-z
 ---
 ```
+(Download the [sortspec.md](./docs/examples/1/sortspec.md) file of this example)
 
 which can result in:
 
@@ -175,6 +176,8 @@ sorting-spec: |
     Archive
 ---
 ```
+
+(Download the [sortspec.md](./docs/examples/5/sortspec.md) file of this example)
 
 which will have the effect of:
 
