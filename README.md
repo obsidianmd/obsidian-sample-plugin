@@ -16,7 +16,7 @@ Take full control of the order of your notes and folders:
 - simple to use yet versatile configuration options
 - order configuration stored directly in your note(s) front matter
   - use a dedicated key in YAML
-- folders not  the global Obsidian setting
+- folders not set up for the custom order remain on the standard Obsidian sorting
 
 ## Table of contents
 
