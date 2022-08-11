@@ -1,18 +1,22 @@
-## Custom Sorting Order in File Explorer (https://obsidian.md plugin)
+## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
 
-Take full control of the order of your notes and folders in File Explorer
+Take full control of the order of your notes and folders:
 
-- folder-level configuration
-	- each folder can have its own order or use the global Obsidian setting
-- use sorting and grouping rules or direct order specification or mixed
-  - Roman numbers support, also compound numbers
-  - sorting by full name, prefix, suffix or infix
-  - explicitly list note (and folder) titles in the desired order, if you like
-    - wildcard names matching supported
-  - treat folders and files equally or distinctively
-- versatile configuration options
+- treat folders and files equally or distinctively, you decide
+- fine-grained folder-level or even notes-group-level specification
+- support for fully manual order
+  - list notes and folders names explicitly, or use prefixes or suffixes only
+  - wildcard names matching supported
+- support for automatic sorting by standard and non-standard rules
+- mixing manual and automatic ordering also supported
+- order by compound numbers in prefix, in suffix (e.g date in suffix) or inbetween 
+- Roman numbers support, also compound Roman numbers
+- grouping by prefix or suffix or prefix and suffix
+  - different sorting rules per group even inside the same folder
+- simple to use yet versatile configuration options
 - order configuration stored directly in your note(s) front matter
-	- use a dedicated key in YAML
+  - use a dedicated key in YAML
+- folders not  the global Obsidian setting
 
 ## Table of contents
 
