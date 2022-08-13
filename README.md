@@ -71,7 +71,7 @@ sorting-spec: |
     < a-z
 ---
 ```
-(Download the [sortspec.md](./docs/examples/1/sortspec.md) file of this example)
+(View or download the [sortspec.md](./docs/examples/1/sortspec.md?plain=1) file of this example)
 
 which can result in:
 
@@ -181,7 +181,7 @@ sorting-spec: |
 ---
 ```
 
-(Download the [sortspec.md](./docs/examples/5/sortspec.md) file of this example)
+(View or download the [sortspec.md](./docs/examples/5/sortspec.md?plain=1) file of this example)
 
 which will have the effect of:
 
