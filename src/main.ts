@@ -87,9 +87,9 @@ export default class CustomSortPlugin extends Plugin {
 			new Notice(`Parsing custom sorting specification SUCCEEDED!`)
 		} else {
 			if (anySortingSpecFound) {
-				errorMessage = errorMessage ? errorMessage : `No custom sorting specification found or only empty specification(s)`
-			} else {
 				errorMessage = `No valid '${SORTINGSPEC_YAML_KEY}:' key(s) in YAML front matter or multiline YAML indentation error or general YAML syntax error`
+			} else {
+				errorMessage = errorMessage ? errorMessage : `No custom sorting specification found or only empty specification(s)`
 			}
 			new Notice(`Parsing custom sorting specification FAILED. Suspending the plugin.\n${errorMessage}`, ERROR_NOTICE_TIMEOUT)
 			this.settings.suspended = true
