@@ -52,7 +52,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl('h2', { text: 'General Settings' });
+    containerEl.createEl('h2', { text: 'Bulk Rename - Settings' });
     this.renderFileLocation();
     this.renderReplaceSymbol();
     this.renderFilesAndPreview();
@@ -61,10 +61,23 @@ class BulkRenameSettingsTab extends PluginSettingTab {
 
   renderReplaceSymbol() {
     const { settings } = this.plugin;
+    const desc = document.createDocumentFragment();
+
+    const button = document.createElement('button');
+    button.textContent = 'Preview';
+    button.className = 'mod-cta';
+    button.onclick = () => {
+      this.display();
+    };
+
+    desc.appendChild(button);
+
     new Setting(this.containerEl)
-      .setName('Replace pattern')
-      .setDesc('Files in this folder will be available renamed.')
+      .setName('Symbols in existing file name')
+      .setDesc(desc)
       .addText((textComponent) => {
+        const previewLabel = createPreviewElement('Replacement symbols');
+        textComponent.inputEl.insertAdjacentElement('afterend', previewLabel);
         textComponent.setValue(settings.existingSymbol);
         textComponent.setPlaceholder('existing symbols');
         textComponent.onChange((newValue) => {
@@ -78,13 +91,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         textComponent.onChange((newValue) => {
           settings.replacePattern = newValue;
           this.plugin.saveSettings();
-          this.calculateFiles()
-        });
-      })
-      .addButton((button) => {
-        button.setButtonText('Preview');
-        button.onClick(() => {
-          this.display();
+          this.calculateFiles();
         });
       });
   }
@@ -108,6 +115,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
       .addButton((button) => {
         button.setButtonText('Refresh');
         button.onClick(() => {
+          this.calculateFiles();
           this.display();
         });
       });
@@ -117,7 +125,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
     let existingFilesTextArea: HTMLTextAreaElement;
     let replacedPreviewTextArea: HTMLTextAreaElement;
     new Setting(this.containerEl)
-      .setName('files within the folder')
+      .setName('Files within the folder')
       .setDesc(`Total Files: ${this.plugin.settings.fileNames.length}`)
       .addTextArea((text) => {
         existingFilesTextArea = text.inputEl;
@@ -141,10 +149,22 @@ class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderRenameFiles() {
+    let desc = document.createDocumentFragment();
+    desc.append(
+      'You are going to update all marked files',
+      desc.createEl('br'),
+      desc.createEl('b', {
+        text: 'Warning: ',
+      }),
+      'This plugin in ALPHA, make sure you checked all files in preview',
+    );
+
     new Setting(this.containerEl)
-      .setName('Replace pattern')
-      .setDesc('Files in this folder will be available renamed.')
+      .setDesc(desc)
+      .setName('Replace patterns')
       .addButton((button) => {
+        button.buttonEl.style.width = '100%';
+        button.setTooltip('This action cannot be undone!');
         button.setButtonText('Rename');
         button.onClick(() => {
           const { replacePattern, existingSymbol } = this.plugin.settings;
@@ -219,10 +239,10 @@ const replaceFilePath = (plugin: MyPlugin, file: TFile) => {
   return file.path.replaceAll(existingSymbol, replacePattern);
 };
 
-const createPreviewElement = () => {
+const createPreviewElement = (textContent = '=> => => =>') => {
   const previewLabel = window.document.createElement('span');
   previewLabel.className = 'previewLabel';
-  previewLabel.textContent = '=> => => =>';
+  previewLabel.textContent = textContent;
   previewLabel.style.margin = '0 20px';
   return previewLabel;
 };
