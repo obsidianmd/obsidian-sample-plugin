@@ -6,7 +6,7 @@ on:
       - "*"
 
 env:
-  PLUGIN_NAME: obsidian-to-notion
+  PLUGIN_NAME: obsidian-bulk-rename-plugin
 
 jobs:
   build:

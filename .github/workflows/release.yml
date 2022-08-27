@@ -6,7 +6,7 @@ on:
       - "*"
 
 env:
-  PLUGIN_NAME: obsidian-to-notion # Change this to match the id of your plugin.
+  PLUGIN_NAME: obsidian-bulk-rename-plugin # Change this to match the id of your plugin.
 
 jobs:
   build:
