@@ -1,13 +1,5 @@
-import {
-  App,
-  FileManager,
-  Plugin,
-  PluginSettingTab,
-  Setting,
-  TAbstractFile,
-  TFile,
-} from 'obsidian';
-import { FolderSuggest } from './suggest/folderSuggest';
+import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { FolderSuggest } from './suggestions/folderSuggest';
 
 interface MyPluginSettings {
   folderName: string;
@@ -95,6 +87,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         });
       });
   }
+
   renderFileLocation() {
     const { settings } = this.plugin;
     new Setting(this.containerEl)
@@ -133,12 +126,14 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         text.setDisabled(true);
         const previewLabel = createPreviewElement();
         text.inputEl.insertAdjacentElement('afterend', previewLabel);
+        text.inputEl.addClass('templater_cmd');
       })
       .addTextArea((text) => {
         replacedPreviewTextArea = text.inputEl;
         const value = getRenderedFileNamesReplaced(this.plugin);
         text.setValue(value);
         text.setDisabled(true);
+        text.inputEl.addClass('templater_cmd');
       })
       .then((setting) => {
         syncScrolls(existingFilesTextArea, replacedPreviewTextArea, this.state);
@@ -146,7 +141,6 @@ class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderRenameFiles() {
-    const { settings } = this.plugin;
     new Setting(this.containerEl)
       .setName('Replace pattern')
       .setDesc('Files in this folder will be available renamed.')
@@ -154,12 +148,19 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         button.setButtonText('Rename');
         button.onClick(() => {
           const { replacePattern, existingSymbol } = this.plugin.settings;
-          const firstFile = this.plugin.settings.fileNames[0];
-          console.log(firstFile);
+          if (!replacePattern || !existingSymbol) {
+            return;
+          }
+
+          this.plugin.settings.fileNames.forEach((fileName) => {
+            this.app.fileManager.renameFile(
+              fileName,
+              replaceFilePath(this.plugin, fileName),
+            );
+          });
         });
       })
       .addText((cb) => {});
-    const fileManager = new FileManager();
     this.plugin.settings.fileNames;
   }
 }
@@ -188,22 +189,28 @@ const prepareFileNameString = (filesNames: TFile[]) => {
   filesNames.forEach((fileName, index) => {
     const isLast = index + 1 === filesNames.length;
     if (isLast) {
-      return (value += fileName.name);
+      return (value += fileName.path);
     }
-    value += fileName.name + '\r\n';
+    value += fileName.path + '\r\n';
   });
   return value;
 };
 
 const getRenderedFileNamesReplaced = (plugin: MyPlugin) => {
-  const { fileNames, replacePattern, existingSymbol } = plugin.settings;
+  const { fileNames } = plugin.settings;
   const newFiles = fileNames.map((file) => {
     return {
       ...file,
-      name: file.name.replaceAll(existingSymbol, replacePattern),
+      path: replaceFilePath(plugin, file),
     };
   });
   return prepareFileNameString(newFiles);
+};
+
+const replaceFilePath = (plugin: MyPlugin, file: TFile) => {
+  const { replacePattern, existingSymbol } = plugin.settings;
+
+  return file.path.replaceAll(existingSymbol, replacePattern);
 };
 
 const createPreviewElement = () => {
@@ -220,14 +227,14 @@ const syncScrolls = (
   state: State,
 ) => {
   existingFilesArea.addEventListener('scroll', (event) => {
-    const target = event.target;
+    const target = event.target as HTMLTextAreaElement;
     if (target.scrollTop !== state.previewScroll) {
       previewArea.scrollTop = target.scrollTop;
       state.previewScroll = target.scrollTop;
     }
   });
   previewArea.addEventListener('scroll', (event) => {
-    const target = event.target;
+    const target = event.target as HTMLTextAreaElement;
     if (target.scrollTop !== state.filesScroll) {
       existingFilesArea.scrollTop = target.scrollTop;
       state.filesScroll = target.scrollTop;
