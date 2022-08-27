@@ -78,6 +78,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         textComponent.onChange((newValue) => {
           settings.replacePattern = newValue;
           this.plugin.saveSettings();
+          this.calculateFiles()
         });
       })
       .addButton((button) => {
@@ -89,18 +90,17 @@ class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderFileLocation() {
-    const { settings } = this.plugin;
     new Setting(this.containerEl)
       .setName('Folder location')
       .setDesc('Files in this folder will be available renamed.')
       .addSearch((cb) => {
         new FolderSuggest(this.app, cb.inputEl);
         cb.setPlaceholder('Example: folder1/')
-          .setValue(settings.folderName)
+          .setValue(this.plugin.settings.folderName)
           .onChange((newFolder) => {
-            settings.folderName = newFolder;
-            settings.fileNames = [...getObsidianFiles(this.app, newFolder)];
+            this.plugin.settings.folderName = newFolder;
             this.plugin.saveSettings();
+            this.calculateFiles();
           });
         // @ts-ignore
         cb.containerEl.addClass('templater_search');
@@ -112,13 +112,13 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         });
       });
   }
+
   renderFilesAndPreview() {
-    const { settings } = this.plugin;
     let existingFilesTextArea: HTMLTextAreaElement;
     let replacedPreviewTextArea: HTMLTextAreaElement;
     new Setting(this.containerEl)
       .setName('files within the folder')
-      .setDesc(`Total Files: ${settings.fileNames.length}`)
+      .setDesc(`Total Files: ${this.plugin.settings.fileNames.length}`)
       .addTextArea((text) => {
         existingFilesTextArea = text.inputEl;
         const value = getRenderedFileNames(this.plugin);
@@ -159,9 +159,13 @@ class BulkRenameSettingsTab extends PluginSettingTab {
             );
           });
         });
-      })
-      .addText((cb) => {});
-    this.plugin.settings.fileNames;
+      });
+  }
+
+  calculateFiles() {
+    this.plugin.settings.fileNames = [
+      ...getObsidianFiles(this.app, this.plugin.settings.folderName),
+    ];
   }
 }
 
@@ -173,6 +177,7 @@ const getObsidianFiles = (app: App, folderName: string) => {
       files.push(file);
     }
   });
+
   return sortByname(files);
 };
 
@@ -204,6 +209,7 @@ const getRenderedFileNamesReplaced = (plugin: MyPlugin) => {
       path: replaceFilePath(plugin, file),
     };
   });
+
   return prepareFileNameString(newFiles);
 };
 
@@ -216,7 +222,7 @@ const replaceFilePath = (plugin: MyPlugin, file: TFile) => {
 const createPreviewElement = () => {
   const previewLabel = window.document.createElement('span');
   previewLabel.className = 'previewLabel';
-  previewLabel.textContent = 'Preview';
+  previewLabel.textContent = '=> => => =>';
   previewLabel.style.margin = '0 20px';
   return previewLabel;
 };
