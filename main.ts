@@ -1,6 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
-import { FolderSuggest } from './suggestions/folderSuggest';
-import { renderDonateButton } from './components/DonateButton';
+import { FolderSuggest } from './src/suggestions/folderSuggest';
+import { renderDonateButton } from './src/components/DonateButton';
 
 interface MyPluginSettings {
   folderName: string;
@@ -140,7 +140,9 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         text.inputEl.addClass('templater_cmd');
       })
       .addTextArea((text) => {
-        text.setPlaceholder('How filenames will looks like after replacement(click preview first)');
+        text.setPlaceholder(
+          'How filenames will looks like after replacement(click preview first)',
+        );
         replacedPreviewTextArea = text.inputEl;
         const value = getRenderedFileNamesReplaced(this.plugin);
         text.setValue(value);
@@ -168,7 +170,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
       .setName('Replace patterns')
       .addButton((button) => {
         button.buttonEl.style.width = '100%';
-        button.setTooltip('This action cannot be undone!');
+        button.setTooltip("FYI: We don't have undone button yet!");
         button.setButtonText('Rename');
         button.onClick(() => {
           const { replacePattern, existingSymbol } = this.plugin.settings;
