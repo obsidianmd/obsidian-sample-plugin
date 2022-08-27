@@ -130,6 +130,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
       .setName('Files within the folder')
       .setDesc(`Total Files: ${this.plugin.settings.fileNames.length}`)
       .addTextArea((text) => {
+        text.setPlaceholder('Here you will see files under folder location');
         existingFilesTextArea = text.inputEl;
         const value = getRenderedFileNames(this.plugin);
         text.setValue(value);
@@ -139,6 +140,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         text.inputEl.addClass('templater_cmd');
       })
       .addTextArea((text) => {
+        text.setPlaceholder('How filenames will looks like after replacement(click preview first)');
         replacedPreviewTextArea = text.inputEl;
         const value = getRenderedFileNamesReplaced(this.plugin);
         text.setValue(value);
