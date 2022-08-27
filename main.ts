@@ -155,12 +155,12 @@ class BulkRenameSettingsTab extends PluginSettingTab {
   renderRenameFiles() {
     const desc = document.createDocumentFragment();
     desc.append(
-      'You are going to update all marked files',
+      'You are going to update all marked files and their directories',
       desc.createEl('br'),
       desc.createEl('b', {
         text: 'Warning: ',
       }),
-      'This plugin in ALPHA, make sure you checked all files in preview',
+      'This plugin in Beta, make sure you verified all files in preview',
     );
 
     new Setting(this.containerEl)
