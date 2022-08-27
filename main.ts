@@ -1,5 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { FolderSuggest } from './suggestions/folderSuggest';
+import { renderDonateButton } from './components/DonateButton';
 
 interface MyPluginSettings {
   folderName: string;
@@ -57,6 +58,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
     this.renderReplaceSymbol();
     this.renderFilesAndPreview();
     this.renderRenameFiles();
+    this.renderSupportDevelopment();
   }
 
   renderReplaceSymbol() {
@@ -149,7 +151,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderRenameFiles() {
-    let desc = document.createDocumentFragment();
+    const desc = document.createDocumentFragment();
     desc.append(
       'You are going to update all marked files',
       desc.createEl('br'),
@@ -180,6 +182,10 @@ class BulkRenameSettingsTab extends PluginSettingTab {
           });
         });
       });
+  }
+
+  renderSupportDevelopment() {
+    renderDonateButton(this.containerEl);
   }
 
   calculateFiles() {
