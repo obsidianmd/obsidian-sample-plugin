@@ -1,137 +1,236 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-
-// Remember to rename these classes and interfaces!
+import {
+  App,
+  FileManager,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TAbstractFile,
+  TFile,
+} from 'obsidian';
+import { FolderSuggest } from './suggest/folderSuggest';
 
 interface MyPluginSettings {
-	mySetting: string;
+  folderName: string;
+  fileNames: TFile[];
+  existingSymbol: string;
+  replacePattern: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+  folderName: '',
+  fileNames: [],
+  existingSymbol: '',
+  replacePattern: '',
+};
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+  settings: MyPluginSettings;
 
-	async onload() {
-		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  async onload() {
+    await this.loadSettings();
+    this.addSettingTab(new BulkRenameSettingsTab(this.app, this));
+  }
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+type State = {
+  previewScroll: number;
+  filesScroll: number;
+};
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+class BulkRenameSettingsTab extends PluginSettingTab {
+  plugin: MyPlugin;
+  state: State;
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
+  constructor(app: App, plugin: MyPlugin) {
+    super(app, plugin);
+    this.state = {
+      previewScroll: 0,
+      filesScroll: 0,
+    };
+
+    this.plugin = plugin;
+  }
+
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    containerEl.createEl('h2', { text: 'General Settings' });
+    this.renderFileLocation();
+    this.renderReplaceSymbol();
+    this.renderFilesAndPreview();
+    this.renderRenameFiles();
+  }
+
+  renderReplaceSymbol() {
+    const { settings } = this.plugin;
+    new Setting(this.containerEl)
+      .setName('Replace pattern')
+      .setDesc('Files in this folder will be available renamed.')
+      .addText((textComponent) => {
+        textComponent.setValue(settings.existingSymbol);
+        textComponent.setPlaceholder('existing symbols');
+        textComponent.onChange((newValue) => {
+          settings.existingSymbol = newValue;
+          this.plugin.saveSettings();
+        });
+      })
+      .addText((textComponent) => {
+        textComponent.setValue(settings.replacePattern);
+        textComponent.setPlaceholder('replace with');
+        textComponent.onChange((newValue) => {
+          settings.replacePattern = newValue;
+          this.plugin.saveSettings();
+        });
+      })
+      .addButton((button) => {
+        button.setButtonText('Preview');
+        button.onClick(() => {
+          this.display();
+        });
+      });
+  }
+  renderFileLocation() {
+    const { settings } = this.plugin;
+    new Setting(this.containerEl)
+      .setName('Folder location')
+      .setDesc('Files in this folder will be available renamed.')
+      .addSearch((cb) => {
+        new FolderSuggest(this.app, cb.inputEl);
+        cb.setPlaceholder('Example: folder1/')
+          .setValue(settings.folderName)
+          .onChange((newFolder) => {
+            settings.folderName = newFolder;
+            settings.fileNames = [...getObsidianFiles(this.app, newFolder)];
+            this.plugin.saveSettings();
+          });
+        // @ts-ignore
+        cb.containerEl.addClass('templater_search');
+      })
+      .addButton((button) => {
+        button.setButtonText('Refresh');
+        button.onClick(() => {
+          this.display();
+        });
+      });
+  }
+  renderFilesAndPreview() {
+    const { settings } = this.plugin;
+    let existingFilesTextArea: HTMLTextAreaElement;
+    let replacedPreviewTextArea: HTMLTextAreaElement;
+    new Setting(this.containerEl)
+      .setName('files within the folder')
+      .setDesc(`Total Files: ${settings.fileNames.length}`)
+      .addTextArea((text) => {
+        existingFilesTextArea = text.inputEl;
+        const value = getRenderedFileNames(this.plugin);
+        text.setValue(value);
+        text.setDisabled(true);
+        const previewLabel = createPreviewElement();
+        text.inputEl.insertAdjacentElement('afterend', previewLabel);
+      })
+      .addTextArea((text) => {
+        replacedPreviewTextArea = text.inputEl;
+        const value = getRenderedFileNamesReplaced(this.plugin);
+        text.setValue(value);
+        text.setDisabled(true);
+      })
+      .then((setting) => {
+        syncScrolls(existingFilesTextArea, replacedPreviewTextArea, this.state);
+      });
+  }
+
+  renderRenameFiles() {
+    const { settings } = this.plugin;
+    new Setting(this.containerEl)
+      .setName('Replace pattern')
+      .setDesc('Files in this folder will be available renamed.')
+      .addButton((button) => {
+        button.setButtonText('Rename');
+        button.onClick(() => {
+          const { replacePattern, existingSymbol } = this.plugin.settings;
+          const firstFile = this.plugin.settings.fileNames[0];
+          console.log(firstFile);
+        });
+      })
+      .addText((cb) => {});
+    const fileManager = new FileManager();
+    this.plugin.settings.fileNames;
+  }
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+const getObsidianFiles = (app: App, folderName: string) => {
+  const abstractFiles = app.vault.getAllLoadedFiles();
+  const files = [] as TFile[];
+  abstractFiles.forEach((file) => {
+    if (file instanceof TFile && file.parent.name.includes(folderName)) {
+      files.push(file);
+    }
+  });
+  return sortByname(files);
+};
 
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+const sortByname = (files: TFile[]) => {
+  return files.sort((a, b) => a.name.localeCompare(b.name));
+};
 
-	display(): void {
-		const {containerEl} = this;
+const getRenderedFileNames = (plugin: MyPlugin) => {
+  return prepareFileNameString(plugin.settings.fileNames);
+};
 
-		containerEl.empty();
+const prepareFileNameString = (filesNames: TFile[]) => {
+  let value = '';
+  filesNames.forEach((fileName, index) => {
+    const isLast = index + 1 === filesNames.length;
+    if (isLast) {
+      return (value += fileName.name);
+    }
+    value += fileName.name + '\r\n';
+  });
+  return value;
+};
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+const getRenderedFileNamesReplaced = (plugin: MyPlugin) => {
+  const { fileNames, replacePattern, existingSymbol } = plugin.settings;
+  const newFiles = fileNames.map((file) => {
+    return {
+      ...file,
+      name: file.name.replaceAll(existingSymbol, replacePattern),
+    };
+  });
+  return prepareFileNameString(newFiles);
+};
 
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
-}
+const createPreviewElement = () => {
+  const previewLabel = window.document.createElement('span');
+  previewLabel.className = 'previewLabel';
+  previewLabel.textContent = 'Preview';
+  previewLabel.style.margin = '0 20px';
+  return previewLabel;
+};
+
+const syncScrolls = (
+  existingFilesArea: HTMLTextAreaElement,
+  previewArea: HTMLTextAreaElement,
+  state: State,
+) => {
+  existingFilesArea.addEventListener('scroll', (event) => {
+    const target = event.target;
+    if (target.scrollTop !== state.previewScroll) {
+      previewArea.scrollTop = target.scrollTop;
+      state.previewScroll = target.scrollTop;
+    }
+  });
+  previewArea.addEventListener('scroll', (event) => {
+    const target = event.target;
+    if (target.scrollTop !== state.filesScroll) {
+      existingFilesArea.scrollTop = target.scrollTop;
+      state.filesScroll = target.scrollTop;
+    }
+  });
+};
