@@ -55,7 +55,14 @@ const selectFilenamesWithReplacedPath = (plugin: BulkRenamePlugin) => {
 export const replaceFilePath = (plugin: BulkRenamePlugin, file: TFile) => {
   const { replacePattern, existingSymbol } = plugin.settings;
 
-  return file.path.replaceAll(existingSymbol, replacePattern);
+  const pathWithoutExtension = file.path.split('.').slice(0, -1).join('.');
+
+  const newPath = pathWithoutExtension?.replaceAll(
+    existingSymbol,
+    replacePattern,
+  );
+
+  return `${newPath}.${file.extension}`;
 };
 
 export const renameFilesInObsidian = (app: App, plugin: BulkRenamePlugin) => {

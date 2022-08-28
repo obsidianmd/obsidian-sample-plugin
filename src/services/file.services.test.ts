@@ -18,6 +18,26 @@ describe('File Services', () => {
   });
 
   describe('Renaming', () => {
+    it('should replace symbols in naming', () => {
+      const plugin = {
+        settings: {
+          replacePattern: '-',
+          existingSymbol: '_',
+        },
+      } as unknown as BulkRenamePlugin;
+
+      const file = {
+        path: 'journals/2022_10_13.md',
+        extension: 'md',
+      } as unknown as TFile;
+
+      const expectedResult = 'journals/2022-10-13.md';
+
+      const result = replaceFilePath(plugin, file);
+
+      expect(result).toEqual(expectedResult);
+    });
+
     it('should not rename extensions', () => {
       const plugin = {
         settings: {
@@ -28,6 +48,7 @@ describe('File Services', () => {
 
       const file = {
         path: '2022.10.13.md',
+        extension: 'md',
       } as unknown as TFile;
 
       const expectedResult = '2022-10-13.md';
@@ -36,9 +57,25 @@ describe('File Services', () => {
 
       expect(result).toEqual(expectedResult);
     });
-    it.todo('should replace symbols in naming');
-    it.todo(
-      'Should rename files only in a particular directory if the name could match other directories',
-    );
+
+    it('should update directory path', () => {
+      const plugin = {
+        settings: {
+          replacePattern: 'days',
+          existingSymbol: 'journals',
+        },
+      } as unknown as BulkRenamePlugin;
+
+      const file = {
+        path: 'journals/2022_10_13.md',
+        extension: 'md',
+      } as unknown as TFile;
+
+      const expectedResult = 'days/2022_10_13.md';
+
+      const result = replaceFilePath(plugin, file);
+
+      expect(result).toEqual(expectedResult);
+    });
   });
 });
