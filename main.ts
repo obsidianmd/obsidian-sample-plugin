@@ -193,7 +193,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         button.setButtonText('Rename');
         button.onClick(async () => {
           button.setDisabled(true);
-          renameFilesInObsidian(this.app, this.plugin);
+          await renameFilesInObsidian(this.app, this.plugin);
           this.display();
         });
       });

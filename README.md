@@ -8,7 +8,7 @@
 
 This plugin was developed to cover my initial needs and rename a bunch of files and update their reference in code base respectively. So now you can rename a bunch of files from the directory and all imports also will be updated in a code-base
 
-![img.png](documentation/assets/img.png)
+![](documentation/assets/Animation.gif)
 
 > Under the hood this plugin is using obsidian API for renaming, but we just applying it for many files
 

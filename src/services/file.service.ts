@@ -65,7 +65,7 @@ export const replaceFilePath = (plugin: BulkRenamePlugin, file: TFile) => {
   return `${newPath}.${file.extension}`;
 };
 
-export const renameFilesInObsidian = (app: App, plugin: BulkRenamePlugin) => {
+export const renameFilesInObsidian = async (app: App, plugin: BulkRenamePlugin) => {
   const { replacePattern, existingSymbol } = plugin.settings;
 
   if (!existingSymbol) {
@@ -85,7 +85,7 @@ export const renameFilesInObsidian = (app: App, plugin: BulkRenamePlugin) => {
 
   new Notice('renaming has been started');
   for (const fileName of plugin.settings.fileNames) {
-    app.fileManager.renameFile(fileName, replaceFilePath(plugin, fileName));
+    await app.fileManager.renameFile(fileName, replaceFilePath(plugin, fileName));
   }
   new Notice('successfully renamed all files');
 };

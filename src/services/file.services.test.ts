@@ -10,7 +10,6 @@ describe('File Services', () => {
   });
   describe('Validation', () => {
     it.todo('should display notification if there an error');
-    it.todo('should display notification if there an error');
     it.todo("should display notification if Existing Symbol doesn't exists");
     it.todo(
       'should display notification if Existing Symbol match Replace Pattern',
