@@ -1,6 +1,21 @@
-import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import {
+  App,
+  Notice,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TFile,
+} from 'obsidian';
 import { FolderSuggest } from './src/suggestions/folderSuggest';
 import { renderDonateButton } from './src/components/DonateButton';
+import {
+  getFilesNamesInDirectory,
+  getObsidianFiles,
+  getRenderedFileNamesReplaced,
+  renameFilesInObsidian,
+  syncScrolls,
+} from './src/services/file.service';
+import { createPreviewElement } from './src/components/PreviewElement';
 
 interface MyPluginSettings {
   folderName: string;
@@ -16,31 +31,38 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
   replacePattern: '',
 };
 
-export default class MyPlugin extends Plugin {
+class BulkRenamePlugin extends Plugin {
   settings: MyPluginSettings;
 
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new BulkRenameSettingsTab(this.app, this));
+
+    // this.app.vault.on('rename', (file, oldPath) => {
+    // });
   }
+
+  onunload() {}
+
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
+
   async saveSettings() {
     await this.saveData(this.settings);
   }
 }
 
-type State = {
+export type State = {
   previewScroll: number;
   filesScroll: number;
 };
 
 class BulkRenameSettingsTab extends PluginSettingTab {
-  plugin: MyPlugin;
+  plugin: BulkRenamePlugin;
   state: State;
 
-  constructor(app: App, plugin: MyPlugin) {
+  constructor(app: App, plugin: BulkRenamePlugin) {
     super(app, plugin);
     this.state = {
       previewScroll: 0,
@@ -54,6 +76,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl('h2', { text: 'Bulk Rename - Settings' });
+
     this.renderFileLocation();
     this.renderReplaceSymbol();
     this.renderFilesAndPreview();
@@ -75,7 +98,7 @@ class BulkRenameSettingsTab extends PluginSettingTab {
     desc.appendChild(button);
 
     new Setting(this.containerEl)
-      .setName('Symbols in existing file name')
+      .setName('Existing Symbol')
       .setDesc(desc)
       .addText((textComponent) => {
         const previewLabel = createPreviewElement('Replacement symbols');
@@ -131,10 +154,12 @@ class BulkRenameSettingsTab extends PluginSettingTab {
       .setDesc(`Total Files: ${this.plugin.settings.fileNames.length}`)
       .addTextArea((text) => {
         text.setPlaceholder('Here you will see files under folder location');
-        existingFilesTextArea = text.inputEl;
-        const value = getRenderedFileNames(this.plugin);
-        text.setValue(value);
         text.setDisabled(true);
+        existingFilesTextArea = text.inputEl;
+
+        const value = getFilesNamesInDirectory(this.plugin);
+        text.setValue(value);
+
         const previewLabel = createPreviewElement();
         text.inputEl.insertAdjacentElement('afterend', previewLabel);
         text.inputEl.addClass('templater_cmd');
@@ -143,10 +168,11 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         text.setPlaceholder(
           'How filenames will looks like after replacement(click preview first)',
         );
+        text.setDisabled(true);
+
         replacedPreviewTextArea = text.inputEl;
         const value = getRenderedFileNamesReplaced(this.plugin);
         text.setValue(value);
-        text.setDisabled(true);
         text.inputEl.addClass('templater_cmd');
       })
       .then((setting) => {
@@ -172,18 +198,10 @@ class BulkRenameSettingsTab extends PluginSettingTab {
         button.buttonEl.style.width = '100%';
         button.setTooltip("FYI: We don't have undone button yet!");
         button.setButtonText('Rename');
-        button.onClick(() => {
-          const { replacePattern, existingSymbol } = this.plugin.settings;
-          if (!replacePattern || !existingSymbol) {
-            return;
-          }
-
-          this.plugin.settings.fileNames.forEach((fileName) => {
-            this.app.fileManager.renameFile(
-              fileName,
-              replaceFilePath(this.plugin, fileName),
-            );
-          });
+        button.onClick(async () => {
+          button.setDisabled(true);
+          renameFilesInObsidian(this.app, this.plugin);
+          this.display();
         });
       });
   }
@@ -193,87 +211,8 @@ class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   calculateFiles() {
-    this.plugin.settings.fileNames = [
-      ...getObsidianFiles(this.app, this.plugin.settings.folderName),
-    ];
+    this.plugin.settings.fileNames = getObsidianFiles(this.app, this.plugin);
   }
 }
 
-const getObsidianFiles = (app: App, folderName: string) => {
-  const abstractFiles = app.vault.getAllLoadedFiles();
-  const files = [] as TFile[];
-  abstractFiles.forEach((file) => {
-    if (file instanceof TFile && file.parent.name.includes(folderName)) {
-      files.push(file);
-    }
-  });
-
-  return sortByname(files);
-};
-
-const sortByname = (files: TFile[]) => {
-  return files.sort((a, b) => a.name.localeCompare(b.name));
-};
-
-const getRenderedFileNames = (plugin: MyPlugin) => {
-  return prepareFileNameString(plugin.settings.fileNames);
-};
-
-const prepareFileNameString = (filesNames: TFile[]) => {
-  let value = '';
-  filesNames.forEach((fileName, index) => {
-    const isLast = index + 1 === filesNames.length;
-    if (isLast) {
-      return (value += fileName.path);
-    }
-    value += fileName.path + '\r\n';
-  });
-  return value;
-};
-
-const getRenderedFileNamesReplaced = (plugin: MyPlugin) => {
-  const { fileNames } = plugin.settings;
-  const newFiles = fileNames.map((file) => {
-    return {
-      ...file,
-      path: replaceFilePath(plugin, file),
-    };
-  });
-
-  return prepareFileNameString(newFiles);
-};
-
-const replaceFilePath = (plugin: MyPlugin, file: TFile) => {
-  const { replacePattern, existingSymbol } = plugin.settings;
-
-  return file.path.replaceAll(existingSymbol, replacePattern);
-};
-
-const createPreviewElement = (textContent = '=> => => =>') => {
-  const previewLabel = window.document.createElement('span');
-  previewLabel.className = 'previewLabel';
-  previewLabel.textContent = textContent;
-  previewLabel.style.margin = '0 20px';
-  return previewLabel;
-};
-
-const syncScrolls = (
-  existingFilesArea: HTMLTextAreaElement,
-  previewArea: HTMLTextAreaElement,
-  state: State,
-) => {
-  existingFilesArea.addEventListener('scroll', (event) => {
-    const target = event.target as HTMLTextAreaElement;
-    if (target.scrollTop !== state.previewScroll) {
-      previewArea.scrollTop = target.scrollTop;
-      state.previewScroll = target.scrollTop;
-    }
-  });
-  previewArea.addEventListener('scroll', (event) => {
-    const target = event.target as HTMLTextAreaElement;
-    if (target.scrollTop !== state.filesScroll) {
-      existingFilesArea.scrollTop = target.scrollTop;
-      state.filesScroll = target.scrollTop;
-    }
-  });
-};
+export default BulkRenamePlugin;
