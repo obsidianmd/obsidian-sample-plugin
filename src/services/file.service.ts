@@ -78,6 +78,11 @@ export const renameFilesInObsidian = (app: App, plugin: BulkRenamePlugin) => {
     return;
   }
 
+  if (!plugin.settings.fileNames.length) {
+    new Notice('Please check your results before rename!');
+    return;
+  }
+
   new Notice('renaming has been started');
   for (const fileName of plugin.settings.fileNames) {
     app.fileManager.renameFile(fileName, replaceFilePath(plugin, fileName));

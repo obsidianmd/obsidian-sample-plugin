@@ -15,6 +15,9 @@ describe('File Services', () => {
     it.todo(
       'should display notification if Existing Symbol match Replace Pattern',
     );
+    it.todo(
+      "should throw an error if there files didn't reviewed before submit",
+    );
   });
 
   describe('Renaming', () => {

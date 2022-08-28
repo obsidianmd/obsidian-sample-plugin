@@ -1,11 +1,4 @@
-import {
-  App,
-  Notice,
-  Plugin,
-  PluginSettingTab,
-  Setting,
-  TFile,
-} from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { FolderSuggest } from './src/suggestions/folderSuggest';
 import { renderDonateButton } from './src/components/DonateButton';
 import {
