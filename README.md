@@ -361,7 +361,7 @@ You can read the below YAML specification as:
   - Note, that a more specific (or more nested or more focused) rule overrides the more generic inherited one
 - at the same time, the folder `Archive` and `Inbox` sort their items by creation date
   - this is because specifying direct name in `target-folder: Archive` has always the highest priority and overrides any inheritance
-- and finally, the folders `/Reviews/Attachments` and `TODOs` are explicitly excluded from the control of the custom sort 
+- and finally, the folders `Reviews/Attachments` and `TODOs` are explicitly excluded from the control of the custom sort 
   plugin and use the standard Obsidian UI sorting, as selected in the UI
   - the special syntax `sorting: standard` tells the plugin to refrain from ordering items in specified folders
   - again, specifying the folder by name in `target-folder: TODOs` overrides any inherited sorting rules
@@ -372,14 +372,14 @@ sorting-spec: |
     target-folder: /*
     < a-z
 	
-    target-folder: /Reviews/...
+    target-folder: Reviews/...
     < modified
 
     target-folder: Archive
     target-folder: Inbox
     < created
 
-    target-folder: /Reviews/Attachments
+    target-folder: Reviews/Attachments
     target-folder: TODOs
     sorting: standard
 ---
