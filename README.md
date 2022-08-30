@@ -17,11 +17,12 @@ Take full control of the order of your notes and folders:
 - order configuration stored directly in your note(s) front matter
   - use a dedicated key in YAML
 - folders not set up for the custom order remain on the standard Obsidian sorting
+- support for imposing inheritance of order specifications with flexible exclusion and overriding logic
 
 ## Table of contents
 
 - [TL;DR Usage](#tldr-usage)
-  - [Simple case 1: in root folder sort entries alphabetically treating folders and files equally]
+  - [Simple case 1: in root folder sort entries alphabetically treating folders and files equally](#simple-case-1-in-root-folder-sort-entries-alphabetically-treating-folders-and-files-equally)
   -	[Simple case 2: impose manual order of some items in root folder](#simple-case-2-impose-manual-order-of-some-items-in-root-folder)
   - [Example 3: In root folder, let files go first and folders get pushed to the bottom](#example-3-in-root-folder-let-files-go-first-and-folders-get-pushed-to-the-bottom)
   - [Example 4: In root folder, pin a focus note, then Inbox folder, and push archive to the bottom](#example-4-in-root-folder-pin-a-focus-note-then-inbox-folder-and-push-archive-to-the-bottom)
@@ -32,8 +33,8 @@ Take full control of the order of your notes and folders:
   - [Example 9: Sort by numerical suffix](#example-9-sort-by-numerical-suffix)
   - [Example 10: Sample book structure with Roman numbered chapters](#example-10-sample-book-structure-with-roman-numbered-chapters)
   - [Example 11: Sample book structure with compound Roman number suffixes](#example-11-sample-book-structure-with-compound-roman-number-suffixes)
-  - [Example 12: Apply same sorting to all folders in the vault]
-  - [Example 13: Sorting rules inheritance by subfolders]
+  - [Example 12: Apply same sorting to all folders in the vault](#example-12-apply-same-sorting-to-all-folders-in-the-vault)
+  - [Example 13: Sorting rules inheritance by subfolders](#example-13-sorting-rules-inheritance-by-subfolders)
 - [Location of sorting specification YAML entry](#location-of-sorting-specification-yaml-entry) 
 - [Ribbon icon](#ribbon-icon)
 - [Installing the plugin](#installing-the-plugin)
