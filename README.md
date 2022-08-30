@@ -21,7 +21,7 @@ Take full control of the order of your notes and folders:
 ## Table of contents
 
 - [TL;DR Usage](#tldr-usage)
-  - [Simple case 1: in root folder sort items by a rule, intermixing folders and files](#simple-case-1-in-root-folder-sort-items-by-a-rule-intermixing-folders-and-files)
+  - [Simple case 1: in root folder sort entries alphabetically treating folders and files equally]
   -	[Simple case 2: impose manual order of some items in root folder](#simple-case-2-impose-manual-order-of-some-items-in-root-folder)
   - [Example 3: In root folder, let files go first and folders get pushed to the bottom](#example-3-in-root-folder-let-files-go-first-and-folders-get-pushed-to-the-bottom)
   - [Example 4: In root folder, pin a focus note, then Inbox folder, and push archive to the bottom](#example-4-in-root-folder-pin-a-focus-note-then-inbox-folder-and-push-archive-to-the-bottom)
@@ -32,6 +32,8 @@ Take full control of the order of your notes and folders:
   - [Example 9: Sort by numerical suffix](#example-9-sort-by-numerical-suffix)
   - [Example 10: Sample book structure with Roman numbered chapters](#example-10-sample-book-structure-with-roman-numbered-chapters)
   - [Example 11: Sample book structure with compound Roman number suffixes](#example-11-sample-book-structure-with-compound-roman-number-suffixes)
+  - [Example 12: Apply same sorting to all folders in the vault]
+  - [Example 13: Sorting rules inheritance by subfolders]
 - [Location of sorting specification YAML entry](#location-of-sorting-specification-yaml-entry) 
 - [Ribbon icon](#ribbon-icon)
 - [Installing the plugin](#installing-the-plugin)
@@ -58,9 +60,15 @@ Click the [ribbon icon](#ribbon_icon) again to disable custom sorting and switch
 The [ribbon icon](#ribbon_icon) acts also as the visual indicator of the current state of the plugin - see
 the [ribbon icon](#ribbon_icon) section for details
 
-### Simple case 1: in root folder sort items by a rule, intermixing folders and files
+### Simple case 1: in root folder sort entries alphabetically treating folders and files equally
 
-The specified rule is to sort items alphabetically
+The specified rule is to sort items alphabetically in the root folder of the vault 
+
+The line `target-folder: /` specifies to which folder apply the sorting rules which follow.
+
+The `/` indicates the root folder of the vault in File Explorer
+
+And `< a-z` sets the order to alphabetical ascending
 
 > IMPORTANT: indentation matters in all the examples
 
@@ -321,6 +329,60 @@ sorting-spec: |
 the result is:
 
 ![Book - Roman compond suffixes](./docs/svg/roman-suffix.svg)
+
+### Example 12: Apply same sorting to all folders in the vault
+
+Apply the alphabetical sorting to all folders in the Vault. The alphabetical sorting treats the folders and files equally
+(which is different from the standard Obsidian sort, which groups folders in the top of File Explorer)
+
+This involves the wildcard suffix syntax `*` which means _apply the sorting rule to the specified folder
+and all of its subfolders, including descendants. In other words, this is imposing a deep inheritance
+of sorting specification. 
+Applying the wildcard suffix to root folder path `/*` actually means _apply the sorting to all folders in the vault_
+
+```yaml
+---
+sorting-spec: |
+    target-folder: /*
+    < a-z
+---
+```
+
+### Example 13: Sorting rules inheritance by subfolders
+
+A more advanced example showing finetuned options of manipulating of sorting rules inheritance:
+
+You can read the below YAML specification as:
+- all items in all folders in the vault (`target-folder: /*`) should be sorted alphabetically (files and folders treated equally)
+- yet, items in the `Reviews` folder and its direct subfolders (like `Reviews/daily`) should be ordered by modification date
+  - the syntax `Reviews/...` means: the items in `Reviews` folder and its direct subfolders (and no deeper)
+    - the more nested folder like `Reviews/daily/morning` inherit the rule specified for root folder `/*`
+  - Note, that a more specific (or more nested or more focused) rule overrides the more generic inherited one
+- at the same time, the folder `Archive` and `Inbox` sort their items by creation date
+  - this is because specifying direct name in `target-folder: Archive` has always the highest priority and overrides any inheritance
+- and finally, the folders `/Reviews/Attachments` and `TODOs` are explicitly excluded from the control of the custom sort 
+  plugin and use the standard Obsidian UI sorting, as selected in the UI
+  - the special syntax `sorting: standard` tells the plugin to refrain from ordering items in specified folders
+  - again, specifying the folder by name in `target-folder: TODOs` overrides any inherited sorting rules
+
+```yaml
+---
+sorting-spec: |
+    target-folder: /*
+    < a-z
+	
+    target-folder: /Reviews/...
+    < modified
+
+    target-folder: Archive
+    target-folder: Inbox
+    < created
+
+    target-folder: /Reviews/Attachments
+    target-folder: TODOs
+    sorting: standard
+---
+```
 
 ## Location of sorting specification YAML entry
 
