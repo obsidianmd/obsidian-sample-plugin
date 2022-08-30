@@ -55,6 +55,8 @@ export default class CustomSortPlugin extends Plugin {
 		let errorMessage: string
 		// reset cache
 		this.sortSpecCache = null
+		const processor: SortingSpecProcessor = new SortingSpecProcessor()
+
 		Vault.recurseChildren(this.app.vault.getRoot(), (file: TAbstractFile) => {
 			if (failed) return
 			if (file instanceof TFile) {
@@ -68,7 +70,6 @@ export default class CustomSortPlugin extends Plugin {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					if (sortingSpecTxt) {
 						anySortingSpecFound = true
-						const processor: SortingSpecProcessor = new SortingSpecProcessor()
 						this.sortSpecCache = processor.parseSortSpecFromText(
 							sortingSpecTxt.split('\n'),
 							parent.path,

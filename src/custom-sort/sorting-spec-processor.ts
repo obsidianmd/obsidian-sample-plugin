@@ -359,6 +359,11 @@ export class SortingSpecProcessor {
 	problemAlreadyReportedForCurrentLine: boolean
 	recentErrorMessage: string
 
+	// Helper map to deal with rule priorities for the same path
+	//   and also detect non-wildcard duplicates.
+	//   The wildcard duplicates were detected prior to this point, no need to bother about them
+	pathMatchPriorityForPath: {[key: string]: WildcardPriority} = {}
+
 	// Logger parameter exposed to support unit testing of error cases as well as capturing error messages
 	//  for in-app presentation
 	constructor(private errorLogger?: typeof console.log) {
@@ -370,10 +375,17 @@ export class SortingSpecProcessor {
 						  sortingSpecFileName: string,
 						  collection?: SortSpecsCollection
 	): SortSpecsCollection {
+		// reset / init processing state after potential previous invocation
 		this.ctx = {
 			folderPath: folderPath,   // location of the sorting spec file
 			specs: []
 		};
+		this.currentEntryLine = null
+		this.currentEntryLineIdx = null
+		this.currentSortingSpecContainerFilePath = null
+		this.problemAlreadyReportedForCurrentLine = null
+		this.recentErrorMessage = null
+
 		let success: boolean = false;
 		let lineIdx: number = 0;
 		for (let entryLine of text) {
@@ -439,11 +451,6 @@ export class SortingSpecProcessor {
 					collection.sortSpecByWildcard = sortspecByWildcard
 				}
 
-				// Helper transient map to deal with rule priorities for the same path
-				//   and also detect non-wildcard duplicates.
-				//   The wildcard duplicates were detected prior to this point, no need to bother about them
-				const pathMatchPriorityForPath: {[key: string]: WildcardPriority} = {}
-
 				for (let spec of this.ctx.specs) {
 					for (let idx = 0; idx < spec.targetFoldersPaths.length; idx++) {
 						const originalPath = spec.targetFoldersPaths[idx]
@@ -452,7 +459,7 @@ export class SortingSpecProcessor {
 						let path: string
 						[path, detectedWildcardPriority] = stripWildcardPatternSuffix(originalPath)
 						let storeTheSpec: boolean = true
-						const preexistingSortSpecPriority: WildcardPriority = pathMatchPriorityForPath[path]
+						const preexistingSortSpecPriority: WildcardPriority = this.pathMatchPriorityForPath[path]
 						if (preexistingSortSpecPriority) {
 							if (preexistingSortSpecPriority === WildcardPriority.NO_WILDCARD && detectedWildcardPriority === WildcardPriority.NO_WILDCARD) {
 								this.problem(ProblemCode.DuplicateSortSpecForSameFolder, `Duplicate sorting spec for folder ${path}`)
@@ -464,7 +471,7 @@ export class SortingSpecProcessor {
 						}
 						if (storeTheSpec) {
 							collection.sortSpecByPath[path] = spec
-							pathMatchPriorityForPath[path] = detectedWildcardPriority
+							this.pathMatchPriorityForPath[path] = detectedWildcardPriority
 						}
 					}
 				}

@@ -957,6 +957,24 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 	})
 })
 
+const txtInputTargetFolderCCC: string = `
+target-folder: CCC
+`
+
+describe('SortingSpecProcessor advanced error detection', () => {
+	it('should retain state of duplicates detection in the instance', () => {
+		let processor: SortingSpecProcessor = new SortingSpecProcessor(errorsLogger);
+		errorsLogger.mockReset()
+		const inputTxtArr: Array<string> = txtInputTargetFolderCCC.split('\n')
+		const result1 = processor.parseSortSpecFromText(inputTxtArr, 'another-mock-folder', 'sortspec.md')
+		const result2 = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result1).not.toBeNull()
+		expect(result2).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenCalledWith(`${ERR_PREFIX} 2:DuplicateSortSpecForSameFolder Duplicate sorting spec for folder CCC ${ERR_SUFFIX}`)
+	})
+})
+
 describe('convertPlainStringSortingGroupSpecToArraySpec', () => {
 	let processor: SortingSpecProcessor;
 	beforeEach(() => {
