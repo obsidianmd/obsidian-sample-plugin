@@ -14,14 +14,15 @@ import {
 } from 'obsidian';
 import {around} from 'monkey-around';
 import {folderSort} from './custom-sort/custom-sort';
-import {SortingSpecProcessor} from './custom-sort/sorting-spec-processor';
-import {CustomSortSpec, SortSpecsCollection} from './custom-sort/custom-sort-types';
+import {SortingSpecProcessor, SortSpecsCollection} from './custom-sort/sorting-spec-processor';
+import {CustomSortOrder, CustomSortSpec} from './custom-sort/custom-sort-types';
+
 import {
 	addIcons,
 	ICON_SORT_ENABLED_ACTIVE,
+	ICON_SORT_ENABLED_NOT_APPLIED,
 	ICON_SORT_SUSPENDED,
-	ICON_SORT_SUSPENDED_SYNTAX_ERROR,
-	ICON_SORT_ENABLED_NOT_APPLIED
+	ICON_SORT_SUSPENDED_SYNTAX_ERROR
 } from "./custom-sort/icons";
 
 interface CustomSortPluginSettings {
@@ -87,9 +88,9 @@ export default class CustomSortPlugin extends Plugin {
 			new Notice(`Parsing custom sorting specification SUCCEEDED!`)
 		} else {
 			if (anySortingSpecFound) {
-				errorMessage = `No valid '${SORTINGSPEC_YAML_KEY}:' key(s) in YAML front matter or multiline YAML indentation error or general YAML syntax error`
+				errorMessage = errorMessage ? errorMessage : `No valid '${SORTINGSPEC_YAML_KEY}:' key(s) in YAML front matter or multiline YAML indentation error or general YAML syntax error`
 			} else {
-				errorMessage = errorMessage ? errorMessage : `No custom sorting specification found or only empty specification(s)`
+				errorMessage = `No custom sorting specification found or only empty specification(s)`
 			}
 			new Notice(`Parsing custom sorting specification FAILED. Suspending the plugin.\n${errorMessage}`, ERROR_NOTICE_TIMEOUT)
 			this.settings.suspended = true
@@ -196,13 +197,30 @@ export default class CustomSortPlugin extends Plugin {
 		let tmpFolder = new TFolder(Vault, "");
 		let Folder = fileExplorer.createFolderDom(tmpFolder).constructor;
 		this.register(
+			// TODO: Unit tests please!!! The logic below becomes more and more complex, bugs are captured at run-time...
 			around(Folder.prototype, {
 				sort(old: any) {
 					return function (...args: any[]) {
+						// quick check for plugin status
+						if (plugin.settings.suspended) {
+							return old.call(this, ...args);
+						}
+
 						// if custom sort is not specified, use the UI-selected
 						const folder: TFolder = this.file
-						const sortSpec: CustomSortSpec = plugin.sortSpecCache?.[folder.path]
-						if (!plugin.settings.suspended && sortSpec) {
+						let sortSpec: CustomSortSpec = plugin.sortSpecCache?.sortSpecByPath[folder.path]
+						if (sortSpec) {
+							if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
+								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
+							}
+						} else if (plugin.sortSpecCache?.sortSpecByWildcard) {
+							// when no sorting spec found directly by folder path, check for wildcard-based match
+							sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path)
+							if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
+								sortSpec = null // A folder subtree can be also explicitly excluded from custom sorting plugin
+							}
+						}
+						if (sortSpec) {
 							return folderSort.call(this, sortSpec, ...args);
 						} else {
 							return old.call(this, ...args);
