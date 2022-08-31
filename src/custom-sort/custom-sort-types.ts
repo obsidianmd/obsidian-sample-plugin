@@ -1,5 +1,3 @@
-export const SortSpecFileName: string = 'sortspec.md';
-
 export enum CustomSortGroupType {
 	Outsiders, // Not belonging to any of other groups
 	MatchAll, // like a wildard *, used in connection with foldersOnly or filesOnly. The difference between the MatchAll and Outsiders is
@@ -15,7 +13,8 @@ export enum CustomSortOrder {
 	byModifiedTime,
 	byModifiedTimeReverse,
 	byCreatedTime,
-	byCreatedTimeReverse
+	byCreatedTimeReverse,
+	standardObsidian// Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
 }
 
 export interface RecognizedOrderValue {
@@ -52,9 +51,3 @@ export interface CustomSortSpec {
 	outsidersFoldersGroupIdx?: number
 	itemsToHide?: Set<string>
 }
-
-export interface FolderPathToSortSpecMap {
-	[key: string]: CustomSortSpec
-}
-
-export type SortSpecsCollection = FolderPathToSortSpecMap

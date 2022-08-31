@@ -3,9 +3,9 @@ import {
 	CustomSortGroupType,
 	CustomSortOrder,
 	CustomSortSpec,
-	NormalizerFn, RecognizedOrderValue,
-	RegExpSpec,
-	SortSpecsCollection
+	NormalizerFn,
+	RecognizedOrderValue,
+	RegExpSpec
 } from "./custom-sort-types";
 import {isDefined, last} from "../utils/utils";
 import {
@@ -20,6 +20,12 @@ import {
 	NumberRegexStr,
 	RomanNumberRegexStr
 } from "./matchers";
+import {
+	FolderWildcardMatching,
+	MATCH_ALL_SUFFIX,
+	MATCH_CHILDREN_1_SUFFIX,
+	MATCH_CHILDREN_2_SUFFIX
+} from "./folder-matching-rules"
 
 interface ProcessingContext {
 	folderPath: string
@@ -54,11 +60,14 @@ export enum ProblemCode {
 	TooManyNumericSortingSymbols,
 	NumericalSymbolAdjacentToWildcard,
 	ItemToHideExactNameWithExtRequired,
-	ItemToHideNoSupportForThreeDots
+	ItemToHideNoSupportForThreeDots,
+	DuplicateWildcardSortSpecForSameFolder,
+	StandardObsidianSortAllowedOnlyAtFolderLevel
 }
 
 const ContextFreeProblems = new Set<ProblemCode>([
-	ProblemCode.DuplicateSortSpecForSameFolder
+	ProblemCode.DuplicateSortSpecForSameFolder,
+	ProblemCode.DuplicateWildcardSortSpecForSameFolder
 ])
 
 const ThreeDots = '...';
@@ -104,7 +113,8 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 enum Attribute {
 	TargetFolder = 1, // Starting from 1 to allow: if (attribute) { ...
 	OrderAsc,
-	OrderDesc
+	OrderDesc,
+	OrderStandardObsidian
 }
 
 const AttrLexems: { [key: string]: Attribute } = {
@@ -112,6 +122,7 @@ const AttrLexems: { [key: string]: Attribute } = {
 	'target-folder:': Attribute.TargetFolder,
 	'order-asc:': Attribute.OrderAsc,
 	'order-desc:': Attribute.OrderDesc,
+	'sorting:': Attribute.OrderStandardObsidian,
 	// Concise abbreviated equivalents
 	'::::': Attribute.TargetFolder,
 	'<': Attribute.OrderAsc,
@@ -280,6 +291,15 @@ export const convertPlainStringWithNumericSortingSymbolToRegex = (s: string, act
 	}
 }
 
+export interface FolderPathToSortSpecMap {
+	[key: string]: CustomSortSpec
+}
+
+export interface SortSpecsCollection {
+	sortSpecByPath: FolderPathToSortSpecMap
+	sortSpecByWildcard?: FolderWildcardMatching<CustomSortSpec>
+}
+
 interface AdjacencyInfo {
 	noPrefix: boolean,
 	noSuffix: boolean
@@ -292,6 +312,43 @@ const checkAdjacency = (sortingSymbolInfo: ExtractedNumericSortingSymbolInfo): A
 	}
 }
 
+const endsWithWildcardPatternSuffix = (path: string): boolean => {
+	return path.endsWith(MATCH_CHILDREN_1_SUFFIX) ||
+		path.endsWith(MATCH_CHILDREN_2_SUFFIX) ||
+		path.endsWith(MATCH_ALL_SUFFIX)
+}
+
+enum WildcardPriority {
+	NO_WILDCARD = 1,
+	MATCH_CHILDREN,
+	MATCH_ALL
+}
+
+const stripWildcardPatternSuffix = (path: string): [path: string, priority: number] => {
+	if (path.endsWith(MATCH_ALL_SUFFIX)) {
+		return [
+			path.slice(0, -MATCH_ALL_SUFFIX.length),
+			WildcardPriority.MATCH_ALL
+		]
+	}
+	if (path.endsWith(MATCH_CHILDREN_1_SUFFIX)) {
+		return [
+			path.slice(0, -MATCH_CHILDREN_1_SUFFIX.length),
+			WildcardPriority.MATCH_CHILDREN,
+		]
+	}
+	if (path.endsWith(MATCH_CHILDREN_2_SUFFIX)) {
+		return [
+			path.slice(0, -MATCH_CHILDREN_2_SUFFIX.length),
+			WildcardPriority.MATCH_CHILDREN
+		]
+	}
+	return [
+		path,
+		WildcardPriority.NO_WILDCARD
+	]
+}
+
 const ADJACENCY_ERROR: string = "Numerical sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case."
 
 export class SortingSpecProcessor {
@@ -301,6 +358,11 @@ export class SortingSpecProcessor {
 	currentSortingSpecContainerFilePath: string
 	problemAlreadyReportedForCurrentLine: boolean
 	recentErrorMessage: string
+
+	// Helper map to deal with rule priorities for the same path
+	//   and also detect non-wildcard duplicates.
+	//   The wildcard duplicates were detected prior to this point, no need to bother about them
+	pathMatchPriorityForPath: {[key: string]: WildcardPriority} = {}
 
 	// Logger parameter exposed to support unit testing of error cases as well as capturing error messages
 	//  for in-app presentation
@@ -313,10 +375,17 @@ export class SortingSpecProcessor {
 						  sortingSpecFileName: string,
 						  collection?: SortSpecsCollection
 	): SortSpecsCollection {
+		// reset / init processing state after potential previous invocation
 		this.ctx = {
 			folderPath: folderPath,   // location of the sorting spec file
 			specs: []
 		};
+		this.currentEntryLine = null
+		this.currentEntryLineIdx = null
+		this.currentSortingSpecContainerFilePath = null
+		this.problemAlreadyReportedForCurrentLine = null
+		this.recentErrorMessage = null
+
 		let success: boolean = false;
 		let lineIdx: number = 0;
 		for (let entryLine of text) {
@@ -359,13 +428,51 @@ export class SortingSpecProcessor {
 			if (this.ctx.specs.length > 0) {
 				for (let spec of this.ctx.specs) {
 					this._l1s6_postprocessSortSpec(spec)
-					for (let folderPath of spec.targetFoldersPaths) {
-						collection = collection ?? {}
-						if (collection[folderPath]) {
-							this.problem(ProblemCode.DuplicateSortSpecForSameFolder, `Duplicate sorting spec for folder ${folderPath}`)
-							return null // Failure - not allow duplicate specs for the same folder
+				}
+
+				let sortspecByWildcard: FolderWildcardMatching<CustomSortSpec>
+				for (let spec of this.ctx.specs) {
+					// Consume the folder paths ending with wildcard specs
+					for (let idx = 0; idx<spec.targetFoldersPaths.length; idx++) {
+						const path = spec.targetFoldersPaths[idx]
+						if (endsWithWildcardPatternSuffix(path)) {
+							sortspecByWildcard = sortspecByWildcard ?? new FolderWildcardMatching<CustomSortSpec>()
+							const ruleAdded = sortspecByWildcard.addWildcardDefinition(path, spec)
+							if (ruleAdded?.errorMsg) {
+								this.problem(ProblemCode.DuplicateWildcardSortSpecForSameFolder, ruleAdded?.errorMsg)
+								return null // Failure - not allow duplicate wildcard specs for the same folder
+							}
 						}
-						collection[folderPath] = spec
+					}
+				}
+
+				if (sortspecByWildcard) {
+					collection = collection ?? { sortSpecByPath:{} }
+					collection.sortSpecByWildcard = sortspecByWildcard
+				}
+
+				for (let spec of this.ctx.specs) {
+					for (let idx = 0; idx < spec.targetFoldersPaths.length; idx++) {
+						const originalPath = spec.targetFoldersPaths[idx]
+						collection = collection ?? { sortSpecByPath: {} }
+						let detectedWildcardPriority: WildcardPriority
+						let path: string
+						[path, detectedWildcardPriority] = stripWildcardPatternSuffix(originalPath)
+						let storeTheSpec: boolean = true
+						const preexistingSortSpecPriority: WildcardPriority = this.pathMatchPriorityForPath[path]
+						if (preexistingSortSpecPriority) {
+							if (preexistingSortSpecPriority === WildcardPriority.NO_WILDCARD && detectedWildcardPriority === WildcardPriority.NO_WILDCARD) {
+								this.problem(ProblemCode.DuplicateSortSpecForSameFolder, `Duplicate sorting spec for folder ${path}`)
+								return null // Failure - not allow duplicate specs for the same no-wildcard folder path
+							} else if (detectedWildcardPriority >= preexistingSortSpecPriority) {
+								// Ignore lower priority rule
+								storeTheSpec = false
+							}
+						}
+						if (storeTheSpec) {
+							collection.sortSpecByPath[path] = spec
+							this.pathMatchPriorityForPath[path] = detectedWildcardPriority
+						}
 					}
 				}
 			}
@@ -452,7 +559,7 @@ export class SortingSpecProcessor {
 				this.problem(ProblemCode.TargetFolderNestedSpec, `Nested (indented) specification of target folder is not allowed`)
 				return false
 			}
-		} else if (attr.attribute === Attribute.OrderAsc || attr.attribute === Attribute.OrderDesc) {
+		} else if (attr.attribute === Attribute.OrderAsc || attr.attribute === Attribute.OrderDesc || attr.attribute === Attribute.OrderStandardObsidian) {
 			if (attr.nesting === 0) {
 				if (!this.ctx.currentSpec) {
 					this._l2s2_putNewSpecForNewTargetFolder()
@@ -472,6 +579,10 @@ export class SortingSpecProcessor {
 				if (this.ctx.currentSpecGroup.order) {
 					const folderPathsForProblemMsg: string = this.ctx.currentSpec.targetFoldersPaths.join(' :: ');
 					this.problem(ProblemCode.DuplicateOrderAttr, `Duplicate order specification for a sorting rule of folder ${folderPathsForProblemMsg}`)
+					return false;
+				}
+				if ((attr.value as RecognizedOrderValue).order === CustomSortOrder.standardObsidian) {
+					this.problem(ProblemCode.StandardObsidianSortAllowedOnlyAtFolderLevel, `The standard Obsidian sort order is only allowed at a folder level (not nested syntax)`)
 					return false;
 				}
 				this.ctx.currentSpecGroup.order = (attr.value as RecognizedOrderValue).order
@@ -635,10 +746,14 @@ export class SortingSpecProcessor {
 			}
 		}
 
+		const CURRENT_FOLDER_PREFIX: string = `${CURRENT_FOLDER_SYMBOL}/`
+
 		// Replace the dot-folder names (coming from: 'target-folder: .') with actual folder names
 		spec.targetFoldersPaths.forEach((path, idx) => {
 			if (path === CURRENT_FOLDER_SYMBOL) {
 				spec.targetFoldersPaths[idx] = this.ctx.folderPath
+			} else if (path.startsWith(CURRENT_FOLDER_PREFIX)) {
+				spec.targetFoldersPaths[idx] = `${this.ctx.folderPath}/${path.substr(CURRENT_FOLDER_PREFIX.length)}`
 			}
 		});
 	}
@@ -675,10 +790,19 @@ export class SortingSpecProcessor {
 		} : null;
 	}
 
+	private _l2s1_validateSortingAttrValue = (v: string): RecognizedOrderValue | null => {
+		// for now only a single fixed lexem
+		const recognized: boolean = v.trim().toLowerCase() === 'standard'
+		return recognized ? {
+			order: CustomSortOrder.standardObsidian
+		} : null;
+	}
+
 	attrValueValidators: { [key in Attribute]: AttrValueValidatorFn } = {
 		[Attribute.TargetFolder]: this._l2s1_validateTargetFolderAttrValue.bind(this),
 		[Attribute.OrderAsc]: this._l2s1_validateOrderAscAttrValue.bind(this),
 		[Attribute.OrderDesc]: this._l2s1_validateOrderDescAttrValue.bind(this),
+		[Attribute.OrderStandardObsidian]: this._l2s1_validateSortingAttrValue.bind(this)
 	}
 
 	_l2s2_convertPlainStringSortingGroupSpecToArraySpec = (spec: string): Array<string> => {

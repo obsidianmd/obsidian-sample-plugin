@@ -1,5 +1,6 @@
 import {
-	CompoundDashNumberNormalizerFn, CompoundDashRomanNumberNormalizerFn,
+	CompoundDashNumberNormalizerFn,
+	CompoundDashRomanNumberNormalizerFn,
 	CompoundDotNumberNormalizerFn,
 	convertPlainStringWithNumericSortingSymbolToRegex,
 	detectNumericSortingSymbols,
@@ -12,6 +13,7 @@ import {
 	SortingSpecProcessor
 } from "./sorting-spec-processor"
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
+import {FolderMatchingTreeNode} from "./folder-matching-rules";
 
 const txtInputExampleA: string = `
 order-asc: a-z
@@ -348,17 +350,17 @@ describe('SortingSpecProcessor', () => {
 	it('should generate correct SortSpecs (complex example A)', () => {
 		const inputTxtArr: Array<string> = txtInputExampleA.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result).toEqual(expectedSortSpecsExampleA)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleA)
 	})
 	it('should generate correct SortSpecs (complex example A verbose)', () => {
 		const inputTxtArr: Array<string> = txtInputExampleAVerbose.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result).toEqual(expectedSortSpecsExampleA)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleA)
 	})
 	it('should generate correct SortSpecs (example with numerical sorting symbols)', () => {
 		const inputTxtArr: Array<string> = txtInputExampleNumericSortingSymbols.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result).toEqual(expectedSortSpecsExampleNumericSortingSymbols)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleNumericSortingSymbols)
 	})
 })
 
@@ -401,7 +403,36 @@ describe('SortingSpecProcessor', () => {
 	it('should not duplicate spec if former target-folder had some attribute specified', () => {
 		const inputTxtArr: Array<string> = txtInputNotDuplicatedSortSpec.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result).toEqual(expectedSortSpecsNotDuplicatedSortSpec)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsNotDuplicatedSortSpec)
+	})
+})
+
+const txtInputStandardObsidianSortAttr: string = `
+target-folder: AAA
+sorting: standard
+`
+
+const expectedSortSpecForObsidianStandardSorting: { [key: string]: CustomSortSpec } = {
+	"AAA": {
+		defaultOrder: CustomSortOrder.standardObsidian,
+		groups: [{
+			order: CustomSortOrder.standardObsidian,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['AAA']
+	}
+}
+
+describe('SortingSpecProcessor', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should recognize the standard Obsidian sorting attribute for a folder', () => {
+		const inputTxtArr: Array<string> = txtInputStandardObsidianSortAttr.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForObsidianStandardSorting)
 	})
 })
 
@@ -435,7 +466,7 @@ describe('SortingSpecProcessor bonus experimental feature', () => {
 		const inputTxtArr: Array<string> = txtInputItemsToHideWithDupsSortSpec.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		// REMARK: be careful with examining Set object
-		expect(result).toEqual(expectedHiddenItemsSortSpec)
+		expect(result?.sortSpecByPath).toEqual(expectedHiddenItemsSortSpec)
 	})
 })
 
@@ -490,7 +521,7 @@ describe('SortingSpecProcessor - README.md examples', () => {
 		const inputTxtArr: Array<string> = txtInputItemsReadmeExample1Spec.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		// REMARK: be careful with examining Set object
-		expect(result).toEqual(expectedReadmeExample1SortSpec)
+		expect(result?.sortSpecByPath).toEqual(expectedReadmeExample1SortSpec)
 	})
 })
 
@@ -513,43 +544,244 @@ const txtInputTargetFolderAsDot: string = `
   // Let me introduce a comment here ;-) to ensure it is ignored
 target-folder: .
 target-folder: CCC
+target-folder: ./sub
+target-folder: ./*
+target-folder: ./...
+//target-folder: ./.../
   // This comment should be ignored as well
 `
 
-const expectedSortSpecsTargetFolderAsDot: { [key: string]: CustomSortSpec } = {
-	'mock-folder': {
-		groups: [{
-			order: CustomSortOrder.alphabetical,
-			type: CustomSortGroupType.Outsiders
-		}],
-		outsidersGroupIdx: 0,
-		targetFoldersPaths: ['mock-folder', 'CCC']
-	},
-	'CCC': {
-		groups: [{
-			order: CustomSortOrder.alphabetical,
-			type: CustomSortGroupType.Outsiders
-		}],
-		outsidersGroupIdx: 0,
-		targetFoldersPaths: ['mock-folder', 'CCC']
-	}
+const expectedSortSpecToBeMultiplied = {
+	groups: [{
+		order: CustomSortOrder.alphabetical,
+		type: CustomSortGroupType.Outsiders
+	}],
+	outsidersGroupIdx: 0,
+	targetFoldersPaths: ['mock-folder', 'CCC', 'mock-folder/sub', "mock-folder/*", "mock-folder/..."]
 }
 
+const expectedSortSpecsTargetFolderAsDot: { [key: string]: CustomSortSpec } = {
+	'mock-folder': expectedSortSpecToBeMultiplied,
+	'CCC': expectedSortSpecToBeMultiplied,
+	'mock-folder/sub': expectedSortSpecToBeMultiplied
+}
 
 describe('SortingSpecProcessor edge case', () => {
 	let processor: SortingSpecProcessor;
 	beforeEach(() => {
 		processor = new SortingSpecProcessor();
 	});
-	it('should not recognize empty spec containing only target folder', () => {
+	it('should recognize empty spec containing only target folder', () => {
 		const inputTxtArr: Array<string> = txtInputEmptySpecOnlyTargetFolder.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result).toEqual(expectedSortSpecsOnlyTargetFolder)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsOnlyTargetFolder)
 	})
-	it('should not recognize and correctly replace dot as the target folder', () => {
+	it('should recognize and correctly replace dot as the target folder', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderAsDot.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result).toEqual(expectedSortSpecsTargetFolderAsDot)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsTargetFolderAsDot)
+		expect(result?.sortSpecByWildcard).not.toBeNull()
+	})
+})
+
+const txtInputTargetFolderMultiSpecA: string = `
+target-folder: .
+< a-z
+target-folder: ./*
+> a-z
+target-folder: ./.../
+< modified
+`
+
+const txtInputTargetFolderMultiSpecB: string = `
+target-folder: ./*
+> a-z
+target-folder: ./.../
+< modified
+target-folder: .
+< a-z
+`
+
+const expectedSortSpecForMultiSpecAandB: { [key: string]: CustomSortSpec } = {
+	'mock-folder': {
+		defaultOrder: CustomSortOrder.alphabetical,
+		groups: [{
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['mock-folder']
+	}
+}
+
+const expectedWildcardMatchingTreeForMultiSpecAandB: FolderMatchingTreeNode<CustomSortSpec> = {
+	subtree: {
+		"mock-folder": {
+			matchAll: {
+				"defaultOrder": CustomSortOrder.alphabeticalReverse,
+				"groups": [{
+					"order": CustomSortOrder.alphabeticalReverse,
+					"type": CustomSortGroupType.Outsiders
+					}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/*"]
+			},
+			matchChildren: {
+				"defaultOrder": CustomSortOrder.byModifiedTime,
+				"groups": [{
+					"order": CustomSortOrder.byModifiedTime,
+					"type": CustomSortGroupType.Outsiders
+					}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/.../"]
+			},
+			name: "mock-folder",
+			subtree: {}
+		}
+	}
+}
+
+const txtInputTargetFolderMultiSpecC: string = `
+target-folder: ./*
+> a-z
+target-folder: ./.../
+`
+
+const expectedSortSpecForMultiSpecC: { [key: string]: CustomSortSpec } = {
+	'mock-folder': {
+		groups: [{
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['mock-folder/.../']
+	}
+}
+
+const expectedWildcardMatchingTreeForMultiSpecC: FolderMatchingTreeNode<CustomSortSpec> = {
+	subtree: {
+		"mock-folder": {
+			matchAll: {
+				"defaultOrder": CustomSortOrder.alphabeticalReverse,
+				"groups": [{
+					"order": CustomSortOrder.alphabeticalReverse,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/*"]
+			},
+			matchChildren: {
+				"groups": [{
+					"order": CustomSortOrder.alphabetical,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/.../"]
+			},
+			name: "mock-folder",
+			subtree: {}
+		}
+	}
+}
+
+const txtInputTargetFolderMultiSpecD: string = `
+target-folder: ./*
+`
+
+const expectedSortSpecForMultiSpecD: { [key: string]: CustomSortSpec } = {
+	'mock-folder': {
+		groups: [{
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['mock-folder/*']
+	}
+}
+
+const expectedWildcardMatchingTreeForMultiSpecD: FolderMatchingTreeNode<CustomSortSpec> = {
+	subtree: {
+		"mock-folder": {
+			matchAll: {
+				"groups": [{
+					"order": CustomSortOrder.alphabetical,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/*"]
+			},
+			name: "mock-folder",
+			subtree: {}
+		}
+	}
+}
+
+const txtInputTargetFolderMultiSpecE: string = `
+target-folder: mock-folder/...
+`
+
+const expectedSortSpecForMultiSpecE: { [key: string]: CustomSortSpec } = {
+	'mock-folder': {
+		groups: [{
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['mock-folder/...']
+	}
+}
+
+const expectedWildcardMatchingTreeForMultiSpecE: FolderMatchingTreeNode<CustomSortSpec> = {
+	subtree: {
+		"mock-folder": {
+			matchChildren: {
+				"groups": [{
+					"order": CustomSortOrder.alphabetical,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/..."]
+			},
+			name: "mock-folder",
+			subtree: {}
+		}
+	}
+}
+
+describe('SortingSpecProcessor path wildcard priorities', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should not raise error for multiple spec for the same path and choose correct spec, case A', () => {
+		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecA.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecAandB)
+		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecAandB)
+	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, case B', () => {
+		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecB.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecAandB)
+		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecAandB)
+	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, case C', () => {
+		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecC.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecC)
+		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecC)
+	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, case D', () => {
+		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecD.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecD)
+		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecD)
+	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, case E', () => {
+		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecE.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecE)
+		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE)
 	})
 })
 
@@ -600,6 +832,13 @@ target-folder: AAA
 const txtInputErrorTooManyNumericSortSymbols: string = `
 % Chapter\\R+ ... page\\d+ 
 `
+
+const txtInputErrorNestedStandardObsidianSortAttr: string = `
+target-folder: AAA
+/ Some folder
+ sorting: standard
+`
+
 const txtInputEmptySpec: string = ``
 
 describe('SortingSpecProcessor error detection and reporting', () => {
@@ -687,6 +926,15 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 			`${ERR_PREFIX} 9:TooManyNumericSortingSymbols Maximum one numeric sorting indicator allowed per line ${ERR_SUFFIX_IN_LINE(2)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('% Chapter\\R+ ... page\\d+ '))
 	})
+	it('should recognize error: nested standard obsidian sorting attribute', () => {
+		const inputTxtArr: Array<string> = txtInputErrorNestedStandardObsidianSortAttr.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 14:StandardObsidianSortAllowedOnlyAtFolderLevel The standard Obsidian sort order is only allowed at a folder level (not nested syntax) ${ERR_SUFFIX_IN_LINE(4)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT(' sorting: standard'))
+	})
 	it('should recognize empty spec', () => {
 		const inputTxtArr: Array<string> = txtInputEmptySpec.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
@@ -706,6 +954,24 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		expect(errorsLogger).toHaveBeenNthCalledWith(1,
 			`${ERR_PREFIX} 10:NumericalSymbolAdjacentToWildcard Numerical sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case. ${ERR_SUFFIX_IN_LINE(1)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT(s))
+	})
+})
+
+const txtInputTargetFolderCCC: string = `
+target-folder: CCC
+`
+
+describe('SortingSpecProcessor advanced error detection', () => {
+	it('should retain state of duplicates detection in the instance', () => {
+		let processor: SortingSpecProcessor = new SortingSpecProcessor(errorsLogger);
+		errorsLogger.mockReset()
+		const inputTxtArr: Array<string> = txtInputTargetFolderCCC.split('\n')
+		const result1 = processor.parseSortSpecFromText(inputTxtArr, 'another-mock-folder', 'sortspec.md')
+		const result2 = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result1).not.toBeNull()
+		expect(result2).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenCalledWith(`${ERR_PREFIX} 2:DuplicateSortSpecForSameFolder Duplicate sorting spec for folder CCC ${ERR_SUFFIX}`)
 	})
 })
 

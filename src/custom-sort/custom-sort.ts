@@ -31,7 +31,10 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.mtime - b.mtime,
 	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
 	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctime - b.ctime,
-	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime
+	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime,
+
+	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
+	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
 };
 
 function compareTwoItems(itA: FolderItemForSorting, itB: FolderItemForSorting, sortSpec: CustomSortSpec) {
@@ -53,7 +56,7 @@ const isFolder = (entry: TFile | TFolder) => {
 }
 
 export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec): FolderItemForSorting {
-	let groupIdx: number = 0
+	let groupIdx: number
 	let determined: boolean = false
 	let matchedGroup: string
 	const aFolder: boolean = isFolder(entry)
@@ -168,7 +171,6 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 
 export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
 	let fileExplorer = this.fileExplorer
-	const thisFolderPath: string = this.file.path;
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
 		this.file.children.filter((entry: TFile | TFolder) => {
