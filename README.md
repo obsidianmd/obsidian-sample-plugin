@@ -22,6 +22,7 @@ Take full control of the order of your notes and folders:
 ## Table of contents
 
 - [TL;DR Usage](#tldr-usage)
+  - 
   - [Simple case 1: in root folder sort entries alphabetically treating folders and files equally](#simple-case-1-in-root-folder-sort-entries-alphabetically-treating-folders-and-files-equally)
   -	[Simple case 2: impose manual order of some items in root folder](#simple-case-2-impose-manual-order-of-some-items-in-root-folder)
   - [Example 3: In root folder, let files go first and folders get pushed to the bottom](#example-3-in-root-folder-let-files-go-first-and-folders-get-pushed-to-the-bottom)
@@ -46,6 +47,30 @@ Take full control of the order of your notes and folders:
 
 For full version of the manual go to [./docs/manual.md]() and [./docs/syntax-reference.md]()
 > REMARK: as of this version of documentation, the manual and syntax reference are empty :-)
+
+> **Quickstart**
+> 
+> 1. Download the [sortspec.md](./docs/examples/quickstart/sortspec.md?plain=1) file and put it in any folder of your vault,
+can be the root folder. That file contains a basic custom sorting specification.
+>
+> 2. Enable the plugin in obsidian.
+>
+> 3. Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png)) to tell the plugin to read the sorting
+specification from `sortspec` note (the `sortspec.md` file which you downloaded a second ago). 
+>   - The observable effect should be the change of appearance of the ribbon button to
+(![Active](./docs/icons/icon-active.png)) and reordering
+of items in root vault folder to reverse alphabetical with folders and files treated equally.
+> 4. Click the ribbon button again to suspend the plugin. The ribbon button should toggle its appearance again
+and the order of files and folders in the root folder of your vault should get back to the order selected in
+Obsidian UI
+> 5. Happy custom sorting !!! Remember to click the ribbon button twice each time after sorting specification
+change. This will suspend and re-enable the custom sorting, plus parse and apply the updated specification
+> 
+> - If you don't have any
+subfolder in the root folder, create one to observe the plugin at work.
+>
+> NOTE: the appearances of ribbon button also includes ![Not applied](./docs/icons/icon-not-applied.png)
+and ![Error](./docs/icons/icon-error.png). For the meaning of them please refer to [ribbon icon](#ribbon_icon) section below
 
 Below go examples of (some of) the key features, ready to copy & paste to your vault.
 
