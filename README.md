@@ -60,6 +60,7 @@ specification from `sortspec` note (the `sortspec.md` file which you downloaded 
 >   - The observable effect should be the change of appearance of the ribbon button to
 (![Active](./docs/icons/icon-active.png)) and reordering
 of items in root vault folder to reverse alphabetical with folders and files treated equally.
+>   - The notification balloon should confirm success: ![Success](./docs/icons/parsing-succeeded.png)
 > 4. Click the ribbon button again to suspend the plugin. The ribbon button should toggle its appearance again
 and the order of files and folders in the root folder of your vault should get back to the order selected in
 Obsidian UI
