@@ -11,5 +11,5 @@ sorting-spec: |
  // To play with more examples go to https://github.com/SebastianMC/obsidian-custom-sort#readme
 
  target-folder: /
- < a-z
+ > a-z
 ---
