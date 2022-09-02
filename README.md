@@ -45,7 +45,7 @@ Take full control of the order of your notes and folders:
 
 ## TL;DR Usage
 
-For full version of the manual go to [./docs/manual.md]() and [./docs/syntax-reference.md]()
+For full version of the manual go to [./docs/manual.md](./docs/manual.md) and [./docs/syntax-reference.md](./docs/manual.md)
 > REMARK: as of this version of documentation, the manual and syntax reference are empty :-)
 
 > **Quickstart**
