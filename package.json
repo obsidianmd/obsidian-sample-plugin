@@ -8,7 +8,8 @@
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "test": "jest ./src",
     "test:watch": "jest ./src --watch",
-    "version": "node version-bump.mjs && git add manifest.json versions.json && git push origin --tags"
+    "version": "node version-bump.mjs && git add manifest.json versions.json && git push origin --tags",
+    "tags": "git push origin --tags"
   },
   "keywords": [],
   "author": "",

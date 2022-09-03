@@ -10,14 +10,14 @@ import {
 } from './src/services/file.service';
 import { createPreviewElement } from './src/components/PreviewElement';
 
-interface MyPluginSettings {
+interface BulkRenamePluginSettings {
   folderName: string;
   fileNames: TFile[];
   existingSymbol: string;
   replacePattern: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
   folderName: '',
   fileNames: [],
   existingSymbol: '',
@@ -25,14 +25,11 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 };
 
 class BulkRenamePlugin extends Plugin {
-  settings: MyPluginSettings;
+  settings: BulkRenamePluginSettings;
 
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new BulkRenameSettingsTab(this.app, this));
-
-    // this.app.vault.on('rename', (file, oldPath) => {
-    // });
   }
 
   onunload() {}
