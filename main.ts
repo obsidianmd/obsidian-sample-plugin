@@ -2,12 +2,7 @@ import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 
 import { FolderSuggest } from './src/suggestions/folderSuggest';
 import { renderDonateButton } from './src/components/DonateButton';
-import {
-  getFilesNamesInDirectory,
-  getRenderedFileNamesReplaced,
-  renameFilesInObsidian,
-  syncScrolls,
-} from './src/services/file.service';
+import { renameFilesInObsidian } from './src/services/file.service';
 import { createPreviewElement } from './src/components/PreviewElement';
 import {
   getObsidianFilesByFolderName,
@@ -83,6 +78,13 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl('h2', { text: 'Bulk Rename - Settings' });
+    containerEl.addEventListener('keyup', (event) => {
+      if (event.key !== 'Enter') {
+        return;
+      }
+
+      this.reRenderPreview();
+    });
 
     this.renderTabs();
     this.renderFileLocation();
@@ -95,7 +97,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
 
   renderTabs() {
     new Setting(this.containerEl)
-      .setName('toggle view')
+      .setName('UI will be changed when you click those buttons')
       .addButton((button) => {
         button.setButtonText('Search by folder');
         if (isViewTypeFolder(this.plugin)) {
@@ -134,17 +136,14 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           .onChange((newFolder) => {
             this.plugin.settings.folderName = newFolder;
             this.plugin.saveSettings();
-            this.calculateFiles();
+            this.getFilesByFolder();
           });
         // @ts-ignore
         cb.containerEl.addClass('templater_search');
       })
       .addButton((button) => {
         button.setButtonText('Refresh');
-        button.onClick(() => {
-          this.calculateFiles();
-          this.reRenderPreview();
-        });
+        button.onClick(this.reRenderPreview);
       });
   }
 
@@ -165,8 +164,6 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
 
           this.plugin.settings.tags = target.value.replace(/ /g, '').split(',');
           this.plugin.saveSettings();
-          this.getFilesByTags();
-          this.reRenderPreview();
         });
         cb.setPlaceholder('Example: #tag, #tag2')
           .setValue(this.plugin.settings.tags.join(','))
@@ -180,10 +177,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       })
       .addButton((button) => {
         button.setButtonText('Refresh');
-        button.onClick(() => {
-          this.getFilesByTags();
-          this.reRenderPreview();
-        });
+        button.onClick(this.reRenderPreview);
       });
   }
 
@@ -202,10 +196,9 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     desc.appendChild(button);
 
     const newSettings = new Setting(this.containerEl)
-      .setName('Existing Symbol')
+      .setName('Existing Characters')
       .setDesc(desc);
 
-    // if (!isViewTypeTags(this.plugin)) {
     newSettings.addText((textComponent) => {
       textComponent.setValue(settings.existingSymbol);
       textComponent.setPlaceholder('existing symbols');
@@ -214,7 +207,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
         this.plugin.saveSettings();
       });
     });
-    // }
+
     newSettings.addText((textComponent) => {
       const previewLabel = createPreviewElement('Replacement symbols');
       textComponent.inputEl.insertAdjacentElement('beforebegin', previewLabel);
@@ -223,7 +216,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       textComponent.onChange((newValue) => {
         settings.replacePattern = newValue;
         this.plugin.saveSettings();
-        this.calculateFiles();
+        this.getFilesByFolder();
       });
     });
   }
@@ -232,6 +225,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     this.filesAndPreview = new Setting(this.containerEl)
       .setName('Files within the folder')
       .setDesc(`Total Files: ${this.plugin.settings.fileNames.length}`);
+    this.calculateFileNames();
 
     renderPreviewFiles(this.filesAndPreview, this.plugin, this.state);
   };
@@ -268,7 +262,20 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     renderDonateButton(this.containerEl);
   }
 
-  calculateFiles() {
+  reRenderPreview = () => {
+    this.calculateFileNames();
+    renderPreviewFiles(this.filesAndPreview, this.plugin, this.state);
+  };
+
+  calculateFileNames() {
+    if (isViewTypeTags(this.plugin)) {
+      this.getFilesByTags();
+      return;
+    }
+    this.getFilesByFolder();
+  }
+
+  getFilesByFolder() {
     this.plugin.settings.fileNames = getObsidianFilesByFolderName(
       this.app,
       this.plugin,
@@ -281,10 +288,6 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       this.plugin,
     );
   }
-
-  reRenderPreview = () => {
-    renderPreviewFiles(this.filesAndPreview, this.plugin, this.state);
-  };
 }
 
 export default BulkRenamePlugin;

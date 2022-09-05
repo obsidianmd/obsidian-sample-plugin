@@ -11,8 +11,39 @@ Now you can rename a bunch of files from the directory and all references also w
 
 > Under the hood this plugin is using obsidian API for renaming, but we just applying it for many files
 
-## How to use?
+# Features
 
+> Whenever we're updating **Replacement Symbols** you can set new _Directory Location_ too
+> so, you can also move files to _another directory_
+
+
+## Rename/Move files based on folder location
+Click _Search By Folder_
+
+Update **Folder Location** where are you wanting to get files from, put **Existing Characters** from the file path
+later on update **Replacement Symbols** those symbols will be used for in a new path.
+
+
+## Rename/Move files based on tags
+Click _Search By Tags_
+
+Put tags in **Tags names** field search will be completed across the vault, use coma separator if you need more than 1 tag
+Click Refresh
+Update **Existing Characters** field with a pattern you are looking for in existing notes, set **Replacement Symbols**
+
+---
+
+Click Preview or `Enter` to see intermediate results(nothing will be changed/moved/renamed).
+
+Click `Rename` whenever you done
+
+
+
+## Update files based on tags
+
+
+
+## API
 - **folder location** - Files from which folder you need to rename
 - **Symbols in existing files** - the symbols/characters that we have in the files
 - **Replacement Symbols** - a new symbols that will be pasted instead
