@@ -13,17 +13,35 @@ Now you can rename a bunch of files from the directory and all references also w
 
 # Features
 
+> Whenever we're updating **Replacement Symbols** you can set new _Directory Location_ too
+> so, you can also move files to _another directory_
 
-## Update FilePath name based on pattern
 
-Whenever we're updating **File Path** we can update _Directory Location_ too
-So, you can not only update file name but also move files to a new directory
+## Rename/Move files based on folder location
+Click _Search By Folder_
 
-### Default showcase
-Update **folder location** where from you want to get files, put **existing characters** from the file path
+Update **Folder Location** where are you wanting to get files from, put **Existing Characters** from the file path
 later on update **Replacement Symbols** those symbols will be used for in a new path.
 
+
+## Rename/Move files based on tags
+Click _Search By Tags_
+
+Put tags in **Tags names** field search will be completed across the vault, use coma separator if you need more than 1 tag
+Click Refresh
+Update **Existing Characters** field with a pattern you are looking for in existing notes, set **Replacement Symbols**
+
+---
+
+Click Preview or `Enter` to see intermediate results(nothing will be changed/moved/renamed).
+
+Click `Rename` whenever you done
+
+
+
 ## Update files based on tags
+
+
 
 ## API
 - **folder location** - Files from which folder you need to rename
