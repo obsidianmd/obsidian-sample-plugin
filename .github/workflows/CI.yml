@@ -3,7 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - "*"
+      - '*'
+  pull_request:
+    branches:
+      - '*'
 
 env:
   PLUGIN_NAME: obsidian-bulk-rename-plugin
