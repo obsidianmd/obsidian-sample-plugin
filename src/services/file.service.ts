@@ -1,21 +1,6 @@
 import { App, Notice, TFile } from 'obsidian';
 import BulkRenamePlugin, { State } from '../../main';
 
-export const getObsidianFiles = (app: App, plugin: BulkRenamePlugin) => {
-  const { folderName } = plugin.settings;
-  const abstractFiles = app.vault.getAllLoadedFiles();
-  const files = [] as TFile[];
-  abstractFiles.forEach((file) => {
-    if (file instanceof TFile && file.parent.name.includes(folderName)) {
-      files.push(file);
-    }
-  });
-
-  const filesSortedByName = files.sort((a, b) => a.name.localeCompare(b.name));
-
-  return filesSortedByName;
-};
-
 export const getFilesNamesInDirectory = (plugin: BulkRenamePlugin) => {
   const { fileNames } = plugin.settings;
 
@@ -65,27 +50,33 @@ export const replaceFilePath = (plugin: BulkRenamePlugin, file: TFile) => {
   return `${newPath}.${file.extension}`;
 };
 
-export const renameFilesInObsidian = async (app: App, plugin: BulkRenamePlugin) => {
-  const { replacePattern, existingSymbol } = plugin.settings;
+export const renameFilesInObsidian = async (
+  app: App,
+  plugin: BulkRenamePlugin,
+) => {
+  const { existingSymbol, fileNames } = plugin.settings;
 
   if (!existingSymbol) {
     new Notice('please fill Existing Symbol');
     return;
   }
 
-  if (replacePattern === existingSymbol) {
-    new Notice("Replace Pattern shouldn't much Existing Symbol");
-    return;
-  }
+  // if (replacePattern === existingSymbol) {
+  //   new Notice("Replace Pattern shouldn't much Existing Symbol");
+  //   return;
+  // }
 
-  if (!plugin.settings.fileNames.length) {
+  if (!fileNames.length) {
     new Notice('Please check your results before rename!');
     return;
   }
 
   new Notice('renaming has been started');
-  for (const fileName of plugin.settings.fileNames) {
-    await app.fileManager.renameFile(fileName, replaceFilePath(plugin, fileName));
+  for (const fileName of fileNames) {
+    await app.fileManager.renameFile(
+      fileName,
+      replaceFilePath(plugin, fileName),
+    );
   }
   new Notice('successfully renamed all files');
 };

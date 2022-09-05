@@ -11,8 +11,21 @@ Now you can rename a bunch of files from the directory and all references also w
 
 > Under the hood this plugin is using obsidian API for renaming, but we just applying it for many files
 
-## How to use?
+# Features
 
+
+## Update FilePath name based on pattern
+
+Whenever we're updating **File Path** we can update _Directory Location_ too
+So, you can not only update file name but also move files to a new directory
+
+### Default showcase
+Update **folder location** where from you want to get files, put **existing characters** from the file path
+later on update **Replacement Symbols** those symbols will be used for in a new path.
+
+## Update files based on tags
+
+## API
 - **folder location** - Files from which folder you need to rename
 - **Symbols in existing files** - the symbols/characters that we have in the files
 - **Replacement Symbols** - a new symbols that will be pasted instead
@@ -36,3 +49,7 @@ And rename a **bunch of files** and update their reference in code base respecti
 ## Installing
 
 The plugin in beta. To beta test, you can install the plugin using BRAT (see [BRAT > Adding a beta plugin](https://github.com/TfTHacker/obsidian42-brat#adding-a-beta-plugin) for further instructions).
+
+## Support development
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/oleglustenko)
