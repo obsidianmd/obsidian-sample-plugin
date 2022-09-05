@@ -1,10 +1,9 @@
 import {
   getFilesNamesInDirectory,
   getRenderedFileNamesReplaced,
-  syncScrolls,
 } from '../services/file.service';
 import { createPreviewElement } from './PreviewElement';
-import BulkRenamePlugin, { BulkRenameSettingsTab } from '../../main';
+import BulkRenamePlugin, { BulkRenameSettingsTab, State } from '../../main';
 
 export const renderPreviewFiles = (
   setting: BulkRenameSettingsTab['filesAndPreview'],
@@ -42,4 +41,25 @@ export const renderPreviewFiles = (
     .then((setting) => {
       syncScrolls(existingFilesTextArea, replacedPreviewTextArea, state);
     });
+};
+
+export const syncScrolls = (
+  existingFilesArea: HTMLTextAreaElement,
+  previewArea: HTMLTextAreaElement,
+  state: State,
+) => {
+  existingFilesArea.addEventListener('scroll', (event) => {
+    const target = event.target as HTMLTextAreaElement;
+    if (target.scrollTop !== state.previewScroll) {
+      previewArea.scrollTop = target.scrollTop;
+      state.previewScroll = target.scrollTop;
+    }
+  });
+  previewArea.addEventListener('scroll', (event) => {
+    const target = event.target as HTMLTextAreaElement;
+    if (target.scrollTop !== state.filesScroll) {
+      existingFilesArea.scrollTop = target.scrollTop;
+      state.filesScroll = target.scrollTop;
+    }
+  });
 };

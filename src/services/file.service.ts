@@ -1,5 +1,5 @@
 import { App, Notice, TFile } from 'obsidian';
-import BulkRenamePlugin, { State } from '../../main';
+import BulkRenamePlugin from '../../main';
 
 export const getFilesNamesInDirectory = (plugin: BulkRenamePlugin) => {
   const { fileNames } = plugin.settings;
@@ -26,7 +26,7 @@ export const getRenderedFileNamesReplaced = (plugin: BulkRenamePlugin) => {
   return getFilesAsString(newFiles);
 };
 
-const selectFilenamesWithReplacedPath = (plugin: BulkRenamePlugin) => {
+export const selectFilenamesWithReplacedPath = (plugin: BulkRenamePlugin) => {
   const { fileNames } = plugin.settings;
 
   return fileNames.map((file) => {
@@ -42,10 +42,11 @@ export const replaceFilePath = (plugin: BulkRenamePlugin, file: TFile) => {
 
   const pathWithoutExtension = file.path.split('.').slice(0, -1).join('.');
 
-  const newPath = pathWithoutExtension?.replaceAll(
-    existingSymbol,
-    replacePattern,
-  );
+  const convertedToRegExpString = escapeRegExp(existingSymbol);
+
+  const regExpSymbol = new RegExp(convertedToRegExpString, 'g');
+
+  const newPath = pathWithoutExtension?.replace(regExpSymbol, replacePattern);
 
   return `${newPath}.${file.extension}`;
 };
@@ -60,11 +61,6 @@ export const renameFilesInObsidian = async (
     new Notice('please fill Existing Symbol');
     return;
   }
-
-  // if (replacePattern === existingSymbol) {
-  //   new Notice("Replace Pattern shouldn't much Existing Symbol");
-  //   return;
-  // }
 
   if (!fileNames.length) {
     new Notice('Please check your results before rename!');
@@ -81,23 +77,9 @@ export const renameFilesInObsidian = async (
   new Notice('successfully renamed all files');
 };
 
-export const syncScrolls = (
-  existingFilesArea: HTMLTextAreaElement,
-  previewArea: HTMLTextAreaElement,
-  state: State,
-) => {
-  existingFilesArea.addEventListener('scroll', (event) => {
-    const target = event.target as HTMLTextAreaElement;
-    if (target.scrollTop !== state.previewScroll) {
-      previewArea.scrollTop = target.scrollTop;
-      state.previewScroll = target.scrollTop;
-    }
-  });
-  previewArea.addEventListener('scroll', (event) => {
-    const target = event.target as HTMLTextAreaElement;
-    if (target.scrollTop !== state.filesScroll) {
-      existingFilesArea.scrollTop = target.scrollTop;
-      state.filesScroll = target.scrollTop;
-    }
-  });
-};
+let reRegExpChar = /[\\^$.*+?()[\]{}]/g,
+  reHasRegExpChar = RegExp(reRegExpChar.source);
+
+export function escapeRegExp(s: string) {
+  return s && reHasRegExpChar.test(s) ? s.replace(reRegExpChar, '\\$&') : s;
+}

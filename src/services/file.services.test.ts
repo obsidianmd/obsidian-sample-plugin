@@ -1,6 +1,9 @@
 import { TFile } from 'obsidian';
 
-import { replaceFilePath } from './file.service';
+import {
+  replaceFilePath,
+  selectFilenamesWithReplacedPath,
+} from './file.service';
 import BulkRenamePlugin from '../../main';
 
 describe('File Services', () => {
@@ -78,6 +81,67 @@ describe('File Services', () => {
       const result = replaceFilePath(plugin, file);
 
       expect(result).toEqual(expectedResult);
+    });
+
+    describe('selectFilenamesWithReplacedPath', () => {
+      const files = [
+        {
+          path: 'journals/2022_10_13.md',
+          extension: 'md',
+        },
+        {
+          path: 'pages/2022_10_13.md',
+          extension: 'md',
+        },
+        {
+          path: 'bulkRenameTets/2022_10_13.md',
+          extension: 'md',
+        },
+        {
+          path: 'YesWecan/canWe/2022_10_13.md',
+          extension: 'md',
+        },
+      ] as unknown as TFile[];
+
+      const mockPluginPlugin = {
+        settings: {
+          fileNames: files,
+        },
+      } as unknown as BulkRenamePlugin;
+
+      it('should rename many files with RegExp', () => {
+        const plugin = {
+          ...mockPluginPlugin,
+          settings: {
+            ...mockPluginPlugin.settings,
+            existingSymbol: 'journals|pages|bulkRenameTets|canWe',
+            replacePattern: 'qwe',
+          },
+        } as unknown as BulkRenamePlugin;
+
+        const expectedResults = [
+          {
+            path: 'qwe/2022_10_13.md',
+            extension: 'md',
+          },
+          {
+            path: 'qwe/2022_10_13.md',
+            extension: 'md',
+          },
+          {
+            path: 'qwe/2022_10_13.md',
+            extension: 'md',
+          },
+          {
+            path: 'YesWecan/qwe/2022_10_13.md',
+            extension: 'md',
+          },
+        ];
+
+        const updatedFiles = selectFilenamesWithReplacedPath(plugin);
+
+        expect(expectedResults).toEqual(updatedFiles);
+      });
     });
   });
 });

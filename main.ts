@@ -1,10 +1,4 @@
-import {
-  App,
-  Plugin,
-  PluginSettingTab,
-  Setting,
-  TAbstractFile,
-} from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 
 import { FolderSuggest } from './src/suggestions/folderSuggest';
 import { renderDonateButton } from './src/components/DonateButton';
@@ -18,7 +12,7 @@ import { renderPreviewFiles } from './src/components/RenderPreviewFiles';
 
 interface BulkRenamePluginSettings {
   folderName: string;
-  fileNames: TAbstractFile[];
+  fileNames: TFile[];
   existingSymbol: string;
   replacePattern: string;
   tags: string[];
@@ -205,7 +199,6 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       .setName('Existing Characters')
       .setDesc(desc);
 
-    // if (!isViewTypeTags(this.plugin)) {
     newSettings.addText((textComponent) => {
       textComponent.setValue(settings.existingSymbol);
       textComponent.setPlaceholder('existing symbols');
@@ -214,7 +207,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
         this.plugin.saveSettings();
       });
     });
-    // }
+
     newSettings.addText((textComponent) => {
       const previewLabel = createPreviewElement('Replacement symbols');
       textComponent.inputEl.insertAdjacentElement('beforebegin', previewLabel);

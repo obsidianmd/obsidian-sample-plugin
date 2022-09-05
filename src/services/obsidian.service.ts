@@ -8,11 +8,11 @@ export const getObsidianFilesByFolderName = (
   const { folderName } = plugin.settings;
   const abstractFiles = app.vault.getAllLoadedFiles();
 
-  const files = abstractFiles.filter((file) => {
-    return file instanceof TFile && file.parent.name.includes(folderName);
-  });
+  const files = abstractFiles.filter(
+    (file) => file instanceof TFile && file.parent.name.includes(folderName),
+  ) as TFile[];
 
-  const filesSortedByName = files.sort((a, b) => a.name.localeCompare(b.name));
+  const filesSortedByName = sortFilesByName(files);
 
   return filesSortedByName;
 };
@@ -43,9 +43,13 @@ export const getObsidianFilesWithTagName = (
     }
 
     return file;
-  });
+  }) as TFile[];
 
-  const filesSortedByName = files.sort((a, b) => a.name.localeCompare(b.name));
+  const filesSortedByName = sortFilesByName(files);
 
   return filesSortedByName;
+};
+
+const sortFilesByName = (files: TFile[]) => {
+  return files.sort((a, b) => a.name.localeCompare(b.name));
 };
