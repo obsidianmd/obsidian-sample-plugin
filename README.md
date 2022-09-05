@@ -36,3 +36,7 @@ And rename a **bunch of files** and update their reference in code base respecti
 ## Installing
 
 The plugin in beta. To beta test, you can install the plugin using BRAT (see [BRAT > Adding a beta plugin](https://github.com/TfTHacker/obsidian42-brat#adding-a-beta-plugin) for further instructions).
+
+## Support development
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/oleglustenko)
