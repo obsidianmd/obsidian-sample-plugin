@@ -326,20 +326,23 @@ enum WildcardPriority {
 
 const stripWildcardPatternSuffix = (path: string): [path: string, priority: number] => {
 	if (path.endsWith(MATCH_ALL_SUFFIX)) {
+		path = path.slice(0, -MATCH_ALL_SUFFIX.length)
 		return [
-			path.slice(0, -MATCH_ALL_SUFFIX.length),
+			path.length > 0 ? path : '/',
 			WildcardPriority.MATCH_ALL
 		]
 	}
 	if (path.endsWith(MATCH_CHILDREN_1_SUFFIX)) {
+		path = path.slice(0, -MATCH_CHILDREN_1_SUFFIX.length)
 		return [
-			path.slice(0, -MATCH_CHILDREN_1_SUFFIX.length),
+			path.length > 0 ? path : '/',
 			WildcardPriority.MATCH_CHILDREN,
 		]
 	}
 	if (path.endsWith(MATCH_CHILDREN_2_SUFFIX)) {
+		path = path.slice(0, -MATCH_CHILDREN_2_SUFFIX.length)
 		return [
-			path.slice(0, -MATCH_CHILDREN_2_SUFFIX.length),
+			path.length > 0 ? path : '/',
 			WildcardPriority.MATCH_CHILDREN
 		]
 	}
@@ -732,7 +735,7 @@ export class SortingSpecProcessor {
 			console.warn(`Inconsistent Outsiders sorting group definition in sort spec for folder '${last(spec.targetFoldersPaths)}'`)
 		}
 		// For consistency and to simplify sorting code later on, implicitly append a single catch-all Outsiders group
-		if (!outsidersGroupForFiles && !outsidersGroupForFolders) {
+		if (!(outsidersGroupForFiles && outsidersGroupForFolders)) {
 			spec.outsidersGroupIdx = spec.groups.length
 			spec.groups.push({
 				type: CustomSortGroupType.Outsiders

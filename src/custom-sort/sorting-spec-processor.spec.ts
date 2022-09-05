@@ -436,6 +436,86 @@ describe('SortingSpecProcessor', () => {
 	})
 })
 
+const txtInputSimplistic1: string = `
+target-folder: /*
+/:files
+//folders
+`
+
+const expectedSortSpecForSimplistic1: { [key: string]: CustomSortSpec } = {
+	"/": {
+		groups: [{
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersFilesGroupIdx: 0,
+		outsidersGroupIdx: 1,
+		targetFoldersPaths: ['/*']
+	}
+}
+
+const expectedWildcardMatchingTreeForSimplistic1 = {
+	"matchAll": {
+		groups: [{
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersFilesGroupIdx: 0,
+		outsidersGroupIdx: 1,
+		targetFoldersPaths: ['/*']
+	},
+	"subtree": {}
+}
+
+const txtInputSimplistic2: string = `
+target-folder: /
+/:files
+//folders
+`
+
+const expectedSortSpecForSimplistic2: { [key: string]: CustomSortSpec } = {
+	"/": {
+		groups: [{
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersFilesGroupIdx: 0,
+		outsidersGroupIdx: 1,
+		targetFoldersPaths: ['/']
+	}
+}
+
+describe('SortingSpecProcessor', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should recognize the simplistic sorting spec to put files first (wildcard /* rule)', () => {
+		const inputTxtArr: Array<string> = txtInputSimplistic1.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForSimplistic1)
+		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForSimplistic1)
+	})
+	it('should recognize the simplistic sorting spec to put files first (direct / rule)', () => {
+		const inputTxtArr: Array<string> = txtInputSimplistic2.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForSimplistic2)
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
+})
+
 const txtInputItemsToHideWithDupsSortSpec: string = `
 target-folder: AAA
 /--hide: SomeFileToHide.md
