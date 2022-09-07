@@ -101,6 +101,43 @@ export default class CustomSortPlugin extends Plugin {
 		}
 	}
 
+	// Safe to suspend when suspended and re-enable when enabled
+	switchPluginStateTo(enabled: boolean, updateRibbonBtnIcon: boolean = true) {
+		this.settings.suspended = !enabled;
+		this.saveSettings()
+		let iconToSet: string
+		if (this.settings.suspended) {
+			new Notice('Custom sort OFF');
+			this.sortSpecCache = null
+			iconToSet = ICON_SORT_SUSPENDED
+		} else {
+			this.readAndParseSortingSpec();
+			if (this.sortSpecCache) {
+				new Notice('Custom sort ON');
+				this.initialAutoOrManualSortingTriggered = true
+				iconToSet = ICON_SORT_ENABLED_ACTIVE
+			} else {
+				iconToSet = ICON_SORT_SUSPENDED_SYNTAX_ERROR
+				this.settings.suspended = true
+				this.saveSettings()
+			}
+		}
+		const fileExplorerView: FileExplorerView = this.getFileExplorer()
+		if (fileExplorerView) {
+			fileExplorerView.requestSort();
+		} else {
+			if (iconToSet === ICON_SORT_ENABLED_ACTIVE) {
+				iconToSet = ICON_SORT_ENABLED_NOT_APPLIED
+			}
+		}
+
+		if (updateRibbonBtnIcon) {
+			setIcon(this.ribbonIconEl, iconToSet)
+		}
+
+		this.updateStatusBar();
+	}
+
 	async onload() {
 		console.log("loading custom-sort");
 
@@ -119,41 +156,14 @@ export default class CustomSortPlugin extends Plugin {
 			this.settings.suspended ? ICON_SORT_SUSPENDED : ICON_SORT_ENABLED_NOT_APPLIED,
 			'Toggle custom sorting', (evt: MouseEvent) => {
 				// Clicking the icon toggles between the states of custom sort plugin
-				this.settings.suspended = !this.settings.suspended;
-				this.saveSettings()
-				let iconToSet: string
-				if (this.settings.suspended) {
-					new Notice('Custom sort OFF');
-					this.sortSpecCache = null
-					iconToSet = ICON_SORT_SUSPENDED
-				} else {
-					this.readAndParseSortingSpec();
-					if (this.sortSpecCache) {
-						new Notice('Custom sort ON');
-						this.initialAutoOrManualSortingTriggered = true
-						iconToSet = ICON_SORT_ENABLED_ACTIVE
-					} else {
-						iconToSet = ICON_SORT_SUSPENDED_SYNTAX_ERROR
-						this.settings.suspended = true
-						this.saveSettings()
-					}
-				}
-				const fileExplorerView: FileExplorerView = this.getFileExplorer()
-				if (fileExplorerView) {
-					fileExplorerView.requestSort();
-				} else {
-					if (iconToSet === ICON_SORT_ENABLED_ACTIVE) {
-						iconToSet = ICON_SORT_ENABLED_NOT_APPLIED
-					}
-				}
-
-				setIcon(this.ribbonIconEl, iconToSet)
-				this.updateStatusBar();
+				this.switchPluginStateTo(this.settings.suspended)
 			});
 
 		this.addSettingTab(new CustomSortSettingTab(this.app, this));
 
 		this.registerEventHandlers()
+
+		this.registerCommands()
 
 		this.initialize();
 	}
@@ -185,6 +195,24 @@ export default class CustomSortPlugin extends Plugin {
 				}
 			})
 		);
+	}
+
+	registerCommands() {
+		const plugin: CustomSortPlugin = this
+		this.addCommand({
+			id: 'enable-custom-sorting',
+			name: 'Enable and apply the custom sorting, (re)parsing the sorting configuration first. Sort-on.',
+			callback: () => {
+				plugin.switchPluginStateTo(true, true)
+			}
+		});
+		this.addCommand({
+			id: 'suspend-custom-sorting',
+			name: 'Suspend the custom sorting. Sort-off.',
+			callback: () => {
+				plugin.switchPluginStateTo(false, true)
+			}
+		});
 	}
 
 	initialize() {
@@ -276,7 +304,7 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for custom sorting plugin'});
+		containerEl.createEl('h2', {text: 'Settings for Custom File Explorer Sorting Plugin'});
 
 		new Setting(containerEl)
 			.setName('Path to the designated note containing sorting specification')

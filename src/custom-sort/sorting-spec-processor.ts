@@ -499,7 +499,7 @@ export class SortingSpecProcessor {
 
 		this.recentErrorMessage =
 			`File: ${this.currentSortingSpecContainerFilePath}\n` +
-			(hasLineContext ? `Line #${this.currentEntryLineIdx}: "${this.currentEntryLine}"\n` : '') +
+			(hasLineContext ? `Specification line #${this.currentEntryLineIdx}: "${this.currentEntryLine}"\n` : '') +
 			`Problem: ${code}:${problemLabel}\n` +
 			`Details: ${details}`
 		this.problemAlreadyReportedForCurrentLine = true
