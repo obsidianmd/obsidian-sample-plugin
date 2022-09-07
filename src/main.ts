@@ -307,7 +307,6 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 					} else { // disabling
 						if (this.plugin.statusBarItemEl) {
-							// for sanity
 							this.plugin.statusBarItemEl.detach()
 						}
 					}
