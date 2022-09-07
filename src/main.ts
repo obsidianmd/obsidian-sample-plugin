@@ -28,11 +28,13 @@ import {
 interface CustomSortPluginSettings {
 	additionalSortspecFile: string
 	suspended: boolean
+	statusBarEntryEnabled: boolean
 }
 
 const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	additionalSortspecFile: 'Inbox/Inbox.md',
-	suspended: true  // if false by default, it would be hard to handle the auto-parse after plugin install
+	suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
+	statusBarEntryEnabled: true
 }
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
@@ -105,8 +107,10 @@ export default class CustomSortPlugin extends Plugin {
 		await this.loadSettings();
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		this.statusBarItemEl = this.addStatusBarItem();
-		this.updateStatusBar()
+		if (this.settings.statusBarEntryEnabled) {
+			this.statusBarItemEl =  this.addStatusBarItem();
+			this.updateStatusBar()
+		}
 
 		addIcons();
 
@@ -282,6 +286,31 @@ class CustomSortSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.additionalSortspecFile)
 				.onChange(async (value) => {
 					this.plugin.settings.additionalSortspecFile = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Enable the status bar entry')
+			.setDesc('The status bar entry shows the label `Custom sort:ON` or `Custom sort:OFF`, representing the current state of the plugin.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.statusBarEntryEnabled)
+				.onChange(async (value) => {
+					this.plugin.settings.statusBarEntryEnabled = value;
+					if (value) {
+						// Enabling
+						if (this.plugin.statusBarItemEl) {
+							// for sanity
+							this.plugin.statusBarItemEl.detach()
+						}
+						this.plugin.statusBarItemEl =  this.plugin.addStatusBarItem();
+						this.plugin.updateStatusBar()
+
+					} else { // disabling
+						if (this.plugin.statusBarItemEl) {
+							// for sanity
+							this.plugin.statusBarItemEl.detach()
+						}
+					}
 					await this.plugin.saveSettings();
 				}));
 	}
