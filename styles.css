@@ -1,1 +1,7 @@
+.bulk_rename {
+  width: calc(100% - 20px);
+}
 
+.bulk_rename_preview {
+  width: 80%;
+}

@@ -139,7 +139,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
             this.getFilesByFolder();
           });
         // @ts-ignore
-        cb.containerEl.addClass('templater_search');
+        cb.containerEl.addClass('bulk_rename');
       })
       .addButton((button) => {
         button.setButtonText('Refresh');
@@ -173,7 +173,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
             this.getFilesByTags();
           });
         // @ts-ignore
-        cb.containerEl.addClass('templater_search');
+        cb.containerEl.addClass('bulk_rename');
       })
       .addButton((button) => {
         button.setButtonText('Refresh');
@@ -182,9 +182,6 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderReplaceSymbol() {
-    // if (isViewTypeTags(this.plugin)) {
-    //   return;
-    // }
     const { settings } = this.plugin;
     const desc = document.createDocumentFragment();
 
@@ -225,6 +222,8 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     this.filesAndPreview = new Setting(this.containerEl)
       .setName('Files within the folder')
       .setDesc(`Total Files: ${this.plugin.settings.fileNames.length}`);
+
+    this.filesAndPreview.controlEl.addClass('bulk_rename_preview');
     this.calculateFileNames();
 
     renderPreviewFiles(this.filesAndPreview, this.plugin, this.state);

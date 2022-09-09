@@ -5,7 +5,7 @@
 [![Github all releases](https://img.shields.io/github/downloads/OlegLustenko/obsidian-bulk-rename/total.svg)](https://github.com/OlegLustenko/obsidian-bulk-rename/releases/)
 [![GitLab latest release](https://badgen.net/github/release/OlegLustenko/obsidian-bulk-rename/)](https://github.com/OlegLustenko/obsidian-bulk-rename/releases)
 ## Introduction
-Now you can rename a bunch of files from the directory and all references also will be updated acros the vault.
+Now you can rename a bunch of files from the directory and all references also will be updated across the vault.
 
 ![](documentation/assets/Animation.gif)
 
@@ -55,7 +55,7 @@ Rename files will start renaming all files by respective path.
 
 ## Motivation
 This plugin was developed to cover my needs. Originally I've started to use my daily files with **_** delimiter.
-So my files looked like this: 2022_01_01, over the time I realized other platform out of the bos configured to prefer dashes.
+So my files looked like this: 2022_01_01, over the time I realized other platform out of the box configured to prefer dashes, like this 2022-01-01
 
 Here is many guides on how to rename files, what kind of script we need to run, what version of python or Node.js we need to install and so on.
 
