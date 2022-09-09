@@ -64,9 +64,12 @@ Why Not to have this functionality build-in into Obsidian?
 And rename a **bunch of files** and update their reference in code base respectively. So now you can rename a bunch of files from the directory and all imports also will be updated in a code-base
 
 
-## Installing
+# Installation
+Follow the steps below to install Tasks.
 
-The plugin in beta. To beta test, you can install the plugin using BRAT (see [BRAT > Adding a beta plugin](https://github.com/TfTHacker/obsidian42-brat#adding-a-beta-plugin) for further instructions).
+1) Search for "Bulk Rename" in Obsidian's community plugins browser
+2) Enable the plugin in your Obsidian settings (find "Bulk Rename" under "Community plugins").
+3) Welcome on board! Follow the guides above, share your findings!
 
 ## Support development
 
