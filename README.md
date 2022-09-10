@@ -73,4 +73,5 @@ Follow the steps below to install Tasks.
 
 ## Support development
 
+If you enjoy Bulk Rename, consider [buying me a coffee](https://www.buymeacoffee.com/oleglustenko), and following me on twitter [@oleglutenko](https://twitter.com/oleglustenko)
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/oleglustenko)
