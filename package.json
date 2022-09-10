@@ -1,6 +1,6 @@
 {
   "name": "obsidian-bulk-rename",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Purpose of this plugin rename files based on pattern",
   "main": "main.js",
   "scripts": {
