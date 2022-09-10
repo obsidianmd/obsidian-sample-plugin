@@ -219,9 +219,9 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderFilesAndPreview = () => {
-    this.filesAndPreview = new Setting(this.containerEl)
-      .setName('Files within the folder')
-      .setDesc(`Total Files: ${this.plugin.settings.fileNames.length}`);
+    this.filesAndPreview = new Setting(this.containerEl).setName(
+      'Files within the folder',
+    );
 
     this.filesAndPreview.controlEl.addClass('bulk_rename_preview');
     this.calculateFileNames();

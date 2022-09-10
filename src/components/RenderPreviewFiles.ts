@@ -14,6 +14,7 @@ export const renderPreviewFiles = (
   let replacedPreviewTextArea: HTMLTextAreaElement;
 
   return setting
+    .setDesc(`Total Files: ${plugin.settings.fileNames.length}`)
     .clear()
     .addTextArea((text) => {
       text.setPlaceholder('Here you will see files under folder location');
