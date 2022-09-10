@@ -1,7 +1,6 @@
 export const createPreviewElement = (textContent = '=> => => =>') => {
   const previewLabel = window.document.createElement('span');
-  previewLabel.className = 'previewLabel';
+  previewLabel.className = 'bulk_preview_label';
   previewLabel.textContent = textContent;
-  previewLabel.style.margin = '0 20px';
   return previewLabel;
 };

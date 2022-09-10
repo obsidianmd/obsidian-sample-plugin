@@ -5,3 +5,21 @@
 .bulk_rename_preview {
   width: 80%;
 }
+
+.bulk_button {
+  width: 100%;
+}
+
+.bulk_preview_header {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.bulk_input {
+  width: 100%;
+  margin-right: 15px;
+}
+
+.bulk_preview_label {
+  margin-right: 15px;
+}

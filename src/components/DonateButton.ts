@@ -1,5 +1,4 @@
 export const renderDonateButton = (containerEl: HTMLElement) => {
-  containerEl.createEl('br');
   containerEl.createEl('h3', { text: 'Support development' });
 
   const donateText = containerEl.createEl('p');

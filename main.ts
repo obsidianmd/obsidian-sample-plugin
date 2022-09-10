@@ -63,6 +63,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   plugin: BulkRenamePlugin;
   state: State;
   filesAndPreview: Setting;
+  totalFiles: HTMLSpanElement;
 
   constructor(app: App, plugin: BulkRenamePlugin) {
     super(app, plugin);
@@ -128,7 +129,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     }
     new Setting(this.containerEl)
       .setName('Folder location')
-      .setDesc('Files in this folder will be available renamed.')
+      .setDesc('Find files within the folder')
       .addSearch((cb) => {
         new FolderSuggest(this.app, cb.inputEl);
         cb.setPlaceholder('Example: folder1/')
@@ -140,10 +141,8 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           });
         // @ts-ignore
         cb.containerEl.addClass('bulk_rename');
-      })
-      .addButton((button) => {
-        button.setButtonText('Refresh');
-        button.onClick(this.reRenderPreview);
+        cb.inputEl.addClass('bulk_input');
+        cb.inputEl.onblur = this.reRenderPreview;
       });
   }
 
@@ -174,39 +173,32 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           });
         // @ts-ignore
         cb.containerEl.addClass('bulk_rename');
-      })
-      .addButton((button) => {
-        button.setButtonText('Refresh');
-        button.onClick(this.reRenderPreview);
+        cb.inputEl.addClass('bulk_input');
+        cb.inputEl.onblur = this.reRenderPreview;
       });
   }
 
   renderReplaceSymbol() {
     const { settings } = this.plugin;
-    const desc = document.createDocumentFragment();
 
-    const button = document.createElement('button');
-    button.textContent = 'Preview';
-    button.className = 'mod-cta';
-    button.onclick = this.reRenderPreview;
-
-    desc.appendChild(button);
-
-    const newSettings = new Setting(this.containerEl)
-      .setName('Existing Characters')
-      .setDesc(desc);
+    const newSettings = new Setting(this.containerEl);
+    newSettings.infoEl.style.display = 'none';
 
     newSettings.addText((textComponent) => {
+      const previewLabel = createPreviewElement('Existing');
+      textComponent.inputEl.insertAdjacentElement('beforebegin', previewLabel);
       textComponent.setValue(settings.existingSymbol);
       textComponent.setPlaceholder('existing symbols');
       textComponent.onChange((newValue) => {
         settings.existingSymbol = newValue;
         this.plugin.saveSettings();
       });
+      textComponent.inputEl.addClass('bulk_input');
+      textComponent.inputEl.onblur = this.reRenderPreview;
     });
 
     newSettings.addText((textComponent) => {
-      const previewLabel = createPreviewElement('Replacement symbols');
+      const previewLabel = createPreviewElement('Replacement');
       textComponent.inputEl.insertAdjacentElement('beforebegin', previewLabel);
       textComponent.setValue(settings.replacePattern);
       textComponent.setPlaceholder('replace with');
@@ -215,18 +207,25 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
         this.plugin.saveSettings();
         this.getFilesByFolder();
       });
+      textComponent.inputEl.addClass('bulk_input');
+      textComponent.inputEl.onblur = this.reRenderPreview;
     });
   }
 
   renderFilesAndPreview = () => {
-    this.filesAndPreview = new Setting(this.containerEl).setName(
-      'Files within the folder',
-    );
+    this.containerEl.createEl('h2', { text: 'Preview' }, (el) => {
+      el.className = 'bulk_preview_header';
+    });
+
+    this.filesAndPreview = new Setting(this.containerEl);
+    this.totalFiles = this.containerEl.createEl('span', {
+      text: `Total Files: ${this.plugin.settings.fileNames.length}`,
+    });
+
+    this.filesAndPreview.infoEl.style.display = 'none';
 
     this.filesAndPreview.controlEl.addClass('bulk_rename_preview');
-    this.calculateFileNames();
-
-    renderPreviewFiles(this.filesAndPreview, this.plugin, this.state);
+    this.reRenderPreview();
   };
 
   renderRenameFiles() {
@@ -237,14 +236,20 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       desc.createEl('b', {
         text: 'Warning: ',
       }),
-      'This plugin in Beta, make sure you verified all files in preview',
+      'Make sure you verified all files in preview',
     );
 
     new Setting(this.containerEl)
       .setDesc(desc)
       .setName('Replace patterns')
       .addButton((button) => {
-        button.buttonEl.style.width = '100%';
+        button.setClass('bulk_button');
+        button.setTooltip("Your files won't be changed");
+        button.setButtonText('Preview');
+        button.onClick(this.reRenderPreview);
+      })
+      .addButton((button) => {
+        button.setClass('bulk_button');
         button.setTooltip(
           "We don't have undone button yet!\r\n Do we need it?",
         );
@@ -264,6 +269,9 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   reRenderPreview = () => {
     this.calculateFileNames();
     renderPreviewFiles(this.filesAndPreview, this.plugin, this.state);
+    this.totalFiles.setText(
+      `Total Files: ${this.plugin.settings.fileNames.length}`,
+    );
   };
 
   calculateFileNames() {
