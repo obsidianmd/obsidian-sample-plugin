@@ -1,4 +1,11 @@
-import { App, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import {
+  App,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TFile,
+  Platform,
+} from 'obsidian';
 
 import { FolderSuggest } from './src/suggestions/folderSuggest';
 import { renderDonateButton } from './src/components/DonateButton';
@@ -185,10 +192,15 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     newSettings.infoEl.style.display = 'none';
 
     newSettings.addText((textComponent) => {
-      const previewLabel = createPreviewElement('Existing');
-      textComponent.inputEl.insertAdjacentElement('beforebegin', previewLabel);
+      if (Platform.isDesktop) {
+        const previewLabel = createPreviewElement('Existing');
+        textComponent.inputEl.insertAdjacentElement(
+          'beforebegin',
+          previewLabel,
+        );
+      }
       textComponent.setValue(settings.existingSymbol);
-      textComponent.setPlaceholder('existing symbols');
+      textComponent.setPlaceholder('existing chars');
       textComponent.onChange((newValue) => {
         settings.existingSymbol = newValue;
         this.plugin.saveSettings();
@@ -198,8 +210,13 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     });
 
     newSettings.addText((textComponent) => {
-      const previewLabel = createPreviewElement('Replacement');
-      textComponent.inputEl.insertAdjacentElement('beforebegin', previewLabel);
+      if (Platform.isDesktop) {
+        const previewLabel = createPreviewElement('Replacement');
+        textComponent.inputEl.insertAdjacentElement(
+          'beforebegin',
+          previewLabel,
+        );
+      }
       textComponent.setValue(settings.replacePattern);
       textComponent.setPlaceholder('replace with');
       textComponent.onChange((newValue) => {
