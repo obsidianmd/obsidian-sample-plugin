@@ -506,7 +506,7 @@ describe('SortingSpecProcessor', () => {
 		const inputTxtArr: Array<string> = txtInputSimplistic1.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForSimplistic1)
-		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForSimplistic1)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForSimplistic1)
 	})
 	it('should recognize the simplistic sorting spec to put files first (direct / rule)', () => {
 		const inputTxtArr: Array<string> = txtInputSimplistic2.split('\n')
@@ -837,31 +837,31 @@ describe('SortingSpecProcessor path wildcard priorities', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecA.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecAandB)
-		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecAandB)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecAandB)
 	})
 	it('should not raise error for multiple spec for the same path and choose correct spec, case B', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecB.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecAandB)
-		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecAandB)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecAandB)
 	})
 	it('should not raise error for multiple spec for the same path and choose correct spec, case C', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecC.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecC)
-		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecC)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecC)
 	})
 	it('should not raise error for multiple spec for the same path and choose correct spec, case D', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecD.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecD)
-		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecD)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecD)
 	})
 	it('should not raise error for multiple spec for the same path and choose correct spec, case E', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecE.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecE)
-		expect(result?.sortSpecByWildcard.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE)
 	})
 })
 
@@ -1224,7 +1224,7 @@ describe('convertPlainStringWithNumericSortingSymbolToRegex', () => {
 		['abc\\d+efg\\d+hij', /abc *(\d+)efg/i], // Double numerical sorting symbol, error case, covered for clarity of implementation detail
 	])('should correctly extract from >%s< the numeric sorting symbol (%s)', (s: string, regex: RegExp) => {
 		const result = convertPlainStringWithNumericSortingSymbolToRegex(s, RegexpUsedAs.InUnitTest)
-		expect(result.regexpSpec.regex).toEqual(regex)
+		expect(result?.regexpSpec.regex).toEqual(regex)
 		// No need to examine prefix and suffix fields of result, they are secondary and derived from the returned regexp
 	})
 	it('should not process string not containing numeric sorting symbol', () => {
@@ -1235,16 +1235,16 @@ describe('convertPlainStringWithNumericSortingSymbolToRegex', () => {
 	it('should correctly include regex token for string begin', () => {
 		const input = 'Part\\-D+:'
 		const result = convertPlainStringWithNumericSortingSymbolToRegex(input, RegexpUsedAs.Prefix)
-		expect(result.regexpSpec.regex).toEqual(/^Part *(\d+(?:-\d+)*):/i)
+		expect(result?.regexpSpec.regex).toEqual(/^Part *(\d+(?:-\d+)*):/i)
 	})
 	it('should correctly include regex token for string end', () => {
 		const input = 'Part\\-D+:'
 		const result = convertPlainStringWithNumericSortingSymbolToRegex(input, RegexpUsedAs.Suffix)
-		expect(result.regexpSpec.regex).toEqual(/Part *(\d+(?:-\d+)*):$/i)
+		expect(result?.regexpSpec.regex).toEqual(/Part *(\d+(?:-\d+)*):$/i)
 	})
 	it('should correctly include regex token for string begin and end', () => {
 		const input = 'Part\\.D+:'
 		const result = convertPlainStringWithNumericSortingSymbolToRegex(input, RegexpUsedAs.FullMatch)
-		expect(result.regexpSpec.regex).toEqual(/^Part *(\d+(?:\.\d+)*):$/i)
+		expect(result?.regexpSpec.regex).toEqual(/^Part *(\d+(?:\.\d+)*):$/i)
 	})
 })

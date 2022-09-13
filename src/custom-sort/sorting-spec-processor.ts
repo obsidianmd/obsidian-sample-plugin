@@ -212,10 +212,14 @@ export const detectNumericSortingSymbols = (s: string): boolean => {
 	return numericSortingSymbolsRegex.test(s)
 }
 
-export const extractNumericSortingSymbol = (s: string): string => {
-	numericSortingSymbolsRegex.lastIndex = 0
-	const matches: RegExpMatchArray = numericSortingSymbolsRegex.exec(s)
-	return matches ? matches[0] : null
+export const extractNumericSortingSymbol = (s?: string): string | null => {
+	if (s) {
+		numericSortingSymbolsRegex.lastIndex = 0
+		const matches: RegExpMatchArray | null = numericSortingSymbolsRegex.exec(s)
+		return matches ? matches[0] : null
+	} else {
+		return null
+	}
 }
 
 export interface RegExpSpecStr {
@@ -271,11 +275,11 @@ export enum RegexpUsedAs {
 	FullMatch
 }
 
-export const convertPlainStringWithNumericSortingSymbolToRegex = (s: string, actAs: RegexpUsedAs): ExtractedNumericSortingSymbolInfo => {
-	const detectedSymbol: string = extractNumericSortingSymbol(s)
+export const convertPlainStringWithNumericSortingSymbolToRegex = (s?: string, actAs?: RegexpUsedAs): ExtractedNumericSortingSymbolInfo | null => {
+	const detectedSymbol: string | null = extractNumericSortingSymbol(s)
 	if (detectedSymbol) {
 		const replacement: RegExpSpecStr = numericSortingSymbolToRegexpStr[detectedSymbol.toLowerCase()]
-		const [extractedPrefix, extractedSuffix] = s.split(detectedSymbol)
+		const [extractedPrefix, extractedSuffix] = s!.split(detectedSymbol)
 		const regexPrefix: string = actAs === RegexpUsedAs.Prefix || actAs === RegexpUsedAs.FullMatch ? '^' : ''
 		const regexSuffix: string = actAs === RegexpUsedAs.Suffix || actAs === RegexpUsedAs.FullMatch ? '$' : ''
 		return {
@@ -356,11 +360,11 @@ const ADJACENCY_ERROR: string = "Numerical sorting symbol must not be directly a
 
 export class SortingSpecProcessor {
 	ctx: ProcessingContext
-	currentEntryLine: string
-	currentEntryLineIdx: number
-	currentSortingSpecContainerFilePath: string
-	problemAlreadyReportedForCurrentLine: boolean
-	recentErrorMessage: string
+	currentEntryLine: string | null
+	currentEntryLineIdx: number | null
+	currentSortingSpecContainerFilePath: string | null
+	problemAlreadyReportedForCurrentLine: boolean | null
+	recentErrorMessage: string | null
 
 	// Helper map to deal with rule priorities for the same path
 	//   and also detect non-wildcard duplicates.
@@ -376,8 +380,8 @@ export class SortingSpecProcessor {
 	parseSortSpecFromText(text: Array<string>,
 						  folderPath: string,
 						  sortingSpecFileName: string,
-						  collection?: SortSpecsCollection
-	): SortSpecsCollection {
+						  collection?: SortSpecsCollection | null
+	): SortSpecsCollection | null | undefined {
 		// reset / init processing state after potential previous invocation
 		this.ctx = {
 			folderPath: folderPath,   // location of the sorting spec file
@@ -404,12 +408,12 @@ export class SortingSpecProcessor {
 
 			success = false   // Empty lines and comments are OK, that's why setting so late
 
-			const attr: ParsedSortingAttribute = this._l1s1_parseAttribute(entryLine);
+			const attr: ParsedSortingAttribute | null = this._l1s1_parseAttribute(entryLine);
 			if (attr) {
 				success = this._l1s2_processParsedSortingAttribute(attr);
 				this.ctx.previousValidEntryWasTargetFolderAttr = success && (attr.attribute === Attribute.TargetFolder)
 			} else if (!this.problemAlreadyReportedForCurrentLine && !this._l1s3_checkForRiskyAttrSyntaxError(entryLine)) {
-				let group: ParsedSortingGroup = this._l1s4_parseSortingGroupSpec(entryLine);
+				let group: ParsedSortingGroup | null = this._l1s4_parseSortingGroupSpec(entryLine);
 				if (!this.problemAlreadyReportedForCurrentLine && !group) {
 					// Default for unrecognized syntax: treat the line as exact name (of file or folder)
 					group = {plainSpec: trimmedEntryLine}
@@ -433,7 +437,7 @@ export class SortingSpecProcessor {
 					this._l1s6_postprocessSortSpec(spec)
 				}
 
-				let sortspecByWildcard: FolderWildcardMatching<CustomSortSpec>
+				let sortspecByWildcard: FolderWildcardMatching<CustomSortSpec> | undefined
 				for (let spec of this.ctx.specs) {
 					// Consume the folder paths ending with wildcard specs
 					for (let idx = 0; idx<spec.targetFoldersPaths.length; idx++) {
@@ -553,9 +557,14 @@ export class SortingSpecProcessor {
 		if (attr.attribute === Attribute.TargetFolder) {
 			if (attr.nesting === 0) { // root-level attribute causing creation of new spec or decoration of a previous one
 				if (this.ctx.previousValidEntryWasTargetFolderAttr) {
-					this.ctx.currentSpec.targetFoldersPaths.push(attr.value)
+					if (this.ctx.currentSpec) {
+						this.ctx.currentSpec.targetFoldersPaths.push(attr.value)
+					} else {
+						// Should never reach this execution path, yet for sanity and clarity:
+						this.ctx.currentSpec = this._l2s2_putNewSpecForNewTargetFolder(attr.value)
+					}
 				} else {
-					this._l2s2_putNewSpecForNewTargetFolder(attr.value)
+					this.ctx.currentSpec = this._l2s2_putNewSpecForNewTargetFolder(attr.value)
 				}
 				return true
 			} else {
@@ -565,7 +574,7 @@ export class SortingSpecProcessor {
 		} else if (attr.attribute === Attribute.OrderAsc || attr.attribute === Attribute.OrderDesc || attr.attribute === Attribute.OrderStandardObsidian) {
 			if (attr.nesting === 0) {
 				if (!this.ctx.currentSpec) {
-					this._l2s2_putNewSpecForNewTargetFolder()
+					this.ctx.currentSpec = this._l2s2_putNewSpecForNewTargetFolder()
 				}
 				if (this.ctx.currentSpec.defaultOrder) {
 					const folderPathsForProblemMsg: string = this.ctx.currentSpec.targetFoldersPaths.join(' :: ');
@@ -663,7 +672,7 @@ export class SortingSpecProcessor {
 
 	private _l1s5_processParsedSortGroupSpec(group: ParsedSortingGroup): boolean {
 		if (!this.ctx.currentSpec) {
-			this._l2s2_putNewSpecForNewTargetFolder()
+			this.ctx.currentSpec = this._l2s2_putNewSpecForNewTargetFolder()
 		}
 
 		if (group.plainSpec) {
@@ -679,14 +688,18 @@ export class SortingSpecProcessor {
 				return true
 			}
 		} else { // !group.itemToHide
-			const newGroup: CustomSortGroup = this._l2s4_consumeParsedSortingGroupSpec(group)
+			const newGroup: CustomSortGroup | null = this._l2s4_consumeParsedSortingGroupSpec(group)
 			if (newGroup) {
 				if (this._l2s5_adjustSortingGroupForNumericSortingSymbol(newGroup)) {
-					this.ctx.currentSpec.groups.push(newGroup)
-					this.ctx.currentSpecGroup = newGroup
-					return true;
+					if (this.ctx.currentSpec) {
+						this.ctx.currentSpec.groups.push(newGroup)
+						this.ctx.currentSpecGroup = newGroup
+						return true;
+					} else {
+						return false
+					}
 				} else {
-					return false;
+					return false
 				}
 			} else {
 				return false;
@@ -699,8 +712,8 @@ export class SortingSpecProcessor {
 		spec.outsidersGroupIdx = undefined
 		spec.outsidersFilesGroupIdx = undefined
 		spec.outsidersFoldersGroupIdx = undefined
-		let outsidersGroupForFolders: boolean
-		let outsidersGroupForFiles: boolean
+		let outsidersGroupForFolders: boolean | undefined
+		let outsidersGroupForFiles: boolean | undefined
 
 		// process all defined sorting groups
 		for (let groupIdx = 0; groupIdx < spec.groups.length; groupIdx++) {
@@ -778,7 +791,7 @@ export class SortingSpecProcessor {
 	}
 
 	private _l2s1_validateOrderAscAttrValue = (v: string): RecognizedOrderValue | null => {
-		const recognized: CustomSortOrderAscDescPair = this._l2s1_internal_validateOrderAttrValue(v)
+		const recognized: CustomSortOrderAscDescPair | null = this._l2s1_internal_validateOrderAttrValue(v)
 		return recognized ? {
 			order: recognized.asc,
 			secondaryOrder: recognized.secondary
@@ -786,7 +799,7 @@ export class SortingSpecProcessor {
 	}
 
 	private _l2s1_validateOrderDescAttrValue = (v: string): RecognizedOrderValue | null => {
-		const recognized: CustomSortOrderAscDescPair = this._l2s1_internal_validateOrderAttrValue(v)
+		const recognized: CustomSortOrderAscDescPair | null = this._l2s1_internal_validateOrderAttrValue(v)
 		return recognized ? {
 			order: recognized.desc,
 			secondaryOrder: recognized.secondary
@@ -833,30 +846,34 @@ export class SortingSpecProcessor {
 		return [spec];
 	}
 
-	private _l2s2_putNewSpecForNewTargetFolder(folderPath?: string) {
+	private _l2s2_putNewSpecForNewTargetFolder(folderPath?: string): CustomSortSpec {
 		const newSpec: CustomSortSpec = {
 			targetFoldersPaths: [folderPath ?? this.ctx.folderPath],
 			groups: []
 		}
 
 		this.ctx.specs.push(newSpec);
-		this.ctx.currentSpec = newSpec;
+		this.ctx.currentSpec = undefined;
 		this.ctx.currentSpecGroup = undefined;
+
+		return newSpec
 	}
 
 	// Detection of slippery syntax errors which can confuse user due to false positive parsing with an unexpected sorting result
 
 	private _l2s3_consumeParsedItemToHide(spec: ParsedSortingGroup): boolean {
-		if (spec.arraySpec.length === 1) {
+		if (spec.arraySpec?.length === 1) {
 			const theOnly: string = spec.arraySpec[0]
 			if (!isThreeDots(theOnly)) {
 				const nameWithExt: string = theOnly.trim()
 				if (nameWithExt) { // Sanity check
 					if (!detectNumericSortingSymbols(nameWithExt)) {
-						const itemsToHide: Set<string> = this.ctx.currentSpec.itemsToHide ?? new Set<string>()
-						itemsToHide.add(nameWithExt)
-						this.ctx.currentSpec.itemsToHide = itemsToHide
-						return true
+						if (this.ctx.currentSpec) {
+							const itemsToHide: Set<string> = this.ctx.currentSpec?.itemsToHide ?? new Set<string>()
+							itemsToHide.add(nameWithExt)
+							this.ctx.currentSpec.itemsToHide = itemsToHide
+							return true
+						}
 					}
 				}
 			}
@@ -864,7 +881,7 @@ export class SortingSpecProcessor {
 		return false
 	}
 
-	private _l2s4_consumeParsedSortingGroupSpec = (spec: ParsedSortingGroup): CustomSortGroup => {
+	private _l2s4_consumeParsedSortingGroupSpec = (spec: ParsedSortingGroup): CustomSortGroup | null => {
 		if (spec.outsidersGroup) {
 			return {
 				type: CustomSortGroupType.Outsiders,
@@ -874,7 +891,7 @@ export class SortingSpecProcessor {
 			}               									    // theoretically could match the sorting of matched files
 		}
 
-		if (spec.arraySpec.length === 1) {
+		if (spec.arraySpec?.length === 1) {
 			const theOnly: string = spec.arraySpec[0]
 			if (isThreeDots(theOnly)) {
 				return {
@@ -894,7 +911,7 @@ export class SortingSpecProcessor {
 				}
 			}
 		}
-		if (spec.arraySpec.length === 2) {
+		if (spec.arraySpec?.length === 2) {
 			const theFirst: string = spec.arraySpec[0]
 			const theSecond: string = spec.arraySpec[1]
 			if (isThreeDots(theFirst) && !isThreeDots(theSecond) && !containsThreeDots(theSecond)) {
@@ -919,7 +936,7 @@ export class SortingSpecProcessor {
 				return null;
 			}
 		}
-		if (spec.arraySpec.length === 3) {
+		if (spec.arraySpec?.length === 3) {
 			const theFirst: string = spec.arraySpec[0]
 			const theMiddle: string = spec.arraySpec[1]
 			const theLast: string = spec.arraySpec[2]

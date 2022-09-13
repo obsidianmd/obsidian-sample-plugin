@@ -47,14 +47,14 @@ export default class CustomSortPlugin extends Plugin {
 	statusBarItemEl: HTMLElement
 	ribbonIconEl: HTMLElement
 
-	sortSpecCache: SortSpecsCollection
+	sortSpecCache?: SortSpecsCollection | null
 	initialAutoOrManualSortingTriggered: boolean
 
 	readAndParseSortingSpec() {
 		const mCache: MetadataCache = this.app.metadataCache
 		let failed: boolean = false
 		let anySortingSpecFound: boolean = false
-		let errorMessage: string
+		let errorMessage: string | null = null
 		// reset cache
 		this.sortSpecCache = null
 		const processor: SortingSpecProcessor = new SortingSpecProcessor()
@@ -241,7 +241,7 @@ export default class CustomSortPlugin extends Plugin {
 
 						// if custom sort is not specified, use the UI-selected
 						const folder: TFolder = this.file
-						let sortSpec: CustomSortSpec = plugin.sortSpecCache?.sortSpecByPath[folder.path]
+						let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath[folder.path]
 						if (sortSpec) {
 							if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
 								sortSpec = null // A folder is explicitly excluded from custom sorting plugin

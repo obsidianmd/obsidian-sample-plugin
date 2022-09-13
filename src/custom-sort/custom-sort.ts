@@ -1,10 +1,5 @@
-import {TFile, TFolder, requireApiVersion} from 'obsidian';
-import {
-	CustomSortGroup,
-	CustomSortGroupType,
-	CustomSortOrder,
-	CustomSortSpec
-} from "./custom-sort-types";
+import {requireApiVersion, TFile, TFolder} from 'obsidian';
+import {CustomSortGroup, CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
 import {isDefined} from "../utils/utils";
 
 let Collator = new Intl.Collator(undefined, {
@@ -15,7 +10,7 @@ let Collator = new Intl.Collator(undefined, {
 
 interface FolderItemForSorting {
 	path: string
-	groupIdx: number  // the index itself represents order for groups
+	groupIdx?: number  // the index itself represents order for groups
 	sortString: string // fragment (or full name) to be used for sorting
 	matchGroup?: string // advanced - used for secondary sorting rule, to recognize 'same regex match'
 	ctime: number
@@ -38,15 +33,22 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 };
 
 function compareTwoItems(itA: FolderItemForSorting, itB: FolderItemForSorting, sortSpec: CustomSortSpec) {
-	if (itA.groupIdx === itB.groupIdx) {
-		const group: CustomSortGroup = sortSpec.groups[itA.groupIdx]
-		if (group.regexSpec && group.secondaryOrder && itA.matchGroup === itB.matchGroup) {
-			return Sorters[group.secondaryOrder](itA, itB)
+	if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
+		if (itA.groupIdx === itB.groupIdx) {
+			const group: CustomSortGroup | undefined = sortSpec.groups[itA.groupIdx]
+			if (group?.regexSpec && group.secondaryOrder && itA.matchGroup === itB.matchGroup) {
+				return Sorters[group.secondaryOrder ?? CustomSortOrder.default](itA, itB)
+			} else {
+				return Sorters[group?.order ?? CustomSortOrder.default](itA, itB)
+			}
 		} else {
-			return Sorters[group.order](itA, itB)
+			return itA.groupIdx - itB.groupIdx;
 		}
 	} else {
-		return itA.groupIdx - itB.groupIdx;
+		// should never happen - groupIdx is not known for at least one of items to compare.
+		// The logic of determining the index always sets some idx
+		// Yet for sanity and to satisfy TS code analyzer a fallback to default behavior below
+		return Sorters[CustomSortOrder.default](itA, itB)
 	}
 }
 
@@ -58,7 +60,7 @@ const isFolder = (entry: TFile | TFolder) => {
 export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec): FolderItemForSorting {
 	let groupIdx: number
 	let determined: boolean = false
-	let matchedGroup: string
+	let matchedGroup: string | null | undefined
 	const aFolder: boolean = isFolder(entry)
 	const aFile: boolean = !aFolder
 	const entryAsTFile: TFile = entry as TFile
@@ -77,10 +79,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						determined = true;
 					}
 				} else { // regexp is involved
-					const match: RegExpMatchArray = group.regexSpec.regex.exec(nameForMatching);
+					const match: RegExpMatchArray | null | undefined = group.regexSpec?.regex.exec(nameForMatching);
 					if (match) {
 						determined = true
-						matchedGroup = group.regexSpec.normalizerFn(match[1]);
+						matchedGroup = group.regexSpec?.normalizerFn(match[1]);
 					}
 				}
 				break;
@@ -90,10 +92,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						determined = true;
 					}
 				} else { // regexp is involved
-					const match: RegExpMatchArray = group.regexSpec.regex.exec(nameForMatching);
+					const match: RegExpMatchArray | null | undefined = group.regexSpec?.regex.exec(nameForMatching);
 					if (match) {
 						determined = true
-						matchedGroup = group.regexSpec.normalizerFn(match[1]);
+						matchedGroup = group.regexSpec?.normalizerFn(match[1]);
 					}
 				}
 				break;
@@ -107,10 +109,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				} else { // regexp is involved as the prefix or as the suffix
 					if ((group.exactPrefix && nameForMatching.startsWith(group.exactPrefix)) ||
 						(group.exactSuffix && nameForMatching.endsWith(group.exactSuffix))) {
-						const match: RegExpMatchArray = group.regexSpec.regex.exec(nameForMatching);
+						const match: RegExpMatchArray | null | undefined = group.regexSpec?.regex.exec(nameForMatching);
 						if (match) {
 							const fullMatch: string = match[0]
-							matchedGroup = group.regexSpec.normalizerFn(match[1]);
+							matchedGroup = group.regexSpec?.normalizerFn(match[1]);
 							// check for overlapping of prefix and suffix match (not allowed)
 							if ((fullMatch.length + (group.exactPrefix?.length ?? 0) + (group.exactSuffix?.length ?? 0)) <= nameForMatching.length) {
 								determined = true
@@ -127,10 +129,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						determined = true;
 					}
 				} else { // regexp is involved
-					const match: RegExpMatchArray = group.regexSpec.regex.exec(nameForMatching);
+					const match: RegExpMatchArray | null | undefined = group.regexSpec?.regex.exec(nameForMatching);
 					if (match) {
 						determined = true
-						matchedGroup = group.regexSpec.normalizerFn(match[1]);
+						matchedGroup = group.regexSpec?.normalizerFn(match[1]);
 					}
 				}
 				break;
@@ -144,7 +146,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	}
 
 	// the final groupIdx for undetermined folder entry is either the last+1 groupIdx or idx of explicitly defined outsiders group
-	let determinedGroupIdx = groupIdx;
+	let determinedGroupIdx: number | undefined = groupIdx;
 
 	if (!determined) {
 		// Automatically assign the index to outsiders group, if relevant was configured
@@ -174,7 +176,7 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
 		this.file.children.filter((entry: TFile | TFolder) => {
-			return !sortingSpec.itemsToHide.has(entry.name)
+			return !sortingSpec.itemsToHide!.has(entry.name)
 		})
 		:
 		this.file.children)
