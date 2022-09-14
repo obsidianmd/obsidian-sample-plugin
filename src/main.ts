@@ -68,7 +68,7 @@ export default class CustomSortPlugin extends Plugin {
 				// - files with designated name (sortspec.md by default)
 				// - files with the same name as parent folders (aka folder notes): References/References.md
 				// - the file explicitly indicated in documentation, by default Inbox/Inbox.md
-				if (aFile.name === SORTSPEC_FILE_NAME || aFile.basename === parent.name || aFile.path === DEFAULT_SETTINGS.additionalSortspecFile) {
+				if (aFile.name === SORTSPEC_FILE_NAME || aFile.basename === parent.name || aFile.path === this.settings.additionalSortspecFile) {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					if (sortingSpecTxt) {
 						anySortingSpecFound = true
