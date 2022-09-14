@@ -310,7 +310,7 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Path to the designated note containing sorting specification')
-			.setDesc('The YAML front matter of this note will be scanned for sorting specification, in addition to the sortspec.md notes and folder notes')
+			.setDesc('The YAML front matter of this note will be scanned for sorting specification, in addition to the sortspec.md notes and folder notes. Remember to add the `.md` explicitly here.')
 			.addText(text => text
 				.setPlaceholder('e.g. note.md')
 				.setValue(this.plugin.settings.additionalSortspecFile)
