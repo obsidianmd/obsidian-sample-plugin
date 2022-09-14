@@ -26,7 +26,7 @@ describe('Plain numbers regexp', () => {
 		const match: RegExpMatchArray | null = s.match(NumberRegex)
 		if (out) {
 			expect(match).not.toBeNull()
-			expect(match[1]).toBe(out)
+			expect(match?.[1]).toBe(out)
 		} else {
 			expect(match).toBeNull()
 		}
@@ -58,7 +58,7 @@ describe('Plain compound numbers regexp (dot)', () => {
 		const match: RegExpMatchArray | null = s.match(CompoundNumberDotRegex)
 		if (out) {
 			expect(match).not.toBeNull()
-			expect(match[1]).toBe(out)
+			expect(match?.[1]).toBe(out)
 		} else {
 			expect(match).toBeNull()
 		}
@@ -90,7 +90,7 @@ describe('Plain compound numbers regexp (dash)', () => {
 		const match: RegExpMatchArray | null = s.match(CompoundNumberDashRegex)
 		if (out) {
 			expect(match).not.toBeNull()
-			expect(match[1]).toBe(out)
+			expect(match?.[1]).toBe(out)
 		} else {
 			expect(match).toBeNull()
 		}
@@ -112,7 +112,7 @@ describe('Plain Roman numbers regexp', () => {
 		const match: RegExpMatchArray | null = s.match(RomanNumberRegex)
 		if (out) {
 			expect(match).not.toBeNull()
-			expect(match[1]).toBe(out)
+			expect(match?.[1]).toBe(out)
 		} else {
 			expect(match).toBeNull()
 		}
@@ -146,7 +146,7 @@ describe('Roman compound numbers regexp (dot)', () => {
 		const match: RegExpMatchArray | null = s.match(CompoundRomanNumberDotRegex)
 		if (out) {
 			expect(match).not.toBeNull()
-			expect(match[1]).toBe(out)
+			expect(match?.[1]).toBe(out)
 		} else {
 			expect(match).toBeNull()
 		}
@@ -180,7 +180,7 @@ describe('Roman compound numbers regexp (dash)', () => {
 		const match: RegExpMatchArray | null = s.match(CompoundRomanNumberDashRegex)
 		if (out) {
 			expect(match).not.toBeNull()
-			expect(match[1]).toBe(out)
+			expect(match?.[1]).toBe(out)
 		} else {
 			expect(match).toBeNull()
 		}

@@ -1,4 +1,4 @@
-import {TFile} from 'obsidian';
+import {TFile, TFolder, Vault} from 'obsidian';
 import {determineSortingGroup} from './custom-sort';
 import {CustomSortGroupType, CustomSortSpec} from './custom-sort-types';
 import {CompoundDashNumberNormalizerFn, CompoundDotRomanNumberNormalizerFn} from "./sorting-spec-processor";
@@ -12,10 +12,10 @@ const mockTFile = (basename: string, ext: string, size?: number, ctime?: number,
 		},
 		basename: basename,
 		extension: ext,
-		vault: null,
+		vault: {} as Vault, // To satisfy TS typechecking
 		path: `Some parent folder/${basename}.${ext}`,
 		name: `${basename}.${ext}`,
-		parent: null
+		parent: {} as TFolder // To satisfy TS typechecking
 	}
 }
 

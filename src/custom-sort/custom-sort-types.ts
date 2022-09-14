@@ -14,7 +14,8 @@ export enum CustomSortOrder {
 	byModifiedTimeReverse,
 	byCreatedTime,
 	byCreatedTimeReverse,
-	standardObsidian// Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
+	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
+	default = alphabetical
 }
 
 export interface RecognizedOrderValue {
@@ -22,7 +23,7 @@ export interface RecognizedOrderValue {
 	secondaryOrder?: CustomSortOrder
 }
 
-export type NormalizerFn = (s: string) => string
+export type NormalizerFn = (s: string) => string | null
 
 export interface RegExpSpec {
 	regex: RegExp

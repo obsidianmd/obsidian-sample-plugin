@@ -42,19 +42,22 @@ const SORTINGSPEC_YAML_KEY: string = 'sorting-spec'
 
 const ERROR_NOTICE_TIMEOUT: number = 10000
 
+// the monkey-around package doesn't export the below type
+type MonkeyAroundUninstaller = () => void
+
 export default class CustomSortPlugin extends Plugin {
 	settings: CustomSortPluginSettings
 	statusBarItemEl: HTMLElement
 	ribbonIconEl: HTMLElement
 
-	sortSpecCache: SortSpecsCollection
+	sortSpecCache?: SortSpecsCollection | null
 	initialAutoOrManualSortingTriggered: boolean
 
 	readAndParseSortingSpec() {
 		const mCache: MetadataCache = this.app.metadataCache
 		let failed: boolean = false
 		let anySortingSpecFound: boolean = false
-		let errorMessage: string
+		let errorMessage: string | null = null
 		// reset cache
 		this.sortSpecCache = null
 		const processor: SortingSpecProcessor = new SortingSpecProcessor()
@@ -68,7 +71,7 @@ export default class CustomSortPlugin extends Plugin {
 				// - files with designated name (sortspec.md by default)
 				// - files with the same name as parent folders (aka folder notes): References/References.md
 				// - the file explicitly indicated in documentation, by default Inbox/Inbox.md
-				if (aFile.name === SORTSPEC_FILE_NAME || aFile.basename === parent.name || aFile.path === DEFAULT_SETTINGS.additionalSortspecFile) {
+				if (aFile.name === SORTSPEC_FILE_NAME || aFile.basename === parent.name || aFile.path === this.settings.additionalSortspecFile) {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					if (sortingSpecTxt) {
 						anySortingSpecFound = true
@@ -229,39 +232,38 @@ export default class CustomSortPlugin extends Plugin {
 		// @ts-ignore
 		let tmpFolder = new TFolder(Vault, "");
 		let Folder = fileExplorer.createFolderDom(tmpFolder).constructor;
-		this.register(
-			// TODO: Unit tests please!!! The logic below becomes more and more complex, bugs are captured at run-time...
-			around(Folder.prototype, {
-				sort(old: any) {
-					return function (...args: any[]) {
-						// quick check for plugin status
-						if (plugin.settings.suspended) {
-							return old.call(this, ...args);
-						}
+		const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
+			// TODO: Unit tests, the logic below becomes more and more complex, bugs are captured at run-time...
+			sort(old: any) {
+				return function (...args: any[]) {
+					// quick check for plugin status
+					if (plugin.settings.suspended) {
+						return old.call(this, ...args);
+					}
 
-						// if custom sort is not specified, use the UI-selected
-						const folder: TFolder = this.file
-						let sortSpec: CustomSortSpec = plugin.sortSpecCache?.sortSpecByPath[folder.path]
-						if (sortSpec) {
-							if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
-								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
-							}
-						} else if (plugin.sortSpecCache?.sortSpecByWildcard) {
-							// when no sorting spec found directly by folder path, check for wildcard-based match
-							sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path)
-							if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
-								sortSpec = null // A folder subtree can be also explicitly excluded from custom sorting plugin
-							}
+					// if custom sort is not specified, use the UI-selected
+					const folder: TFolder = this.file
+					let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath[folder.path]
+					if (sortSpec) {
+						if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
+							sortSpec = null // A folder is explicitly excluded from custom sorting plugin
 						}
-						if (sortSpec) {
-							return folderSort.call(this, sortSpec, ...args);
-						} else {
-							return old.call(this, ...args);
+					} else if (plugin.sortSpecCache?.sortSpecByWildcard) {
+						// when no sorting spec found directly by folder path, check for wildcard-based match
+						sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path)
+						if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
+							sortSpec = null // A folder subtree can be also explicitly excluded from custom sorting plugin
 						}
-					};
-				},
-			})
-		);
+					}
+					if (sortSpec) {
+						return folderSort.call(this, sortSpec, ...args);
+					} else {
+						return old.call(this, ...args);
+					}
+				};
+			}
+		})
+		this.register(uninstallerOfFolderSortFunctionWrapper)
 		leaf.detach()
 	}
 

@@ -41,9 +41,9 @@ export class FolderWildcardMatching<SortingSpec> {
 	// cache
 	determinedWildcardRules: { [key: string]: DeterminedSortingSpec<SortingSpec> } = {}
 
-	addWildcardDefinition = (wilcardDefinition: string, rule: SortingSpec): AddingWildcardFailure | null => {
+	addWildcardDefinition = (wilcardDefinition: string, rule: SortingSpec): AddingWildcardFailure | null | undefined => {
 		const pathComponents: Array<string> = splitPath(wilcardDefinition)
-		const lastComponent: string = pathComponents.pop()
+		const lastComponent: string | undefined = pathComponents.pop()
 		if (lastComponent !== MATCH_ALL_PATH_TOKEN && lastComponent !== MATCH_CHILDREN_PATH_TOKEN) {
 			return null
 		}
@@ -82,8 +82,8 @@ export class FolderWildcardMatching<SortingSpec> {
 		if (spec) {
 			return spec.spec ?? null
 		} else {
-			let rule: SortingSpec = this.tree.matchChildren
-			let inheritedRule: SortingSpec = this.tree.matchAll
+			let rule: SortingSpec | null | undefined = this.tree.matchChildren
+			let inheritedRule: SortingSpec | undefined = this.tree.matchAll
 			const pathComponents: Array<string> = splitPath(folderPath)
 			let parentNode: FolderMatchingTreeNode<SortingSpec> = this.tree
 			let lastIdx: number = pathComponents.length - 1
