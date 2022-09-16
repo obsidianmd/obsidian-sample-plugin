@@ -17,6 +17,22 @@ export const getObsidianFilesByFolderName = (
   return filesSortedByName;
 };
 
+export const getObsidianFilesByRegExp = (
+  app: App,
+  plugin: BulkRenamePlugin,
+) => {
+  const { userRegExp } = plugin.settings;
+  const abstractFiles = app.vault.getAllLoadedFiles();
+
+  const files = abstractFiles.filter(
+    (file) => file instanceof TFile && file.parent.name.includes(userRegExp),
+  ) as TFile[];
+
+  const filesSortedByName = sortFilesByName(files);
+
+  return filesSortedByName;
+};
+
 export const getObsidianFilesWithTagName = (
   app: App,
   plugin: BulkRenamePlugin,

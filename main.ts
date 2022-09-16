@@ -13,6 +13,7 @@ import { renameFilesInObsidian } from './src/services/file.service';
 import { createPreviewElement } from './src/components/PreviewElement';
 import {
   getObsidianFilesByFolderName,
+  getObsidianFilesByRegExp,
   getObsidianFilesWithTagName,
 } from './src/services/obsidian.service';
 import { renderPreviewFiles } from './src/components/RenderPreviewFiles';
@@ -23,7 +24,8 @@ interface BulkRenamePluginSettings {
   existingSymbol: string;
   replacePattern: string;
   tags: string[];
-  viewType: 'tags' | 'folder';
+  userRegExp: string;
+  viewType: 'tags' | 'folder' | 'regexp';
 }
 
 const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
@@ -31,6 +33,7 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
   fileNames: [],
   existingSymbol: '',
   replacePattern: '',
+  userRegExp: '',
   tags: [],
   viewType: 'folder',
 };
@@ -38,8 +41,13 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
 const isViewTypeFolder = ({ settings }: BulkRenamePlugin) => {
   return settings.viewType === 'folder';
 };
+
 const isViewTypeTags = ({ settings }: BulkRenamePlugin) => {
   return settings.viewType === 'tags';
+};
+
+const isViewTypeRegExp = ({ settings }: BulkRenamePlugin) => {
+  return settings.viewType === 'regexp';
 };
 
 class BulkRenamePlugin extends Plugin {
@@ -97,6 +105,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     this.renderTabs();
     this.renderFileLocation();
     this.renderTagNames();
+    this.renderRegExpInput();
     this.renderReplaceSymbol();
     this.renderFilesAndPreview();
     this.renderRenameFiles();
@@ -124,6 +133,17 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
         }
         button.onClick(async () => {
           this.plugin.settings.viewType = 'tags';
+          await this.plugin.saveSettings();
+          this.display();
+        });
+      })
+      .addButton((button) => {
+        button.setButtonText('Search by RegExp');
+        if (isViewTypeRegExp(this.plugin)) {
+          button.setCta();
+        }
+        button.onClick(async () => {
+          this.plugin.settings.viewType = 'regexp';
           await this.plugin.saveSettings();
           this.display();
         });
@@ -180,6 +200,38 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           });
         // @ts-ignore
         cb.containerEl.addClass('bulk_rename');
+        cb.inputEl.addClass('bulk_input');
+        cb.inputEl.onblur = this.reRenderPreview;
+      });
+  }
+
+  renderRegExpInput() {
+    if (!isViewTypeRegExp(this.plugin)) {
+      return;
+    }
+    new Setting(this.containerEl)
+      .setName('RegExp')
+      .setDesc('all files by titles will be found')
+      .addSearch((cb) => {
+        // @ts-ignore
+        cb.inputEl.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter') {
+            return;
+          }
+          const target = event.target as HTMLInputElement;
+
+          this.plugin.settings.userRegExp = target.value;
+          this.plugin.saveSettings();
+        });
+        cb.setPlaceholder('Example: #tag, #tag2')
+          .setValue(this.plugin.settings.userRegExp)
+          .onChange((newFolder) => {
+            this.plugin.settings.userRegExp = newFolder;
+            this.plugin.saveSettings();
+            this.getFilesByRegExp();
+          });
+        // @ts-ignore
+        cb.containerEl.addClass('bulk_regexp');
         cb.inputEl.addClass('bulk_input');
         cb.inputEl.onblur = this.reRenderPreview;
       });
@@ -296,6 +348,12 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       this.getFilesByTags();
       return;
     }
+
+    if (isViewTypeRegExp(this.plugin)) {
+      this.getFilesByRegExp();
+      return;
+    }
+
     this.getFilesByFolder();
   }
 
@@ -308,6 +366,13 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
 
   getFilesByTags() {
     this.plugin.settings.fileNames = getObsidianFilesWithTagName(
+      this.app,
+      this.plugin,
+    );
+  }
+
+  getFilesByRegExp() {
+    this.plugin.settings.fileNames = getObsidianFilesByRegExp(
       this.app,
       this.plugin,
     );

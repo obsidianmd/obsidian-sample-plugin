@@ -23,3 +23,36 @@
 .bulk_preview_label {
   margin-right: 15px;
 }
+
+.bulk_regexp {
+  width: 100%;
+}
+
+.bulk_regexp > input {
+  color: green;
+  padding: 0 28px 0 14px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.bulk_regexp:before {
+  content: '/';
+  top: 2px;
+  left: -15px;
+}
+
+.bulk_regexp:after {
+  content: '/';
+  bottom: 5px;
+  right: -15px;
+}
+
+.bulk_regexp:before,
+.bulk_regexp:after {
+  color: #000080;
+  font-size: 30px;
+  /*background-color: #cccccc;*/
+  display: block;
+  /*text-align: center;*/
+  position: absolute;
+}
