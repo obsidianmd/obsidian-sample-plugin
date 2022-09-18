@@ -1,5 +1,6 @@
 import { App, TFile } from 'obsidian';
 import BulkRenamePlugin from '../../main';
+import XRegExp from 'xregexp';
 
 export const getObsidianFilesByFolderName = (
   app: App,
@@ -13,6 +14,27 @@ export const getObsidianFilesByFolderName = (
   ) as TFile[];
 
   const filesSortedByName = sortFilesByName(files);
+
+  return filesSortedByName;
+};
+
+export const getObsidianFilesByRegExp = (
+  app: App,
+  plugin: BulkRenamePlugin,
+) => {
+  const { regExpState } = plugin.settings;
+
+  const regExp = XRegExp(regExpState.regExp, regExpState.flags.join(''));
+
+  const abstractFiles = app.vault.getAllLoadedFiles();
+
+  const matchedFileNames = abstractFiles.filter((file) => {
+    if (file instanceof TFile && XRegExp.match(file.path, regExp)) {
+      return true;
+    }
+  }) as TFile[];
+
+  const filesSortedByName = sortFilesByName(matchedFileNames);
 
   return filesSortedByName;
 };

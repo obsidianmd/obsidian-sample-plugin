@@ -13,9 +13,13 @@ import { renameFilesInObsidian } from './src/services/file.service';
 import { createPreviewElement } from './src/components/PreviewElement';
 import {
   getObsidianFilesByFolderName,
+  getObsidianFilesByRegExp,
   getObsidianFilesWithTagName,
 } from './src/services/obsidian.service';
 import { renderPreviewFiles } from './src/components/RenderPreviewFiles';
+import { createBackslash } from './src/components/RegExpBackslash';
+import { RegExpFlag } from './src/constants/RegExpFlags';
+import { RegExpFlagsSuggest } from './src/suggestions/RegExpFlagsSuggest';
 
 interface BulkRenamePluginSettings {
   folderName: string;
@@ -23,7 +27,11 @@ interface BulkRenamePluginSettings {
   existingSymbol: string;
   replacePattern: string;
   tags: string[];
-  viewType: 'tags' | 'folder';
+  regExpState: {
+    regExp: string;
+    flags: RegExpFlag[];
+  };
+  viewType: 'tags' | 'folder' | 'regexp';
 }
 
 const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
@@ -31,6 +39,10 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
   fileNames: [],
   existingSymbol: '',
   replacePattern: '',
+  regExpState: {
+    regExp: '',
+    flags: [],
+  },
   tags: [],
   viewType: 'folder',
 };
@@ -38,8 +50,13 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
 const isViewTypeFolder = ({ settings }: BulkRenamePlugin) => {
   return settings.viewType === 'folder';
 };
+
 const isViewTypeTags = ({ settings }: BulkRenamePlugin) => {
   return settings.viewType === 'tags';
+};
+
+const isViewTypeRegExp = ({ settings }: BulkRenamePlugin) => {
+  return settings.viewType === 'regexp';
 };
 
 class BulkRenamePlugin extends Plugin {
@@ -97,6 +114,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     this.renderTabs();
     this.renderFileLocation();
     this.renderTagNames();
+    this.renderRegExpInput();
     this.renderReplaceSymbol();
     this.renderFilesAndPreview();
     this.renderRenameFiles();
@@ -127,6 +145,17 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           await this.plugin.saveSettings();
           this.display();
         });
+      })
+      .addButton((button) => {
+        button.setButtonText('Search by RegExp');
+        if (isViewTypeRegExp(this.plugin)) {
+          button.setCta();
+        }
+        button.onClick(async () => {
+          this.plugin.settings.viewType = 'regexp';
+          await this.plugin.saveSettings();
+          this.display();
+        });
       });
   }
 
@@ -138,7 +167,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       .setName('Folder location')
       .setDesc('Find files within the folder')
       .addSearch((cb) => {
-        new FolderSuggest(this.app, cb.inputEl);
+        new FolderSuggest(this.app, cb.inputEl, this.plugin);
         cb.setPlaceholder('Example: folder1/')
           .setValue(this.plugin.settings.folderName)
           .onChange((newFolder) => {
@@ -157,11 +186,11 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     if (!isViewTypeTags(this.plugin)) {
       return;
     }
+
     new Setting(this.containerEl)
       .setName('Tag names ')
       .setDesc('all files with the tags will be found')
       .addSearch((cb) => {
-        // @ts-ignore
         cb.inputEl.addEventListener('keydown', (event) => {
           if (event.key !== 'Enter') {
             return;
@@ -183,6 +212,68 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
         cb.inputEl.addClass('bulk_input');
         cb.inputEl.onblur = this.reRenderPreview;
       });
+  }
+
+  renderRegExpInput() {
+    if (!isViewTypeRegExp(this.plugin)) {
+      return;
+    }
+
+    const desc = document.createDocumentFragment();
+    desc.append(
+      desc.createEl('b', {
+        text: 'Reg exp will match file Operation System path',
+      }),
+    );
+
+    new Setting(this.containerEl)
+      .setName('RegExp Search')
+      .setDesc(desc)
+      .addText((cb) => {
+        const backslash = createBackslash('/');
+        cb.inputEl.insertAdjacentElement('beforebegin', backslash);
+        // @ts-ignore
+        cb.inputEl.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter') {
+            return;
+          }
+          const target = event.target as HTMLInputElement;
+
+          this.plugin.settings.regExpState.regExp = target.value;
+          this.plugin.saveSettings();
+        });
+        cb.setPlaceholder('Put your RegExp here')
+          .setValue(this.plugin.settings.regExpState.regExp)
+          .onChange((newFolder) => {
+            this.plugin.settings.regExpState.regExp = newFolder;
+            this.plugin.saveSettings();
+            this.getFilesByRegExp();
+          });
+        // @ts-ignore
+        cb.inputEl.addClass('bulk_regexp');
+        cb.inputEl.onblur = this.reRenderPreview;
+      })
+      .addText((cb) => {
+        new RegExpFlagsSuggest(this.app, cb.inputEl, this.plugin);
+        const backslash = createBackslash('/');
+        cb.inputEl.insertAdjacentElement('beforebegin', backslash);
+        cb.inputEl.addEventListener('keydown', (event) => {
+          // @ts-ignore
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          event.preventDefault();
+        });
+        cb.setPlaceholder('flags here')
+          // .setDisabled(true)
+          .setValue(this.plugin.settings.regExpState.flags.join(''))
+          .onChange((flag: RegExpFlag) => {
+            this.plugin.saveSettings();
+            this.getFilesByRegExp();
+            this.reRenderPreview();
+          });
+        cb.inputEl.addClass('bulk_regexp_flags');
+      })
+      .controlEl.addClass('bulk_regexp_control');
   }
 
   renderReplaceSymbol() {
@@ -248,7 +339,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   renderRenameFiles() {
     const desc = document.createDocumentFragment();
     desc.append(
-      'You are going to update all marked files and their directories',
+      'You are going to update all files from preview section',
       desc.createEl('br'),
       desc.createEl('b', {
         text: 'Warning: ',
@@ -296,6 +387,12 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       this.getFilesByTags();
       return;
     }
+
+    if (isViewTypeRegExp(this.plugin)) {
+      this.getFilesByRegExp();
+      return;
+    }
+
     this.getFilesByFolder();
   }
 
@@ -308,6 +405,13 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
 
   getFilesByTags() {
     this.plugin.settings.fileNames = getObsidianFilesWithTagName(
+      this.app,
+      this.plugin,
+    );
+  }
+
+  getFilesByRegExp() {
+    this.plugin.settings.fileNames = getObsidianFilesByRegExp(
       this.app,
       this.plugin,
     );

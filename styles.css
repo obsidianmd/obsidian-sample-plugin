@@ -23,3 +23,29 @@
 .bulk_preview_label {
   margin-right: 15px;
 }
+
+.bulk_regexp_control {
+  border: 1px solid var(--background-modifier-border);
+}
+
+.bulk_regexp_control > input {
+  border: none;
+}
+
+.bulk_regexp,
+.bulk_regexp_flags {
+  width: 100%;
+}
+
+.bulk_regexp_flags {
+  caret-color: transparent;
+}
+
+.bulk_regexp_slash {
+  font-size: 1.5em;
+  opacity: 0.5;
+}
+
+.bulk-flag-selected {
+  background-color: lavender !important;
+}
