@@ -366,6 +366,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           button.setDisabled(true);
           await renameFilesInObsidian(this.app, this.plugin);
           this.reRenderPreview();
+          button.setDisabled(false);
         });
       });
   }
