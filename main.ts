@@ -18,11 +18,7 @@ import {
 } from './src/services/obsidian.service';
 import { renderPreviewFiles } from './src/components/RenderPreviewFiles';
 import { createBackslash } from './src/components/RegExpBackslash';
-import {
-  REGEXP_FLAGS,
-  RegExpFlag,
-  RegExpFlags,
-} from './src/constants/RegExpFlags';
+import { RegExpFlag } from './src/constants/RegExpFlags';
 import { RegExpFlagsSuggest } from './src/suggestions/RegExpFlagsSuggest';
 
 interface BulkRenamePluginSettings {
@@ -31,7 +27,6 @@ interface BulkRenamePluginSettings {
   existingSymbol: string;
   replacePattern: string;
   tags: string[];
-  userRegExp: string;
   regExpState: {
     regExp: string;
     flags: RegExpFlag[];
@@ -44,7 +39,6 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
   fileNames: [],
   existingSymbol: '',
   replacePattern: '',
-  userRegExp: '',
   regExpState: {
     regExp: '',
     flags: [],
@@ -196,7 +190,6 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       .setName('Tag names ')
       .setDesc('all files with the tags will be found')
       .addSearch((cb) => {
-        // @ts-ignore
         cb.inputEl.addEventListener('keydown', (event) => {
           if (event.key !== 'Enter') {
             return;
@@ -267,6 +260,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           .onChange((flag: RegExpFlag) => {
             this.plugin.saveSettings();
             this.getFilesByRegExp();
+            this.reRenderPreview();
           });
         cb.inputEl.addClass('bulk_regexp_flags');
       })

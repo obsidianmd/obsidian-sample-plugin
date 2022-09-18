@@ -34,9 +34,6 @@ export class RegExpFlagsSuggest extends TextInputSuggest<RegExpFlag> {
     }
     target.classList.toggle('bulk-flag-selected');
     this.inputEl.value = regExpState.flags.join('');
-    // this.inputEl.trigger('input');
-    // this.settings.plugin.settings.regExpState.flags.push(file);
-    // this.inputEl.trigger('input');
-    // this.close();
+    this.inputEl.trigger('input');
   };
 }

@@ -1,26 +1,15 @@
-export type RegExpFlag =
-  | 'g'
-  | 'm'
-  | 'i'
-  | 'x'
-  | 's'
-  | 'u'
-  | 'U'
-  | 'A'
-  | 'J'
-  | 'D';
+export type RegExpFlag = 'g' | 'i' | 'm' | 'u' | 'y' | 'n' | 's' | 'x' | 'A';
 
 export const REGEXP_FLAGS = [
   'g',
-  'm',
   'i',
-  'x',
-  's',
+  'm',
   'u',
-  'U',
+  'y',
+  'n',
+  's',
+  'x',
   'A',
-  'J',
-  'D',
 ] as const;
 
 export type RegExpFlags = typeof REGEXP_FLAGS;
