@@ -31,23 +31,37 @@ Put tags in **Tags names** field search will be completed across the vault, use 
 Click Refresh
 Update **Existing Characters** field with a pattern you are looking for in existing notes, set **Replacement Symbols**
 
+## Search By RegExp
+Usage of Search By RegExp
+You have two fields, RegExp pattern, and RegExp Flags
+
+RegExp pattern will be wrapped into `/ /`
+
+## Supported flags:
+
+- **g** - global
+- **i** - ignore case
+- **m** - multiline anchors
+- **s** - dot matches all (aka singleline) - works even when not natively supported
+- **u** - unicode (ES6)
+- **y** - sticky (Firefox 3+, ES6)
+- **n** - explicit capture
+- **x** - free-spacing and line comments (aka extended)
+- **A** - astral (requires the Unicode Base addon)
+
 ---
 
 Click Preview or `Enter` to see intermediate results(nothing will be changed/moved/renamed).
 
-Click `Rename` whenever you done
-
-
-
-## Update files based on tags
-
-
+Click `Rename` whenever you're done
 
 ## API
 - **folder location** - Files from which folder you need to rename
 - **Symbols in existing files** - the symbols/characters that we have in the files
 - **Replacement Symbols** - a new symbols that will be pasted instead
 - **Files within the folder** - this is for information purpose
+- **RegExp pattern** - pattern of RegExp to match
+- **RegExp flags** - flags that will be applied to RegExp pattern
 
 Rename Button
 Rename files will start renaming all files by respective path.
@@ -62,7 +76,6 @@ Here is many guides on how to rename files, what kind of script we need to run, 
 Why Not to have this functionality build-in into Obsidian?
 
 And rename a **bunch of files** and update their reference in code base respectively. So now you can rename a bunch of files from the directory and all imports also will be updated in a code-base
-
 
 # Installation
 Follow the steps below to install Tasks.
