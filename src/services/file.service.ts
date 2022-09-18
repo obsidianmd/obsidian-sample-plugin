@@ -1,6 +1,5 @@
 import { App, Notice, TFile } from 'obsidian';
 import BulkRenamePlugin from '../../main';
-import XRegExp from 'xregexp';
 
 export const getFilesNamesInDirectory = (plugin: BulkRenamePlugin) => {
   const { fileNames } = plugin.settings;
@@ -78,6 +77,9 @@ export const renameFilesInObsidian = async (
   new Notice('successfully renamed all files');
 };
 
+let reRegExpChar = /[\\^$.*+?()[\]{}]/g,
+  reHasRegExpChar = RegExp(reRegExpChar.source);
+
 export function escapeRegExp(s: string) {
-  return XRegExp.escape(s);
+  return s && reHasRegExpChar.test(s) ? s.replace(reRegExpChar, '\\$&') : s;
 }

@@ -4,7 +4,7 @@ import { TextInputSuggest } from './suggest';
 import { REGEXP_FLAGS, RegExpFlag } from '../constants/RegExpFlags';
 
 export class RegExpFlagsSuggest extends TextInputSuggest<RegExpFlag> {
-  // @ts-ignore TODO refactor types types
+  // @ts-ignore TODO refactor types
   getSuggestions() {
     return REGEXP_FLAGS;
   }
