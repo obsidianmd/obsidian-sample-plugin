@@ -2,6 +2,7 @@
 
 import { App, ISuggestOwner, Scope } from 'obsidian';
 import { createPopper, Instance as PopperInstance } from '@popperjs/core';
+import BulkRenamePlugin from '../../main';
 
 const wrapAround = (value: number, size: number): number => {
   return ((value % size) + size) % size;
@@ -104,6 +105,7 @@ class Suggest<T> {
 
 export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
   protected app: App;
+  protected plugin: BulkRenamePlugin;
   protected inputEl: HTMLInputElement | HTMLTextAreaElement;
 
   private popper: PopperInstance;
@@ -111,7 +113,12 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
   private suggestEl: HTMLElement;
   private suggest: Suggest<T>;
 
-  constructor(app: App, inputEl: HTMLInputElement | HTMLTextAreaElement) {
+  constructor(
+    app: App,
+    inputEl: HTMLInputElement | HTMLTextAreaElement,
+    plugin: BulkRenamePlugin,
+  ) {
+    this.plugin = plugin;
     this.app = app;
     this.inputEl = inputEl;
     this.scope = new Scope();
@@ -191,7 +198,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
     this.suggestEl.detach();
   }
 
-  abstract getSuggestions(inputStr: string): T[];
+  abstract getSuggestions(inputStr?: string): T[];
   abstract renderSuggestion(item: T, el: HTMLElement): void;
-  abstract selectSuggestion(item: T): void;
+  abstract selectSuggestion(item: T, evt: MouseEvent | KeyboardEvent): void;
 }

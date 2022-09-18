@@ -17,6 +17,13 @@ import {
   getObsidianFilesWithTagName,
 } from './src/services/obsidian.service';
 import { renderPreviewFiles } from './src/components/RenderPreviewFiles';
+import { createBackslash } from './src/components/RegExpBackslash';
+import {
+  REGEXP_FLAGS,
+  RegExpFlag,
+  RegExpFlags,
+} from './src/constants/RegExpFlags';
+import { RegExpFlagsSuggest } from './src/suggestions/RegExpFlagsSuggest';
 
 interface BulkRenamePluginSettings {
   folderName: string;
@@ -25,6 +32,10 @@ interface BulkRenamePluginSettings {
   replacePattern: string;
   tags: string[];
   userRegExp: string;
+  regExpState: {
+    regExp: string;
+    flags: RegExpFlag[];
+  };
   viewType: 'tags' | 'folder' | 'regexp';
 }
 
@@ -34,6 +45,10 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
   existingSymbol: '',
   replacePattern: '',
   userRegExp: '',
+  regExpState: {
+    regExp: '',
+    flags: [],
+  },
   tags: [],
   viewType: 'folder',
 };
@@ -158,7 +173,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       .setName('Folder location')
       .setDesc('Find files within the folder')
       .addSearch((cb) => {
-        new FolderSuggest(this.app, cb.inputEl);
+        new FolderSuggest(this.app, cb.inputEl, this.plugin);
         cb.setPlaceholder('Example: folder1/')
           .setValue(this.plugin.settings.folderName)
           .onChange((newFolder) => {
@@ -212,7 +227,9 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName('RegExp')
       .setDesc('all files by titles will be found')
-      .addSearch((cb) => {
+      .addText((cb) => {
+        const backslash = createBackslash('/');
+        cb.inputEl.insertAdjacentElement('beforebegin', backslash);
         // @ts-ignore
         cb.inputEl.addEventListener('keydown', (event) => {
           if (event.key !== 'Enter') {
@@ -220,21 +237,40 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
           }
           const target = event.target as HTMLInputElement;
 
-          this.plugin.settings.userRegExp = target.value;
+          this.plugin.settings.regExpState.regExp = target.value;
           this.plugin.saveSettings();
         });
-        cb.setPlaceholder('Example: #tag, #tag2')
-          .setValue(this.plugin.settings.userRegExp)
+        cb.setPlaceholder('Put your RegExp here')
+          .setValue(this.plugin.settings.regExpState.regExp)
           .onChange((newFolder) => {
-            this.plugin.settings.userRegExp = newFolder;
+            this.plugin.settings.regExpState.regExp = newFolder;
             this.plugin.saveSettings();
             this.getFilesByRegExp();
           });
         // @ts-ignore
-        cb.containerEl.addClass('bulk_regexp');
-        cb.inputEl.addClass('bulk_input');
+        cb.inputEl.addClass('bulk_regexp');
         cb.inputEl.onblur = this.reRenderPreview;
-      });
+      })
+      .addText((cb) => {
+        new RegExpFlagsSuggest(this.app, cb.inputEl, this.plugin);
+        const backslash = createBackslash('/');
+        cb.inputEl.insertAdjacentElement('beforebegin', backslash);
+        cb.inputEl.addEventListener('keydown', (event) => {
+          // @ts-ignore
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          event.preventDefault();
+        });
+        cb.setPlaceholder('flags here')
+          // .setDisabled(true)
+          .setValue(this.plugin.settings.regExpState.flags.join(''))
+          .onChange((flag: RegExpFlag) => {
+            this.plugin.saveSettings();
+            this.getFilesByRegExp();
+          });
+        cb.inputEl.addClass('bulk_regexp_flags');
+      })
+      .controlEl.addClass('bulk_regexp_control');
   }
 
   renderReplaceSymbol() {
