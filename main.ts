@@ -186,6 +186,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     if (!isViewTypeTags(this.plugin)) {
       return;
     }
+
     new Setting(this.containerEl)
       .setName('Tag names ')
       .setDesc('all files with the tags will be found')
@@ -217,9 +218,17 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     if (!isViewTypeRegExp(this.plugin)) {
       return;
     }
+
+    const desc = document.createDocumentFragment();
+    desc.append(
+      desc.createEl('b', {
+        text: 'Reg exp will match file Operation System path',
+      }),
+    );
+
     new Setting(this.containerEl)
-      .setName('RegExp')
-      .setDesc('all files by titles will be found')
+      .setName('RegExp Search')
+      .setDesc(desc)
       .addText((cb) => {
         const backslash = createBackslash('/');
         cb.inputEl.insertAdjacentElement('beforebegin', backslash);
@@ -330,7 +339,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   renderRenameFiles() {
     const desc = document.createDocumentFragment();
     desc.append(
-      'You are going to update all marked files and their directories',
+      'You are going to update all files from preview section',
       desc.createEl('br'),
       desc.createEl('b', {
         text: 'Warning: ',
