@@ -86,6 +86,7 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'a-z': {asc: CustomSortOrder.alphabetical, desc: CustomSortOrder.alphabeticalReverse},
 	'created': {asc: CustomSortOrder.byCreatedTime, desc: CustomSortOrder.byCreatedTimeReverse},
 	'modified': {asc: CustomSortOrder.byModifiedTime, desc: CustomSortOrder.byModifiedTimeReverse},
+	'advanced modified': {asc: CustomSortOrder.byModifiedTimeAdvanced, desc: CustomSortOrder.byModifiedTimeReverseAdvanced},
 
 	// Advanced, for edge cases of secondary sorting, when if regexp match is the same, override the alphabetical sorting by full name
 	'a-z, created': {
@@ -399,7 +400,7 @@ export class SortingSpecProcessor {
 			lineIdx++
 			this.currentEntryLine = entryLine
 			this.currentEntryLineIdx = lineIdx
-			this.currentSortingSpecContainerFilePath = `${folderPath}/${sortingSpecFileName}`
+			this.currentSortingSpecContainerFilePath = `${folderPath === '/' ? '' : folderPath}/${sortingSpecFileName}`
 			this.problemAlreadyReportedForCurrentLine = false
 
 			const trimmedEntryLine: string = entryLine.trim()

@@ -1,4 +1,4 @@
-import {requireApiVersion, TFile, TFolder} from 'obsidian';
+import {requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
 import {CustomSortGroup, CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
 import {isDefined} from "../utils/utils";
 
@@ -16,6 +16,7 @@ interface FolderItemForSorting {
 	ctime: number
 	mtime: number
 	isFolder: boolean
+	folder?: TFolder
 }
 
 type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
@@ -24,7 +25,9 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(b.sortString, a.sortString),
 	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.mtime - b.mtime,
+	[CustomSortOrder.byModifiedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.mtime - b.mtime,
 	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
+	[CustomSortOrder.byModifiedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
 	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctime - b.ctime,
 	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime,
 
@@ -52,10 +55,13 @@ function compareTwoItems(itA: FolderItemForSorting, itB: FolderItemForSorting, s
 	}
 }
 
-const isFolder = (entry: TFile | TFolder) => {
+const isFolder = (entry: TAbstractFile) => {
 	// The plain obvious 'entry instanceof TFolder' doesn't work inside Jest unit tests, hence a workaround below
 	return !!((entry as any).isRoot);
 }
+
+export const DEFAULT_FOLDER_MTIME: number = 0
+export const DEFAULT_FOLDER_CTIME: number = 0
 
 export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec): FolderItemForSorting {
 	let groupIdx: number
@@ -165,14 +171,37 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		sortString: matchedGroup ? (matchedGroup + '//' + entry.name) : entry.name,
 		matchGroup: matchedGroup ?? undefined,
 		isFolder: aFolder,
+		folder: aFolder ? (entry as TFolder) : undefined,
 		path: entry.path,
-		ctime: aFile ? entryAsTFile.stat.ctime : 0,
-		mtime: aFile ? entryAsTFile.stat.mtime : 0
+		ctime: aFile ? entryAsTFile.stat.ctime : DEFAULT_FOLDER_CTIME,
+		mtime: aFile ? entryAsTFile.stat.mtime : DEFAULT_FOLDER_MTIME
 	}
 }
 
+export const sortOrderNeedsFoldersMDate = (order: CustomSortOrder | undefined): boolean => {
+	return order === CustomSortOrder.byModifiedTimeAdvanced || order === CustomSortOrder.byModifiedTimeReverseAdvanced
+}
+
+// Syntax sugar for readability
+export type ModifiedTime = number
+
+export const determineModifiedDateForFolder = (folder: TFolder): ModifiedTime => {
+	let mtimeOfFolder: ModifiedTime = DEFAULT_FOLDER_MTIME
+	folder.children.forEach((item) => {
+		if (!isFolder(item)) {
+			const file: TFile = item as TFile
+			if (file.stat.mtime > mtimeOfFolder) {
+				mtimeOfFolder = file.stat.mtime
+			}
+		}
+	})
+	return mtimeOfFolder
+}
+
+
 export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
 	let fileExplorer = this.fileExplorer
+	const sortingGroupsCardinality: {[key: number]: number} = {}
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
 		this.file.children.filter((entry: TFile | TFolder) => {
@@ -180,9 +209,27 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 		})
 		:
 		this.file.children)
-		.map((entry: TFile | TFolder) =>
-			determineSortingGroup(entry, sortingSpec)
-		)
+		.map((entry: TFile | TFolder) => {
+			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec)
+			const groupIdx: number | undefined = itemForSorting.groupIdx
+			if (groupIdx !== undefined) {
+				sortingGroupsCardinality[groupIdx] = 1 + (sortingGroupsCardinality[groupIdx] ?? 0)
+			}
+			return itemForSorting
+		})
+
+	// Finally, for advanced sorting by modified date, for some of the folders the modified date has to be determined
+	folderItems.forEach((item) => {
+		const groupIdx: number | undefined = item.groupIdx
+		if (groupIdx !== undefined) {
+			const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
+			if (sortOrderNeedsFoldersMDate(groupOrder)) {
+				if (item.folder) {
+					item.mtime = determineModifiedDateForFolder(item.folder)
+				}
+			}
+		}
+	})
 
 	folderItems.sort(function (itA: FolderItemForSorting, itB: FolderItemForSorting) {
 		return compareTwoItems(itA, itB, sortingSpec);

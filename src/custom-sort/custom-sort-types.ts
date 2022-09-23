@@ -11,7 +11,9 @@ export enum CustomSortOrder {
 	alphabetical = 1,  // = 1 to allow: if (customSortOrder) { ...
 	alphabeticalReverse,
 	byModifiedTime,
+	byModifiedTimeAdvanced,
 	byModifiedTimeReverse,
+	byModifiedTimeReverseAdvanced,
 	byCreatedTime,
 	byCreatedTimeReverse,
 	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI

@@ -31,7 +31,7 @@ target-folder: tricky folder
 target-folder: /
 /: Con...
 /
-  > modified
+  > advanced modified
 /:
   < modified
 /: Ref...
@@ -78,7 +78,7 @@ target-folder: tricky folder
 target-folder: /
 /:files Con...
 /folders
-  > modified
+  > advanced modified
 /:files
   < modified
 /:files Ref...
@@ -163,7 +163,7 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			type: CustomSortGroupType.ExactPrefix
 		}, {
 			foldersOnly: true,
-			order: CustomSortOrder.byModifiedTimeReverse,
+			order: CustomSortOrder.byModifiedTimeReverseAdvanced,
 			type: CustomSortGroupType.Outsiders
 		}, {
 			filesOnly: true,
