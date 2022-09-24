@@ -1,20 +1,27 @@
 import { App, Notice, TFile } from 'obsidian';
-import BulkRenamePlugin from '../../main';
+import BulkRenamePlugin, { BulkRenamePluginSettings } from '../../main';
+import { isViewTypeFolder } from './settings.service';
+import { ROOT_FOLDER_NAME } from '../constants/folders';
 
 export const getFilesNamesInDirectory = (plugin: BulkRenamePlugin) => {
-  const { fileNames } = plugin.settings;
-
-  return getFilesAsString(fileNames);
+  return getFilesAsString(plugin.settings);
 };
 
-const getFilesAsString = (fileNames: TFile[]) => {
+const getFilesAsString = (settings: BulkRenamePluginSettings) => {
   let value = '';
+  const { fileNames, folderName } = settings;
+  const shouldPrependSlash =
+    isViewTypeFolder(settings) && folderName === ROOT_FOLDER_NAME;
+
   fileNames.forEach((fileName, index) => {
     const isLast = index + 1 === fileNames.length;
+    const filePath = shouldPrependSlash ? '/' + fileName.path : fileName.path;
+
     if (isLast) {
-      return (value += fileName.path);
+      return (value += filePath);
     }
-    value += fileName.path + '\r\n';
+
+    value += filePath + '\r\n';
   });
 
   return value;
@@ -23,7 +30,10 @@ const getFilesAsString = (fileNames: TFile[]) => {
 export const getRenderedFileNamesReplaced = (plugin: BulkRenamePlugin) => {
   const newFiles = selectFilenamesWithReplacedPath(plugin);
 
-  return getFilesAsString(newFiles);
+  return getFilesAsString({
+    ...plugin.settings,
+    fileNames: newFiles,
+  });
 };
 
 export const selectFilenamesWithReplacedPath = (plugin: BulkRenamePlugin) => {
@@ -38,14 +48,16 @@ export const selectFilenamesWithReplacedPath = (plugin: BulkRenamePlugin) => {
 };
 
 export const replaceFilePath = (plugin: BulkRenamePlugin, file: TFile) => {
+  const pathWithoutExtension = file.path.split('.').slice(0, -1).join('.');
   const { replacePattern, existingSymbol } = plugin.settings;
 
-  const pathWithoutExtension = file.path.split('.').slice(0, -1).join('.');
+  if (isRootFilesSelected(plugin)) {
+    const newPath = replacePattern + pathWithoutExtension;
+    return `${newPath}.${file.extension}`;
+  }
 
   const convertedToRegExpString = escapeRegExp(existingSymbol);
-
   const regExpSymbol = new RegExp(convertedToRegExpString, 'g');
-
   const newPath = pathWithoutExtension?.replace(regExpSymbol, replacePattern);
 
   return `${newPath}.${file.extension}`;
@@ -68,13 +80,26 @@ export const renameFilesInObsidian = async (
   }
 
   new Notice('renaming has been started');
+  let success = true;
   for (const fileName of fileNames) {
-    await app.fileManager.renameFile(
-      fileName,
-      replaceFilePath(plugin, fileName),
-    );
+    try {
+      await app.fileManager.renameFile(
+        fileName,
+        replaceFilePath(plugin, fileName),
+      );
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        new Notice('FILES NOT RENAMED!');
+        new Notice(
+          'WARNING: YOU MUST CREATE FOLDER BEFORE MOVING INTO IT',
+          7000,
+        );
+        success = false;
+        break;
+      }
+    }
   }
-  new Notice('successfully renamed all files');
+  success && new Notice('successfully renamed all files');
 };
 
 let reRegExpChar = /[\\^$.*+?()[\]{}]/g,
@@ -83,3 +108,13 @@ let reRegExpChar = /[\\^$.*+?()[\]{}]/g,
 export function escapeRegExp(s: string) {
   return s && reHasRegExpChar.test(s) ? s.replace(reRegExpChar, '\\$&') : s;
 }
+
+const isRootFilesSelected = (plugin: BulkRenamePlugin) => {
+  const { existingSymbol, folderName } = plugin.settings;
+
+  return (
+    existingSymbol === ROOT_FOLDER_NAME &&
+    folderName === ROOT_FOLDER_NAME &&
+    isViewTypeFolder(plugin.settings)
+  );
+};
