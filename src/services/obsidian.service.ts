@@ -10,7 +10,7 @@ export const getObsidianFilesByFolderName = (
   const abstractFiles = app.vault.getAllLoadedFiles();
 
   const files = abstractFiles.filter(
-    (file) => file instanceof TFile && file.parent.name.includes(folderName),
+    (file) => file instanceof TFile && file.parent.path.includes(folderName),
   ) as TFile[];
 
   const filesSortedByName = sortFilesByName(files);

@@ -142,6 +142,21 @@ describe('File Services', () => {
 
         expect(expectedResults).toEqual(updatedFiles);
       });
+
+      it('should select all files', () => {
+        const plugin = {
+          ...mockPluginPlugin,
+          settings: {
+            ...mockPluginPlugin.settings,
+            existingSymbol: '',
+            replacePattern: '',
+          },
+        } as unknown as BulkRenamePlugin;
+
+        const updatedFiles = selectFilenamesWithReplacedPath(plugin);
+
+        expect(files).toEqual(updatedFiles);
+      });
     });
   });
 });
