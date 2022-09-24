@@ -113,8 +113,8 @@ const isRootFilesSelected = (plugin: BulkRenamePlugin) => {
   const { existingSymbol, folderName } = plugin.settings;
 
   return (
-    existingSymbol === '/' &&
-    folderName === '/' &&
+    existingSymbol === ROOT_FOLDER_NAME &&
+    folderName === ROOT_FOLDER_NAME &&
     isViewTypeFolder(plugin.settings)
   );
 };
