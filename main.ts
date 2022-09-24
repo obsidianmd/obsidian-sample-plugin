@@ -20,8 +20,13 @@ import { renderPreviewFiles } from './src/components/RenderPreviewFiles';
 import { createBackslash } from './src/components/RegExpBackslash';
 import { RegExpFlag } from './src/constants/RegExpFlags';
 import { RegExpFlagsSuggest } from './src/suggestions/RegExpFlagsSuggest';
+import {
+  isViewTypeRegExp,
+  isViewTypeFolder,
+  isViewTypeTags,
+} from './src/services/settings.service';
 
-interface BulkRenamePluginSettings {
+export interface BulkRenamePluginSettings {
   folderName: string;
   fileNames: TFile[];
   existingSymbol: string;
@@ -45,18 +50,6 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
   },
   tags: [],
   viewType: 'folder',
-};
-
-const isViewTypeFolder = ({ settings }: BulkRenamePlugin) => {
-  return settings.viewType === 'folder';
-};
-
-const isViewTypeTags = ({ settings }: BulkRenamePlugin) => {
-  return settings.viewType === 'tags';
-};
-
-const isViewTypeRegExp = ({ settings }: BulkRenamePlugin) => {
-  return settings.viewType === 'regexp';
 };
 
 class BulkRenamePlugin extends Plugin {
@@ -126,7 +119,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       .setName('UI will be changed when you click those buttons')
       .addButton((button) => {
         button.setButtonText('Search by folder');
-        if (isViewTypeFolder(this.plugin)) {
+        if (isViewTypeFolder(this.plugin.settings)) {
           button.setCta();
         }
         button.onClick(async () => {
@@ -137,7 +130,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       })
       .addButton((button) => {
         button.setButtonText('Search By Tags');
-        if (isViewTypeTags(this.plugin)) {
+        if (isViewTypeTags(this.plugin.settings)) {
           button.setCta();
         }
         button.onClick(async () => {
@@ -148,7 +141,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       })
       .addButton((button) => {
         button.setButtonText('Search by RegExp');
-        if (isViewTypeRegExp(this.plugin)) {
+        if (isViewTypeRegExp(this.plugin.settings)) {
           button.setCta();
         }
         button.onClick(async () => {
@@ -160,7 +153,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderFileLocation() {
-    if (!isViewTypeFolder(this.plugin)) {
+    if (!isViewTypeFolder(this.plugin.settings)) {
       return;
     }
     new Setting(this.containerEl)
@@ -183,7 +176,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderTagNames() {
-    if (!isViewTypeTags(this.plugin)) {
+    if (!isViewTypeTags(this.plugin.settings)) {
       return;
     }
 
@@ -215,7 +208,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   }
 
   renderRegExpInput() {
-    if (!isViewTypeRegExp(this.plugin)) {
+    if (!isViewTypeRegExp(this.plugin.settings)) {
       return;
     }
 
@@ -384,12 +377,12 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   };
 
   calculateFileNames() {
-    if (isViewTypeTags(this.plugin)) {
+    if (isViewTypeTags(this.plugin.settings)) {
       this.getFilesByTags();
       return;
     }
 
-    if (isViewTypeRegExp(this.plugin)) {
+    if (isViewTypeRegExp(this.plugin.settings)) {
       this.getFilesByRegExp();
       return;
     }
