@@ -108,6 +108,16 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 		asc: CustomSortOrder.alphabetical,
 		desc: CustomSortOrder.alphabeticalReverse,
 		secondary: CustomSortOrder.byModifiedTimeReverse
+	},
+	'a-z, advanced modified': {
+		asc: CustomSortOrder.alphabetical,
+		desc: CustomSortOrder.alphabeticalReverse,
+		secondary: CustomSortOrder.byModifiedTimeAdvanced
+	},
+	'a-z, advanced modified desc': {
+		asc: CustomSortOrder.alphabetical,
+		desc: CustomSortOrder.alphabeticalReverse,
+		secondary: CustomSortOrder.byModifiedTimeReverseAdvanced
 	}
 }
 

@@ -24,12 +24,12 @@ type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
 let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(b.sortString, a.sortString),
-	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.mtime - b.mtime,
+	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (a.mtime - b.mtime),
 	[CustomSortOrder.byModifiedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.mtime - b.mtime,
-	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
+	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.mtime - a.mtime),
 	[CustomSortOrder.byModifiedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
-	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctime - b.ctime,
-	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime,
+	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (a.ctime - b.ctime),
+	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.ctime - a.ctime),
 
 	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
@@ -178,8 +178,11 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	}
 }
 
-export const sortOrderNeedsFoldersMDate = (order: CustomSortOrder | undefined): boolean => {
-	return order === CustomSortOrder.byModifiedTimeAdvanced || order === CustomSortOrder.byModifiedTimeReverseAdvanced
+export const sortOrderNeedsFoldersMDate = (order: CustomSortOrder | undefined, secondary?: CustomSortOrder): boolean => {
+	return order === CustomSortOrder.byModifiedTimeAdvanced
+		|| order === CustomSortOrder.byModifiedTimeReverseAdvanced
+		|| secondary === CustomSortOrder.byModifiedTimeAdvanced
+		|| secondary === CustomSortOrder.byModifiedTimeReverseAdvanced
 }
 
 // Syntax sugar for readability
