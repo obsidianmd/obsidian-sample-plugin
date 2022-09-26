@@ -355,7 +355,7 @@ sorting-spec: |
 
 the result is:
 
-![Book - Roman compond suffixes](./docs/svg/roman-suffix.svg)
+![Book - Roman compound suffixes](./docs/svg/roman-suffix.svg)
 
 ### Example 12: Apply same sorting to all folders in the vault
 
