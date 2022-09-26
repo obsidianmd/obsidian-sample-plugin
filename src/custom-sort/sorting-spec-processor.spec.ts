@@ -865,6 +865,102 @@ describe('SortingSpecProcessor path wildcard priorities', () => {
 	})
 })
 
+const txtInputAdvancedFolderDateSortingMethods: string = `
+target-folder: A
+< advanced modified
+target-folder: B
+> advanced modified
+target-folder: C
+< advanced created
+target-folder: D
+> advanced created
+target-folder: AA
+/folders
+ < advanced modified
+/:files
+ > advanced modified
+/folders Archive...
+ < advanced created
+/:files Archive...
+ > advanced created
+`
+
+const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: CustomSortSpec } = {
+	'A': {
+		defaultOrder: CustomSortOrder.byModifiedTimeAdvanced,
+		groups: [{
+			order: CustomSortOrder.byModifiedTimeAdvanced,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['A']
+	},
+	'B': {
+		defaultOrder: CustomSortOrder.byModifiedTimeReverseAdvanced,
+		groups: [{
+				order: CustomSortOrder.byModifiedTimeReverseAdvanced,
+				type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['B']
+	},
+	'C': {
+		defaultOrder: CustomSortOrder.byCreatedTimeAdvanced,
+		groups: [{
+				order: CustomSortOrder.byCreatedTimeAdvanced,
+				type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['C']
+	},
+	'D': {
+		defaultOrder: CustomSortOrder.byCreatedTimeReverseAdvanced,
+		groups: [{
+				order: CustomSortOrder.byCreatedTimeReverseAdvanced,
+				type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['D']
+	},
+	'AA': {
+		groups: [{
+				foldersOnly: true,
+				order: CustomSortOrder.byModifiedTimeAdvanced,
+				type: CustomSortGroupType.Outsiders
+		}, {
+				filesOnly: true,
+				order: CustomSortOrder.byModifiedTimeReverseAdvanced,
+				type: CustomSortGroupType.Outsiders
+		}, {
+				exactPrefix: 'Archive',
+				foldersOnly: true,
+				order: CustomSortOrder.byCreatedTimeAdvanced,
+				type: 3
+		}, {
+				exactPrefix: 'Archive',
+				filesOnly: true,
+				order: CustomSortOrder.byCreatedTimeReverseAdvanced,
+				type: 3
+		}],
+		outsidersFilesGroupIdx: 1,
+		outsidersFoldersGroupIdx: 0,
+		targetFoldersPaths: ['AA']
+	}
+}
+
+describe('SortingSpecProcessor advanced folder-date based sorting methods', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should not raise error for multiple spec for the same path and choose correct spec, case A', () => {
+		const inputTxtArr: Array<string> = txtInputAdvancedFolderDateSortingMethods.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForAdvancedFolderDateSortingMethods)
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
+})
+
 const errorsLogger = jest.fn();
 
 const ERR_PREFIX = 'Sorting specification problem:'
