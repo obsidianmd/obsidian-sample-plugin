@@ -8,12 +8,13 @@ let Collator = new Intl.Collator(undefined, {
 	numeric: true,
 }).compare;
 
-interface FolderItemForSorting {
+export interface FolderItemForSorting {
 	path: string
 	groupIdx?: number  // the index itself represents order for groups
 	sortString: string // fragment (or full name) to be used for sorting
 	matchGroup?: string // advanced - used for secondary sorting rule, to recognize 'same regex match'
-	ctime: number
+	ctimeOldest: number // for a file, both ctime values are the same. For folder they can be different:
+	ctimeNewest: number     //  ctimeOldest = ctime of oldest child file, ctimeNewest = ctime of newest child file
 	mtime: number
 	isFolder: boolean
 	folder?: TFolder
@@ -28,10 +29,10 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byModifiedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.mtime - b.mtime,
 	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.mtime - a.mtime),
 	[CustomSortOrder.byModifiedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
-	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (a.ctime - b.ctime),
-	[CustomSortOrder.byCreatedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctime - b.ctime,
-	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.ctime - a.ctime),
-	[CustomSortOrder.byCreatedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime,
+	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (a.ctimeNewest - b.ctimeNewest),
+	[CustomSortOrder.byCreatedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctimeNewest - b.ctimeNewest,
+	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.ctimeOldest - a.ctimeOldest),
+	[CustomSortOrder.byCreatedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctimeOldest - a.ctimeOldest,
 
 	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
@@ -175,7 +176,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		isFolder: aFolder,
 		folder: aFolder ? (entry as TFolder) : undefined,
 		path: entry.path,
-		ctime: aFile ? entryAsTFile.stat.ctime : DEFAULT_FOLDER_CTIME,
+		ctimeNewest: aFile ? entryAsTFile.stat.ctime : DEFAULT_FOLDER_CTIME,
+		ctimeOldest: aFile ? entryAsTFile.stat.ctime : DEFAULT_FOLDER_CTIME,
 		mtime: aFile ? entryAsTFile.stat.mtime : DEFAULT_FOLDER_MTIME
 	}
 }
@@ -195,25 +197,44 @@ export const sortOrderNeedsFolderDates = (order: CustomSortOrder | undefined, se
 
 // Syntax sugar for readability
 export type ModifiedTime = number
-export type CreatedTime = number
+export type CreatedTimeNewest = number
+export type CreatedTimeOldest = number
 
-export const determineDatesForFolder = (folder: TFolder): [ModifiedTime, CreatedTime] => {
+export const determineDatesForFolder = (folder: TFolder, now: number): [ModifiedTime, CreatedTimeNewest, CreatedTimeOldest] => {
 	let mtimeOfFolder: ModifiedTime = DEFAULT_FOLDER_MTIME
-	let ctimeOfFolder: CreatedTime = DEFAULT_FOLDER_CTIME
+	let ctimeNewestOfFolder: CreatedTimeNewest = DEFAULT_FOLDER_CTIME
+	let ctimeOldestOfFolder: CreatedTimeOldest = now
 	folder.children.forEach((item) => {
 		if (!isFolder(item)) {
 			const file: TFile = item as TFile
 			if (file.stat.mtime > mtimeOfFolder) {
 				mtimeOfFolder = file.stat.mtime
 			}
-			if (file.stat.ctime > ctimeOfFolder) {
-				ctimeOfFolder = file.stat.ctime
+			if (file.stat.ctime > ctimeNewestOfFolder) {
+				ctimeNewestOfFolder = file.stat.ctime
+			}
+			if (file.stat.ctime < ctimeOldestOfFolder) {
+				ctimeOldestOfFolder = file.stat.ctime
 			}
 		}
 	})
-	return [mtimeOfFolder, ctimeOfFolder]
+	return [mtimeOfFolder, ctimeNewestOfFolder, ctimeOldestOfFolder]
 }
 
+export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, sortingGroupsCardinality: {[key: number]: number} = {}) => {
+	const Now: number = Date.now()
+	folderItems.forEach((item) => {
+		const groupIdx: number | undefined = item.groupIdx
+		if (groupIdx !== undefined && sortingGroupsCardinality[groupIdx] > 1) {
+			const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
+			if (sortOrderNeedsFolderDates(groupOrder)) {
+				if (item.folder) {
+					[item.mtime, item.ctimeNewest, item.ctimeOldest] = determineDatesForFolder(item.folder, Now)
+				}
+			}
+		}
+	})
+}
 
 export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
 	let fileExplorer = this.fileExplorer
@@ -235,17 +256,7 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 		})
 
 	// Finally, for advanced sorting by modified date, for some of the folders the modified date has to be determined
-	folderItems.forEach((item) => {
-		const groupIdx: number | undefined = item.groupIdx
-		if (groupIdx !== undefined) {
-			const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
-			if (sortOrderNeedsFolderDates(groupOrder)) {
-				if (item.folder) {
-					[item.mtime, item.ctime] = determineDatesForFolder(item.folder)
-				}
-			}
-		}
-	})
+	determineFolderDatesIfNeeded(folderItems, sortingSpec, sortingGroupsCardinality)
 
 	folderItems.sort(function (itA: FolderItemForSorting, itB: FolderItemForSorting) {
 		return compareTwoItems(itA, itB, sortingSpec);

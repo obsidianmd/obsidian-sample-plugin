@@ -10,11 +10,11 @@ export enum CustomSortGroupType {
 export enum CustomSortOrder {
 	alphabetical = 1,  // = 1 to allow: if (customSortOrder) { ...
 	alphabeticalReverse,
-	byModifiedTime,
+	byModifiedTime,   // New to old
 	byModifiedTimeAdvanced,
-	byModifiedTimeReverse,
+	byModifiedTimeReverse,  // Old to new
 	byModifiedTimeReverseAdvanced,
-	byCreatedTime,
+	byCreatedTime,  // New to old
 	byCreatedTimeAdvanced,
 	byCreatedTimeReverse,
 	byCreatedTimeReverseAdvanced,
