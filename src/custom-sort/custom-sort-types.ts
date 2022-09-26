@@ -10,10 +10,14 @@ export enum CustomSortGroupType {
 export enum CustomSortOrder {
 	alphabetical = 1,  // = 1 to allow: if (customSortOrder) { ...
 	alphabeticalReverse,
-	byModifiedTime,
-	byModifiedTimeReverse,
-	byCreatedTime,
+	byModifiedTime,   // New to old
+	byModifiedTimeAdvanced,
+	byModifiedTimeReverse,  // Old to new
+	byModifiedTimeReverseAdvanced,
+	byCreatedTime,  // New to old
+	byCreatedTimeAdvanced,
 	byCreatedTimeReverse,
+	byCreatedTimeReverseAdvanced,
 	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
 	default = alphabetical
 }

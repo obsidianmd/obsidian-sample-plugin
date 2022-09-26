@@ -355,12 +355,13 @@ sorting-spec: |
 
 the result is:
 
-![Book - Roman compond suffixes](./docs/svg/roman-suffix.svg)
+![Book - Roman compound suffixes](./docs/svg/roman-suffix.svg)
 
 ### Example 12: Apply same sorting to all folders in the vault
 
-Apply the alphabetical sorting to all folders in the Vault. The alphabetical sorting treats the folders and files equally
-(which is different from the standard Obsidian sort, which groups folders in the top of File Explorer)
+Apply the same advanced modified date sorting to all folders in the Vault. The advanced modified sorting treats the folders 
+ and files equally (which is different from the standard Obsidian sort, which groups folders in the top of File Explorer)
+ The modified date for a folder is derived from its newest direct child file (if any), otherwise a folder is considered old
 
 This involves the wildcard suffix syntax `*` which means _apply the sorting rule to the specified folder
 and all of its subfolders, including descendants. In other words, this is imposing a deep inheritance
@@ -371,7 +372,7 @@ Applying the wildcard suffix to root folder path `/*` actually means _apply the 
 ---
 sorting-spec: |
     target-folder: /*
-    < a-z
+    > advanced modified
 ---
 ```
 
