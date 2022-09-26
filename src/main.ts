@@ -29,12 +29,14 @@ interface CustomSortPluginSettings {
 	additionalSortspecFile: string
 	suspended: boolean
 	statusBarEntryEnabled: boolean
+	notificationsEnabled: boolean
 }
 
 const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	additionalSortspecFile: 'Inbox/Inbox.md',
 	suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
-	statusBarEntryEnabled: true
+	statusBarEntryEnabled: true,
+	notificationsEnabled: true
 }
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
@@ -52,6 +54,12 @@ export default class CustomSortPlugin extends Plugin {
 
 	sortSpecCache?: SortSpecsCollection | null
 	initialAutoOrManualSortingTriggered: boolean
+
+	showNotice(message: string, timeout?: number) {
+		if (this.settings.notificationsEnabled) {
+			new Notice(message, timeout)
+		}
+	}
 
 	readAndParseSortingSpec() {
 		const mCache: MetadataCache = this.app.metadataCache
@@ -91,14 +99,14 @@ export default class CustomSortPlugin extends Plugin {
 		})
 
 		if (this.sortSpecCache) {
-			new Notice(`Parsing custom sorting specification SUCCEEDED!`)
+			this.showNotice(`Parsing custom sorting specification SUCCEEDED!`)
 		} else {
 			if (anySortingSpecFound) {
 				errorMessage = errorMessage ? errorMessage : `No valid '${SORTINGSPEC_YAML_KEY}:' key(s) in YAML front matter or multiline YAML indentation error or general YAML syntax error`
 			} else {
 				errorMessage = `No custom sorting specification found or only empty specification(s)`
 			}
-			new Notice(`Parsing custom sorting specification FAILED. Suspending the plugin.\n${errorMessage}`, ERROR_NOTICE_TIMEOUT)
+			this.showNotice(`Parsing custom sorting specification FAILED. Suspending the plugin.\n${errorMessage}`, ERROR_NOTICE_TIMEOUT)
 			this.settings.suspended = true
 			this.saveSettings()
 		}
@@ -110,13 +118,13 @@ export default class CustomSortPlugin extends Plugin {
 		this.saveSettings()
 		let iconToSet: string
 		if (this.settings.suspended) {
-			new Notice('Custom sort OFF');
+			this.showNotice('Custom sort OFF');
 			this.sortSpecCache = null
 			iconToSet = ICON_SORT_SUSPENDED
 		} else {
 			this.readAndParseSortingSpec();
 			if (this.sortSpecCache) {
-				new Notice('Custom sort ON');
+				this.showNotice('Custom sort ON');
 				this.initialAutoOrManualSortingTriggered = true
 				iconToSet = ICON_SORT_ENABLED_ACTIVE
 			} else {
@@ -180,7 +188,7 @@ export default class CustomSortPlugin extends Plugin {
 						this.readAndParseSortingSpec()
 						this.initialAutoOrManualSortingTriggered = true
 						if (this.sortSpecCache) { // successful read of sorting specifications?
-							new Notice('Custom sort ON')
+							this.showNotice('Custom sort ON')
 							const fileExplorerView: FileExplorerView = this.getFileExplorer()
 							if (fileExplorerView) {
 								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
@@ -340,6 +348,19 @@ class CustomSortSettingTab extends PluginSettingTab {
 							this.plugin.statusBarItemEl.detach()
 						}
 					}
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Enable notifications of plugin state changes')
+			.setDesc('The plugin can show notifications about its state changes: e.g. when successfully parsed and applied'
+			+ ' the custom sorting specification, or, when the parsing failed. If the notifications are disabled,'
+			+ ' the only indicator of plugin state is the ribbon button icon. The developer console presents the parsing'
+			+ ' error messages regardless if the notifications are enabled or not.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.notificationsEnabled)
+				.onChange(async (value) => {
+					this.plugin.settings.notificationsEnabled = value;
 					await this.plugin.saveSettings();
 				}));
 	}
