@@ -15,7 +15,9 @@ export enum CustomSortOrder {
 	byModifiedTimeReverse,
 	byModifiedTimeReverseAdvanced,
 	byCreatedTime,
+	byCreatedTimeAdvanced,
 	byCreatedTimeReverse,
+	byCreatedTimeReverseAdvanced,
 	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
 	default = alphabetical
 }

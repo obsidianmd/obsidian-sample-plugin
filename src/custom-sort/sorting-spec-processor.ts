@@ -87,6 +87,7 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'created': {asc: CustomSortOrder.byCreatedTime, desc: CustomSortOrder.byCreatedTimeReverse},
 	'modified': {asc: CustomSortOrder.byModifiedTime, desc: CustomSortOrder.byModifiedTimeReverse},
 	'advanced modified': {asc: CustomSortOrder.byModifiedTimeAdvanced, desc: CustomSortOrder.byModifiedTimeReverseAdvanced},
+	'advanced created': {asc: CustomSortOrder.byCreatedTimeAdvanced, desc: CustomSortOrder.byCreatedTimeReverseAdvanced},
 
 	// Advanced, for edge cases of secondary sorting, when if regexp match is the same, override the alphabetical sorting by full name
 	'a-z, created': {
@@ -108,6 +109,16 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 		asc: CustomSortOrder.alphabetical,
 		desc: CustomSortOrder.alphabeticalReverse,
 		secondary: CustomSortOrder.byModifiedTimeReverse
+	},
+	'a-z, advanced created': {
+		asc: CustomSortOrder.alphabetical,
+		desc: CustomSortOrder.alphabeticalReverse,
+		secondary: CustomSortOrder.byCreatedTimeAdvanced
+	},
+	'a-z, advanced created desc': {
+		asc: CustomSortOrder.alphabetical,
+		desc: CustomSortOrder.alphabeticalReverse,
+		secondary: CustomSortOrder.byCreatedTimeReverseAdvanced
 	},
 	'a-z, advanced modified': {
 		asc: CustomSortOrder.alphabetical,

@@ -29,7 +29,9 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.mtime - a.mtime),
 	[CustomSortOrder.byModifiedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
 	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (a.ctime - b.ctime),
+	[CustomSortOrder.byCreatedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctime - b.ctime,
 	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.ctime - a.ctime),
+	[CustomSortOrder.byCreatedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime,
 
 	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
@@ -178,27 +180,38 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	}
 }
 
-export const sortOrderNeedsFoldersMDate = (order: CustomSortOrder | undefined, secondary?: CustomSortOrder): boolean => {
-	return order === CustomSortOrder.byModifiedTimeAdvanced
-		|| order === CustomSortOrder.byModifiedTimeReverseAdvanced
-		|| secondary === CustomSortOrder.byModifiedTimeAdvanced
-		|| secondary === CustomSortOrder.byModifiedTimeReverseAdvanced
+const SortOrderRequiringFolderDate = new Set<CustomSortOrder>([
+	CustomSortOrder.byModifiedTimeAdvanced,
+	CustomSortOrder.byModifiedTimeReverseAdvanced,
+	CustomSortOrder.byCreatedTimeAdvanced,
+	CustomSortOrder.byCreatedTimeReverseAdvanced
+])
+
+export const sortOrderNeedsFolderDates = (order: CustomSortOrder | undefined, secondary?: CustomSortOrder): boolean => {
+	// The CustomSortOrder.standardObsidian used as default because it doesn't require date on folders
+	return SortOrderRequiringFolderDate.has(order ?? CustomSortOrder.standardObsidian)
+		|| SortOrderRequiringFolderDate.has(secondary ?? CustomSortOrder.standardObsidian)
 }
 
 // Syntax sugar for readability
 export type ModifiedTime = number
+export type CreatedTime = number
 
-export const determineModifiedDateForFolder = (folder: TFolder): ModifiedTime => {
+export const determineDatesForFolder = (folder: TFolder): [ModifiedTime, CreatedTime] => {
 	let mtimeOfFolder: ModifiedTime = DEFAULT_FOLDER_MTIME
+	let ctimeOfFolder: CreatedTime = DEFAULT_FOLDER_CTIME
 	folder.children.forEach((item) => {
 		if (!isFolder(item)) {
 			const file: TFile = item as TFile
 			if (file.stat.mtime > mtimeOfFolder) {
 				mtimeOfFolder = file.stat.mtime
 			}
+			if (file.stat.ctime > ctimeOfFolder) {
+				ctimeOfFolder = file.stat.ctime
+			}
 		}
 	})
-	return mtimeOfFolder
+	return [mtimeOfFolder, ctimeOfFolder]
 }
 
 
@@ -226,9 +239,9 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 		const groupIdx: number | undefined = item.groupIdx
 		if (groupIdx !== undefined) {
 			const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
-			if (sortOrderNeedsFoldersMDate(groupOrder)) {
+			if (sortOrderNeedsFolderDates(groupOrder)) {
 				if (item.folder) {
-					item.mtime = determineModifiedDateForFolder(item.folder)
+					[item.mtime, item.ctime] = determineDatesForFolder(item.folder)
 				}
 			}
 		}
