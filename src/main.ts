@@ -352,10 +352,10 @@ class CustomSortSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Enable notifications of plugin states changes')
+			.setName('Enable notifications of plugin state changes')
 			.setDesc('The plugin can show notifications about its state changes: e.g. when successfully parsed and applied'
-			+ ' the custom sorting specification, or, when the parsing failed. If the notification are disabled,'
-			+ ' the only source of plugin state is the ribbon button icon. The developer console presents the parsing'
+			+ ' the custom sorting specification, or, when the parsing failed. If the notifications are disabled,'
+			+ ' the only indicator of plugin state is the ribbon button icon. The developer console presents the parsing'
 			+ ' error messages regardless if the notifications are enabled or not.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.notificationsEnabled)
