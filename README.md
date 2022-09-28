@@ -63,8 +63,7 @@ Click `Rename` whenever you're done
 - **RegExp pattern** - pattern of RegExp to match
 - **RegExp flags** - flags that will be applied to RegExp pattern
 
-Rename Button
-Rename files will start renaming all files by respective path.
+Rename Button will start renaming all files by respective path.
 
 
 ## Motivation
@@ -75,7 +74,7 @@ Here is many guides on how to rename files, what kind of script we need to run, 
 
 Why Not to have this functionality build-in into Obsidian?
 
-And rename a **bunch of files** and update their reference in code base respectively. So now you can rename a bunch of files from the directory and all imports also will be updated in a code-base
+And rename a **bunch of files** and update their reference in code base respectively. So now you can rename a bunch of files at once and all imports also will be updated in the vault 
 
 # Installation
 Follow the steps below to install Tasks.
