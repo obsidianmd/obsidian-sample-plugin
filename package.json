@@ -13,7 +13,8 @@
 		"obsidian",
 		"custom sorting"
 	],
-	"author": "SebastianMC <SebastianMC.github@gmail.com>",
+	"author": "SebastianMC",
+	"repository": "https://github.com/SebastianMC/obsidian-custom-sort",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/jest": "^28.1.2",

@@ -4,7 +4,7 @@
 	"version": "0.8.1",
 	"minAppVersion": "0.15.0",
 	"description": "Allows for manual and automatic, config-driven reordering and sorting of files and folders in File Explorer",
-	"author": "SebastianMC <SebastianMC.github@gmail.com>",
+	"author": "SebastianMC",
 	"authorUrl": "https://github.com/SebastianMC",
 	"isDesktopOnly": false
 }
