@@ -1158,71 +1158,71 @@ describe('convertPlainStringSortingGroupSpecToArraySpec', () => {
 	});
 	it('should recognize infix', () => {
 		const s = 'Advanced adv...ed, etc. and so on'
-		expect(processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
 			'Advanced adv', '...', 'ed, etc. and so on'
 		])
 	})
 	it('should recognize suffix', () => {
 		const s = 'Advanced... '
-		expect(processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
 			'Advanced', '...'
 		])
 	})
 	it('should recognize prefix', () => {
 		const s = ' ...tion. !!!'
-		expect(processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
 			'...', 'tion. !!!'
 		])
 	})
 	it('should recognize some edge case', () => {
 		const s = 'Edge...... ... ..... ... eee?'
-		expect(processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
 			'Edge', '...', '... ... ..... ... eee?'
 		])
 	})
 	it('should recognize some other edge case', () => {
 		const s = 'Edge... ... ... ..... ... eee?'
-		expect(processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
 			'Edge', '...', ' ... ... ..... ... eee?'
 		])
 	})
 	it('should recognize another edge case', () => {
 		const s = '...Edge ... ... ... ..... ... eee? ...'
-		expect(processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
 			'...', 'Edge ... ... ... ..... ... eee? ...'
 		])
 	})
 	it('should recognize yet another edge case', () => {
 		const s = '. .. ... ...'
-		const result = processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)
+		const result = processor.convertPlainStringSortingGroupSpecToArraySpec(s)
 		expect(result).toEqual([
 			'. .. ... ', '...' // Edge case -> splitting here is neutral, syntax error should be raised later on
 		])
 	})
 	it('should recognize tricky edge case', () => {
 		const s = '... ...'
-		const result = processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)
+		const result = processor.convertPlainStringSortingGroupSpecToArraySpec(s)
 		expect(result).toEqual([
 			'...', ' ...' // Edge case -> splitting here is neutral, syntax error should be raised later on
 		])
 	})
 	it('should recognize a variant of tricky edge case', () => {
 		const s = '......'
-		const result = processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)
+		const result = processor.convertPlainStringSortingGroupSpecToArraySpec(s)
 		expect(result).toEqual([
 			'...', '...' // Edge case -> splitting here is neutral, syntax error should be raised later on
 		])
 	})
 	it('edge case behavior', () => {
 		const s = '    ...... ..........    '
-		const result = processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)
+		const result = processor.convertPlainStringSortingGroupSpecToArraySpec(s)
 		expect(result).toEqual([
 			'...', '... ..........' // Edge case -> splitting here is neutral, syntax error should be raised later on
 		])
 	})
 	it('intentional edge case parsing', () => {
 		const s = ' Abc......def..........ghi '
-		const result = processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)
+		const result = processor.convertPlainStringSortingGroupSpecToArraySpec(s)
 		expect(result).toEqual([
 			'Abc', '...', '...def..........ghi' // Edge case -> splitting here is neutral, syntax error should be raised later on
 		])
@@ -1232,7 +1232,7 @@ describe('convertPlainStringSortingGroupSpecToArraySpec', () => {
 		'... ',
 		' ...'
 	])('should not split >%s< and only trim', (s: string) => {
-		const result = processor._l2s2_convertPlainStringSortingGroupSpecToArraySpec(s)
+		const result = processor.convertPlainStringSortingGroupSpecToArraySpec(s)
 		expect(result).toEqual([s.trim()])
 	})
 })
