@@ -55,6 +55,8 @@ export default class CustomSortPlugin extends Plugin {
 	sortSpecCache?: SortSpecsCollection | null
 	initialAutoOrManualSortingTriggered: boolean
 
+	fileExplorerFolderPatched: boolean
+
 	showNotice(message: string, timeout?: number) {
 		if (this.settings.notificationsEnabled) {
 			new Notice(message, timeout)
@@ -133,9 +135,14 @@ export default class CustomSortPlugin extends Plugin {
 				this.saveSettings()
 			}
 		}
-		const fileExplorerView: FileExplorerView = this.getFileExplorer()
+		const fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
 		if (fileExplorerView) {
-			fileExplorerView.requestSort();
+			if (!this.fileExplorerFolderPatched) {
+				this.fileExplorerFolderPatched = this.patchFileExplorerFolder(fileExplorerView);
+			}
+			if (this.fileExplorerFolderPatched) {
+				fileExplorerView.requestSort();
+			}
 		} else {
 			if (iconToSet === ICON_SORT_ENABLED_ACTIVE) {
 				iconToSet = ICON_SORT_ENABLED_NOT_APPLIED
@@ -189,7 +196,7 @@ export default class CustomSortPlugin extends Plugin {
 						this.initialAutoOrManualSortingTriggered = true
 						if (this.sortSpecCache) { // successful read of sorting specifications?
 							this.showNotice('Custom sort ON')
-							const fileExplorerView: FileExplorerView = this.getFileExplorer()
+							const fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
 							if (fileExplorerView) {
 								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
 								fileExplorerView.requestSort()
@@ -228,55 +235,57 @@ export default class CustomSortPlugin extends Plugin {
 
 	initialize() {
 		this.app.workspace.onLayoutReady(() => {
-			this.patchFileExplorerFolder();
+			this.fileExplorerFolderPatched = this.patchFileExplorerFolder();
 		})
 	}
 
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
-	patchFileExplorerFolder() {
+	patchFileExplorerFolder(fileExplorer?: FileExplorerView): boolean {
 		let plugin = this;
-		let leaf = this.app.workspace.getLeaf(true);
-		const fileExplorer = this.app.viewRegistry.viewByType["file-explorer"](leaf) as FileExplorerView;
-		// @ts-ignore
-		let tmpFolder = new TFolder(Vault, "");
-		let Folder = fileExplorer.createFolderDom(tmpFolder).constructor;
-		const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
-			// TODO: Unit tests, the logic below becomes more and more complex, bugs are captured at run-time...
-			sort(old: any) {
-				return function (...args: any[]) {
-					// quick check for plugin status
-					if (plugin.settings.suspended) {
-						return old.call(this, ...args);
-					}
+		fileExplorer = fileExplorer ?? this.getFileExplorer()
+		if (fileExplorer) {
+			// @ts-ignore
+			let tmpFolder = new TFolder(Vault, "");
+			let Folder = fileExplorer.createFolderDom(tmpFolder).constructor;
+			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
+				sort(old: any) {
+					return function (...args: any[]) {
+						// quick check for plugin status
+						if (plugin.settings.suspended) {
+							return old.call(this, ...args);
+						}
 
-					// if custom sort is not specified, use the UI-selected
-					const folder: TFolder = this.file
-					let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath[folder.path]
-					if (sortSpec) {
-						if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
-							sortSpec = null // A folder is explicitly excluded from custom sorting plugin
+						// if custom sort is not specified, use the UI-selected
+						const folder: TFolder = this.file
+						let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath[folder.path]
+						if (sortSpec) {
+							if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
+								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
+							}
+						} else if (plugin.sortSpecCache?.sortSpecByWildcard) {
+							// when no sorting spec found directly by folder path, check for wildcard-based match
+							sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path)
+							if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
+								sortSpec = null // A folder subtree can be also explicitly excluded from custom sorting plugin
+							}
 						}
-					} else if (plugin.sortSpecCache?.sortSpecByWildcard) {
-						// when no sorting spec found directly by folder path, check for wildcard-based match
-						sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path)
-						if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
-							sortSpec = null // A folder subtree can be also explicitly excluded from custom sorting plugin
+						if (sortSpec) {
+							return folderSort.call(this, sortSpec, ...args);
+						} else {
+							return old.call(this, ...args);
 						}
-					}
-					if (sortSpec) {
-						return folderSort.call(this, sortSpec, ...args);
-					} else {
-						return old.call(this, ...args);
-					}
-				};
-			}
-		})
-		this.register(uninstallerOfFolderSortFunctionWrapper)
-		leaf.detach()
+					};
+				}
+			})
+			this.register(uninstallerOfFolderSortFunctionWrapper)
+			return true
+		} else {
+			return false
+		}
 	}
 
 	// Credits go to https://github.com/nothingislost/obsidian-bartender
-	getFileExplorer() {
+	getFileExplorer(): FileExplorerView | undefined {
 		let fileExplorer: FileExplorerView | undefined = this.app.workspace.getLeavesOfType("file-explorer")?.first()
 			?.view as unknown as FileExplorerView;
 		return fileExplorer;
