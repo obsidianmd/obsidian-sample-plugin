@@ -235,7 +235,7 @@ export default class CustomSortPlugin extends Plugin {
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
 	patchFileExplorerFolder() {
 		let plugin = this;
-		let leaf = this.app.workspace.getLeaf();
+		let leaf = this.app.workspace.getLeaf(true);
 		const fileExplorer = this.app.viewRegistry.viewByType["file-explorer"](leaf) as FileExplorerView;
 		// @ts-ignore
 		let tmpFolder = new TFolder(Vault, "");
