@@ -3,6 +3,7 @@ import {
 	FileExplorerView,
 	MetadataCache,
 	Notice,
+	normalizePath,
 	Plugin,
 	PluginSettingTab,
 	setIcon,
@@ -332,7 +333,7 @@ class CustomSortSettingTab extends PluginSettingTab {
 				.setPlaceholder('e.g. note.md')
 				.setValue(this.plugin.settings.additionalSortspecFile)
 				.onChange(async (value) => {
-					this.plugin.settings.additionalSortspecFile = value;
+					this.plugin.settings.additionalSortspecFile = normalizePath(value);
 					await this.plugin.saveSettings();
 				}));
 
