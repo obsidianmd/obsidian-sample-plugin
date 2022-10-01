@@ -4,6 +4,21 @@
 
 .bulk_rename_preview {
   width: 80%;
+  height: 100%;
+  gap: 0;
+}
+
+.bulk_rename_preview > textarea {
+  height: 360px;
+}
+
+.bulk_preview_textarea {
+  margin-left: 5px;
+  margin-right: 5px;
+  font-size: 14px;
+  width: 100%;
+  /*white-space: nowrap;*/
+  /*overflow: auto;*/
 }
 
 .bulk_button {
@@ -25,11 +40,25 @@
 }
 
 .bulk_regexp_control {
+  background: var(--background-modifier-form-field);
   border: 1px solid var(--background-modifier-border);
+  transition: box-shadow 0.15s ease-in-out, border 0.15s ease-in-out;
+  font-family: inherit;
+  border-radius: var(--input-radius);
+  outline: none;
+}
+
+.bulk_regexp_control:hover,
+.bulk_regexp_control:focus,
+.bulk_regexp_control:focus-visible {
+  box-shadow: 0 0 0 2px var(--background-modifier-border-hover);
+  /*box-shadow: 0 0 0 2px var*/
 }
 
 .bulk_regexp_control > input {
   border: none;
+  margin: 0;
+  padding: 0;
 }
 
 .bulk_regexp,
@@ -37,8 +66,18 @@
   width: 100%;
 }
 
+.bulk_regexp:hover,
+.bulk_regexp:focus,
+.bulk_regexp:focus-visible .bulk_regexp_flags:hover,
+.bulk_regexp_flags:focus,
+.bulk_regexp_flags:focus-visible {
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .bulk_regexp_flags {
   caret-color: transparent;
+  max-width: 80px;
 }
 
 .bulk_regexp_slash {

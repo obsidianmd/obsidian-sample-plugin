@@ -95,7 +95,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl('h2', { text: 'Bulk Rename - Settings' });
+    containerEl.createEl('h1', { text: 'Bulk Rename - Settings' });
     containerEl.addEventListener('keyup', (event) => {
       if (event.key !== 'Enter') {
         return;
@@ -116,9 +116,9 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
 
   renderTabs() {
     new Setting(this.containerEl)
-      .setName('UI will be changed when you click those buttons')
+      .setName('Search by: ')
       .addButton((button) => {
-        button.setButtonText('Search by folder');
+        button.setButtonText('Folder');
         if (isViewTypeFolder(this.plugin.settings)) {
           button.setCta();
         }
@@ -129,7 +129,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
         });
       })
       .addButton((button) => {
-        button.setButtonText('Search By Tags');
+        button.setButtonText('Tags');
         if (isViewTypeTags(this.plugin.settings)) {
           button.setCta();
         }
@@ -140,7 +140,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
         });
       })
       .addButton((button) => {
-        button.setButtonText('Search by RegExp');
+        button.setButtonText('RegExp');
         if (isViewTypeRegExp(this.plugin.settings)) {
           button.setCta();
         }

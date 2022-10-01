@@ -25,7 +25,8 @@ export const renderPreviewFiles = (
 
       const previewLabel = createPreviewElement();
       text.inputEl.insertAdjacentElement('afterend', previewLabel);
-      text.inputEl.addClass('templater_cmd');
+      text.inputEl.addClass('bulk_preview_textarea');
+      text.inputEl.wrap = 'soft';
     })
     .addTextArea((text) => {
       text.setPlaceholder(
@@ -36,7 +37,8 @@ export const renderPreviewFiles = (
       replacedPreviewTextArea = text.inputEl;
       const value = getRenderedFileNamesReplaced(plugin);
       text.setValue(value);
-      text.inputEl.addClass('templater_cmd');
+      text.inputEl.addClass('bulk_preview_textarea');
+      text.inputEl.wrap = 'soft';
     })
     .then((setting) => {
       syncScrolls(existingFilesTextArea, replacedPreviewTextArea, state);
