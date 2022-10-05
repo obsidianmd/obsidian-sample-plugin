@@ -39,7 +39,23 @@
 - `> a-z, modified`
 - `< a-z, modified desc`
 - `> a-z, modified desc`
-- `< a-z, advanced modified`
-- `> a-z, advanced modified`
-- `< a-z, advanced modified desc`
-- `> a-z, advanced modified desc`
+- `< a-z, advanced created`
+- `> a-z, advanced created`
+- `< a-z, advanced created desc`
+- `> a-z, advanced created desc`
+- `< a-z, advanced created`
+- `> a-z, advanced created`
+- `< a-z, advanced created desc`
+- `> a-z, advanced created desc`
+
+### Alternate tokens
+
+Some tokens have shorter equivalents, which can be used interchangeably:
+
+- `target-folder:` : `::::` --> e.g `target-folder: /` is equivalent to `:::: /`
+- `order-asc:` : `<` --> e.g. `order-asc: modified` is equivalent to `< modified`
+- `order-desc:` : `>` --> e.g. `order-desc: a-z` is equivalent to `> a-z`
+- `/:files` : `/:` --> e.g. `/:files Chapter \.d+ ...` is equivalent to `/: Chapter \.d+ ...`
+- `/:files.` : `/:.` --> e.g. `/:files. ... \-D+.md` is equivalent to `/:. ... \-D+.md`
+- `/folders` : `/` --> e.g. `/folders Archive...` is equivalent to `/ Archive...`
+
