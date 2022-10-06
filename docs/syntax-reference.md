@@ -2,6 +2,25 @@
 > Please refer to [README.md](../../README.md) for usage examples
 > Check [manual.md](), maybe that file has already some content?
 
+# Table of contents
+
+TBD
+
+# Introduction
+
+The syntax of sorting specification presented here intentionally uses an informal language (instead of a formal grammar definition).
+The intention is to make it understandable to non-technical persons.
+
+# The syntax
+
+## Sorting specification
+
+The `sorting specification` comprises one or more [sections|#Section]
+
+## Section
+
+Blah blah
+
 ### Supported sorting methods
 
 #### At folder level only
