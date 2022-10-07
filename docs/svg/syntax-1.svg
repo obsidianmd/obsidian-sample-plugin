@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="-115 -160.5 386.5592 331.5" width="386.5592" height="331.5">
+	<defs/>
+	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 09:19:46 +0000</metadata>
+	<g id="syntax-1" fill="none" stroke-dasharray="none" stroke="none" fill-opacity="1" stroke-opacity="1">
+		<title>syntax-1</title>
+		<g id="syntax-1_Layer_1">
+			<title>Layer 1</title>
+			<g id="Graphic_9">
+				<rect x="-114.5" y="-160" width="385" height="330.5" fill="white"/>
+				<rect x="-114.5" y="-160" width="385" height="330.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+				<text transform="translate(-109.5 -160)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="17" fill="black" x="0" y="16">Some note</tspan>
+				</text>
+			</g>
+			<g id="Graphic_8">
+				<rect x="-114.5" y="-134" width="385" height="261" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_2">
+				<text transform="translate(-108.5 -131.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">---</tspan>
+				</text>
+			</g>
+			<g id="Graphic_4">
+				<text transform="translate(-108.5 -109.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">sorting-spec: |</tspan>
+				</text>
+			</g>
+			<g id="Graphic_5">
+				<text transform="translate(-90 -87.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_6">
+				<text transform="translate(-89.94079 -65.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_7">
+				<text transform="translate(-90 -43.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_27">
+				<text transform="translate(-90 -21.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_48">
+				<text transform="translate(-89.94079 .8040009)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_49">
+				<text transform="translate(-89.88158 22.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_50">
+				<text transform="translate(-89.94079 44.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_51">
+				<text transform="translate(-89.94079 66.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_52">
+				<text transform="translate(4 -54.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="11.313" y="13">section</tspan>
+				</text>
+			</g>
+			<g id="Line_53">
+				<path d="M -31 -82.5 C -11 -82.5 -33 -46 -14 -46" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Line_54">
+				<path d="M -31 -9.5 C -11 -9.5 -33 -46 -14 -46" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_55">
+				<text transform="translate(5 32.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="11.313" y="13">section</tspan>
+				</text>
+			</g>
+			<g id="Line_56">
+				<path d="M -30 4.5 C -10 4.5 -32 41 -13 41" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Line_57">
+				<path d="M -30 77.5 C -10 77.5 -32 41 -13 41" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_58">
+				<text transform="translate(-109.5 107.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">---</tspan>
+				</text>
+			</g>
+			<g id="Graphic_59">
+				<text transform="translate(-108.5 90.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">... some other YAML content</tspan>
+				</text>
+			</g>
+			<g id="Graphic_60">
+				<text transform="translate(-108.5 134.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">Note text</tspan>
+				</text>
+			</g>
+			<g id="Graphic_61">
+				<text transform="translate(-108.5 151.304)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">...</tspan>
+				</text>
+			</g>
+		</g>
+	</g>
+</svg>

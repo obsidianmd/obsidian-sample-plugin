@@ -13,6 +13,8 @@ The intention is to make it understandable to non-technical persons.
 
 # The syntax
 
+![Visual idea of the syntax](./svg/syntax-1.svg)
+
 ## Sorting specification
 
 - the `sorting specification` has textual format
