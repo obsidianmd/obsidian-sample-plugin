@@ -148,7 +148,9 @@ const AttrLexems: { [key: string]: Attribute } = {
 	// Concise abbreviated equivalents
 	'::::': Attribute.TargetFolder,
 	'<': Attribute.OrderAsc,
-	'>': Attribute.OrderDesc
+	'\\<': Attribute.OrderAsc, // to allow single-liners in YAML
+	'>': Attribute.OrderDesc,
+	'\\>': Attribute.OrderDesc // to allow single-liners in YAML
 }
 
 const CURRENT_FOLDER_SYMBOL: string = '.'

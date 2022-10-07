@@ -95,12 +95,12 @@ target-folder: Sandbox
   > created
 
 target-folder: Abcd efgh ijk
-> a-z
+\> a-z
 Plain text spec bla bla bla (matches files and folders)...
 /:files files only matching
   > a-z
 /folders folders only matching
-  < a-z
+  \< a-z
 % some-file (or folder) 
 /:files. sort....md
 % Trailer item
