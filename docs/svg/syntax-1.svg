@@ -1,12 +1,63 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="-115 -160.5 386.5592 331.5" width="386.5592" height="331.5">
-	<defs/>
-	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 09:19:46 +0000</metadata>
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="-136 -186.5 876.5 678.5" width="876.5" height="678.5">
+	<defs>
+		<marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="black">
+			<g>
+				<path d="M 8 0 L 0 -3 L 0 3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+			</g>
+		</marker>
+	</defs>
+	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 10:15:04 +0000</metadata>
 	<g id="syntax-1" fill="none" stroke-dasharray="none" stroke="none" fill-opacity="1" stroke-opacity="1">
 		<title>syntax-1</title>
 		<g id="syntax-1_Layer_1">
 			<title>Layer 1</title>
+			<g id="Graphic_154">
+				<rect x="-136" y="-186.5" width="876.5" height="678.5" fill="white"/>
+			</g>
+			<g id="Graphic_130">
+				<rect x="-90.5" y="-142.25" width="385" height="330.5" fill="white"/>
+				<rect x="-90.5" y="-142.25" width="385" height="330.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_131">
+				<rect x="-90.5" y="-116.25" width="385" height="261" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_152">
+				<rect x="-103.5" y="-151" width="385" height="330.5" fill="white"/>
+				<rect x="-103.5" y="-151" width="385" height="330.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_153">
+				<rect x="-103.5" y="-125" width="385" height="261" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_119">
+				<rect x="-78.5" y="227" width="385" height="177" fill="white"/>
+				<rect x="-78.5" y="227" width="385" height="177" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_120">
+				<rect x="-78.5" y="253" width="385" height="151" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_128">
+				<rect x="-90.5" y="212" width="385" height="177" fill="white"/>
+				<rect x="-90.5" y="212" width="385" height="177" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_129">
+				<rect x="-90.5" y="238" width="385" height="151" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_108">
+				<rect x="310.7204" y="-60.75" width="385" height="167.5" fill="white"/>
+				<rect x="310.7204" y="-60.75" width="385" height="167.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_109">
+				<rect x="310.7204" y="-34.75" width="385" height="98" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_117">
+				<rect x="333" y="-77" width="385" height="167.5" fill="white"/>
+				<rect x="333" y="-77" width="385" height="167.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_118">
+				<rect x="333" y="-51" width="385" height="98" fill="#e9e9e9"/>
+			</g>
 			<g id="Graphic_9">
 				<rect x="-114.5" y="-160" width="385" height="330.5" fill="white"/>
 				<rect x="-114.5" y="-160" width="385" height="330.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
@@ -107,6 +158,110 @@
 			<g id="Graphic_61">
 				<text transform="translate(-108.5 151.304)" fill="black">
 					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">...</tspan>
+				</text>
+			</g>
+			<g id="Graphic_62">
+				<rect x="319" y="-90" width="385" height="167.5" fill="white"/>
+				<rect x="319" y="-90" width="385" height="167.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+				<text transform="translate(324 -90)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="17" fill="black" x="0" y="16">Folder note</tspan>
+				</text>
+			</g>
+			<g id="Graphic_63">
+				<rect x="319" y="-64" width="385" height="98" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_64">
+				<text transform="translate(325 -61.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">---</tspan>
+				</text>
+			</g>
+			<g id="Graphic_65">
+				<text transform="translate(325 -39.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">sorting-spec: ..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_80">
+				<text transform="translate(324 14.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">---</tspan>
+				</text>
+			</g>
+			<g id="Graphic_81">
+				<text transform="translate(325 -5.695999)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">... some other YAML content</tspan>
+				</text>
+			</g>
+			<g id="Graphic_82">
+				<text transform="translate(325 38.054)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">Note text</tspan>
+				</text>
+			</g>
+			<g id="Graphic_83">
+				<text transform="translate(325 54.554)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">...</tspan>
+				</text>
+			</g>
+			<g id="Graphic_84">
+				<rect x="-102.5" y="201" width="385" height="177" fill="white"/>
+				<rect x="-102.5" y="201" width="385" height="177" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+				<text transform="translate(-97.5 201)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="17" fill="black" x="0" y="16">sortspec</tspan>
+				</text>
+			</g>
+			<g id="Graphic_85">
+				<rect x="-102.5" y="227" width="385" height="151" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_86">
+				<text transform="translate(-96.5 229.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">---</tspan>
+				</text>
+			</g>
+			<g id="Graphic_87">
+				<text transform="translate(-96.5 251.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">sorting-spec: |</tspan>
+				</text>
+			</g>
+			<g id="Graphic_88">
+				<text transform="translate(-78 273.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_89">
+				<text transform="translate(-77.94079 295.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_90">
+				<text transform="translate(-78 317.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_91">
+				<text transform="translate(-78 339.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Graphic_96">
+				<text transform="translate(16 306.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="11.313" y="13">section</tspan>
+				</text>
+			</g>
+			<g id="Line_97">
+				<path d="M -19 278.5 C 1 278.5 -21 315 -2 315" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Line_98">
+				<path d="M -19 351.5 C 1 351.5 -21 315 -2 315" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_74">
+				<text transform="translate(544 -54.196)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="11.313" y="13">section</tspan>
+				</text>
+			</g>
+			<g id="Line_106">
+				<line x1="549" y1="-46" x2="464.73277" y2="-30.311952" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_107">
+				<text transform="translate(-96.5 358.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">---</tspan>
 				</text>
 			</g>
 		</g>
