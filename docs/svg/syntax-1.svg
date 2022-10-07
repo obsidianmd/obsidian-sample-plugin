@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="-136 -186.5 876.5 678.5" width="876.5" height="678.5">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="-126.5 -207.448 855.5 621.948" width="855.5" height="621.948">
 	<defs>
 		<marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="black">
 			<g>
@@ -8,13 +8,14 @@
 			</g>
 		</marker>
 	</defs>
-	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 10:15:04 +0000</metadata>
+	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 10:18:50 +0000</metadata>
 	<g id="syntax-1" fill="none" stroke-dasharray="none" stroke="none" fill-opacity="1" stroke-opacity="1">
 		<title>syntax-1</title>
 		<g id="syntax-1_Layer_1">
 			<title>Layer 1</title>
 			<g id="Graphic_154">
-				<rect x="-136" y="-186.5" width="876.5" height="678.5" fill="white"/>
+				<path d="M -116 -174 L 718.5 -174 C 723.4706 -174 727.5 -169.97056 727.5 -165 L 727.5 404 C 727.5 408.97056 723.4706 413 718.5 413 L -116 413 C -120.97056 413 -125 408.97056 -125 404 L -125 -165 C -125 -169.97056 -120.97056 -174 -116 -174 Z" fill="white"/>
+				<path d="M -116 -174 L 718.5 -174 C 723.4706 -174 727.5 -169.97056 727.5 -165 L 727.5 404 C 727.5 408.97056 723.4706 413 718.5 413 L -116 413 C -120.97056 413 -125 408.97056 -125 404 L -125 -165 C -125 -169.97056 -120.97056 -174 -116 -174 Z" stroke="#919191" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6.0,6.0" stroke-width="3"/>
 			</g>
 			<g id="Graphic_130">
 				<rect x="-90.5" y="-142.25" width="385" height="330.5" fill="white"/>
@@ -262,6 +263,12 @@
 			<g id="Graphic_107">
 				<text transform="translate(-96.5 358.804)" fill="black">
 					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">---</tspan>
+				</text>
+			</g>
+			<g id="Graphic_155">
+				<path d="M 271.018 -207.448 L 331.482 -207.448 C 334.24342 -207.448 336.482 -205.20942 336.482 -202.448 L 336.482 -184 C 336.482 -181.23858 334.24342 -179 331.482 -179 L 271.018 -179 C 268.25658 -179 266.018 -181.23858 266.018 -184 L 266.018 -202.448 C 266.018 -205.20942 268.25658 -207.448 271.018 -207.448 Z" fill="white"/>
+				<text transform="translate(271.018 -202.448)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">My vault</tspan>
 				</text>
 			</g>
 		</g>
