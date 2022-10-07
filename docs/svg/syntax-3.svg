@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="75 3.0546265 423 105" width="423" height="105">
+	<defs/>
+	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 13:22:34 +0000</metadata>
+	<g id="syntax-3" fill="none" stroke-dasharray="none" stroke="none" fill-opacity="1" stroke-opacity="1">
+		<title>syntax-3</title>
+		<g id="syntax-3_Layer_1">
+			<title>Layer 1</title>
+			<g id="Graphic_154">
+				<path d="M 85.5 4.5546265 L 487.5 4.5546265 C 492.47056 4.5546265 496.5 8.584064 496.5 13.554626 L 496.5 97.55463 C 496.5 102.52519 492.47056 106.55463 487.5 106.55463 L 85.5 106.55463 C 80.52944 106.55463 76.5 102.52519 76.5 97.55463 L 76.5 13.554626 C 76.5 8.584064 80.52944 4.5546265 85.5 4.5546265 Z" fill="white"/>
+				<path d="M 85.5 4.5546265 L 487.5 4.5546265 C 492.47056 4.5546265 496.5 8.584064 496.5 13.554626 L 496.5 97.55463 C 496.5 102.52519 492.47056 106.55463 487.5 106.55463 L 85.5 106.55463 C 80.52944 106.55463 76.5 102.52519 76.5 97.55463 L 76.5 13.554626 C 76.5 8.584064 80.52944 4.5546265 85.5 4.5546265 Z" stroke="#919191" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6.0,6.0" stroke-width="3"/>
+			</g>
+			<g id="Graphic_159">
+				<rect x="197.3795" y="32.109253" width="264.5" height="46.890747" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_74">
+				<text transform="translate(91.5 46.278)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="5.608" y="13">a section</tspan>
+				</text>
+			</g>
+			<g id="Graphic_160">
+				<text transform="translate(206 37.981003)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">target-folder: Reviews/*</tspan>
+				</text>
+			</g>
+			<g id="Line_171">
+				<path d="M 186.5 32.109253 C 166.5 32.109253 188.5 55.554626 169.5 55.554626" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Line_172">
+				<path d="M 186.5 79 C 166.5 79 188.5 55.554626 169.5 55.554626" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_178">
+				<text transform="translate(91.5 73.246)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="10" fill="black" x="19.37" y="10">typical </tspan>
+					<tspan font-family="Helvetica Neue" font-size="10" fill="black" x="15.015" y="22.28">example</tspan>
+				</text>
+			</g>
+			<g id="Graphic_179">
+				<text transform="translate(206 59.804)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">&gt; advanced modified</tspan>
+				</text>
+			</g>
+		</g>
+	</g>
+</svg>

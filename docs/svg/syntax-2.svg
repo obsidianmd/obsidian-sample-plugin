@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="80.5 4.5 280.5 82.5" width="280.5" height="82.5">
+	<defs/>
+	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 13:22:34 +0000</metadata>
+	<g id="syntax-2-1" fill="none" stroke-dasharray="none" stroke="none" fill-opacity="1" stroke-opacity="1">
+		<title>syntax-2</title>
+		<g id="syntax-2-1_Layer_1">
+			<title>Layer 1</title>
+			<g id="Graphic_154">
+				<path d="M 91 6 L 350.5 6 C 355.47056 6 359.5 10.029437 359.5 15 L 359.5 76.5 C 359.5 81.47056 355.47056 85.5 350.5 85.5 L 91 85.5 C 86.02944 85.5 82 81.47056 82 76.5 L 82 15 C 82 10.029437 86.02944 6 91 6 Z" fill="white"/>
+				<path d="M 91 6 L 350.5 6 C 355.47056 6 359.5 10.029437 359.5 15 L 359.5 76.5 C 359.5 81.47056 355.47056 85.5 350.5 85.5 L 91 85.5 C 86.02944 85.5 82 81.47056 82 76.5 L 82 15 C 82 10.029437 86.02944 6 91 6 Z" stroke="#919191" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6.0,6.0" stroke-width="3"/>
+			</g>
+			<g id="Graphic_159">
+				<rect x="290" y="31.48163" width="49" height="29.390747" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_74">
+				<text transform="translate(91 22.455002)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="5.608" y="13">a section</tspan>
+				</text>
+			</g>
+			<g id="Graphic_160">
+				<text transform="translate(206 37.981003)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">sorting-spec: \&lt; a-z</tspan>
+				</text>
+			</g>
+			<g id="Line_171">
+				<path d="M 191 35.177 C 176.29412 35.177 192.47059 46.177 178.5 46.177" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Line_172">
+				<path d="M 191 57.177 C 176.29412 57.177 192.47059 46.177 178.5 46.177" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_178">
+				<text transform="translate(91 49.423004)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="10" fill="black" x="15.29" y="10">simplest </tspan>
+					<tspan font-family="Helvetica Neue" font-size="10" fill="black" x="15.015" y="22.28">example</tspan>
+				</text>
+			</g>
+		</g>
+	</g>
+</svg>

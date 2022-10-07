@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="63.5 12.302002 423 270.198" width="423" height="270.198">
+	<defs/>
+	<metadata> Produced by OmniGraffle 7.20\n2022-10-07 13:22:34 +0000</metadata>
+	<g id="syntax-4" fill="none" stroke-dasharray="none" stroke="none" fill-opacity="1" stroke-opacity="1">
+		<title>syntax-4</title>
+		<g id="syntax-4_Layer_1">
+			<title>Layer 1</title>
+			<g id="Graphic_154">
+				<path d="M 74 13.802002 L 476 13.802002 C 480.97056 13.802002 485 17.83144 485 22.802002 L 485 272 C 485 276.97056 480.97056 281 476 281 L 74 281 C 69.02944 281 65 276.97056 65 272 L 65 22.802002 C 65 17.83144 69.02944 13.802002 74 13.802002 Z" fill="white"/>
+				<path d="M 74 13.802002 L 476 13.802002 C 480.97056 13.802002 485 17.83144 485 22.802002 L 485 272 C 485 276.97056 480.97056 281 476 281 L 74 281 C 69.02944 281 65 276.97056 65 272 L 65 22.802002 C 65 17.83144 69.02944 13.802002 74 13.802002 Z" stroke="#919191" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6.0,6.0" stroke-width="3"/>
+			</g>
+			<g id="Graphic_159">
+				<rect x="197.3795" y="32.109253" width="264.5" height="227.89075" fill="#e9e9e9"/>
+			</g>
+			<g id="Graphic_74">
+				<text transform="translate(88 136.554)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="5.608" y="13">a section</tspan>
+				</text>
+			</g>
+			<g id="Graphic_160">
+				<text transform="translate(206 37.981003)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">target-folder: Meeting minutes</tspan>
+				</text>
+			</g>
+			<g id="Graphic_161">
+				<text transform="translate(206 57.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">target-folder: Archive/...</tspan>
+				</text>
+			</g>
+			<g id="Graphic_162">
+				<text transform="translate(206 81.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">.......... default sorting for the folder(s)</tspan>
+				</text>
+			</g>
+			<g id="Graphic_163">
+				<text transform="translate(206 103.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">.......... group 1 definition</tspan>
+				</text>
+			</g>
+			<g id="Graphic_164">
+				<text transform="translate(217.79675 125.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">.......... sorting within group 1</tspan>
+				</text>
+			</g>
+			<g id="Graphic_165">
+				<text transform="translate(206 147.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">.......... group 2 definition</tspan>
+				</text>
+			</g>
+			<g id="Graphic_166">
+				<text transform="translate(206 169.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">.......... group 3 definition</tspan>
+				</text>
+			</g>
+			<g id="Graphic_167">
+				<text transform="translate(206 191.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">.......... group 4 definition</tspan>
+				</text>
+			</g>
+			<g id="Graphic_168">
+				<text transform="translate(217.8345 213.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">.......... sorting within group 2</tspan>
+				</text>
+			</g>
+			<g id="Graphic_169">
+				<text transform="translate(206 235.856)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="14" fill="black" x="0" y="13">..........</tspan>
+				</text>
+			</g>
+			<g id="Line_171">
+				<path d="M 184.5 47 C 164.5 47 186.5 145.5 167.5 145.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Line_172">
+				<path d="M 184.5 244 C 164.5 244 186.5 145.5 167.5 145.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+			</g>
+			<g id="Graphic_178">
+				<text transform="translate(88 157.382)" fill="black">
+					<tspan font-family="Helvetica Neue" font-size="10" fill="black" x="14.83" y="10">complex </tspan>
+					<tspan font-family="Helvetica Neue" font-size="10" fill="black" x="15.015" y="22.28">example</tspan>
+					<tspan font-family="Helvetica Neue" font-size="10" fill="black" x="10.385" y="34.559998">of the idea</tspan>
+				</text>
+			</g>
+		</g>
+	</g>
+</svg>
