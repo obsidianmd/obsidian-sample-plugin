@@ -13,9 +13,14 @@ The intention is to make it understandable to non-technical persons.
 
 # The syntax
 
+**Visual presentation of the sorting specification structure**
+
 ![Visual idea of the syntax 1](./svg/syntax-1.svg)
+
 ![Visual idea of the syntax 2](./svg/syntax-2.svg)
+
 ![Visual idea of the syntax 3](./svg/syntax-3.svg)
+
 ![Visual idea of the syntax 4](./svg/syntax-4.svg)
 
 ## Sorting specification
