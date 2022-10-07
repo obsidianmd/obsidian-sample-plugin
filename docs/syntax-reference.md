@@ -150,3 +150,6 @@ Some tokens have shorter equivalents, which can be used interchangeably:
 - `/:files.` --> `/:.` e.g. `/:files. ... \-D+.md` is equivalent to `/:. ... \-D+.md`
 - `/folders` --> `/` e.g. `/folders Archive...` is equivalent to `/ Archive...`
 
+Additional shorter equivalents to allow single-liners like `sorting-spec: \< a-z`:
+- `order-asc:` --> `\<` e.g. `order-asc: modified` is equivalent to `\< modified`
+- `order-desc:` --> `\>` e.g. `order-desc: a-z` is equivalent to `\> a-z`
