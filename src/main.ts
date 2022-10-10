@@ -34,7 +34,7 @@ interface CustomSortPluginSettings {
 }
 
 const DEFAULT_SETTINGS: CustomSortPluginSettings = {
-	additionalSortspecFile: 'Inbox/Inbox.md',
+	additionalSortspecFile: '',
 	suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
 	statusBarEntryEnabled: true,
 	notificationsEnabled: true
@@ -330,10 +330,10 @@ class CustomSortSettingTab extends PluginSettingTab {
 			.setName('Path to the designated note containing sorting specification')
 			.setDesc('The YAML front matter of this note will be scanned for sorting specification, in addition to the sortspec.md notes and folder notes. Remember to add the `.md` explicitly here.')
 			.addText(text => text
-				.setPlaceholder('e.g. note.md')
+				.setPlaceholder('e.g. Inbox/Inbox.md')
 				.setValue(this.plugin.settings.additionalSortspecFile)
 				.onChange(async (value) => {
-					this.plugin.settings.additionalSortspecFile = normalizePath(value);
+					this.plugin.settings.additionalSortspecFile = value.trim() ? normalizePath(value) : '';
 					await this.plugin.saveSettings();
 				}));
 
