@@ -39,6 +39,7 @@ Take full control of the order of your notes and folders:
 - [Location of sorting specification YAML entry](#location-of-sorting-specification-yaml-entry) 
 - [Ribbon icon](#ribbon-icon)
 - [Installing the plugin](#installing-the-plugin)
+  - [From the official Obsidian Community Plugins page](#from-the-official-obsidian-community-plugins-page) 
   - [Installing the plugin using BRAT](#installing-the-plugin-using-brat)
   - [Manually installing the plugin](#manually-installing-the-plugin)
 - [Credits](#credits)
@@ -462,9 +463,17 @@ States of the ribbon icon:
 
 ## Installing the plugin
 
-As for now, the plugin can be installed manually or via the BRAT plugin
+### From the official Obsidian Community Plugins page
+
+The plugin could and should be installed from the official Obsidian Community Plugins list at https://obsidian.md/plugins
+or directly in the Obsidian app itself.
+Search the plugin by its name 'CUSTOM FILE EXPLORER SORTING'
 
 ### Installing the plugin using BRAT
+
+> NOTE
+> 
+> BRAT installation is supported yet no longer needed since reaching the official list at https://obsidian.md/plugins
 
 1. Install the BRAT plugin
 	1. Open `Settings` -> `Community Plugins`
@@ -479,9 +488,13 @@ As for now, the plugin can be installed manually or via the BRAT plugin
 
 ### Manually installing the plugin
 
+> NOTE
+> 
+> Manual installation is no longer needed since reaching the official list at https://obsidian.md/plugins
+
 1. Go to Github for releases: https://github.com/SebastianMC/obsidian-custom-sort/releases
-2. Download the Latest Release from the Releases section of the GitHub Repository
-3. Copy the downloaded files `main.js`, `styles.css`, `manifest.json` over to your
+2. Download the latest (or desired) Release from the Releases section of the GitHub Repository
+3. Copy the downloaded files `main.js` and `manifest.json` over to your
    vault `VaultFolder/.obsidian/plugins/custom-sort/`.
 	- you might need to manually create the `/custom-sort/` folder under `VaultFolder/.obsidian/plugins/`
 4. Reload Obsidian
