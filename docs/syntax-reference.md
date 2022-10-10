@@ -1,6 +1,6 @@
 > Document is partial, creation in progress
 > Please refer to [README.md](../../README.md) for usage examples
-> Check [manual.md](), maybe that file has already some content?
+> Check [manual.md](./manual.md), maybe that file has already some content?
 
 # Table of contents
 
@@ -49,20 +49,6 @@ The intention is to make it understandable to non-technical persons.
 
 ## Section
 
-- a `section` specifies sorting for one or more folders of the vault
-- a `section` starts with one or more [target-folder:](#target-folder) lines, each one specifying a folder or a folders (sub)tree
-  - the `target-folder:` is optional for the very first `section` in a `sorting-spec:` YAML entry. 
-    In that case it is assumed that the target folder is the parent folder of the note containing the `sorting-spec:`
-  - if a `target-folder:` is specified, the above default behavior is not applicable.
-  - subsequent lines with `target-folder:` are collected and treated as multi-target-folder specification
-    - empty lines are ignored
-    - [comments](#Comments) are ignored as well
-  - one (or more) `target-folder:` lines has to be followed by [sorting instruction(s)](#sorting-instructions) for these folders
-    - the `sorting instruction(s)` can be ignored only for the last (or only) `target-folder:` line of `sorting-spec:`. 
-      In that case, the default alphabetical sorting is assumed for the specified folders, treating the folders and notes equally
-  - occurrence of `target-folder:` line after one or more `sorting-instruction(s)` indicates a beginning of a new `section`
-
----
 - a [section](#Section) specifies sorting for one or more folders of the vault
 - a [section](#Section) starts with one or more [target-folder:](#target-folder) lines, each one specifying a folder or a folders (sub)tree
 	- the [target-folder:](#target-folder) is optional for the very first [section](#Section) in a `sorting-spec:` YAML entry.
@@ -75,7 +61,6 @@ The intention is to make it understandable to non-technical persons.
 		- the `sorting instruction(s)` can be ignored only for the last (or only) [target-folder:](#target-folder) line of `sorting-spec:`.
 		  In that case, the default alphabetical sorting is assumed for the specified folders, treating the folders and notes equally
 	- occurrence of [target-folder:](#target-folder) line after one or more `sorting-instruction(s)` indicates a beginning of a new [section](#Section)
-
 
 ## target-folder:
 

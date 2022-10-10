@@ -1,3 +1,3 @@
 Yet to be filled with content ;-)
 
-See [syntax-reference.md](), maybe that file has already some content?
+See [syntax-reference.md](./syntax-reference.md), maybe that file has already some content?
