@@ -82,7 +82,12 @@ export default class CustomSortPlugin extends Plugin {
 				// - files with designated name (sortspec.md by default)
 				// - files with the same name as parent folders (aka folder notes): References/References.md
 				// - the file explicitly indicated in documentation, by default Inbox/Inbox.md
-				if (aFile.name === SORTSPEC_FILE_NAME || aFile.basename === parent.name || aFile.path === this.settings.additionalSortspecFile) {
+				if (aFile.name === SORTSPEC_FILE_NAME ||
+					aFile.basename === parent.name ||
+					aFile.basename === this.settings.additionalSortspecFile ||
+					aFile.path === this.settings.additionalSortspecFile ||
+					aFile.path === this.settings.additionalSortspecFile + '.md'
+				) {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					if (sortingSpecTxt) {
 						anySortingSpecFound = true
@@ -328,9 +333,9 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Path to the designated note containing sorting specification')
-			.setDesc('The YAML front matter of this note will be scanned for sorting specification, in addition to the sortspec.md notes and folder notes. Remember to add the `.md` explicitly here.')
+			.setDesc('The YAML front matter of this note will be scanned for sorting specification, in addition to the `sortspec` notes and folder notes. The `.md` filename suffix is optional.')
 			.addText(text => text
-				.setPlaceholder('e.g. Inbox/Inbox.md')
+				.setPlaceholder('e.g. Inbox/sort')
 				.setValue(this.plugin.settings.additionalSortspecFile)
 				.onChange(async (value) => {
 					this.plugin.settings.additionalSortspecFile = value.trim() ? normalizePath(value) : '';
