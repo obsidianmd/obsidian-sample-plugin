@@ -17,6 +17,9 @@
   margin-right: 5px;
   font-size: 14px;
   width: 100%;
+  height: 400px;
+  resize: none;
+  width: 100%;
   /*white-space: nowrap;*/
   /*overflow: auto;*/
 }
