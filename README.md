@@ -22,7 +22,6 @@ Take full control of the order of your notes and folders:
 ## Table of contents
 
 - [TL;DR Usage](#tldr-usage)
-  - 
   - [Simple case 1: in root folder sort entries alphabetically treating folders and files equally](#simple-case-1-in-root-folder-sort-entries-alphabetically-treating-folders-and-files-equally)
   -	[Simple case 2: impose manual order of some items in root folder](#simple-case-2-impose-manual-order-of-some-items-in-root-folder)
   - [Example 3: In root folder, let files go first and folders get pushed to the bottom](#example-3-in-root-folder-let-files-go-first-and-folders-get-pushed-to-the-bottom)
@@ -46,8 +45,7 @@ Take full control of the order of your notes and folders:
 
 ## TL;DR Usage
 
-For full version of the manual go to [./docs/manual.md](./docs/manual.md) and [./docs/syntax-reference.md](./docs/syntax-reference.md)
-> REMARK: as of this version of documentation, the manual and syntax reference are empty :-)
+For full version of the manual go to [manual](./docs/manual.md) and [syntax-reference](./docs/syntax-reference.md)
 
 > **Quickstart**
 > 
