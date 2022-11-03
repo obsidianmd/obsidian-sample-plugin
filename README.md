@@ -415,24 +415,33 @@ sorting-spec: |
 
 ### Example 14: Grouping and sorting by metadata value
 
-Notes can contain metadata, and let me use the example inspired by the [Feature Request #23](https://github.com/SebastianMC/obsidian-custom-sort/issues/23)
-Namely, someone can create notes when reading a book and uses the `Pages` metadata field to store reference information to which page(s) the note refers
+Notes can contain metadata, let me use the example inspired by the [Feature Request #23](https://github.com/SebastianMC/obsidian-custom-sort/issues/23).
+Namely, someone can create notes when reading a book and use the `Pages` metadata field. In that field s/he enters page(s) number(s) of the book, for reference
 For example:
 
 ```yaml
+---
 Pages: 6
+...
+---
 ```
 
 or
 
 ```yaml
+---
 Pages: 7,8
+...
+---
 ```
 
 or 
 
 ```yaml
+---
 Pages: 12-15
+...
+---
 ```
 
 Using this plugin you can group and sort notes by the value of the specific metadata, for example:
@@ -440,24 +449,30 @@ Using this plugin you can group and sort notes by the value of the specific meta
 ```yaml
 ---
 sorting-spec: |
-    target-folder: Remarks from The Little Prince book
-    metadata: Pages
-	  < a-z
+    target-folder: Remarks from 'The Little Prince' book
+    with-metadata: Pages
+      < a-z
 ---
 ```
 
-In the above example the simple syntax `metadata: Pages` was used to tell the plugin about the metadata name for grouping and sorting.
-The specified sorting `< a-z` is obviously alphabetical, and in this specific context it tells to sort by the value of the metadata and not by the note or folder name.
-Any other sorting from the supported set of rules can be applied, also not related to the metadata value
+In the above example the syntax `with-metadata: Pages` was used to tell the plugin about the metadata field name for grouping and sorting.
+The specified sorting `< a-z` is obviously alphabetical, and in this specific context it tells to sort by the value of the specified metadata (and not by the note or folder name).
+Any other sorting from the supported set of rules can be applied, also these not related to the metadata value
 
 > NOTE
 > 
-> For folders, their 'folder note' metadata is scanned
+> The grouping and sorting by metadata is not refreshed automatically after change of the metadata in note(s) to avoid impact on Obsidian performance.
+> After editing of metadata of some note(s) you have to explicitly click the plugin ribbon button to refresh the sorting. Or close and reopen the vault. Or restart Obsidian.
+> This behavior is intentionally different from other grouping and sorting rules, which stay active and up-to-date once enabled.
+
+> NOTE
+> 
+> For folders, metadata of their 'folder note' is scanned (if present)
  
 > NOTE
 > 
-> The `metadata:` keyword can be used with other specifiers like `/:files metadata: Pages` or `/folders metadata: Pages`
-> If the metadata name is omitted, the default `sort-index-value` is assumed.
+> The `with-metadata:` keyword can be used with other specifiers like `/:files with-metadata: Pages` or `/folders with-metadata: Pages`
+> If the metadata name is omitted, the default `sort-index-value` metadata name is assumed.
 
 ## Location of sorting specification YAML entry
 

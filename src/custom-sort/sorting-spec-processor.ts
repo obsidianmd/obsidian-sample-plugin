@@ -173,7 +173,7 @@ const AnyTypeGroupLexeme: string = '%'  // See % as a combination of / and :
 const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
 
-const MetadataFieldIndicatorLexeme: string = 'metadata:'
+const MetadataFieldIndicatorLexeme: string = 'with-metadata:'
 
 const DEFAULT_METADATA_FIELD_FOR_SORTING: string = 'sort-index-value'
 
@@ -935,7 +935,6 @@ export class SortingSpecProcessor {
 					matchFilenameWithExt: spec.matchFilenameWithExt  // Doesn't make sense for matching, yet for multi-match
 				}               									    // theoretically could match the sorting of matched files
 			} else {
-				// prototyping - only detect the presence of metadata: lexem
 				if (theOnly.startsWith(MetadataFieldIndicatorLexeme)) {
 					const metadataFieldName: string | undefined = extractIdentifier(
 						theOnly.substring(MetadataFieldIndicatorLexeme.length),

@@ -25,9 +25,9 @@ target-folder: tricky folder
 /:  
 
 :::: tricky folder 2
-/: metadata:
+/: with-metadata:
  > modified
-metadata: Pages 
+with-metadata: Pages 
  > a-z
 
 :::: Conceptual model
@@ -78,9 +78,9 @@ target-folder: tricky folder
 /:files  
 
 target-folder: tricky folder 2
-/:files metadata:
+/:files with-metadata:
  > modified
-% metadata: Pages 
+% with-metadata: Pages 
  > a-z
 
 :::: Conceptual model
