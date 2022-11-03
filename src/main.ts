@@ -52,6 +52,7 @@ export default class CustomSortPlugin extends Plugin {
 	settings: CustomSortPluginSettings
 	statusBarItemEl: HTMLElement
 	ribbonIconEl: HTMLElement
+	ribbonIconStateInaccurate: boolean
 
 	sortSpecCache?: SortSpecsCollection | null
 	initialAutoOrManualSortingTriggered: boolean
@@ -152,6 +153,10 @@ export default class CustomSortPlugin extends Plugin {
 		} else {
 			if (iconToSet === ICON_SORT_ENABLED_ACTIVE) {
 				iconToSet = ICON_SORT_ENABLED_NOT_APPLIED
+
+				if (updateRibbonBtnIcon) {
+					this.ribbonIconStateInaccurate = true
+				}
 			}
 		}
 
@@ -163,7 +168,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	async onload() {
-		console.log("loading custom-sort");
+		console.log(`loading custom-sort v${this.manifest.version}`);
 
 		await this.loadSettings();
 
@@ -183,6 +188,10 @@ export default class CustomSortPlugin extends Plugin {
 				this.switchPluginStateTo(this.settings.suspended)
 			});
 
+		if (!this.settings.suspended) {
+			this.ribbonIconStateInaccurate = true
+		}
+
 		this.addSettingTab(new CustomSortSettingTab(this.app, this));
 
 		this.registerEventHandlers()
@@ -193,6 +202,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	registerEventHandlers() {
+		const plugin: CustomSortPlugin = this
 		this.registerEvent(
 			// Keep in mind: this event is triggered once after app starts and then after each modification of _any_ metadata
 			this.app.metadataCache.on("resolved", () => {
@@ -208,6 +218,7 @@ export default class CustomSortPlugin extends Plugin {
 								fileExplorerView.requestSort()
 							} else {
 								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_NOT_APPLIED)
+								plugin.ribbonIconStateInaccurate = true
 							}
 							this.updateStatusBar()
 						} else {
@@ -259,6 +270,11 @@ export default class CustomSortPlugin extends Plugin {
 						// quick check for plugin status
 						if (plugin.settings.suspended) {
 							return old.call(this, ...args);
+						}
+
+						if (plugin.ribbonIconStateInaccurate && plugin.ribbonIconEl) {
+							plugin.ribbonIconStateInaccurate = false
+							setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
 						}
 
 						// if custom sort is not specified, use the UI-selected
