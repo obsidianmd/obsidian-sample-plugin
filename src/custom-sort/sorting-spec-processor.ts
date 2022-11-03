@@ -173,6 +173,10 @@ const AnyTypeGroupLexeme: string = '%'  // See % as a combination of / and :
 const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
 
+const MetadataFieldIndicatorLexeme: string = 'metadata:'
+
+const DEFAULT_METADATA_FIELD_FOR_SORTING: string = 'sort-index-value'
+
 const CommentPrefix: string = '//'
 
 interface SortingGroupType {
@@ -378,6 +382,12 @@ const stripWildcardPatternSuffix = (path: string): [path: string, priority: numb
 		path,
 		WildcardPriority.NO_WILDCARD
 	]
+}
+
+// Simplistic
+const extractIdentifier = (text: string, defaultResult?: string): string | undefined => {
+	const identifier: string = text.trim().split(' ')?.[0]?.trim()
+	return identifier ? identifier : defaultResult
 }
 
 const ADJACENCY_ERROR: string = "Numerical sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case."
@@ -925,13 +935,28 @@ export class SortingSpecProcessor {
 					matchFilenameWithExt: spec.matchFilenameWithExt  // Doesn't make sense for matching, yet for multi-match
 				}               									    // theoretically could match the sorting of matched files
 			} else {
-				// For non-three dots single text line assume exact match group
-				return {
-					type: CustomSortGroupType.ExactName,
-					exactText: spec.arraySpec[0],
-					filesOnly: spec.filesOnly,
-					foldersOnly: spec.foldersOnly,
-					matchFilenameWithExt: spec.matchFilenameWithExt
+				// prototyping - only detect the presence of metadata: lexem
+				if (theOnly.startsWith(MetadataFieldIndicatorLexeme)) {
+					const metadataFieldName: string | undefined = extractIdentifier(
+						theOnly.substring(MetadataFieldIndicatorLexeme.length),
+						DEFAULT_METADATA_FIELD_FOR_SORTING
+					)
+					return {
+						type: CustomSortGroupType.HasMetadataField,
+						metadataFieldName: metadataFieldName,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
+				} else {
+					// For non-three dots single text line assume exact match group
+					return {
+						type: CustomSortGroupType.ExactName,
+						exactText: theOnly,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
 				}
 			}
 		}

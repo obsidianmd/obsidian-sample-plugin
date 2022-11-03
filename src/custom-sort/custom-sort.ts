@@ -1,4 +1,4 @@
-import {requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
+import {MetadataCache, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
 import {CustomSortGroup, CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
 import {isDefined} from "../utils/utils";
 
@@ -33,6 +33,7 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byCreatedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctimeNewest - b.ctimeNewest,
 	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.ctimeOldest - a.ctimeOldest),
 	[CustomSortOrder.byCreatedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctimeOldest - a.ctimeOldest,
+	[CustomSortOrder.byMetadataField]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
 
 	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
@@ -70,6 +71,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	let groupIdx: number
 	let determined: boolean = false
 	let matchedGroup: string | null | undefined
+	let sortString: string | undefined
 	const aFolder: boolean = isFolder(entry)
 	const aFile: boolean = !aFolder
 	const entryAsTFile: TFile = entry as TFile
@@ -144,10 +146,24 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						matchedGroup = group.regexSpec?.normalizerFn(match[1]);
 					}
 				}
-				break;
+				break
+			case CustomSortGroupType.HasMetadataField:
+				if (group.metadataFieldName) {
+					const mCache: MetadataCache | undefined = spec.plugin?.app.metadataCache
+					if (mCache) {
+						// For folders - scan metadata of 'folder note'
+						const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
+						const metadataValue: string | undefined = mCache.getCache(notePathToScan)?.frontmatter?.[group.metadataFieldName]
+						if (metadataValue) {
+							determined = true
+							sortString = metadataValue
+						}
+					}
+				}
+				break
 			case CustomSortGroupType.MatchAll:
 				determined = true;
-				break;
+				break
 		}
 		if (determined) {
 			break;
@@ -171,7 +187,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	return {
 		// idx of the matched group or idx of Outsiders group or the largest index (= groups count+1)
 		groupIdx: determinedGroupIdx,
-		sortString: matchedGroup ? (matchedGroup + '//' + entry.name) : entry.name,
+		sortString: sortString ?? (matchedGroup ? (matchedGroup + '//' + entry.name) : entry.name),
 		matchGroup: matchedGroup ?? undefined,
 		isFolder: aFolder,
 		folder: aFolder ? (entry as TFolder) : undefined,
@@ -255,7 +271,7 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 			return itemForSorting
 		})
 
-	// Finally, for advanced sorting by modified date, for some of the folders the modified date has to be determined
+	// Finally, for advanced sorting by modified date, for some folders the modified date has to be determined
 	determineFolderDatesIfNeeded(folderItems, sortingSpec, sortingGroupsCardinality)
 
 	folderItems.sort(function (itA: FolderItemForSorting, itB: FolderItemForSorting) {

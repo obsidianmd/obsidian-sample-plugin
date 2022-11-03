@@ -24,6 +24,12 @@ target-folder: tricky folder
 /  
 /:  
 
+:::: tricky folder 2
+/: metadata:
+ > modified
+metadata: Pages 
+ > a-z
+
 :::: Conceptual model
 /: Entities
 %
@@ -70,6 +76,12 @@ order-asc: a-z
 target-folder: tricky folder 
 /folders  
 /:files  
+
+target-folder: tricky folder 2
+/:files metadata:
+ > modified
+% metadata: Pages 
+ > a-z
 
 :::: Conceptual model
 /:files Entities
@@ -141,6 +153,25 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 		outsidersFilesGroupIdx: 1,
 		outsidersFoldersGroupIdx: 0,
 		targetFoldersPaths: ['tricky folder']
+	},
+	"tricky folder 2": {
+		groups: [{
+			filesOnly: true,
+			metadataFieldName: 'sort-index-value',
+			order: CustomSortOrder.byModifiedTimeReverse,
+			type: CustomSortGroupType.HasMetadataField
+		}, {
+			metadataFieldName: 'Pages',
+			order: CustomSortOrder.alphabeticalReverse,
+			type: CustomSortGroupType.HasMetadataField
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 2,
+		targetFoldersPaths: [
+			'tricky folder 2'
+		]
 	},
 	"Conceptual model": {
 		groups: [{

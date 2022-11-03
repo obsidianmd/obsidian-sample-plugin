@@ -1,3 +1,5 @@
+import {Plugin} from "obsidian";
+
 export enum CustomSortGroupType {
 	Outsiders, // Not belonging to any of other groups
 	MatchAll, // like a wildard *, used in connection with foldersOnly or filesOnly. The difference between the MatchAll and Outsiders is
@@ -5,6 +7,7 @@ export enum CustomSortGroupType {
 	ExactPrefix,						  // ... while the Outsiders captures items which didn't match any of other defined groups
 	ExactSuffix,
 	ExactHeadAndTail, // Like W...n or Un...ed, which is shorter variant of typing the entire title
+	HasMetadataField  // Notes (or folder's notes) containing a specific metadata field
 }
 
 export enum CustomSortOrder {
@@ -18,6 +21,7 @@ export enum CustomSortOrder {
 	byCreatedTimeAdvanced,
 	byCreatedTimeReverse,
 	byCreatedTimeReverseAdvanced,
+	byMetadataField,
 	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
 	default = alphabetical
 }
@@ -44,7 +48,8 @@ export interface CustomSortGroup {
 	secondaryOrder?: CustomSortOrder
 	filesOnly?: boolean
 	matchFilenameWithExt?: boolean
-	foldersOnly?: boolean,
+	foldersOnly?: boolean
+	metadataFieldName?: string
 }
 
 export interface CustomSortSpec {
@@ -55,4 +60,5 @@ export interface CustomSortSpec {
 	outsidersFilesGroupIdx?: number
 	outsidersFoldersGroupIdx?: number
 	itemsToHide?: Set<string>
+	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
 }

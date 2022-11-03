@@ -292,6 +292,7 @@ export default class CustomSortPlugin extends Plugin {
 							}
 						}
 						if (sortSpec) {
+							sortSpec.plugin = plugin
 							return folderSort.call(this, sortSpec, ...args);
 						} else {
 							return old.call(this, ...args);
