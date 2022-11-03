@@ -7,6 +7,7 @@ Take full control of the order of your notes and folders:
 - support for fully manual order
   - list notes and folders names explicitly, or use prefixes or suffixes only
   - wildcard names matching supported
+- group and sort notes and folders by notes custom metadata
 - support for automatic sorting by standard and non-standard rules
 - mixing manual and automatic ordering also supported
 - order by compound numbers in prefix, in suffix (e.g date in suffix) or inbetween 
@@ -15,7 +16,7 @@ Take full control of the order of your notes and folders:
   - different sorting rules per group even inside the same folder
 - simple to use yet versatile configuration options
 - order configuration stored directly in your note(s) front matter
-  - use a dedicated key in YAML
+  - use a dedicated `sorting-spec:` key in YAML
 - folders not set up for the custom order remain on the standard Obsidian sorting
 - support for imposing inheritance of order specifications with flexible exclusion and overriding logic
 
