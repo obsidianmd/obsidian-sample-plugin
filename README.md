@@ -35,6 +35,7 @@ Take full control of the order of your notes and folders:
   - [Example 11: Sample book structure with compound Roman number suffixes](#example-11-sample-book-structure-with-compound-roman-number-suffixes)
   - [Example 12: Apply same sorting to all folders in the vault](#example-12-apply-same-sorting-to-all-folders-in-the-vault)
   - [Example 13: Sorting rules inheritance by subfolders](#example-13-sorting-rules-inheritance-by-subfolders)
+  - [Example 14: Grouping and sorting by metadata value](#example-14-grouping-and-sorting-by-metadata-value)
 - [Location of sorting specification YAML entry](#location-of-sorting-specification-yaml-entry) 
 - [Ribbon icon](#ribbon-icon)
 - [Installing the plugin](#installing-the-plugin)
@@ -410,6 +411,52 @@ sorting-spec: |
     sorting: standard
 ---
 ```
+
+### Example 14: Grouping and sorting by metadata value
+
+Notes can contain metadata, and let me use the example inspired by the [Feature Request #23](https://github.com/SebastianMC/obsidian-custom-sort/issues/23)
+Namely, someone can create notes when reading a book and uses the `Pages` metadata field to store reference information to which page(s) the note refers
+For example:
+
+```yaml
+Pages: 6
+```
+
+or
+
+```yaml
+Pages: 7,8
+```
+
+or 
+
+```yaml
+Pages: 12-15
+```
+
+Using this plugin you can group and sort notes by the value of the specific metadata, for example:
+
+```yaml
+---
+sorting-spec: |
+    target-folder: Remarks from The Little Prince book
+    metadata: Pages
+	  < a-z
+---
+```
+
+In the above example the simple syntax `metadata: Pages` was used to tell the plugin about the metadata name for grouping and sorting.
+The specified sorting `< a-z` is obviously alphabetical, and in this specific context it tells to sort by the value of the metadata and not by the note or folder name.
+Any other sorting from the supported set of rules can be applied, also not related to the metadata value
+
+> NOTE
+> 
+> For folders, their 'folder note' metadata is scanned
+ 
+> NOTE
+> 
+> The `metadata:` keyword can be used with other specifiers like `/:files metadata: Pages` or `/folders metadata: Pages`
+> If the metadata name is omitted, the default `sort-index-value` is assumed.
 
 ## Location of sorting specification YAML entry
 
