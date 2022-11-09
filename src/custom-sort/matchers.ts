@@ -23,7 +23,7 @@ export const DEFAULT_NORMALIZATION_PLACES = 8;  // Fixed width of a normalized n
 export function prependWithZeros(s: string, minLength: number) {
 	if (s.length < minLength) {
 		const delta: number = minLength - s.length;
-		return '000000000000000000000000000'.substr(0, delta) + s;
+		return '000000000000000000000000000'.substring(0, delta) + s;
 	} else {
 		return s;
 	}

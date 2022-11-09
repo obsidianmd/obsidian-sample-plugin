@@ -26,9 +26,9 @@ target-folder: tricky folder
 
 :::: tricky folder 2
 /: with-metadata:
- > modified
+ < a-z by-metadata: Some-dedicated-field
 with-metadata: Pages 
- > a-z
+ > a-z by-metadata: 
 
 :::: Conceptual model
 /: Entities
@@ -79,9 +79,9 @@ target-folder: tricky folder
 
 target-folder: tricky folder 2
 /:files with-metadata:
- > modified
+ < a-z by-metadata: Some-dedicated-field
 % with-metadata: Pages 
- > a-z
+ > a-z by-metadata:
 
 :::: Conceptual model
 /:files Entities
@@ -157,13 +157,14 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 	"tricky folder 2": {
 		groups: [{
 			filesOnly: true,
-			metadataFieldName: 'sort-index-value',
-			order: CustomSortOrder.byModifiedTimeReverse,
-			type: CustomSortGroupType.HasMetadataField
+			type: CustomSortGroupType.HasMetadataField,
+			withMetadataFieldName: 'sort-index-value',
+			order: CustomSortOrder.byMetadataFieldAlphabetical,
+			byMetadataField: 'Some-dedicated-field',
 		}, {
-			metadataFieldName: 'Pages',
-			order: CustomSortOrder.alphabeticalReverse,
-			type: CustomSortGroupType.HasMetadataField
+			type: CustomSortGroupType.HasMetadataField,
+			withMetadataFieldName: 'Pages',
+			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
 		}, {
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders

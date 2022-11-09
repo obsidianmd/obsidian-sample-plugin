@@ -416,7 +416,8 @@ sorting-spec: |
 ### Example 14: Grouping and sorting by metadata value
 
 Notes can contain metadata, let me use the example inspired by the [Feature Request #23](https://github.com/SebastianMC/obsidian-custom-sort/issues/23).
-Namely, someone can create notes when reading a book and use the `Pages` metadata field. In that field s/he enters page(s) number(s) of the book, for reference
+Namely, someone can create notes when reading a book and use the `Pages` metadata field. In that field s/he enters page(s) number(s) of the book, for reference.
+
 For example:
 
 ```yaml
@@ -444,20 +445,38 @@ Pages: 12-15
 ---
 ```
 
-Using this plugin you can group and sort notes by the value of the specific metadata, for example:
+Using this plugin you can sort notes by the value of the specific metadata, for example:
+
+```yaml
+---
+sorting-spec: |
+    target-folder: Remarks from 'The Little Prince' book
+    < a-z by-metadata: Pages
+---
+```
+
+In that approach, the notes containing the metadata `Pages` will go first, sorted alphabetically by the value of that metadata.
+The remaining notes (not having the metadata) will go below, sorted alphabetically by default. 
+
+In the above example the syntax `by-metadata: Pages` was used to tell the plugin about the metadata field name for sorting.
+The specified sorting `< a-z` is obviously alphabetical, and in this specific context it tells to sort by the value of the specified metadata (and not by the note or folder name).
+
+In a more advanced fine-tuned approach you can explicitly group notes having some metadata and sort by that (or other) metadata:
 
 ```yaml
 ---
 sorting-spec: |
     target-folder: Remarks from 'The Little Prince' book
     with-metadata: Pages
-      < a-z
+     < a-z by-metadata: Pages
+	...
+	 > modified
 ---
 ```
 
-In the above example the syntax `with-metadata: Pages` was used to tell the plugin about the metadata field name for grouping and sorting.
+In the above example the syntax `with-metadata: Pages` was used to tell the plugin about the metadata field name for grouping.
 The specified sorting `< a-z` is obviously alphabetical, and in this specific context it tells to sort by the value of the specified metadata (and not by the note or folder name).
-Any other sorting from the supported set of rules can be applied, also these not related to the metadata value
+Then the remaining notes (not having the `Pages` metadata) are sorted by modification date descending.
 
 > NOTE
 > 

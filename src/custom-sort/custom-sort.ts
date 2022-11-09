@@ -1,5 +1,11 @@
-import {MetadataCache, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
-import {CustomSortGroup, CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
+import {FrontMatterCache, MetadataCache, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
+import {
+	CustomSortGroup,
+	CustomSortGroupType,
+	CustomSortOrder,
+	CustomSortSpec,
+	DEFAULT_METADATA_FIELD_FOR_SORTING
+} from "./custom-sort-types";
 import {isDefined} from "../utils/utils";
 
 let Collator = new Intl.Collator(undefined, {
@@ -12,6 +18,7 @@ export interface FolderItemForSorting {
 	path: string
 	groupIdx?: number  // the index itself represents order for groups
 	sortString: string // fragment (or full name) to be used for sorting
+	metadataFieldValue?: string // relevant to metadata-based sorting only
 	matchGroup?: string // advanced - used for secondary sorting rule, to recognize 'same regex match'
 	ctimeOldest: number // for a file, both ctime values are the same. For folder they can be different:
 	ctimeNewest: number     //  ctimeOldest = ctime of oldest child file, ctimeNewest = ctime of newest child file
@@ -20,9 +27,9 @@ export interface FolderItemForSorting {
 	folder?: TFolder
 }
 
-type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
+export type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
 
-let Sorters: { [key in CustomSortOrder]: SorterFn } = {
+export let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(b.sortString, a.sortString),
 	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (a.mtime - b.mtime),
@@ -33,7 +40,38 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byCreatedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctimeNewest - b.ctimeNewest,
 	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? Collator(a.sortString, b.sortString) : (b.ctimeOldest - a.ctimeOldest),
 	[CustomSortOrder.byCreatedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctimeOldest - a.ctimeOldest,
-	[CustomSortOrder.byMetadataField]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
+	[CustomSortOrder.byMetadataFieldAlphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => {
+		if (a.metadataFieldValue && b.metadataFieldValue) {
+			const sortResult: number = Collator(a.metadataFieldValue, b.metadataFieldValue)
+			if (sortResult === 0) {
+				// Fallback -> requested sort by metadata and both items have the same metadata value
+				return Collator(a.sortString, b.sortString)    // switch to alphabetical sort by note/folder titles
+			} else {
+				return sortResult
+			}
+		}
+		// Item with metadata goes before the w/o metadata
+		if (a.metadataFieldValue) return -1
+		if (b.metadataFieldValue) return 1
+		// Fallback -> requested sort by metadata, yet none of two items contain it, use alphabetical by name
+		return Collator(a.sortString, b.sortString)
+	},
+	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => {
+		if (a.metadataFieldValue && b.metadataFieldValue) {
+			const sortResult: number = Collator(b.metadataFieldValue, a.metadataFieldValue)
+			if (sortResult === 0) {
+				// Fallback -> requested sort by metadata and both items have the same metadata value
+				return Collator(b.sortString, a.sortString)    // switch to alphabetical sort by note/folder titles
+			} else {
+				return sortResult
+			}
+		}
+		// Item with metadata goes before the w/o metadata
+		if (a.metadataFieldValue) return -1
+		if (b.metadataFieldValue) return 1
+		// Fallback -> requested sort by metadata, yet none of two items contain it, use alphabetical reverse by name
+		return Collator(b.sortString, a.sortString)
+	},
 
 	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => Collator(a.sortString, b.sortString),
@@ -64,6 +102,10 @@ const isFolder = (entry: TAbstractFile) => {
 	return !!((entry as any).isRoot);
 }
 
+const isByMetadata = (order: CustomSortOrder | undefined) => {
+	return order === CustomSortOrder.byMetadataFieldAlphabetical || order === CustomSortOrder.byMetadataFieldAlphabeticalReverse
+}
+
 export const DEFAULT_FOLDER_MTIME: number = 0
 export const DEFAULT_FOLDER_CTIME: number = 0
 
@@ -71,7 +113,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	let groupIdx: number
 	let determined: boolean = false
 	let matchedGroup: string | null | undefined
-	let sortString: string | undefined
+	let metadataValueToSortBy: string | undefined
 	const aFolder: boolean = isFolder(entry)
 	const aFile: boolean = !aFolder
 	const entryAsTFile: TFile = entry as TFile
@@ -148,15 +190,15 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				}
 				break
 			case CustomSortGroupType.HasMetadataField:
-				if (group.metadataFieldName) {
-					const mCache: MetadataCache | undefined = spec.plugin?.app.metadataCache
-					if (mCache) {
+				if (group.withMetadataFieldName) {
+					if (spec._mCache) {
 						// For folders - scan metadata of 'folder note'
 						const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
-						const metadataValue: string | undefined = mCache.getCache(notePathToScan)?.frontmatter?.[group.metadataFieldName]
-						if (metadataValue) {
+						const frontMatterCache: FrontMatterCache | undefined = spec._mCache.getCache(notePathToScan)?.frontmatter
+						const hasMetadata: boolean | undefined = frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
+
+						if (hasMetadata) {
 							determined = true
-							sortString = metadataValue
 						}
 					}
 				}
@@ -177,17 +219,64 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		// Automatically assign the index to outsiders group, if relevant was configured
 		if (isDefined(spec.outsidersFilesGroupIdx) && aFile) {
 			determinedGroupIdx = spec.outsidersFilesGroupIdx;
+			determined = true
 		} else if (isDefined(spec.outsidersFoldersGroupIdx) && aFolder) {
 			determinedGroupIdx = spec.outsidersFoldersGroupIdx;
+			determined = true
 		} else if (isDefined(spec.outsidersGroupIdx)) {
 			determinedGroupIdx = spec.outsidersGroupIdx;
+			determined = true
+		}
+	}
+
+	// The not obvious logic of determining the value of metadata field to use its value for sorting
+	// - the sorting spec processor automatically populates the order field of CustomSortingGroup for each group
+	//    - yet defensive code should assume some default
+	// - if the order in group is by metadata (and only in that case):
+	//    - if byMetadata field name is defined for the group -> use it. Done even if value empty or not present.
+	//    - else, if byMetadata field name is defined for the Sorting spec (folder level, for all groups) -> use it. Done even if value empty or not present.
+	//    - else, if withMetadata field name is defined for the group -> use it. Done even if value empty or not present.
+	//    - otherwise, fallback to the default metadata field name (hardcoded in the plugin as 'sort-index-value')
+
+
+	// TODO: in manual of plugin, in details, explain these nuances. Let readme.md contain only the basic simple example and reference to manual.md section
+
+	// One of nuances: if metadata value is not present or empty -> is this treated same or not?
+	// Other nuance: the fallback to compare titles -> exactly when (I suspect when there are no metadata or empty values. Because if one item has some metadata value and the other doesn't have any, the one with the metadata value goes first (for alphabetical) or goes last (for alphabetical reverse) - maybe in both cases should go last?
+	//
+	// I should probably write a test for this specific comparator
+
+	if (determined && determinedGroupIdx !== undefined) {  // <-- defensive code, maybe too defensive
+		const group: CustomSortGroup = spec.groups[determinedGroupIdx];
+		if (isByMetadata(group?.order)) {
+			let metadataFieldName: string | undefined = group.byMetadataField
+			if (!metadataFieldName) {
+				if (isByMetadata(spec.defaultOrder)) {
+					metadataFieldName = spec.byMetadataField
+				}
+			}
+			if (!metadataFieldName) {
+				metadataFieldName = group.withMetadataFieldName
+			}
+			if (!metadataFieldName) {
+				metadataFieldName = DEFAULT_METADATA_FIELD_FOR_SORTING
+			}
+			if (metadataFieldName) {
+				if (spec._mCache) {
+					// For folders - scan metadata of 'folder note'
+					const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
+					const frontMatterCache: FrontMatterCache | undefined = spec._mCache.getCache(notePathToScan)?.frontmatter
+					metadataValueToSortBy = frontMatterCache?.[metadataFieldName]
+				}
+			}
 		}
 	}
 
 	return {
 		// idx of the matched group or idx of Outsiders group or the largest index (= groups count+1)
 		groupIdx: determinedGroupIdx,
-		sortString: sortString ?? (matchedGroup ? (matchedGroup + '//' + entry.name) : entry.name),
+		sortString: matchedGroup ? (matchedGroup + '//' + entry.name) : entry.name,
+		metadataFieldValue: metadataValueToSortBy,
 		matchGroup: matchedGroup ?? undefined,
 		isFolder: aFolder,
 		folder: aFolder ? (entry as TFolder) : undefined,
@@ -255,6 +344,7 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
 	let fileExplorer = this.fileExplorer
 	const sortingGroupsCardinality: {[key: number]: number} = {}
+	sortingSpec._mCache = sortingSpec.plugin?.app.metadataCache
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
 		this.file.children.filter((entry: TFile | TFolder) => {
