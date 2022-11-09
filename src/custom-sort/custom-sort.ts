@@ -238,13 +238,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	//    - else, if withMetadata field name is defined for the group -> use it. Done even if value empty or not present.
 	//    - otherwise, fallback to the default metadata field name (hardcoded in the plugin as 'sort-index-value')
 
-
 	// TODO: in manual of plugin, in details, explain these nuances. Let readme.md contain only the basic simple example and reference to manual.md section
-
-	// One of nuances: if metadata value is not present or empty -> is this treated same or not?
-	// Other nuance: the fallback to compare titles -> exactly when (I suspect when there are no metadata or empty values. Because if one item has some metadata value and the other doesn't have any, the one with the metadata value goes first (for alphabetical) or goes last (for alphabetical reverse) - maybe in both cases should go last?
-	//
-	// I should probably write a test for this specific comparator
 
 	if (determined && determinedGroupIdx !== undefined) {  // <-- defensive code, maybe too defensive
 		const group: CustomSortGroup = spec.groups[determinedGroupIdx];
