@@ -84,6 +84,7 @@ interface CustomSortOrderAscDescPair {
 // remember about .toLowerCase() before comparison!
 const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'a-z': {asc: CustomSortOrder.alphabetical, desc: CustomSortOrder.alphabeticalReverse},
+	'true a-z': {asc: CustomSortOrder.trueAlphabetical, desc: CustomSortOrder.trueAlphabeticalReverse},
 	'created': {asc: CustomSortOrder.byCreatedTime, desc: CustomSortOrder.byCreatedTimeReverse},
 	'modified': {asc: CustomSortOrder.byModifiedTime, desc: CustomSortOrder.byModifiedTimeReverse},
 	'advanced modified': {asc: CustomSortOrder.byModifiedTimeAdvanced, desc: CustomSortOrder.byModifiedTimeReverseAdvanced},
