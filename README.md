@@ -308,7 +308,7 @@ sorting-spec: |
 
 the line `... part \d+` says: group all notes and folders with name ending with 'part' followed by a number. Then order
 them by the number. And for clarity the subsequent (indented) line is added ` < a-z` which sets the order to
-alphanumerical ascending.
+alphabetical ascending.
 
 The effect is:
 
@@ -409,6 +409,35 @@ sorting-spec: |
     target-folder: TODOs
     sorting: standard
 ---
+```
+
+## Alphabetical, Natural and True Alphabetical sorting orders
+
+The 'A-Z' sorting (visible in Obsidian UI of file explorer) at some point before the 1.0.0 release of Obsidian actually became the so-called 'natural' sort order.
+For explanation of the term go to [Natural sort order](https://en.wikipedia.org/wiki/Natural_sort_order) on Wikipedia.
+The plugin follows the convention and the sorting specified by `< a-z` or `> a-z` triggers the _'natural sort order'_.
+
+To allow the true alphabetical sort order, as suggested by the ticket [27: Not alphanumeric, but natural sort order?](https://github.com/SebastianMC/obsidian-custom-sort/issues/27)
+a distinct syntax was introduced: `< true a-z` and `> true a-z`
+
+What is the difference?
+Using the example from the mentioned ticket: the items '0x01FF', '0x02FF' and '0x0200' sorted in _natural order_ go as:
+- 0x01FF -> the number 01 in the text is recognized
+- 0x02FF -> the number 02 in the text is recognized
+- 0x0200 -> the number 0200 in the text is recognized and it causes the third position of the item, because 0200 > 02
+
+The same items when sorted in _true alphabetical_ order go as:
+- 0x01FF
+- 0x0200
+- 0x02FF -> the character 'F' following '2' goes after the character '0', that's why 0x02FF follows the 0x0200
+
+You can use the order `< true a-z` or `> true a-z` to trigger the true alphabetical sorting, like in the ticket:
+```yaml
+sorting-spec: |
+ target-folder: MaDo/...
+ > true a-z
+ target-folder: MaDo/Sandbox/SortingBug
+ < true a-z
 ```
 
 ## Location of sorting specification YAML entry

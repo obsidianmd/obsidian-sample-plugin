@@ -436,6 +436,46 @@ describe('SortingSpecProcessor', () => {
 	})
 })
 
+const txtInputTrueAlphabeticalSortAttr: string = `
+target-folder: AAA
+< true a-z
+target-folder: BBB
+> true a-z
+`
+
+const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpec } = {
+	"AAA": {
+		defaultOrder: CustomSortOrder.trueAlphabetical,
+		groups: [{
+			order: CustomSortOrder.trueAlphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['AAA']
+	},
+	"BBB": {
+		defaultOrder: CustomSortOrder.trueAlphabeticalReverse,
+		groups: [{
+			order: CustomSortOrder.trueAlphabeticalReverse,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['BBB']
+	}
+}
+
+describe('SortingSpecProcessor', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should recognize the true alphabetical (and reverse) sorting attribute for a folder', () => {
+		const inputTxtArr: Array<string> = txtInputTrueAlphabeticalSortAttr.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForTrueAlphabeticalSorting)
+	})
+})
+
 const txtInputSimplistic1: string = `
 target-folder: /*
 /:files

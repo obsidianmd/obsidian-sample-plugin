@@ -9,7 +9,9 @@ export enum CustomSortGroupType {
 
 export enum CustomSortOrder {
 	alphabetical = 1,  // = 1 to allow: if (customSortOrder) { ...
+	trueAlphabetical,
 	alphabeticalReverse,
+	trueAlphabeticalReverse,
 	byModifiedTime,   // New to old
 	byModifiedTimeAdvanced,
 	byModifiedTimeReverse,  // Old to new
