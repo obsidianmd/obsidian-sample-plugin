@@ -35,6 +35,7 @@ Take full control of the order of your notes and folders:
   - [Example 11: Sample book structure with compound Roman number suffixes](#example-11-sample-book-structure-with-compound-roman-number-suffixes)
   - [Example 12: Apply same sorting to all folders in the vault](#example-12-apply-same-sorting-to-all-folders-in-the-vault)
   - [Example 13: Sorting rules inheritance by subfolders](#example-13-sorting-rules-inheritance-by-subfolders)
+- [Alphabetical, Natural and True Alphabetical sorting orders](#alphabetical-natural-and-true-alphabetical-sorting-orders)
 - [Location of sorting specification YAML entry](#location-of-sorting-specification-yaml-entry) 
 - [Ribbon icon](#ribbon-icon)
 - [Installing the plugin](#installing-the-plugin)
