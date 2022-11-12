@@ -3,6 +3,7 @@ import {
 	CustomSortGroupType,
 	CustomSortOrder,
 	CustomSortSpec,
+	DEFAULT_METADATA_FIELD_FOR_SORTING,
 	NormalizerFn,
 	RecognizedOrderValue,
 	RegExpSpec
@@ -79,6 +80,7 @@ interface CustomSortOrderAscDescPair {
 	asc: CustomSortOrder,
 	desc: CustomSortOrder,
 	secondary?: CustomSortOrder
+	applyToMetadataField?: string
 }
 
 // remember about .toLowerCase() before comparison!
@@ -133,6 +135,8 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	}
 }
 
+const OrderByMetadataLexeme: string = 'by-metadata:'
+
 enum Attribute {
 	TargetFolder = 1, // Starting from 1 to allow: if (attribute) { ...
 	OrderAsc,
@@ -173,6 +177,8 @@ const FoldersGroupShortLexeme: string = '/'
 const AnyTypeGroupLexeme: string = '%'  // See % as a combination of / and :
 const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
+
+const MetadataFieldIndicatorLexeme: string = 'with-metadata:'
 
 const CommentPrefix: string = '//'
 
@@ -379,6 +385,12 @@ const stripWildcardPatternSuffix = (path: string): [path: string, priority: numb
 		path,
 		WildcardPriority.NO_WILDCARD
 	]
+}
+
+// Simplistic
+const extractIdentifier = (text: string, defaultResult?: string): string | undefined => {
+	const identifier: string = text.trim().split(' ')?.[0]?.trim()
+	return identifier ? identifier : defaultResult
 }
 
 const ADJACENCY_ERROR: string = "Numerical sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case."
@@ -607,6 +619,7 @@ export class SortingSpecProcessor {
 					return false;
 				}
 				this.ctx.currentSpec.defaultOrder = (attr.value as RecognizedOrderValue).order
+				this.ctx.currentSpec.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
 				return true;
 			} else if (attr.nesting > 0) { // For now only distinguishing nested (indented) and not-nested (not-indented), the depth doesn't matter
 				if (!this.ctx.currentSpec || !this.ctx.currentSpecGroup) {
@@ -623,6 +636,7 @@ export class SortingSpecProcessor {
 					return false;
 				}
 				this.ctx.currentSpecGroup.order = (attr.value as RecognizedOrderValue).order
+				this.ctx.currentSpecGroup.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
 				this.ctx.currentSpecGroup.secondaryOrder = (attr.value as RecognizedOrderValue).secondaryOrder
 				return true;
 			}
@@ -636,7 +650,7 @@ export class SortingSpecProcessor {
 		// no space present, check for potential syntax errors
 		for (let attrLexeme of Object.keys(AttrLexems)) {
 			if (lineTrimmedStartLowerCase.startsWith(attrLexeme)) {
-				const originalAttrLexeme: string = lineTrimmedStart.substr(0, attrLexeme.length)
+				const originalAttrLexeme: string = lineTrimmedStart.substring(0, attrLexeme.length)
 				if (lineTrimmedStartLowerCase.length === attrLexeme.length) {
 					this.problem(ProblemCode.MissingAttributeValue, `Attribute "${originalAttrLexeme}" requires a value to follow`)
 					return true
@@ -784,6 +798,7 @@ export class SortingSpecProcessor {
 		for (let group of spec.groups) {
 			if (!group.order) {
 				group.order = spec.defaultOrder ?? DEFAULT_SORT_ORDER
+				group.byMetadataField = spec.byMetadataField
 			}
 		}
 
@@ -794,7 +809,7 @@ export class SortingSpecProcessor {
 			if (path === CURRENT_FOLDER_SYMBOL) {
 				spec.targetFoldersPaths[idx] = this.ctx.folderPath
 			} else if (path.startsWith(CURRENT_FOLDER_PREFIX)) {
-				spec.targetFoldersPaths[idx] = `${this.ctx.folderPath}/${path.substr(CURRENT_FOLDER_PREFIX.length)}`
+				spec.targetFoldersPaths[idx] = `${this.ctx.folderPath}/${path.substring(CURRENT_FOLDER_PREFIX.length)}`
 			}
 		});
 	}
@@ -812,14 +827,49 @@ export class SortingSpecProcessor {
 
 	private internalValidateOrderAttrValue = (v: string): CustomSortOrderAscDescPair | null => {
 		v = v.trim();
-		return v ? OrderLiterals[v.toLowerCase()] : null
+		let orderLiteral: string = v
+		let metadataSpec: Partial<CustomSortOrderAscDescPair> = {}
+		let applyToMetadata: boolean = false
+
+		if (v.indexOf(OrderByMetadataLexeme) > 0) { // Intentionally > 0 -> not allow the metadata lexeme alone
+			const pieces: Array<string> = v.split(OrderByMetadataLexeme)
+			// there are at least two pieces by definition, prefix and suffix of the metadata lexeme
+			orderLiteral = pieces[0]?.trim()
+			let metadataFieldName: string = pieces[1]?.trim()
+			if (metadataFieldName) {
+				metadataSpec.applyToMetadataField = metadataFieldName
+			}
+			applyToMetadata = true
+		}
+
+		let attr: CustomSortOrderAscDescPair | null = orderLiteral ? OrderLiterals[orderLiteral.toLowerCase()] : null
+		if (attr) {
+			if (applyToMetadata &&
+				(attr.asc === CustomSortOrder.alphabetical || attr.desc === CustomSortOrder.alphabeticalReverse ||
+				 attr.asc === CustomSortOrder.trueAlphabetical || attr.desc === CustomSortOrder.trueAlphabeticalReverse )) {
+
+				const trueAlphabetical: boolean = attr.asc === CustomSortOrder.trueAlphabetical || attr.desc === CustomSortOrder.trueAlphabeticalReverse
+
+				// Create adjusted copy
+				attr = {
+					...attr,
+					asc: trueAlphabetical ? CustomSortOrder.byMetadataFieldTrueAlphabetical : CustomSortOrder.byMetadataFieldAlphabetical,
+					desc: trueAlphabetical ? CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse : CustomSortOrder.byMetadataFieldAlphabeticalReverse
+				}
+			} else {    // For orders different from alphabetical (and reverse) a reference to metadata is not supported
+				metadataSpec.applyToMetadataField = undefined
+			}
+		}
+
+		return attr ? {...attr, ...metadataSpec} : null
 	}
 
 	private validateOrderAscAttrValue = (v: string): RecognizedOrderValue | null => {
 		const recognized: CustomSortOrderAscDescPair | null = this.internalValidateOrderAttrValue(v)
 		return recognized ? {
 			order: recognized.asc,
-			secondaryOrder: recognized.secondary
+			secondaryOrder: recognized.secondary,
+			applyToMetadataField: recognized.applyToMetadataField
 		} : null;
 	}
 
@@ -827,7 +877,8 @@ export class SortingSpecProcessor {
 		const recognized: CustomSortOrderAscDescPair | null = this.internalValidateOrderAttrValue(v)
 		return recognized ? {
 			order: recognized.desc,
-			secondaryOrder: recognized.secondary
+			secondaryOrder: recognized.secondary,
+			applyToMetadataField: recognized.applyToMetadataField
 		} : null;
 	}
 
@@ -852,7 +903,7 @@ export class SortingSpecProcessor {
 			return [ThreeDots]
 		}
 		if (spec.startsWith(ThreeDots)) {
-			return [ThreeDots, spec.substr(ThreeDotsLength)];
+			return [ThreeDots, spec.substring(ThreeDotsLength)];
 		}
 		if (spec.endsWith(ThreeDots)) {
 			return [spec.substring(0, spec.length - ThreeDotsLength), ThreeDots];
@@ -863,7 +914,7 @@ export class SortingSpecProcessor {
 			return [
 				spec.substring(0, idx),
 				ThreeDots,
-				spec.substr(idx + ThreeDotsLength)
+				spec.substring(idx + ThreeDotsLength)
 			];
 		}
 
@@ -926,13 +977,27 @@ export class SortingSpecProcessor {
 					matchFilenameWithExt: spec.matchFilenameWithExt  // Doesn't make sense for matching, yet for multi-match
 				}               									    // theoretically could match the sorting of matched files
 			} else {
-				// For non-three dots single text line assume exact match group
-				return {
-					type: CustomSortGroupType.ExactName,
-					exactText: spec.arraySpec[0],
-					filesOnly: spec.filesOnly,
-					foldersOnly: spec.foldersOnly,
-					matchFilenameWithExt: spec.matchFilenameWithExt
+				if (theOnly.startsWith(MetadataFieldIndicatorLexeme)) {
+					const metadataFieldName: string | undefined = extractIdentifier(
+						theOnly.substring(MetadataFieldIndicatorLexeme.length),
+						DEFAULT_METADATA_FIELD_FOR_SORTING
+					)
+					return {
+						type: CustomSortGroupType.HasMetadataField,
+						withMetadataFieldName: metadataFieldName,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
+				} else {
+					// For non-three dots single text line assume exact match group
+					return {
+						type: CustomSortGroupType.ExactName,
+						exactText: theOnly,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
 				}
 			}
 		}

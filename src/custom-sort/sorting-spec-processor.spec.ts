@@ -24,6 +24,12 @@ target-folder: tricky folder
 /  
 /:  
 
+:::: tricky folder 2
+/: with-metadata:
+ < a-z by-metadata: Some-dedicated-field
+with-metadata: Pages 
+ > a-z by-metadata: 
+
 :::: Conceptual model
 /: Entities
 %
@@ -70,6 +76,12 @@ order-asc: a-z
 target-folder: tricky folder 
 /folders  
 /:files  
+
+target-folder: tricky folder 2
+/:files with-metadata:
+ < a-z by-metadata: Some-dedicated-field
+% with-metadata: Pages 
+ > a-z by-metadata:
 
 :::: Conceptual model
 /:files Entities
@@ -141,6 +153,26 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 		outsidersFilesGroupIdx: 1,
 		outsidersFoldersGroupIdx: 0,
 		targetFoldersPaths: ['tricky folder']
+	},
+	"tricky folder 2": {
+		groups: [{
+			filesOnly: true,
+			type: CustomSortGroupType.HasMetadataField,
+			withMetadataFieldName: 'sort-index-value',
+			order: CustomSortOrder.byMetadataFieldAlphabetical,
+			byMetadataField: 'Some-dedicated-field',
+		}, {
+			type: CustomSortGroupType.HasMetadataField,
+			withMetadataFieldName: 'Pages',
+			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 2,
+		targetFoldersPaths: [
+			'tricky folder 2'
+		]
 	},
 	"Conceptual model": {
 		groups: [{
@@ -437,30 +469,54 @@ describe('SortingSpecProcessor', () => {
 })
 
 const txtInputTrueAlphabeticalSortAttr: string = `
-target-folder: AAA
+target-folder: True Alpha
 < true a-z
-target-folder: BBB
+target-folder: True Alpha Rev
 > true a-z
+target-folder: by-meta True Alpha
+< true a-z by-metadata:
+target-folder: by-meta True Alpha Rev
+> true a-z by-metadata: Some-attr
 `
 
 const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpec } = {
-	"AAA": {
+	"True Alpha": {
 		defaultOrder: CustomSortOrder.trueAlphabetical,
 		groups: [{
 			order: CustomSortOrder.trueAlphabetical,
 			type: CustomSortGroupType.Outsiders
 		}],
 		outsidersGroupIdx: 0,
-		targetFoldersPaths: ['AAA']
+		targetFoldersPaths: ['True Alpha']
 	},
-	"BBB": {
+	"True Alpha Rev": {
 		defaultOrder: CustomSortOrder.trueAlphabeticalReverse,
 		groups: [{
 			order: CustomSortOrder.trueAlphabeticalReverse,
 			type: CustomSortGroupType.Outsiders
 		}],
 		outsidersGroupIdx: 0,
-		targetFoldersPaths: ['BBB']
+		targetFoldersPaths: ['True Alpha Rev']
+	},
+	"by-meta True Alpha": {
+		defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+		groups: [{
+			order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['by-meta True Alpha']
+	},
+	"by-meta True Alpha Rev": {
+		defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+		byMetadataField: 'Some-attr',
+		groups: [{
+			order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+			byMetadataField: 'Some-attr',
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['by-meta True Alpha Rev']
 	}
 }
 
