@@ -58,6 +58,7 @@ can be the root folder. Ensure the exact file name is `sortspec.md`. That file c
 > > Afterwards double check that the content of `sortspec.md` file is not an HTML and:
 > > - it starts exactly with the line `---`
 > > - it and ends the line `---` followed by one or two blank lines
+> > 
 > > In other words, ensure, that the final `sortspec.md` file in your vault (which is the `sortspec` Obsidian note) looks exactly like below:
 > > ![sortspec.md](./docs/img/sortspec-md-bright.jpg)
 > > - or if you are a fan of dark mode (line numbers shown for clarity only, they aren't part of the file content):
