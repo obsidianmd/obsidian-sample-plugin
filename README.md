@@ -61,7 +61,9 @@ can be the root folder. Ensure the exact file name is `sortspec.md`. That file c
 > > 
 > > In other words, ensure, that the final `sortspec.md` file in your vault (which is the `sortspec` Obsidian note) looks exactly like below:
 > > ![sortspec.md](./docs/img/sortspec-md-bright.jpg)
-> > - or if you are a fan of dark mode (line numbers shown for clarity only, they aren't part of the file content):
+> > 
+> > or if you are a fan of dark mode (line numbers shown for clarity only, they aren't part of the file content):
+> >
 > > ![sortspec.md](./docs/img/sortspec-md-dark.jpg)
 > 2. Enable the plugin in obsidian.
 >
