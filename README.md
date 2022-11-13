@@ -52,10 +52,16 @@ For full version of the manual go to [manual](./docs/manual.md) and [syntax-refe
 
 > **Quickstart**
 > 
-> 1. Download the **raw content** of [sortspec.md](./docs/examples/quickstart/sortspec.md?plain=1) file and put it in any folder of your vault,
-can be the root folder. That file contains a basic custom sorting specification.
-> > IMPORTANT: follow the above link to 'sortspec.md' and download (or copy & paste) the __RAW__ content of that file, not the HTML displayed by github. 
->
+> 1. Download the **RAW CONTENT** of [sortspec.md](./docs/examples/quickstart/sortspec.md?plain=1) file and put it in any folder of your vault,
+can be the root folder. Ensure the exact file name is `sortspec.md`. That file contains a basic custom sorting specification under the `sorting-spec:` name in the YAML frontmatter.
+> > IMPORTANT: follow the above link to 'sortspec.md' and download (or copy & paste) the __RAW__ content of that file, not the HTML displayed by github.
+> > Afterwards double check that the content of `sortspec.md` file is not an HTML and:
+> > - it starts exactly with the line `---`
+> > - it and ends the line `---` followed by one or two blank lines
+> > In other words, ensure, that the final `sortspec.md` file in your vault (which is the `sortspec` Obsidian note) looks exactly like below:
+> > ![sortspec.md](./docs/img/sortspec-md-bright.jpg)
+> > - or if you are a fan of dark mode (line numbers shown for clarity only, they aren't part of the file content):
+> > ![sortspec.md](./docs/img/sortspec-md-dark.jpg)
 > 2. Enable the plugin in obsidian.
 >
 > 3. Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png)) to tell the plugin to read the sorting
