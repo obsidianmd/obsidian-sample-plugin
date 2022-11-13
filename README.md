@@ -52,8 +52,9 @@ For full version of the manual go to [manual](./docs/manual.md) and [syntax-refe
 
 > **Quickstart**
 > 
-> 1. Download the [sortspec.md](./docs/examples/quickstart/sortspec.md?plain=1) file and put it in any folder of your vault,
+> 1. Download the raw content of [sortspec.md](./docs/examples/quickstart/sortspec.md?plain=1) file and put it in any folder of your vault,
 can be the root folder. That file contains a basic custom sorting specification.
+> > IMPORTANT: follow the above link to 'sortspec.md' and download (or copy & paste) the __RAW__ content of that file, not the HTML displayed by github. 
 >
 > 2. Enable the plugin in obsidian.
 >
@@ -108,7 +109,7 @@ sorting-spec: |
     < a-z
 ---
 ```
-(View or download the [sortspec.md](./docs/examples/1/sortspec.md?plain=1) file of this example)
+(View or download the raw content of [sortspec.md](./docs/examples/1/sortspec.md?plain=1) file of this example)
 
 which can result in:
 
@@ -218,7 +219,7 @@ sorting-spec: |
 ---
 ```
 
-(View or download the [sortspec.md](./docs/examples/5/sortspec.md?plain=1) file of this example)
+(View or download the raw content of [sortspec.md](./docs/examples/5/sortspec.md?plain=1) file of this example)
 
 which will have the effect of:
 
