@@ -15,7 +15,7 @@
       "DOM",
       "ES5",
       "ES6",
-      "ES7"
+      "ES7" //ES7 is the latest javascript version supported by the Obsidian IOS mobile app
     ]
   },
   "include": [
