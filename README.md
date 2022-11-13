@@ -57,7 +57,8 @@ can be the root folder. Ensure the exact file name is `sortspec.md`. That file c
 > > IMPORTANT: follow the above link to 'sortspec.md' and download (or copy & paste) the __RAW__ content of that file, not the HTML displayed by github.
 > > Afterwards double check that the content of `sortspec.md` file is not an HTML and:
 > > - it starts exactly with the line `---`
-> > - it and ends the line `---` followed by one or two blank lines
+> > - it and ends with the line `---` followed by one or two blank lines
+> > - indentation is correct (consult images below). In YAML the indentation matters.
 > > 
 > > In other words, ensure, that the final `sortspec.md` file in your vault (which is the `sortspec` Obsidian note) looks exactly like below:
 > > ![sortspec.md](./docs/img/sortspec-md-bright.jpg)
