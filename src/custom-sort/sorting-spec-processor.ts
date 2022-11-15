@@ -46,6 +46,7 @@ interface ParsedSortingGroup {
 	arraySpec?: Array<string>
 	outsidersGroup?: boolean // Mutually exclusive with plainSpec and arraySpec
 	itemToHide?: boolean
+	priority?: number
 }
 
 export enum ProblemCode {
@@ -63,7 +64,8 @@ export enum ProblemCode {
 	ItemToHideExactNameWithExtRequired,
 	ItemToHideNoSupportForThreeDots,
 	DuplicateWildcardSortSpecForSameFolder,
-	StandardObsidianSortAllowedOnlyAtFolderLevel
+	StandardObsidianSortAllowedOnlyAtFolderLevel,
+	PriorityNotAllowedOnOutsidersGroup
 }
 
 const ContextFreeProblems = new Set<ProblemCode>([
@@ -174,7 +176,8 @@ const FilesWithExtGroupVerboseLexeme: string = '/:files.'
 const FilesWithExtGroupShortLexeme: string = '/:.'
 const FoldersGroupVerboseLexeme: string = '/folders'
 const FoldersGroupShortLexeme: string = '/'
-const AnyTypeGroupLexeme: string = '%'  // See % as a combination of / and :
+const AnyTypeGroupLexemeShort: string = '%'  // See % as a combination of / and :
+const AnyTypeGroupLexeme: string = '/%'  // See % as a combination of / and :
 const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
 
@@ -182,11 +185,26 @@ const MetadataFieldIndicatorLexeme: string = 'with-metadata:'
 
 const CommentPrefix: string = '//'
 
+const FileGroupModifierPrio1Lexeme: string = '/!'
+const FileGroupModifierPrio2Lexeme: string = '/!!'
+const FileGroupModifierPrio3Lexeme: string = '/!!!'
+
+const PRIO_1: number = 1
+const PRIO_2: number = 2
+const PRIO_3: number = 3
+
+const SortingGroupPriorityPrefixes: { [key: string]: number } = {
+	[FileGroupModifierPrio1Lexeme]: PRIO_1,
+	[FileGroupModifierPrio2Lexeme]: PRIO_2,
+	[FileGroupModifierPrio3Lexeme]: PRIO_3
+}
+
 interface SortingGroupType {
 	filesOnly?: boolean
 	filenameWithExt?: boolean  // The text matching criteria should apply to filename + extension
 	foldersOnly?: boolean
 	itemToHide?: boolean
+	priority?: number
 }
 
 const SortingGroupPrefixes: { [key: string]: SortingGroupType } = {
@@ -196,6 +214,7 @@ const SortingGroupPrefixes: { [key: string]: SortingGroupType } = {
 	[FilesWithExtGroupVerboseLexeme]: {filesOnly: true, filenameWithExt: true},
 	[FoldersGroupShortLexeme]: {foldersOnly: true},
 	[FoldersGroupVerboseLexeme]: {foldersOnly: true},
+	[AnyTypeGroupLexemeShort]: {},
 	[AnyTypeGroupLexeme]: {},
 	[HideItemShortLexeme]: {itemToHide: true},
 	[HideItemVerboseLexeme]: {itemToHide: true}
@@ -664,11 +683,26 @@ export class SortingSpecProcessor {
 	}
 
 	private parseSortingGroupSpec = (line: string): ParsedSortingGroup | null => {
-		const s: string = line.trim()
+		let s: string = line.trim()
 
 		if (hasMoreThanOneNumericSortingSymbol(s)) {
 			this.problem(ProblemCode.TooManyNumericSortingSymbols, 'Maximum one numeric sorting indicator allowed per line')
 			return null
+		}
+
+		const priorityPrefixAlone: number = SortingGroupPriorityPrefixes[s]
+		if (priorityPrefixAlone) {
+			this.problem(ProblemCode.PriorityNotAllowedOnOutsidersGroup, 'Priority is not allowed for sorting group with empty match-pattern')
+			return null
+		}
+
+		let groupPriority: number | undefined = undefined
+		for (const priorityPrefix of Object.keys(SortingGroupPriorityPrefixes)) {
+			if (s.startsWith(priorityPrefix + ' ')) {
+				groupPriority = SortingGroupPriorityPrefixes[priorityPrefix]
+				s = s.substring(priorityPrefix.length).trim()
+				break
+			}
 		}
 
 		const prefixAlone: SortingGroupType = SortingGroupPrefixes[s]
@@ -677,10 +711,15 @@ export class SortingSpecProcessor {
 				this.problem(ProblemCode.ItemToHideExactNameWithExtRequired, 'Exact name with ext of file or folders to hide is required')
 				return null
 			} else { // !prefixAlone.itemToHide
-				return {
-					outsidersGroup: true,
-					filesOnly: prefixAlone.filesOnly,
-					foldersOnly: prefixAlone.foldersOnly
+				if (groupPriority) {
+					this.problem(ProblemCode.PriorityNotAllowedOnOutsidersGroup, 'Priority is not allowed for sorting group with empty match-pattern')
+					return null
+				} else {
+					return {
+						outsidersGroup: true,
+						filesOnly: prefixAlone.filesOnly,
+						foldersOnly: prefixAlone.foldersOnly
+					}
 				}
 			}
 		}
@@ -700,12 +739,26 @@ export class SortingSpecProcessor {
 						plainSpec: s.substring(prefix.length + 1),
 						filesOnly: sortingGroupType.filesOnly,
 						foldersOnly: sortingGroupType.foldersOnly,
-						matchFilenameWithExt: sortingGroupType.filenameWithExt
+						matchFilenameWithExt: sortingGroupType.filenameWithExt,
+						priority: groupPriority ?? undefined
 					}
 				}
 			}
 		}
 
+		if (groupPriority) {
+			if (s === '') {
+				// Edge case: line with only priority prefix and no other content
+				this.problem(ProblemCode.PriorityNotAllowedOnOutsidersGroup, 'Priority is not allowed for sorting group with empty match-pattern')
+				return null
+			} else {
+				// Edge case: line with only priority prefix and no other known syntax, yet some content
+				return {
+					plainSpec: s,
+					priority: groupPriority
+				}
+			}
+		}
 		return null;
 	}
 
@@ -731,8 +784,14 @@ export class SortingSpecProcessor {
 			if (newGroup) {
 				if (this.adjustSortingGroupForNumericSortingSymbol(newGroup)) {
 					if (this.ctx.currentSpec) {
-						this.ctx.currentSpec.groups.push(newGroup)
+						const groupIdx = this.ctx.currentSpec.groups.push(newGroup) - 1
 						this.ctx.currentSpecGroup = newGroup
+						// Consume group with priority
+						if (group.priority && group.priority > 0) {
+							newGroup.priority = group.priority
+							this.addExpediteGroupInfo(this.ctx.currentSpec, group.priority, groupIdx)
+						}
+
 						return true;
 					} else {
 						return false
@@ -794,11 +853,23 @@ export class SortingSpecProcessor {
 			})
 		}
 
-		// Populate sorting order for a bit more efficient sorting later on
+		// Populate sorting order down the hierarchy for more clean sorting logic later on
 		for (let group of spec.groups) {
 			if (!group.order) {
 				group.order = spec.defaultOrder ?? DEFAULT_SORT_ORDER
 				group.byMetadataField = spec.byMetadataField
+			}
+		}
+
+		// If any priority sorting group was present in the spec, determine the groups evaluation order
+		if (spec.priorityOrder) {
+			// priorityOrder array already contains at least one priority group, so append all non-priority groups for the final order
+			// (Outsiders groups are ignored intentionally)
+			for (let idx=0; idx < spec.groups.length; idx++) {
+				const group: CustomSortGroup = spec.groups[idx]
+				if (group.priority === undefined && group.type !== CustomSortGroupType.Outsiders) {
+					spec.priorityOrder.push(idx)
+				}
 			}
 		}
 
@@ -1107,5 +1178,22 @@ export class SortingSpecProcessor {
 				break;
 		}
 		return true
+	}
+
+	private addExpediteGroupInfo = (spec: CustomSortSpec, groupPriority: number, groupIdx: number) => {
+		if (!spec.priorityOrder) {
+			spec.priorityOrder = []
+		}
+		let inserted: boolean = false
+		for (let idx=0; idx<spec.priorityOrder.length; idx++) {
+			if (groupPriority > spec.groups[spec.priorityOrder[idx]].priority!) {
+				spec.priorityOrder.splice(idx, 0, groupIdx)
+				inserted = true
+				break
+			}
+		}
+		if (!inserted) {
+			spec.priorityOrder.push(groupIdx)
+		}
 	}
 }

@@ -788,6 +788,52 @@ describe('determineSortingGroup', () => {
 			} as FolderItemForSorting);
 		})
 	})
+
+	it('should correctly apply priority group', () => {
+		// given
+		const file: TFile = mockTFile('Abcdef!', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+		const sortSpec: CustomSortSpec = {
+			groups: [{
+				filesOnly: true,
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.MatchAll
+			}, {
+				foldersOnly: true,
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.MatchAll
+			}, {
+				exactSuffix: "def!",
+				priority: 2,
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.ExactSuffix
+			}, {
+				exactText: "Abcdef!",
+				order: CustomSortOrder.alphabetical,
+				priority: 3,
+				type: CustomSortGroupType.ExactName
+			}, {
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.Outsiders
+			}],
+			outsidersGroupIdx: 4,
+			targetFoldersPaths: ['/'],
+			priorityOrder: [3,2,0,1]
+		}
+
+		// when
+		const result = determineSortingGroup(file, sortSpec)
+
+		// then
+		expect(result).toEqual({
+			groupIdx: 3,
+			isFolder: false,
+			sortString: "Abcdef!.md",
+			ctimeNewest: MOCK_TIMESTAMP + 222,
+			ctimeOldest: MOCK_TIMESTAMP + 222,
+			mtime: MOCK_TIMESTAMP + 333,
+			path: 'Some parent folder/Abcdef!.md'
+		});
+	})
 })
 
 describe('determineFolderDatesIfNeeded', () => {

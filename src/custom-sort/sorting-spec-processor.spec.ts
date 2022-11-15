@@ -7,7 +7,7 @@ import {
 	escapeRegexUnsafeCharacters,
 	extractNumericSortingSymbol,
 	hasMoreThanOneNumericSortingSymbol,
-	NumberNormalizerFn,
+	NumberNormalizerFn, ProblemCode,
 	RegexpUsedAs,
 	RomanNumberNormalizerFn,
 	SortingSpecProcessor
@@ -535,7 +535,7 @@ describe('SortingSpecProcessor', () => {
 const txtInputSimplistic1: string = `
 target-folder: /*
 /:files
-//folders
+/folders
 `
 
 const expectedSortSpecForSimplistic1: { [key: string]: CustomSortSpec } = {
@@ -545,11 +545,12 @@ const expectedSortSpecForSimplistic1: { [key: string]: CustomSortSpec } = {
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}, {
+			foldersOnly: true,
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}],
 		outsidersFilesGroupIdx: 0,
-		outsidersGroupIdx: 1,
+		outsidersFoldersGroupIdx: 1,
 		targetFoldersPaths: ['/*']
 	}
 }
@@ -561,11 +562,12 @@ const expectedWildcardMatchingTreeForSimplistic1 = {
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}, {
+			foldersOnly: true,
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}],
 		outsidersFilesGroupIdx: 0,
-		outsidersGroupIdx: 1,
+		outsidersFoldersGroupIdx: 1,
 		targetFoldersPaths: ['/*']
 	},
 	"subtree": {}
@@ -574,7 +576,7 @@ const expectedWildcardMatchingTreeForSimplistic1 = {
 const txtInputSimplistic2: string = `
 target-folder: /
 /:files
-//folders
+/folders
 `
 
 const expectedSortSpecForSimplistic2: { [key: string]: CustomSortSpec } = {
@@ -584,11 +586,12 @@ const expectedSortSpecForSimplistic2: { [key: string]: CustomSortSpec } = {
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}, {
+			foldersOnly: true,
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}],
 		outsidersFilesGroupIdx: 0,
-		outsidersGroupIdx: 1,
+		outsidersFoldersGroupIdx: 1,
 		targetFoldersPaths: ['/']
 	}
 }
@@ -759,6 +762,123 @@ describe('SortingSpecProcessor edge case', () => {
 		expect(result?.sortSpecByWildcard).not.toBeNull()
 	})
 })
+
+const txtInputPriorityGroups1: string = `
+target-folder: /
+/:files
+/folders
+/! /:files Fi...
+/!! /folders Fo...
+/!!! ...def!
+Plain text
+/! % Anything
+`
+
+const txtInputPriorityGroups2: string = `
+target-folder: /
+/! /:files Fi...
+/!! /folders Fo...
+/!!! ...def!
+/! Anything
+`
+
+const expectedSortSpecForPriorityGroups1: { [key: string]: CustomSortSpec } = {
+	"/": {
+		groups: [{
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}, {
+			foldersOnly: true,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}, {
+			exactPrefix: "Fi",
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical,
+			priority: 1,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			exactPrefix: "Fo",
+			foldersOnly: true,
+			order: CustomSortOrder.alphabetical,
+			priority: 2,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			exactSuffix: "def!",
+			priority: 3,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.ExactSuffix
+		}, {
+			exactText: "Plain text",
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.ExactName
+		},{
+			exactText: "Anything",
+			order: CustomSortOrder.alphabetical,
+			priority: 1,
+			type: CustomSortGroupType.ExactName
+		}],
+		outsidersFilesGroupIdx: 0,
+		outsidersFoldersGroupIdx: 1,
+		targetFoldersPaths: ['/'],
+		priorityOrder: [4,3,2,6,5]
+	}
+}
+
+const expectedSortSpecForPriorityGroups2: { [key: string]: CustomSortSpec } = {
+	"/": {
+		groups: [{
+			exactPrefix: "Fi",
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical,
+			priority: 1,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			exactPrefix: "Fo",
+			foldersOnly: true,
+			order: CustomSortOrder.alphabetical,
+			priority: 2,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			exactSuffix: "def!",
+			priority: 3,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.ExactSuffix
+		}, {
+			exactText: "Anything",
+			order: CustomSortOrder.alphabetical,
+			priority: 1,
+			type: CustomSortGroupType.ExactName
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 4,
+		targetFoldersPaths: ['/'],
+		priorityOrder: [2,1,0,3]
+	}
+}
+
+describe('SortingSpecProcessor', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should recognize the sorting groups with priority example 1', () => {
+		const inputTxtArr: Array<string> = txtInputPriorityGroups1.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForPriorityGroups1)
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
+	it('should recognize the sorting groups with priority example 2', () => {
+		const inputTxtArr: Array<string> = txtInputPriorityGroups2.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForPriorityGroups2)
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
+})
+
 
 const txtInputTargetFolderMultiSpecA: string = `
 target-folder: .
@@ -1111,6 +1231,22 @@ target-folder: AAA
  sorting: standard
 `
 
+const txtInputErrorPriorityAlone: string = `
+/!
+`
+
+const txtInputErrorPriorityEmptyFilePattern: string = `
+/!! /:
+`
+
+const txtInputErrorPriorityEmptyFolderPattern: string = `
+/!!! /
+`
+
+const txtInputErrorPriorityEmptyPattern: string = `
+/! %
+`
+
 const txtInputEmptySpec: string = ``
 
 describe('SortingSpecProcessor error detection and reporting', () => {
@@ -1206,6 +1342,42 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		expect(errorsLogger).toHaveBeenNthCalledWith(1,
 			`${ERR_PREFIX} 14:StandardObsidianSortAllowedOnlyAtFolderLevel The standard Obsidian sort order is only allowed at a folder level (not nested syntax) ${ERR_SUFFIX_IN_LINE(4)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT(' sorting: standard'))
+	})
+	it('should recognize error: priority indicator alone', () => {
+		const inputTxtArr: Array<string> = txtInputErrorPriorityAlone.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 15:PriorityNotAllowedOnOutsidersGroup Priority is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/!'))
+	})
+	it('should recognize error: priority indicator with empty file pattern', () => {
+		const inputTxtArr: Array<string> = txtInputErrorPriorityEmptyFilePattern.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 15:PriorityNotAllowedOnOutsidersGroup Priority is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/!! /:'))
+	})
+	it('should recognize error: priority indicator with empty folder pattern', () => {
+		const inputTxtArr: Array<string> = txtInputErrorPriorityEmptyFolderPattern.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 15:PriorityNotAllowedOnOutsidersGroup Priority is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/!!! /'))
+	})
+	it('should recognize error: priority indicator with empty pattern', () => {
+		const inputTxtArr: Array<string> = txtInputErrorPriorityEmptyPattern.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 15:PriorityNotAllowedOnOutsidersGroup Priority is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/! %'))
 	})
 	it('should recognize empty spec', () => {
 		const inputTxtArr: Array<string> = txtInputEmptySpec.split('\n')
