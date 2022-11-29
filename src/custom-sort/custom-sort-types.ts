@@ -57,6 +57,7 @@ export interface CustomSortGroup {
 	matchFilenameWithExt?: boolean
 	foldersOnly?: boolean
 	withMetadataFieldName?: string // for 'with-metadata:'
+	priority?: number
 }
 
 export interface CustomSortSpec {
@@ -68,9 +69,10 @@ export interface CustomSortSpec {
 	outsidersFilesGroupIdx?: number
 	outsidersFoldersGroupIdx?: number
 	itemsToHide?: Set<string>
-	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
+	priorityOrder?: Array<number>       // Indexes of groups in evaluation order
 
 		// For internal transient use
+	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
 	_mCache?: MetadataCache
 }
 

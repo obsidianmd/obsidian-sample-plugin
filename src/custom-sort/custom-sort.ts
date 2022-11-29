@@ -129,8 +129,13 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	const entryAsTFile: TFile = entry as TFile
 	const basename: string = aFolder ? entry.name : entryAsTFile.basename
 
-	for (groupIdx = 0; groupIdx < spec.groups.length; groupIdx++) {
+	// When priorities come in play, the ordered list of groups to check could be shorter
+	//    than the actual full set of defined groups, because the outsiders group are not
+	//    in the ordered list (aka priorityOrder array)
+	const numOfGroupsToCheck: number = spec.priorityOrder ? spec.priorityOrder.length : spec.groups.length
+	for (let idx = 0; idx < numOfGroupsToCheck; idx++) {
 		matchedGroup = null
+		groupIdx = spec.priorityOrder ? spec.priorityOrder[idx] : idx
 		const group: CustomSortGroup = spec.groups[groupIdx];
 		if (group.foldersOnly && aFile) continue;
 		if (group.filesOnly && aFolder) continue;
@@ -218,12 +223,12 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				break
 		}
 		if (determined) {
-			break;
+			break; // No need to check other sorting groups
 		}
 	}
 
-	// the final groupIdx for undetermined folder entry is either the last+1 groupIdx or idx of explicitly defined outsiders group
-	let determinedGroupIdx: number | undefined = groupIdx;
+	const idxAfterLastGroupIdx: number = spec.groups.length
+	let determinedGroupIdx: number | undefined = determined ? groupIdx! : idxAfterLastGroupIdx
 
 	if (!determined) {
 		// Automatically assign the index to outsiders group, if relevant was configured
