@@ -230,6 +230,14 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	const idxAfterLastGroupIdx: number = spec.groups.length
 	let determinedGroupIdx: number | undefined = determined ? groupIdx! : idxAfterLastGroupIdx
 
+	// Redirection to the first group of combined, if detected
+	if (determined) {
+		const combinedGroupIdx: number | undefined = spec.groups[determinedGroupIdx].combineWithIdx
+		if (combinedGroupIdx !== undefined) {
+			determinedGroupIdx = combinedGroupIdx
+		}
+	}
+
 	if (!determined) {
 		// Automatically assign the index to outsiders group, if relevant was configured
 		if (isDefined(spec.outsidersFilesGroupIdx) && aFile) {

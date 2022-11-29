@@ -7,7 +7,7 @@ import {
 	escapeRegexUnsafeCharacters,
 	extractNumericSortingSymbol,
 	hasMoreThanOneNumericSortingSymbol,
-	NumberNormalizerFn, ProblemCode,
+	NumberNormalizerFn,
 	RegexpUsedAs,
 	RomanNumberNormalizerFn,
 	SortingSpecProcessor
@@ -860,6 +860,42 @@ const expectedSortSpecForPriorityGroups2: { [key: string]: CustomSortSpec } = {
 	}
 }
 
+const expectedSortSpecForPriorityAndCombineGroups: { [key: string]: CustomSortSpec } = {
+	"/": {
+		groups: [{
+			combineWithIdx: 0,
+			exactPrefix: "Fi",
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical,
+			priority: 1,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			combineWithIdx: 0,
+			exactPrefix: "Fo",
+			foldersOnly: true,
+			order: CustomSortOrder.alphabetical,
+			priority: 2,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			exactSuffix: "def!",
+			priority: 3,
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.ExactSuffix
+		}, {
+			exactText: "Anything",
+			order: CustomSortOrder.alphabetical,
+			priority: 1,
+			type: CustomSortGroupType.ExactName
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 4,
+		targetFoldersPaths: ['/'],
+		priorityOrder: [2,1,0,3]
+	}
+}
+
 describe('SortingSpecProcessor', () => {
 	let processor: SortingSpecProcessor;
 	beforeEach(() => {
@@ -877,8 +913,127 @@ describe('SortingSpecProcessor', () => {
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForPriorityGroups2)
 		expect(result?.sortSpecByWildcard).toBeUndefined()
 	})
-})
+	it('should recognize the combine and priority prefixes in any order example 1', () => {
+		const inputTxtArr: Array<string> = `
+			target-folder: /
+			/! /+ /:files Fi...
+			/!! /+ /folders Fo...
+			/!!! ...def!
+			/! Anything
+			`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForPriorityAndCombineGroups)
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
+	it('should recognize the combine and priority prefixes in any order example 2', () => {
+		const inputTxtArr: Array<string> = `
+			target-folder: /
+			/+ /! /:files Fi...
+			/+ /!! /folders Fo...
+			/!!! ...def!
+			/! Anything
+			`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForPriorityAndCombineGroups)
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
+	it('should accept the combine operator in single line only', () => {
+		const inputTxtArr: Array<string> = `
+			target-folder: /
+			/+ /:files Fi...
+			/folders Fo...
+			`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual({
+			"/": {
+				groups: [{
+					combineWithIdx: 0,
+					exactPrefix: "Fi",
+					filesOnly: true,
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.ExactPrefix
+				}, {
+					exactPrefix: "Fo",
+					foldersOnly: true,
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.ExactPrefix
+				}, {
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.Outsiders
+				}],
+				outsidersGroupIdx: 2,
+				targetFoldersPaths: ['/']
+			}
+		})
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
+	it('should correctly parse combine operator, apply default sorting and explicit sorting', () => {
+		const inputTxtArr: Array<string> = `
+			target-folder: /
+			Nothing
+			 > a-z
+			/+ /:files Fi...
+			/+ /folders Fo...
+			... Separator
+			/+ Abc...
+			/+ ...Def
+			/+ ...
+			 > modified
+			Unreachable line
+			`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual({
+			"/": {
+				groups: [{
+					exactText: "Nothing",
+					order: CustomSortOrder.alphabeticalReverse,
+					type: CustomSortGroupType.ExactName
+				}, {
+					combineWithIdx: 1,
+					exactPrefix: "Fi",
+					filesOnly: true,
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.ExactPrefix
+				}, {
+					combineWithIdx: 1,
+					exactPrefix: "Fo",
+					foldersOnly: true,
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.ExactPrefix
+				}, {
+					exactSuffix: " Separator",
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.ExactSuffix
+				}, {
+					combineWithIdx: 4,
+					exactPrefix: "Abc",
+					order: CustomSortOrder.byModifiedTimeReverse,
+					type: CustomSortGroupType.ExactPrefix
+				}, {
+					combineWithIdx: 4,
+					exactSuffix: "Def",
+					order: CustomSortOrder.byModifiedTimeReverse,
+					type: CustomSortGroupType.ExactSuffix
+				}, {
+					combineWithIdx: 4,
+					order: CustomSortOrder.byModifiedTimeReverse,
+					type: CustomSortGroupType.MatchAll
+				}, {
+					exactText: "Unreachable line",
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.ExactName
+				}, {
+					order: CustomSortOrder.alphabetical,
+					type: CustomSortGroupType.Outsiders
+				}],
+				outsidersGroupIdx: 8,
+				targetFoldersPaths: ['/']
+			}
+		})
+		expect(result?.sortSpecByWildcard).toBeUndefined()
+	})
 
+})
 
 const txtInputTargetFolderMultiSpecA: string = `
 target-folder: .
@@ -1231,10 +1386,6 @@ target-folder: AAA
  sorting: standard
 `
 
-const txtInputErrorPriorityAlone: string = `
-/!
-`
-
 const txtInputErrorPriorityEmptyFilePattern: string = `
 /!! /:
 `
@@ -1344,13 +1495,37 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT(' sorting: standard'))
 	})
 	it('should recognize error: priority indicator alone', () => {
-		const inputTxtArr: Array<string> = txtInputErrorPriorityAlone.split('\n')
+		const inputTxtArr: Array<string> = `
+		/!
+		`.replace(/\t/gi, '').split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result).toBeNull()
 		expect(errorsLogger).toHaveBeenCalledTimes(2)
 		expect(errorsLogger).toHaveBeenNthCalledWith(1,
 			`${ERR_PREFIX} 15:PriorityNotAllowedOnOutsidersGroup Priority is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/!'))
+	})
+	it('should recognize error: multiple priority indicators alone', () => {
+		const inputTxtArr: Array<string> = `
+		/! /!! /!!!
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 16:TooManyPriorityPrefixes Only one priority prefix allowed on sorting group ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/! /!! /!!!'))
+	})
+	it('should recognize error: multiple priority indicators', () => {
+		const inputTxtArr: Array<string> = `
+		/!!! /!!! Abc\.d+ ...
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 16:TooManyPriorityPrefixes Only one priority prefix allowed on sorting group ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/!!! /!!! Abc\.d+ ...'))
 	})
 	it('should recognize error: priority indicator with empty file pattern', () => {
 		const inputTxtArr: Array<string> = txtInputErrorPriorityEmptyFilePattern.split('\n')
@@ -1378,6 +1553,98 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		expect(errorsLogger).toHaveBeenNthCalledWith(1,
 			`${ERR_PREFIX} 15:PriorityNotAllowedOnOutsidersGroup Priority is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/! %'))
+	})
+	it('should recognize error of combining: sorting order on first group', () => {
+		const inputTxtArr: Array<string> = `
+		/+ Abc
+		 > modified
+		/+ /:files def
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 20:OnlyLastCombinedGroupCanSpecifyOrder Predecessor group of combined group cannot contain order specification. Put it at the last of group in combined groups ${ERR_SUFFIX}`)
+	})
+	it('should recognize error of combining: sorting order not on last group', () => {
+		const inputTxtArr: Array<string> = `
+		/+ Abc
+		/+ ...Def
+		/+ Ghi...
+		 > modified
+		/+ /:files def
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 20:OnlyLastCombinedGroupCanSpecifyOrder Predecessor group of combined group cannot contain order specification. Put it at the last of group in combined groups ${ERR_SUFFIX}`)
+	})
+	it('should recognize error of combining: combining not allowed for outsiders group', () => {
+		const inputTxtArr: Array<string> = `
+		/+ %
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 17:CombiningNotAllowedOnOutsidersGroup Combining is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/+ %'))
+	})
+	it('should recognize error of combining: combining not allowed for outsiders priority group', () => {
+		const inputTxtArr: Array<string> = `
+		/+ /! /
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 15:PriorityNotAllowedOnOutsidersGroup Priority is not allowed for sorting group with empty match-pattern ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/+ /! /'))
+	})
+	it('should recognize error of combining: multiple combine operators', () => {
+		const inputTxtArr: Array<string> = `
+		/+ /! /+ /: Something
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 18:TooManyCombinePrefixes Only one combining prefix allowed on sorting group ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/+ /! /+ /: Something'))
+	})
+	it('should recognize error: too many sorting group type prefixes', () => {
+		const inputTxtArr: Array<string> = `
+		/folders /:files Hello
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 21:TooManyGroupTypePrefixes Only one sorting group type prefix allowed on sorting group ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/folders /:files Hello'))
+	})
+	it('should recognize error: priority prefix after sorting group type prefixe', () => {
+		const inputTxtArr: Array<string> = `
+		/folders /+ /! Hello
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 22:PriorityPrefixAfterGroupTypePrefix Priority prefix must be used before sorting group type indicator ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/folders /+ /! Hello'))
+	})
+	it('should recognize error: combine prefix after sorting group type prefixe', () => {
+		const inputTxtArr: Array<string> = `
+		/folders /+ Hello
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 23:CombinePrefixAfterGroupTypePrefix Combining prefix must be used before sorting group type indicator ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/folders /+ Hello'))
 	})
 	it('should recognize empty spec', () => {
 		const inputTxtArr: Array<string> = txtInputEmptySpec.split('\n')

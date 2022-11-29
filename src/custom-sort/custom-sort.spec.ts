@@ -834,6 +834,111 @@ describe('determineSortingGroup', () => {
 			path: 'Some parent folder/Abcdef!.md'
 		});
 	})
+	it('should correctly recognize and apply combined group', () => {
+		// given
+		const file1: TFile = mockTFile('Hello :-) ha', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+		const file2: TFile = mockTFile('Hello World :-)', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+		const sortSpec: CustomSortSpec = {
+			groups: [{
+				exactSuffix: "def!",
+				order: CustomSortOrder.alphabeticalReverse,
+				type: CustomSortGroupType.ExactSuffix
+			}, {
+				exactPrefix: "Hello :-)",
+				order: CustomSortOrder.alphabeticalReverse,
+				type: CustomSortGroupType.ExactPrefix,
+				combineWithIdx: 1
+			}, {
+				exactText: "Hello World :-)",
+				order: CustomSortOrder.alphabeticalReverse,
+				type: CustomSortGroupType.ExactName,
+				combineWithIdx: 1
+			}, {
+				filesOnly: true,
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.MatchAll
+			}, {
+				foldersOnly: true,
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.MatchAll
+			}, {
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.Outsiders
+			}],
+			outsidersGroupIdx: 5,
+			targetFoldersPaths: ['/']
+		}
+
+		// when
+		const result1 = determineSortingGroup(file1, sortSpec)
+		const result2 = determineSortingGroup(file2, sortSpec)
+
+		// then
+		expect(result1).toEqual({
+			groupIdx: 1, // Imposed by combined groups
+			isFolder: false,
+			sortString: "Hello :-) ha.md",
+			ctimeNewest: MOCK_TIMESTAMP + 222,
+			ctimeOldest: MOCK_TIMESTAMP + 222,
+			mtime: MOCK_TIMESTAMP + 333,
+			path: 'Some parent folder/Hello :-) ha.md'
+		});
+		expect(result2).toEqual({
+			groupIdx: 1, // Imposed by combined groups
+			isFolder: false,
+			sortString: "Hello World :-).md",
+			ctimeNewest: MOCK_TIMESTAMP + 222,
+			ctimeOldest: MOCK_TIMESTAMP + 222,
+			mtime: MOCK_TIMESTAMP + 333,
+			path: 'Some parent folder/Hello World :-).md'
+		});
+	})
+	it('should correctly recognize and apply combined group in connection with priorities', () => {
+		// given
+		const file: TFile = mockTFile('Hello :-)', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+		const sortSpec: CustomSortSpec = {
+			groups: [{
+				filesOnly: true,
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.MatchAll
+			}, {
+				foldersOnly: true,
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.MatchAll
+			}, {
+				exactSuffix: "def!",
+				order: CustomSortOrder.alphabeticalReverse,
+				type: CustomSortGroupType.ExactSuffix,
+				combineWithIdx: 2
+			}, {
+				exactText: "Hello :-)",
+				order: CustomSortOrder.alphabeticalReverse,
+				type: CustomSortGroupType.ExactName,
+				priority: 1,
+				combineWithIdx: 2
+			}, {
+				order: CustomSortOrder.alphabetical,
+				type: CustomSortGroupType.Outsiders
+			}],
+			outsidersGroupIdx: 4,
+			priorityOrder: [3,0,1,2],
+			targetFoldersPaths: ['/']
+		}
+
+		// when
+		const result = determineSortingGroup(file, sortSpec)
+
+		// then
+		expect(result).toEqual({
+			groupIdx: 2, // Imposed by combined groups
+ 			isFolder: false,
+			sortString: "Hello :-).md",
+			ctimeNewest: MOCK_TIMESTAMP + 222,
+			ctimeOldest: MOCK_TIMESTAMP + 222,
+			mtime: MOCK_TIMESTAMP + 333,
+			path: 'Some parent folder/Hello :-).md'
+		});
+	})
 })
 
 describe('determineFolderDatesIfNeeded', () => {

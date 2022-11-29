@@ -51,13 +51,14 @@ export interface CustomSortGroup {
 	exactPrefix?: string
 	exactSuffix?: string
 	order?: CustomSortOrder
-	byMetadataField?: string     // for 'by-metadata:' if the order is by metadata alphabetical or reverse
+	byMetadataField?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
 	secondaryOrder?: CustomSortOrder
 	filesOnly?: boolean
 	matchFilenameWithExt?: boolean
 	foldersOnly?: boolean
-	withMetadataFieldName?: string // for 'with-metadata:'
+	withMetadataFieldName?: string // for 'with-metadata:' grouping
 	priority?: number
+	combineWithIdx?: number
 }
 
 export interface CustomSortSpec {

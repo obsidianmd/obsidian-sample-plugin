@@ -30,7 +30,7 @@ sorting-spec: |
 
 The resulting order of notes would be:
 
-![Order of notes w/o priorities](./svg/priorities-example-a.svg)
+![Order of notes w/o priorites](./svg/priorities-example-a.svg)
 
 However, a group can be assigned a higher priority in the sorting spec. In result, folder items will be matched against them _before_ any other rules. To impose a priority on a group use the prefix `/!` or `/!!` or `/!!!`
 

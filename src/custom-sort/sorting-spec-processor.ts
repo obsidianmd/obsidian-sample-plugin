@@ -47,6 +47,7 @@ interface ParsedSortingGroup {
 	outsidersGroup?: boolean // Mutually exclusive with plainSpec and arraySpec
 	itemToHide?: boolean
 	priority?: number
+	combine?: boolean
 }
 
 export enum ProblemCode {
@@ -65,12 +66,21 @@ export enum ProblemCode {
 	ItemToHideNoSupportForThreeDots,
 	DuplicateWildcardSortSpecForSameFolder,
 	StandardObsidianSortAllowedOnlyAtFolderLevel,
-	PriorityNotAllowedOnOutsidersGroup
+	PriorityNotAllowedOnOutsidersGroup,
+	TooManyPriorityPrefixes,
+	CombiningNotAllowedOnOutsidersGroup,
+	TooManyCombinePrefixes,
+	ModifierPrefixesOnlyOnOutsidersGroup,
+	OnlyLastCombinedGroupCanSpecifyOrder,
+	TooManyGroupTypePrefixes,
+	PriorityPrefixAfterGroupTypePrefix,
+	CombinePrefixAfterGroupTypePrefix
 }
 
 const ContextFreeProblems = new Set<ProblemCode>([
 	ProblemCode.DuplicateSortSpecForSameFolder,
-	ProblemCode.DuplicateWildcardSortSpecForSameFolder
+	ProblemCode.DuplicateWildcardSortSpecForSameFolder,
+	ProblemCode.OnlyLastCombinedGroupCanSpecifyOrder
 ])
 
 const ThreeDots = '...';
@@ -198,6 +208,12 @@ const SortingGroupPriorityPrefixes: { [key: string]: number } = {
 	[PriorityModifierPrio2Lexeme]: PRIO_2,
 	[PriorityModifierPrio3Lexeme]: PRIO_3
 }
+
+const CombineGroupLexeme: string = '/+'
+
+const CombiningGroupPrefixes: Array<string> = [
+	CombineGroupLexeme
+]
 
 interface SortingGroupType {
 	filesOnly?: boolean
@@ -490,7 +506,9 @@ export class SortingSpecProcessor {
 		if (success) {
 			if (this.ctx.specs.length > 0) {
 				for (let spec of this.ctx.specs) {
-					this.postprocessSortSpec(spec)
+					if (!this.postprocessSortSpec(spec)) {
+						return null
+					}
 				}
 
 				let sortspecByWildcard: FolderWildcardMatching<CustomSortSpec> | undefined
@@ -690,77 +708,148 @@ export class SortingSpecProcessor {
 			return null
 		}
 
-		const priorityPrefixAlone: number = SortingGroupPriorityPrefixes[s]
-		if (priorityPrefixAlone) {
+		let groupPriority: number | undefined = undefined
+		let groupPriorityPrefixesCount: number = 0
+		let combineGroup: boolean | undefined = undefined
+		let combineGroupPrefixesCount: number = 0
+		let groupType: SortingGroupType | undefined = undefined
+		let groupTypePrefixesCount: number = 0
+		let priorityPrefixAfterGroupTypePrefix: boolean = false
+		let combinePrefixAfterGroupTypePrefix: boolean = false
+
+		let prefixRecognized: boolean | undefined = undefined
+		while (prefixRecognized === undefined || prefixRecognized) {
+			let doContinue: boolean = false // to support 'continue' on external loop from nested loop
+
+			for (const priorityPrefix of Object.keys(SortingGroupPriorityPrefixes)) {
+				if (s === priorityPrefix || s.startsWith(priorityPrefix + ' ')) {
+					groupPriority = SortingGroupPriorityPrefixes[priorityPrefix]
+					groupPriorityPrefixesCount ++
+					prefixRecognized = true
+					doContinue = true
+					if (groupType) {
+						priorityPrefixAfterGroupTypePrefix = true
+					}
+					s = s.substring(priorityPrefix.length).trim()
+					break
+				}
+			}
+
+			if (doContinue) continue
+
+			for (let combinePrefix of CombiningGroupPrefixes) {
+				if (s === combinePrefix || s.startsWith(combinePrefix + ' ')) {
+					combineGroup = true
+					combineGroupPrefixesCount ++
+					prefixRecognized = true
+					doContinue = true
+					if (groupType) {
+						combinePrefixAfterGroupTypePrefix = true
+					}
+					s = s.substring(combinePrefix.length).trim()
+					break
+				}
+			}
+
+			if (doContinue) continue
+
+			for (const sortingGroupTypePrefix of Object.keys(SortingGroupPrefixes)) {
+				if (s === sortingGroupTypePrefix || s.startsWith(sortingGroupTypePrefix + ' ')) {
+					groupType = SortingGroupPrefixes[sortingGroupTypePrefix]
+					groupTypePrefixesCount++
+					prefixRecognized = true
+					doContinue = true
+					s = s.substring(sortingGroupTypePrefix.length).trim()
+					break
+				}
+			}
+
+			if (doContinue) continue
+
+			prefixRecognized = false
+		}
+
+		if (groupPriorityPrefixesCount > 1) {
+			this.problem(ProblemCode.TooManyPriorityPrefixes, 'Only one priority prefix allowed on sorting group')
+			return null
+		}
+
+		if (s === '' && groupPriority) {
 			this.problem(ProblemCode.PriorityNotAllowedOnOutsidersGroup, 'Priority is not allowed for sorting group with empty match-pattern')
 			return null
 		}
 
-		let groupPriority: number | undefined = undefined
-		for (const priorityPrefix of Object.keys(SortingGroupPriorityPrefixes)) {
-			if (s.startsWith(priorityPrefix + ' ')) {
-				groupPriority = SortingGroupPriorityPrefixes[priorityPrefix]
-				s = s.substring(priorityPrefix.length).trim()
-				break
-			}
+		if (combineGroupPrefixesCount > 1) {
+			this.problem(ProblemCode.TooManyCombinePrefixes, 'Only one combining prefix allowed on sorting group')
+			return null
 		}
 
-		const prefixAlone: SortingGroupType = SortingGroupPrefixes[s]
-		if (prefixAlone) {
-			if (prefixAlone.itemToHide) {
+		if (s === '' && combineGroup) {
+			this.problem(ProblemCode.CombiningNotAllowedOnOutsidersGroup, 'Combining is not allowed for sorting group with empty match-pattern')
+			return null
+		}
+
+		if (groupTypePrefixesCount > 1) {
+			this.problem(ProblemCode.TooManyGroupTypePrefixes, 'Only one sorting group type prefix allowed on sorting group')
+			return null
+		}
+
+		if (priorityPrefixAfterGroupTypePrefix) {
+			this.problem(ProblemCode.PriorityPrefixAfterGroupTypePrefix, 'Priority prefix must be used before sorting group type indicator')
+			return null
+		}
+
+		if (combinePrefixAfterGroupTypePrefix) {
+			this.problem(ProblemCode.CombinePrefixAfterGroupTypePrefix, 'Combining prefix must be used before sorting group type indicator')
+			return null
+		}
+
+		if (s === '' && groupType) { // alone alone alone
+			if (groupType.itemToHide) {
 				this.problem(ProblemCode.ItemToHideExactNameWithExtRequired, 'Exact name with ext of file or folders to hide is required')
 				return null
-			} else { // !prefixAlone.itemToHide
-				if (groupPriority) {
-					this.problem(ProblemCode.PriorityNotAllowedOnOutsidersGroup, 'Priority is not allowed for sorting group with empty match-pattern')
-					return null
-				} else {
-					return {
-						outsidersGroup: true,
-						filesOnly: prefixAlone.filesOnly,
-						foldersOnly: prefixAlone.foldersOnly
-					}
+			} else { // !sortingGroupIndicatorPrefixAlone.itemToHide
+				return {
+					outsidersGroup: true,
+					filesOnly: groupType.filesOnly,
+					foldersOnly: groupType.foldersOnly
 				}
 			}
 		}
 
-		for (const prefix of Object.keys(SortingGroupPrefixes)) {
-			if (s.startsWith(prefix + ' ')) {
-				const sortingGroupType: SortingGroupType = SortingGroupPrefixes[prefix]
-				if (sortingGroupType.itemToHide) {
-					return {
-						itemToHide: true,
-						plainSpec: s.substring(prefix.length + 1),
-						filesOnly: sortingGroupType.filesOnly,
-						foldersOnly: sortingGroupType.foldersOnly
-					}
-				} else { // !sortingGroupType.itemToHide
-					return {
-						plainSpec: s.substring(prefix.length + 1),
-						filesOnly: sortingGroupType.filesOnly,
-						foldersOnly: sortingGroupType.foldersOnly,
-						matchFilenameWithExt: sortingGroupType.filenameWithExt,
-						priority: groupPriority ?? undefined
-					}
+		if (groupType) {
+			if (groupType.itemToHide) {
+				return {
+					itemToHide: true,
+					plainSpec: s,
+					filesOnly: groupType.filesOnly,
+					foldersOnly: groupType.foldersOnly
 				}
-			}
-		}
-
-		if (groupPriority) {
-			if (s === '') {
-				// Edge case: line with only priority prefix and no other content
-				this.problem(ProblemCode.PriorityNotAllowedOnOutsidersGroup, 'Priority is not allowed for sorting group with empty match-pattern')
-				return null
-			} else {
-				// Edge case: line with only priority prefix and no other known syntax, yet some content
+			} else { // !sortingGroupType.itemToHide
 				return {
 					plainSpec: s,
-					priority: groupPriority
+					filesOnly: groupType.filesOnly,
+					foldersOnly: groupType.foldersOnly,
+					matchFilenameWithExt: groupType.filenameWithExt,
+					priority: groupPriority ?? undefined,
+					combine: combineGroup
 				}
+			}
+		}
+
+		if ((groupPriority || combineGroup) && s !== '' ) {
+			// Edge case: line with only priority prefix or combine prefix and no other known syntax, yet some content
+			return {
+				plainSpec: s,
+				priority: groupPriority,
+				combine: combineGroup
 			}
 		}
 		return null;
 	}
+
+	// Artificial value used to indicate not-undefined value in if (COMBINING_INDICATOR_IDX) { ... }
+	COMBINING_INDICATOR_IDX: number = -1
 
 	private processParsedSortGroupSpec(group: ParsedSortingGroup): boolean {
 		if (!this.ctx.currentSpec) {
@@ -791,7 +880,10 @@ export class SortingSpecProcessor {
 							newGroup.priority = group.priority
 							this.addExpediteGroupInfo(this.ctx.currentSpec, group.priority, groupIdx)
 						}
-
+						// Consume combined group
+						if (group.combine) {
+							newGroup.combineWithIdx = this.COMBINING_INDICATOR_IDX
+						}
 						return true;
 					} else {
 						return false
@@ -805,7 +897,7 @@ export class SortingSpecProcessor {
 		}
 	}
 
-	private postprocessSortSpec(spec: CustomSortSpec): void {
+	private postprocessSortSpec(spec: CustomSortSpec): boolean {
 		// clean up to prevent false warnings in console
 		spec.outsidersGroupIdx = undefined
 		spec.outsidersFilesGroupIdx = undefined
@@ -853,6 +945,55 @@ export class SortingSpecProcessor {
 			})
 		}
 
+		// Process 'combined groups'
+		let anyCombinedGroupPresent: boolean = false
+		let currentCombinedGroupIdx: number | undefined = undefined
+		for (let i=0; i<spec.groups.length; i++) {
+			const group: CustomSortGroup = spec.groups[i]
+			if (group.combineWithIdx === this.COMBINING_INDICATOR_IDX) { // Here we expect the COMBINING_INDICATOR_IDX artificial value or undefined
+				if (currentCombinedGroupIdx === undefined) {
+					currentCombinedGroupIdx = i
+				} else {
+					// Ensure that the preceding group doesn't contain sorting order
+					if (spec.groups[i - 1].order) {
+						this.problem(ProblemCode.OnlyLastCombinedGroupCanSpecifyOrder, 'Predecessor group of combined group cannot contain order specification. Put it at the last of group in combined groups')
+						return false
+					}
+				}
+
+				group.combineWithIdx = currentCombinedGroupIdx
+				anyCombinedGroupPresent = true
+			} else {
+				currentCombinedGroupIdx = undefined
+			}
+		}
+
+		// Populate sorting order within combined groups
+		if (anyCombinedGroupPresent) {
+			let orderForCombinedGroup: CustomSortOrder | undefined
+			let byMetadataFieldForCombinedGroup: string | undefined
+			let idxOfCurrentCombinedGroup: number | undefined = undefined
+			for (let i = spec.groups.length - 1; i >= 0; i--) {
+				const group: CustomSortGroup = spec.groups[i]
+
+				if (group.combineWithIdx !== undefined) {
+					if (group.combineWithIdx === idxOfCurrentCombinedGroup) { // a subsequent (2nd, 3rd, ...) group of combined (counting from the end)
+						group.order = orderForCombinedGroup
+						group.byMetadataField = byMetadataFieldForCombinedGroup
+					} else { // the first group of combined (counting from the end)
+						idxOfCurrentCombinedGroup = group.combineWithIdx
+						orderForCombinedGroup = group.order // could be undefined
+						byMetadataFieldForCombinedGroup = group.byMetadataField // could be undefined
+					}
+				} else {
+					// for sanity
+					idxOfCurrentCombinedGroup = undefined
+					orderForCombinedGroup = undefined
+					byMetadataFieldForCombinedGroup = undefined
+				}
+			}
+		}
+
 		// Populate sorting order down the hierarchy for more clean sorting logic later on
 		for (let group of spec.groups) {
 			if (!group.order) {
@@ -883,6 +1024,8 @@ export class SortingSpecProcessor {
 				spec.targetFoldersPaths[idx] = `${this.ctx.folderPath}/${path.substring(CURRENT_FOLDER_PREFIX.length)}`
 			}
 		});
+
+		return true // success indicator
 	}
 
 	// level 2 parser functions defined in order of occurrence and dependency
