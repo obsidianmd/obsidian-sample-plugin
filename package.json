@@ -23,6 +23,7 @@
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.14.47",
+		"eslint": "^8.29.0",
 		"jest": "^28.1.1",
 		"monkey-around": "^2.3.0",
 		"obsidian": "^0.15.4",

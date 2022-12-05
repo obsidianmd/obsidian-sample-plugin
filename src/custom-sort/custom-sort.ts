@@ -1,4 +1,4 @@
-import {FrontMatterCache, MetadataCache, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
+import {FrontMatterCache, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
 import {
 	CustomSortGroup,
 	CustomSortGroupType,
