@@ -80,15 +80,17 @@ export default class CustomSortPlugin extends Plugin {
 				const aFile: TFile = file as TFile
 				const parent: TFolder = aFile.parent
 				// Read sorting spec from three sources of equal priority:
-				// - files with designated name (sortspec.md by default)
-				// - files with the same name as parent folders (aka folder notes): References/References.md
-				// - the file explicitly indicated in documentation, by default Inbox/Inbox.md
+				// - files with designated predefined name
+				// - files with the same name as parent folders (aka folder notes), e.g.: References/References.md
+				// - the file(s) explicitly configured by user in plugin settings
+				// Be human-friendly and accept both .md and .md.md file extensions
+				//     (the latter representing a typical confusion between note name vs underlying file name)
 				if (aFile.name === SORTSPEC_FILE_NAME ||
 					aFile.name === `${SORTSPEC_FILE_NAME}.md` ||
 					aFile.basename === parent.name ||
-					aFile.basename === this.settings.additionalSortspecFile ||  // (A) 'Inbox/sort' === setting 'Inbox/sort'
-					aFile.path === this.settings.additionalSortspecFile ||      // (B) 'Inbox/sort.md' === setting 'Inbox/sort.md'
-					aFile.path === `${this.settings.additionalSortspecFile}.md` // (C) 'Inbox/sort.md.md' === setting 'Inbox/sort.md'
+					aFile.basename === this.settings.additionalSortspecFile ||
+					aFile.path === this.settings.additionalSortspecFile ||
+					aFile.path === `${this.settings.additionalSortspecFile}.md`
 				) {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					if (sortingSpecTxt) {
