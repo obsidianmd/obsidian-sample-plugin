@@ -74,7 +74,8 @@ export enum ProblemCode {
 	OnlyLastCombinedGroupCanSpecifyOrder,
 	TooManyGroupTypePrefixes,
 	PriorityPrefixAfterGroupTypePrefix,
-	CombinePrefixAfterGroupTypePrefix
+	CombinePrefixAfterGroupTypePrefix,
+	InlineRegexInPrefixAndSuffix
 }
 
 const ContextFreeProblems = new Set<ProblemCode>([
@@ -252,6 +253,10 @@ const NumberRegexSymbol: string = '\\d+'               // Plain number
 const CompoundNumberDotRegexSymbol: string = '\\.d+'   // Compound number with dot as separator
 const CompoundNumberDashRegexSymbol: string = '\\-d+'  // Compound number with dash as separator
 
+const InlineRegexSymbol_Digit1: string = '\\d'
+const InlineRegexSymbol_Digit2: string = '\\[0-9]'
+const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
+
 const UnsafeRegexCharsRegex: RegExp = /[\^$.\-+\[\]{}()|*?=!\\]/g
 
 export const escapeRegexUnsafeCharacters = (s: string): string => {
@@ -269,6 +274,21 @@ const numericSortingSymbolsArr: Array<string> = [
 
 const numericSortingSymbolsRegex = new RegExp(numericSortingSymbolsArr.join('|'), 'gi')
 
+const inlineRegexSymbolsArrEscapedForRegex: Array<string> = [
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit1),
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit2),
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_0_to_3)
+]
+
+// Don't be confused if the source lexeme is equal to the resulting regex piece, logically these two distinct spaces
+const inlineRegexSymbolsToRegexExpressionsArr: { [key: string]: string} = {
+	[InlineRegexSymbol_Digit1]: '\\d',
+	[InlineRegexSymbol_Digit2]: '[0-9]',
+	[InlineRegexSymbol_0_to_3]: '[0-3]',
+}
+
+const inlineRegexSymbolsDetectionRegex = new RegExp(inlineRegexSymbolsArrEscapedForRegex.join('|'), 'gi')
+
 export const hasMoreThanOneNumericSortingSymbol = (s: string): boolean => {
 	numericSortingSymbolsRegex.lastIndex = 0
 	return numericSortingSymbolsRegex.test(s) && numericSortingSymbolsRegex.test(s)
@@ -276,6 +296,11 @@ export const hasMoreThanOneNumericSortingSymbol = (s: string): boolean => {
 export const detectNumericSortingSymbols = (s: string): boolean => {
 	numericSortingSymbolsRegex.lastIndex = 0
 	return numericSortingSymbolsRegex.test(s)
+}
+
+export const detectInlineRegex = (s?: string): boolean => {
+	inlineRegexSymbolsDetectionRegex.lastIndex = 0
+	return s ? inlineRegexSymbolsDetectionRegex.test(s) : false
 }
 
 export const extractNumericSortingSymbol = (s?: string): string | null => {
@@ -291,6 +316,7 @@ export const extractNumericSortingSymbol = (s?: string): string | null => {
 export interface RegExpSpecStr {
 	regexpStr: string
 	normalizerFn: NormalizerFn
+	advancedRegexType: AdvancedRegexType
 }
 
 // Exposed as named exports to allow unit testing
@@ -301,37 +327,64 @@ export const NumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumb
 export const CompoundDotNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DOT_SEPARATOR)
 export const CompoundDashNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DASH_SEPARATOR)
 
+export enum AdvancedRegexType {
+	None, // to allow if (advancedRegex)
+	Number,
+	CompoundDotNumber,
+	CompoundDashNumber,
+	RomanNumber,
+	CompoundDotRomanNumber,
+	CompoundDashRomanNumber
+}
+
 const numericSortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 	[RomanNumberRegexSymbol.toLowerCase()]: {
 		regexpStr: RomanNumberRegexStr,
-		normalizerFn: RomanNumberNormalizerFn
+		normalizerFn: RomanNumberNormalizerFn,
+		advancedRegexType: AdvancedRegexType.RomanNumber
 	},
 	[CompoundRomanNumberDotRegexSymbol.toLowerCase()]: {
 		regexpStr: CompoundRomanNumberDotRegexStr,
-		normalizerFn: CompoundDotRomanNumberNormalizerFn
+		normalizerFn: CompoundDotRomanNumberNormalizerFn,
+		advancedRegexType: AdvancedRegexType.CompoundDotRomanNumber
 	},
 	[CompoundRomanNumberDashRegexSymbol.toLowerCase()]: {
 		regexpStr: CompoundRomanNumberDashRegexStr,
-		normalizerFn: CompoundDashRomanNumberNormalizerFn
+		normalizerFn: CompoundDashRomanNumberNormalizerFn,
+		advancedRegexType: AdvancedRegexType.CompoundDashRomanNumber
 	},
 	[NumberRegexSymbol.toLowerCase()]: {
 		regexpStr: NumberRegexStr,
-		normalizerFn: NumberNormalizerFn
+		normalizerFn: NumberNormalizerFn,
+		advancedRegexType: AdvancedRegexType.Number
 	},
 	[CompoundNumberDotRegexSymbol.toLowerCase()]: {
 		regexpStr: CompoundNumberDotRegexStr,
-		normalizerFn: CompoundDotNumberNormalizerFn
+		normalizerFn: CompoundDotNumberNormalizerFn,
+		advancedRegexType: AdvancedRegexType.CompoundDotNumber
 	},
 	[CompoundNumberDashRegexSymbol.toLowerCase()]: {
 		regexpStr: CompoundNumberDashRegexStr,
-		normalizerFn: CompoundDashNumberNormalizerFn
+		normalizerFn: CompoundDashNumberNormalizerFn,
+		advancedRegexType: AdvancedRegexType.CompoundDashNumber
 	}
 }
 
-export interface ExtractedNumericSortingSymbolInfo {
+// advanced regex is a regex, which:
+//     - includes a matching group, which is then extracted for sorting needs
+//     - AND
+//     - contains variable-length matching regex, e.g. [0-9]+
+//     - thus requires the prefix and suffix information to check adjacency (to detect and avoid regex backtracking problems)
+// to compare, the non-advanced regex (aka simple regex) is constant-length wildcard, e.g.
+//     - a single digit
+//     - a single alphanumeric character (not implemented yet)
+//     - fixed length number (not implemented yet)
+//     - overall, guaranteed not to have zero-length matches
+export interface RegexMatcherInfo {
 	regexpSpec: RegExpSpec
-	prefix: string
-	suffix: string
+	prefix: string    // NOTE! This can also contain regex string, yet w/o matching groups and w/o optional matches
+	suffix: string    //    in other words, if there is a regex in prefix or suffix, it is guaranteed to not have zero-length matches
+	containsAdvancedRegex: AdvancedRegexType
 }
 
 export enum RegexpUsedAs {
@@ -341,24 +394,97 @@ export enum RegexpUsedAs {
 	FullMatch
 }
 
-export const convertPlainStringWithNumericSortingSymbolToRegex = (s?: string, actAs?: RegexpUsedAs): ExtractedNumericSortingSymbolInfo | null => {
+export const convertPlainStringToLeftRegex = (s: string): RegexMatcherInfo | null => {
+	return convertPlainStringToRegex(s, RegexpUsedAs.Prefix)
+}
+
+export const convertPlainStringToRightRegex = (s: string): RegexMatcherInfo | null => {
+	return convertPlainStringToRegex(s, RegexpUsedAs.Suffix)
+}
+
+export const convertPlainStringToFullMatchRegex = (s: string): RegexMatcherInfo | null => {
+	return convertPlainStringToRegex(s, RegexpUsedAs.FullMatch)
+}
+
+export const convertPlainStringToRegex = (s: string, actAs: RegexpUsedAs): RegexMatcherInfo | null => {
+	const regexMatchesStart: boolean = [RegexpUsedAs.Prefix, RegexpUsedAs.FullMatch].includes(actAs)
+	const regexMatchesEnding: boolean = [RegexpUsedAs.Suffix, RegexpUsedAs.FullMatch].includes(actAs)
 	const detectedSymbol: string | null = extractNumericSortingSymbol(s)
 	if (detectedSymbol) {
 		const replacement: RegExpSpecStr = numericSortingSymbolToRegexpStr[detectedSymbol.toLowerCase()]
 		const [extractedPrefix, extractedSuffix] = s!.split(detectedSymbol)
-		const regexPrefix: string = actAs === RegexpUsedAs.Prefix || actAs === RegexpUsedAs.FullMatch ? '^' : ''
-		const regexSuffix: string = actAs === RegexpUsedAs.Suffix || actAs === RegexpUsedAs.FullMatch ? '$' : ''
+		const regexPrefix: string = regexMatchesStart ? '^' : ''
+		const regexSuffix: string = regexMatchesEnding ? '$' : ''
+		const escapedProcessedPrefix: string = convertInlineRegexSymbolsAndEscapeTheRest(extractedPrefix)
+		const escapedProcessedSuffix: string = convertInlineRegexSymbolsAndEscapeTheRest(extractedSuffix)
 		return {
 			regexpSpec: {
-				regex: new RegExp(`${regexPrefix}${escapeRegexUnsafeCharacters(extractedPrefix)}${replacement.regexpStr}${escapeRegexUnsafeCharacters(extractedSuffix)}${regexSuffix}`, 'i'),
+				regex: new RegExp(`${regexPrefix}${escapedProcessedPrefix}${replacement.regexpStr}${escapedProcessedSuffix}${regexSuffix}`, 'i'),
 				normalizerFn: replacement.normalizerFn
 			},
 			prefix: extractedPrefix,
-			suffix: extractedSuffix
+			suffix: extractedSuffix,
+			containsAdvancedRegex: replacement.advancedRegexType
+		}
+	} else if (detectInlineRegex(s)) {
+		const replacement: RegexAsString = convertInlineRegexSymbolsAndEscapeTheRest(s)!
+		const regexPrefix: string = regexMatchesStart ? '^' : ''
+		const regexSuffix: string = regexMatchesEnding ? '$' : ''
+		return {
+			regexpSpec: {
+				regex: new RegExp(`${regexPrefix}${replacement}${regexSuffix}`, 'i')
+			},
+			prefix: '', // shouldn't be used anyway because of the below containsAdvancedRegex: false
+			suffix: '', // ---- // ----
+			containsAdvancedRegex: AdvancedRegexType.None
 		}
 	} else {
 		return null
 	}
+}
+
+type RegexAsString = string
+
+export const convertInlineRegexSymbolsAndEscapeTheRest = (s: string): RegexAsString => {
+	if (s === '') {
+		return s
+	}
+
+	let regexAsString: Array<string> = []
+
+	while (s!.length > 0) {
+		// detect the first inline regex
+		let earliestRegexSymbolIdx: number | undefined = undefined
+		let earliestRegexSymbol: string | undefined = undefined
+		for (let inlineRegexSymbol of Object.keys(inlineRegexSymbolsToRegexExpressionsArr)) {
+			const index: number = s!.indexOf(inlineRegexSymbol)
+			if (index >= 0) {
+				if (earliestRegexSymbolIdx !== undefined) {
+					if (index < earliestRegexSymbolIdx) {
+						earliestRegexSymbolIdx = index
+						earliestRegexSymbol = inlineRegexSymbol
+					}
+				} else {
+					earliestRegexSymbolIdx = index
+					earliestRegexSymbol = inlineRegexSymbol
+				}
+			}
+		}
+		if (earliestRegexSymbolIdx !== undefined) {
+			if (earliestRegexSymbolIdx > 0) {
+				const charsBeforeRegexSymbol: string = s!.substring(0, earliestRegexSymbolIdx)
+				regexAsString.push(escapeRegexUnsafeCharacters(charsBeforeRegexSymbol))
+				s = s!.substring(earliestRegexSymbolIdx)
+			}
+			regexAsString.push(inlineRegexSymbolsToRegexExpressionsArr[earliestRegexSymbol!])
+			s = s!.substring(earliestRegexSymbol!.length)
+		} else {
+			regexAsString.push(escapeRegexUnsafeCharacters(s))
+			s = ''
+		}
+	}
+
+	return regexAsString.join('')
 }
 
 export interface FolderPathToSortSpecMap {
@@ -375,7 +501,7 @@ interface AdjacencyInfo {
 	noSuffix: boolean
 }
 
-const checkAdjacency = (sortingSymbolInfo: ExtractedNumericSortingSymbolInfo): AdjacencyInfo => {
+const checkAdjacency = (sortingSymbolInfo: RegexMatcherInfo): AdjacencyInfo => {
 	return {
 		noPrefix: sortingSymbolInfo.prefix.length === 0,
 		noSuffix: sortingSymbolInfo.suffix.length === 0
@@ -706,6 +832,14 @@ export class SortingSpecProcessor {
 		if (hasMoreThanOneNumericSortingSymbol(s)) {
 			this.problem(ProblemCode.TooManyNumericSortingSymbols, 'Maximum one numeric sorting indicator allowed per line')
 			return null
+		}
+
+		if (containsThreeDots(s)) {
+			const [prefix, suffix] = s.split(ThreeDots)
+			if (containsThreeDots(prefix) && containsThreeDots(suffix)) {
+				this.problem(ProblemCode.InlineRegexInPrefixAndSuffix, 'In current version, inline regex symbols are not allowed both in prefix and suffix.')
+				return null
+			}
 		}
 
 		let groupPriority: number | undefined = undefined
@@ -1266,57 +1400,61 @@ export class SortingSpecProcessor {
 		return null;
 	}
 
+	// Returns true if no regex will be involved (hence no adjustment) or if correctly adjusted with regex
+	private adjustSortingGroupForRegexBasedMatchers = (group: CustomSortGroup): boolean => {
+		return this.adjustSortingGroupForNumericSortingSymbol(group)
+	}
+
 	// Returns true if no numeric sorting symbol (hence no adjustment) or if correctly adjusted with regex
-	private adjustSortingGroupForNumericSortingSymbol = (group: CustomSortGroup) => {
+	private adjustSortingGroupForNumericSortingSymbol = (group: CustomSortGroup): boolean => {
 		switch (group.type) {
 			case CustomSortGroupType.ExactPrefix:
-				const numSymbolInPrefix = convertPlainStringWithNumericSortingSymbolToRegex(group.exactPrefix, RegexpUsedAs.Prefix)
-				if (numSymbolInPrefix) {
-					if (checkAdjacency(numSymbolInPrefix).noSuffix) {
+				const regexInPrefix = convertPlainStringToLeftRegex(group.exactPrefix!)
+				if (regexInPrefix) {
+					if (regexInPrefix.containsAdvancedRegex && checkAdjacency(regexInPrefix).noSuffix) {
 						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
 						return false;
 					}
 					delete group.exactPrefix
-					group.regexSpec = numSymbolInPrefix.regexpSpec
+					group.regexPrefix = regexInPrefix.regexpSpec
 				}
 				break;
 			case CustomSortGroupType.ExactSuffix:
-				const numSymbolInSuffix = convertPlainStringWithNumericSortingSymbolToRegex(group.exactSuffix, RegexpUsedAs.Suffix)
-				if (numSymbolInSuffix) {
-					if (checkAdjacency(numSymbolInSuffix).noPrefix) {
+				const regexInSuffix = convertPlainStringToRightRegex(group.exactSuffix!)
+				if (regexInSuffix) {
+					if (regexInSuffix.containsAdvancedRegex && checkAdjacency(regexInSuffix).noPrefix) {
 						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
 						return false;
 					}
 					delete group.exactSuffix
-					group.regexSpec = numSymbolInSuffix.regexpSpec
+					group.regexSuffix = regexInSuffix.regexpSpec
 				}
 				break;
 			case CustomSortGroupType.ExactHeadAndTail:
-				const numSymbolInHead = convertPlainStringWithNumericSortingSymbolToRegex(group.exactPrefix, RegexpUsedAs.Prefix)
-				if (numSymbolInHead) {
-					if (checkAdjacency(numSymbolInHead).noSuffix) {
+				const regexInHead = convertPlainStringToLeftRegex(group.exactPrefix!)
+				if (regexInHead) {
+					if (regexInHead.containsAdvancedRegex && checkAdjacency(regexInHead).noSuffix) {
 						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
 						return false;
 					}
 					delete group.exactPrefix
-					group.regexSpec = numSymbolInHead.regexpSpec
-				} else {
-					const numSymbolInTail = convertPlainStringWithNumericSortingSymbolToRegex(group.exactSuffix, RegexpUsedAs.Suffix)
-					if (numSymbolInTail) {
-						if (checkAdjacency(numSymbolInTail).noPrefix) {
-							this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
-							return false;
-						}
-						delete group.exactSuffix
-						group.regexSpec = numSymbolInTail.regexpSpec
+					group.regexPrefix = regexInHead.regexpSpec
+				}
+				const regexInTail = convertPlainStringToRightRegex(group.exactSuffix!)
+				if (regexInTail) {
+					if (regexInTail.containsAdvancedRegex && checkAdjacency(regexInTail).noPrefix) {
+						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
+						return false;
 					}
+					delete group.exactSuffix
+					group.regexSuffix = regexInTail.regexpSpec
 				}
 				break;
 			case CustomSortGroupType.ExactName:
-				const numSymbolInExactMatch = convertPlainStringWithNumericSortingSymbolToRegex(group.exactText, RegexpUsedAs.FullMatch)
-				if (numSymbolInExactMatch) {
+				const regexInExactMatch = convertPlainStringToFullMatchRegex(group.exactText!)
+				if (regexInExactMatch) {
 					delete group.exactText
-					group.regexSpec = numSymbolInExactMatch.regexpSpec
+					group.regexPrefix = regexInExactMatch.regexpSpec
 				}
 				break;
 		}

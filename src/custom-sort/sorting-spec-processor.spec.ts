@@ -2,7 +2,7 @@ import {
 	CompoundDashNumberNormalizerFn,
 	CompoundDashRomanNumberNormalizerFn,
 	CompoundDotNumberNormalizerFn,
-	convertPlainStringWithNumericSortingSymbolToRegex,
+	convertPlainStringToRegex,
 	detectNumericSortingSymbols,
 	escapeRegexUnsafeCharacters,
 	extractNumericSortingSymbol,
@@ -322,7 +322,7 @@ const expectedSortSpecsExampleNumericSortingSymbols: { [key: string]: CustomSort
 			foldersOnly: true,
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.ExactPrefix,
-			regexSpec: {
+			regexPrefix: {
 				regex: /^Chapter  *(\d+(?:\.\d+)*) /i,
 				normalizerFn: CompoundDotNumberNormalizerFn
 			}
@@ -330,14 +330,14 @@ const expectedSortSpecsExampleNumericSortingSymbols: { [key: string]: CustomSort
 			filesOnly: true,
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.ExactSuffix,
-			regexSpec: {
+			regexSuffix: {
 				regex: /section  *([MDCLXVI]+(?:-[MDCLXVI]+)*)\.$/i,
 				normalizerFn: CompoundDashRomanNumberNormalizerFn
 			}
 		}, {
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.ExactName,
-			regexSpec: {
+			regexPrefix: {
 				regex: /^Appendix  *(\d+(?:-\d+)*) \(attachments\)$/i,
 				normalizerFn: CompoundDashNumberNormalizerFn
 			}
@@ -345,7 +345,7 @@ const expectedSortSpecsExampleNumericSortingSymbols: { [key: string]: CustomSort
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.ExactHeadAndTail,
 			exactSuffix: ' works?',
-			regexSpec: {
+			regexPrefix: {
 				regex: /^Plain syntax *([MDCLXVI]+) /i,
 				normalizerFn: RomanNumberNormalizerFn
 			}
@@ -353,7 +353,7 @@ const expectedSortSpecsExampleNumericSortingSymbols: { [key: string]: CustomSort
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.ExactHeadAndTail,
 			exactPrefix: 'And this kind of',
-			regexSpec: {
+			regexSuffix: {
 				regex: /  *(\d+)plain syntax\?\?\?$/i,
 				normalizerFn: NumberNormalizerFn
 			}
@@ -1365,11 +1365,11 @@ const txtInputErrorSpaceAsValueOfAscendingAttr: string = `
 ORDER-ASC: 
 `
 const txtInputErrorInvalidValueOfDescendingAttr: string = `
-/Folders:
+/folders
  > definitely not correct
 `
 const txtInputErrorNoSpaceDescendingAttr: string = `
-/files: Chapter ...
+/:files Chapter ...
 Order-DESC:MODIFIED
 `
 const txtInputErrorItemToHideWithNoValue: string = `
@@ -1666,6 +1666,17 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 			`${ERR_PREFIX} 10:NumericalSymbolAdjacentToWildcard Numerical sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case. ${ERR_SUFFIX_IN_LINE(1)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT(s))
 	})
+	it.each([
+		'% \\.d+\\d...',
+		'% ...[0-9]\\d+',
+		'% Chapter\\R+\\d... page',
+		'% Section ...[0-9]\\-r+page'
+	])('should not recognize adjacency error in >%s<', (s: string) => {
+		const inputTxtArr: Array<string> = s.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).not.toBeNull()
+		expect(errorsLogger).not.toHaveBeenCalled()
+	})
 })
 
 const txtInputTargetFolderCCC: string = `
@@ -1832,6 +1843,7 @@ describe('extractNumericSortingSymbol', () => {
 		['', null],
 		['d+', null],
 		[' \\d +', null],
+		[' [0-9]', null],
 		['\\ d +', null],
 		[' \\d+', '\\d+'],
 		['--\\.D+\\d+', '\\.D+'],
@@ -1844,38 +1856,71 @@ describe('extractNumericSortingSymbol', () => {
 
 describe('convertPlainStringWithNumericSortingSymbolToRegex', () => {
 	it.each([
+		    // Advanced numeric symbols
 		[' \\d+ ', /  *(\d+) /i],
-		['--\\.D+\\d+', /\-\- *(\d+(?:\.\d+)*)\\d\+/i],
 		['Chapter \\D+:', /Chapter  *(\d+):/i],
 		['Section \\.D+ of', /Section  *(\d+(?:\.\d+)*) of/i],
 		['Part\\-D+:', /Part *(\d+(?:-\d+)*):/i],
 		['Lorem ipsum\\r+:', /Lorem ipsum *([MDCLXVI]+):/i],
 		['\\.r+', / *([MDCLXVI]+(?:\.[MDCLXVI]+)*)/i],
 		['\\-r+:Lorem', / *([MDCLXVI]+(?:-[MDCLXVI]+)*):Lorem/i],
-		['abc\\d+efg\\d+hij', /abc *(\d+)efg/i], // Double numerical sorting symbol, error case, covered for clarity of implementation detail
+			// Simple regex
+		['\\d-\\[0-9];-)', /\d\-[0-9];\-\)/i],
+		['[0-9]\\d[0-9]', /\[0\-9\]\d\[0\-9\]/i],
+		['\\[0-9]', /[0-9]/i],
+		['[0-9] \\d', /\[0\-9\] \d/i],
+		['  \\dd  ', /  \dd  /i],
+		['  \\d\\d   \\[0-9]  ', /  \d\d   [0-9]  /i],
+		['  \\d 123 \\[0-9]  ', /  \d 123 [0-9]  /i],
+			// Advanced numeric symbols in connection with simple regex
+		['\\dLorem ipsum\\r+:', /\dLorem ipsum *([MDCLXVI]+):/i],
+		['W\\dLorem ipsum\\r+:', /W\dLorem ipsum *([MDCLXVI]+):/i],
+		['Lorem \\d\\r+\\dipsum:', /Lorem \d *([MDCLXVI]+)\dipsum:/i],
+		['Lorem \\d\\D+\\dipsum:', /Lorem \d *(\d+)\dipsum:/i],
+			// Edge case to act as spec - actually the three dots ... should never reach conversion to regex
+		['% \\.d+\\d...', /%  *(\d+(?:\.\d+)*)\d\.\.\./i],
+		['% ...[0-9]\\d+', /% \.\.\.\[0\-9\] *(\d+)/i],
+		['% Chapter\\R+\\d... page', /% Chapter *([MDCLXVI]+)\d\.\.\. page/i],
+		['% Section ...[0-9]\\-r+page', /% Section \.\.\.\[0\-9\] *([MDCLXVI]+(?:-[MDCLXVI]+)*)page/i],
+		    // Edge and error cases, behavior covered by tests to act as specification of the engine here
+		    //   even if at run-time the error checking prevents some such expressions
+		['abc\\d+efg\\d+hij', /abc *(\d+)efg/i], // Double advanced numerical sorting symbol, error case
+		['--\\.D+\\d+', /\-\- *(\d+(?:\.\d+)*)\d\+/i],  // Two advanced numerical symbols
 	])('should correctly extract from >%s< the numeric sorting symbol (%s)', (s: string, regex: RegExp) => {
-		const result = convertPlainStringWithNumericSortingSymbolToRegex(s, RegexpUsedAs.InUnitTest)
+		const result = convertPlainStringToRegex(s, RegexpUsedAs.InUnitTest)
 		expect(result?.regexpSpec.regex).toEqual(regex)
 		// No need to examine prefix and suffix fields of result, they are secondary and derived from the returned regexp
 	})
-	it('should not process string not containing numeric sorting symbol', () => {
-		const input = 'abc'
-		const result = convertPlainStringWithNumericSortingSymbolToRegex(input, RegexpUsedAs.InUnitTest)
-		expect(result).toBeNull()
+	it('should not process string not containing numeric sorting symbol nor regex', () => {
+		const input1 = 'abc'
+		const input2 = '[0-9]'
+		const result1 = convertPlainStringToRegex(input1, RegexpUsedAs.InUnitTest)
+		const result2 = convertPlainStringToRegex(input2, RegexpUsedAs.InUnitTest)
+		expect(result1).toBeNull()
+		expect(result2).toBeNull()
 	})
 	it('should correctly include regex token for string begin', () => {
-		const input = 'Part\\-D+:'
-		const result = convertPlainStringWithNumericSortingSymbolToRegex(input, RegexpUsedAs.Prefix)
-		expect(result?.regexpSpec.regex).toEqual(/^Part *(\d+(?:-\d+)*):/i)
+		const input1 = 'Part\\-D+:'
+		const input2 = '\\dPart'
+		const result1 = convertPlainStringToRegex(input1, RegexpUsedAs.Prefix)
+		const result2 = convertPlainStringToRegex(input2, RegexpUsedAs.Prefix)
+		expect(result1?.regexpSpec.regex).toEqual(/^Part *(\d+(?:-\d+)*):/i)
+		expect(result2?.regexpSpec.regex).toEqual(/^\dPart/i)
 	})
 	it('should correctly include regex token for string end', () => {
-		const input = 'Part\\-D+:'
-		const result = convertPlainStringWithNumericSortingSymbolToRegex(input, RegexpUsedAs.Suffix)
-		expect(result?.regexpSpec.regex).toEqual(/Part *(\d+(?:-\d+)*):$/i)
+		const input1 = 'Part\\-D+:'
+		const input2 = ' \\[0-9]\\-D+'
+		const result1 = convertPlainStringToRegex(input1, RegexpUsedAs.Suffix)
+		const result2 = convertPlainStringToRegex(input2, RegexpUsedAs.Suffix)
+		expect(result1?.regexpSpec.regex).toEqual(/Part *(\d+(?:-\d+)*):$/i)
+		expect(result2?.regexpSpec.regex).toEqual(/ [0-9] *(\d+(?:-\d+)*)$/i)
 	})
 	it('should correctly include regex token for string begin and end', () => {
-		const input = 'Part\\.D+:'
-		const result = convertPlainStringWithNumericSortingSymbolToRegex(input, RegexpUsedAs.FullMatch)
-		expect(result?.regexpSpec.regex).toEqual(/^Part *(\d+(?:\.\d+)*):$/i)
+		const input1 = 'Part\\.D+:'
+		const input2 = ' \\d \\[0-9] '
+		const result1 = convertPlainStringToRegex(input1, RegexpUsedAs.FullMatch)
+		const result2 = convertPlainStringToRegex(input2, RegexpUsedAs.FullMatch)
+		expect(result1?.regexpSpec.regex).toEqual(/^Part *(\d+(?:\.\d+)*):$/i)
+		expect(result2?.regexpSpec.regex).toEqual(/^ \d [0-9] $/i)
 	})
 })

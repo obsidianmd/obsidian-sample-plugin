@@ -41,15 +41,16 @@ export type NormalizerFn = (s: string) => string | null
 
 export interface RegExpSpec {
 	regex: RegExp
-	normalizerFn: NormalizerFn
+	normalizerFn?: NormalizerFn
 }
 
 export interface CustomSortGroup {
 	type: CustomSortGroupType
-	regexSpec?: RegExpSpec
 	exactText?: string
 	exactPrefix?: string
+	regexPrefix?: RegExpSpec
 	exactSuffix?: string
+	regexSuffix?: RegExpSpec
 	order?: CustomSortOrder
 	byMetadataField?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
 	secondaryOrder?: CustomSortOrder

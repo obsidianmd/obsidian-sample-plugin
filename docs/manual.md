@@ -1,6 +1,6 @@
-Yet to be filled with content ;-)
-
-See [syntax-reference.md](./syntax-reference.md), maybe that file has already some content?
+> Document is partial, creation in progress
+> Please refer to [README.md](../README.md) for usage examples
+> Check [syntax-reference.md](./syntax-reference.md), maybe that file has already some content?
 
 ---
 Some sections added ad-hoc, to be integrated later
@@ -67,3 +67,100 @@ For clarity: the three available prefixes `/!` and `/!!` and `/!!!` allow for fu
 > ---
 > ```
 > The sorting group expressed as `/:files` alone acts as a sorting group 'catch-all-files, which don't match any other sorting rule for the folder' 
+
+## Simple wildcards
+
+Currently, the below simple wildcard syntax is supported:
+
+### A single digit (exactly one)
+
+An expression like `\d` or `\[0-9]` matches a single digit (exactly one)
+
+**Example 1**:
+
+A group specification of `/:files Section \d\d`\
+matches notes with names `Section 23` or `Section 01`, yet not a note like `Section 5`
+
+An opposite example:
+
+A group specification of `/:files Section \d`\
+matches the note with name `Section 5` and doesn't match notes `Section 23` or `Section 01`
+
+However, be careful if used in connection with a wildcard `...` - the behavior could be surprising:
+
+A group specification of `/:files Section \d...`\
+matches all notes like `Section 5`, `Section 23` or `Section 015`
+
+**Example 2**:
+
+As described above, the `\d` is equivalent to `\[0-9]` and can be used interchangeably\
+A group specification of `/folders Notes of \[0-9]\[0-9]\[0-9]\[0-9]`\
+matches the notes with titles like `Notes of 2022` or `Notes of 1999`
+
+## Combining sorting groups
+
+A prefix of `/+` used in sorting group specification tells the sorting engine
+to combine the group with adjanced groups also prefixed with `/+`
+
+**Example:**
+
+The below sorting spec:
+```yaml
+---
+sorting-spec: |
+  Notes \d\d\d\d
+   > advanced modified
+  Notes \d\d\d\d-\d\d
+   > advanced modified
+---
+```
+defines two sorting groups:
+- first go the notes or folders with title like `Notes 2022` or `Notes 1999`
+- then go notes or folders like `Notes 2022-12` or `Notes 1999-11`
+
+Both groups sorted by recent modification date, the newest go first\
+Implicitly, all other files or folders go below these two groups
+
+Using the `/+` prefix you can combine the two groups into a logical one:
+```yaml
+---
+sorting-spec: |
+  /+ Notes \d\d\d\d
+  /+ Notes \d\d\d\d-\d\d
+   > advanced modified
+---
+```
+the result is that:
+- notes or folders with title like `Notes 2022` or `Notes 1999`
+- **AND**
+- notes or folders like `Notes 2022-12` or `Notes 1999-11`
+
+will be pushed to the top in File Explorer, sorted by most recent modification date
+
+> NOTE: the sorting order is specified only once after the last of combined groups
+> and it applies to the whole superset of items of all combined groups
+
+### An edge case: two adjacent combined sorting groups
+
+If you want to define two combined groups one after another
+you should add a separator line with some artificial value not matching
+any of your folders or files. The text `---+---` was used in the below example:
+
+```yaml
+---
+sorting-spec: |
+  /+ Zeta
+  /+ % Gamma
+  /+ /:files Beta
+  /+ Alpha
+    < a-z
+  ---+--- 
+  /+ Notes \d\d\d\d
+  /+ Notes \d\d\d\d-\d\d
+    > advanced modified
+---
+```
+
+The artificial separator `---+---` defines a sorting group, which will not match any folders or files
+and is used here to logically separate the series of combined groups into to logical sets
+

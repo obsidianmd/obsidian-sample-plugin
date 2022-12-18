@@ -1,5 +1,5 @@
 > Document is partial, creation in progress
-> Please refer to [README.md](../../README.md) for usage examples
+> Please refer to [README.md](../README.md) for usage examples
 > Check [manual.md](./manual.md), maybe that file has already some content?
 
 # Table of contents
@@ -97,6 +97,8 @@ Lines starting with `//` are ignored
 
 - `< a-z` - alphabetical
 - `> a-z` - alphabetical reverse, aka alphabetical descending, 'z' goes before 'a'
+- `< true a-z` - true alphabetical, to understand the difference between this one and alphabetical refer to [Alphabetical, Natural and True Alphabetical sorting orders](../README.md#alphabetical-natural-and-true-alphabetical-sorting-orders)
+- `> true a-z` - true alphabetical reverse, aka true alphabetical descending, 'z' goes before 'a'
 - `< modified` - by modified time, the long untouched item goes first (modified time of folder is assumed the beginning of the world, so folders go first and alphabetical)
 - `> modified` - by modified time reverse, the most recently modified item goes first (modified time of folder is assumed the beginning of the world, so folders land in the bottom and alphabetical)
 - `< created` - by created time, the oldest item goes first (modified time of folder is assumed the beginning of the world, so folders go first and alphabetical) 
