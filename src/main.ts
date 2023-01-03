@@ -23,6 +23,7 @@ import {
 	ICON_SORT_ENABLED_ACTIVE,
 	ICON_SORT_ENABLED_NOT_APPLIED,
 	ICON_SORT_SUSPENDED,
+	ICON_SORT_SUSPENDED_GENERAL_ERROR,
 	ICON_SORT_SUSPENDED_SYNTAX_ERROR
 } from "./custom-sort/icons";
 
@@ -124,8 +125,39 @@ export default class CustomSortPlugin extends Plugin {
 		}
 	}
 
+	checkFileExplorerIsAvailableAndPatchable(logWarning: boolean = true): FileExplorerView | undefined {
+		let fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
+		if (fileExplorerView
+			&& typeof fileExplorerView.createFolderDom === 'function'
+			&& typeof fileExplorerView.requestSort === 'function') {
+			return fileExplorerView
+		} else {
+			// Various scenarios when File Explorer was turned off (e.g. by some other plugin)
+			if (logWarning) {
+				this.logWarningFileExplorerNotAvailable()
+			}
+			return undefined
+		}
+	}
+
+	logWarningFileExplorerNotAvailable() {
+		const msg = `custom-sort v${this.manifest.version}: failed to locate File Explorer. The 'Files' core plugin can be disabled.\n`
+			+ `Some community plugins can also disable it.\n`
+			+ `See the example of MAKE.md plugin: https://github.com/Make-md/makemd/issues/25\n`
+			+ `You can find there instructions on how to re-enable the File Explorer in MAKE.md plugin`
+		console.warn(msg)
+	}
+
 	// Safe to suspend when suspended and re-enable when enabled
 	switchPluginStateTo(enabled: boolean, updateRibbonBtnIcon: boolean = true) {
+		let fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable()
+		if (fileExplorerView && !this.fileExplorerFolderPatched) {
+			this.fileExplorerFolderPatched = this.patchFileExplorerFolder(fileExplorerView);
+
+			if (!this.fileExplorerFolderPatched) {
+				fileExplorerView = undefined
+			}
+		}
 		this.settings.suspended = !enabled;
 		this.saveSettings()
 		let iconToSet: string
@@ -136,20 +168,24 @@ export default class CustomSortPlugin extends Plugin {
 		} else {
 			this.readAndParseSortingSpec();
 			if (this.sortSpecCache) {
-				this.showNotice('Custom sort ON');
-				this.initialAutoOrManualSortingTriggered = true
-				iconToSet = ICON_SORT_ENABLED_ACTIVE
+				if (fileExplorerView) {
+					this.showNotice('Custom sort ON');
+					this.initialAutoOrManualSortingTriggered = true
+					iconToSet = ICON_SORT_ENABLED_ACTIVE
+				} else {
+					this.showNotice('Custom sort GENERAL PROBLEM. See console for detailed message.');
+					iconToSet = ICON_SORT_SUSPENDED_GENERAL_ERROR
+					this.settings.suspended = true
+					this.saveSettings()
+				}
 			} else {
 				iconToSet = ICON_SORT_SUSPENDED_SYNTAX_ERROR
 				this.settings.suspended = true
 				this.saveSettings()
 			}
 		}
-		const fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
+
 		if (fileExplorerView) {
-			if (!this.fileExplorerFolderPatched) {
-				this.fileExplorerFolderPatched = this.patchFileExplorerFolder(fileExplorerView);
-			}
 			if (this.fileExplorerFolderPatched) {
 				fileExplorerView.requestSort();
 			}
@@ -215,7 +251,7 @@ export default class CustomSortPlugin extends Plugin {
 						this.initialAutoOrManualSortingTriggered = true
 						if (this.sortSpecCache) { // successful read of sorting specifications?
 							this.showNotice('Custom sort ON')
-							const fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
+							const fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable(false)
 							if (fileExplorerView) {
 								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
 								fileExplorerView.requestSort()
@@ -260,13 +296,15 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
-	patchFileExplorerFolder(fileExplorer?: FileExplorerView): boolean {
+	patchFileExplorerFolder(patchableFileExplorer?: FileExplorerView): boolean {
 		let plugin = this;
-		fileExplorer = fileExplorer ?? this.getFileExplorer()
-		if (fileExplorer) {
+		// patching file explorer might fail here because of various non-error reasons.
+		// That's why not showing and not logging error message here
+		patchableFileExplorer = patchableFileExplorer ?? this.checkFileExplorerIsAvailableAndPatchable(false)
+		if (patchableFileExplorer) {
 			// @ts-ignore
 			let tmpFolder = new TFolder(Vault, "");
-			let Folder = fileExplorer.createFolderDom(tmpFolder).constructor;
+			let Folder = patchableFileExplorer.createFolderDom(tmpFolder).constructor;
 			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
 				sort(old: any) {
 					return function (...args: any[]) {

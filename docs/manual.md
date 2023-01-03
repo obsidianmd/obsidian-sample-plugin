@@ -1,6 +1,6 @@
 > Document is partial, creation in progress
-> Please refer to [README.md](../README.md) for usage examples
-> Check [syntax-reference.md](./syntax-reference.md), maybe that file has already some content?
+> Please refer to [README.md](../README.md) for more usage examples
+> Check also [syntax-reference.md](./syntax-reference.md)
 
 ---
 Some sections added ad-hoc, to be integrated later
@@ -164,3 +164,81 @@ sorting-spec: |
 The artificial separator `---+---` defines a sorting group, which will not match any folders or files
 and is used here to logically separate the series of combined groups into to logical sets
 
+## Matching starred items
+
+The Obsidian core plugin `Starred` allows the user to 'star' files
+The keyword `starred:` allows matching such items. A folder is considered _starred_ if at least one immediate child file is starred
+
+**Example:**
+
+Consider the below sorting spec:
+```yaml
+---
+sorting-spec: |
+  //       Example sorting configuration showing
+    //     how to push the starred items to the top
+    //
+    // the line below applies the sorting specification
+    //  to all folders in the vault
+  target-folder: /*
+    // the sorting order specification for the target folder(s)
+  > advanced created 
+    // the first group of items captures the files and folders which
+    // are 'starred' in Obsidian core 'Starred' plugin.
+    // Items in this group inherit the sorting order of target folder
+  starred:
+    // No further groups specified, which means all other items follow the
+    // starred items, also in the order specified
+---
+```
+
+The above sorting specification pushes the _starred_ items to the top
+To achieve the opposite effect and push the starred items to the bottom, use the below sorting spec:
+
+```yaml
+---
+sorting-spec: |
+  //       Example sorting configuration showing
+    //     how to push the starred items to the bottom
+    //
+    // the line below applies the sorting specification
+    //  to all folders in the vault
+  target-folder: /*
+    // the sorting order specification for the target folder(s)
+  > a-z
+    // the first group of items captures all of the files and folders which don't match any other sorting rule
+    // Items in this group inherit the sorting order of target folder
+  /folders:files
+    // the second group of items captures the files and folders which
+    // are 'starred' in Obsidian core 'Starred' plugin.
+    // Items in this group also inherit the sorting order of target folder
+  starred:
+---
+```
+
+For a broader view, the same effect (as in previous example) can be achieved using the priorities
+of sorting rules:
+
+```yaml
+---
+sorting-spec: |
+  //       Example sorting configuration showing
+    //     how to push the starred items to the bottom
+    //
+    // the line below applies the sorting specification
+    //  to all folders in the vault
+  target-folder: /*
+    // the sorting order specification for the target folder(s)
+  > a-z
+    // the first group of items captures all of the files and folders
+    // Items in this group inherit the sorting order of target folder
+  ...
+    // the second group of items captures the files and folders which
+    // are 'starred' in Obsidian core 'Starred' plugin.
+    // Items in this group also inherit the sorting order of target folder
+    // The priority '/!' indicator tells to evaluate this sorting rule before other rules
+    // If it were not used, the prevoius rule '...' would eat all of the folders and items
+    // and the starred items wouldn't be pushed to the bottom
+  /! starred:
+---
+```

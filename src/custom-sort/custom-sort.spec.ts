@@ -11,6 +11,7 @@ import {
 } from './custom-sort';
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, RegExpSpec} from './custom-sort-types';
 import {CompoundDashNumberNormalizerFn, CompoundDotRomanNumberNormalizerFn} from "./sorting-spec-processor";
+import {findStarredFile_pathParam, Starred_PluginInstance} from "../utils/StarredPluginSignature";
 
 const mockTFile = (basename: string, ext: string, size?: number, ctime?: number, mtime?: number): TFile => {
 	return {
@@ -51,7 +52,7 @@ const mockTFolderWithChildren = (name: string): TFolder => {
 	const child4: TFile = mockTFile('Child file 2 created as newest, not modified at all', 'md', 100, TIMESTAMP_NEWEST, TIMESTAMP_NEWEST)
 	const child5: TFile = mockTFile('Child file 3 created inbetween, modified inbetween', 'md', 100, TIMESTAMP_INBETWEEN, TIMESTAMP_INBETWEEN)
 
-	return mockTFolder('Mock parent folder', [child1, child2, child3, child4, child5])
+	return mockTFolder(name, [child1, child2, child3, child4, child5])
 }
 
 const MockedLoc: Pos = {
@@ -879,6 +880,193 @@ describe('determineSortingGroup', () => {
 			} as FolderItemForSorting);
 		})
 	})
+	describe('CustomSortGroupType.StarredOnly', () => {
+		it('should not match not starred file', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.StarredOnly
+				}]
+			}
+			const starredPluginInstance: Partial<Starred_PluginInstance> = {
+				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
+					return null
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, {
+				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1,  // The lastIdx+1, group not determined
+				isFolder: false,
+				sortString: "References.md",
+				ctimeNewest: MOCK_TIMESTAMP + 222,
+				ctimeOldest: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md'
+			});
+			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(1)
+		})
+		it('should match starred file', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.StarredOnly
+				}]
+			}
+			const starredPluginInstance: Partial<Starred_PluginInstance> = {
+				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
+					return filePath.path === 'Some parent folder/References.md' ? file : null
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, {
+				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctimeNewest: MOCK_TIMESTAMP + 222,
+				ctimeOldest: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md'
+			});
+			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(1)
+		})
+		it('should not match empty folder', () => {
+			// given
+			const folder: TFolder = mockTFolder('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.StarredOnly
+				}]
+			}
+			const starredPluginInstance: Partial<Starred_PluginInstance> = {
+				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
+					return filePath.path === 'Some parent folder/References.md' ? {} as TFile : null
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1,  // The lastIdx+1, group not determined
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: [],
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(starredPluginInstance.findStarredFile).not.toHaveBeenCalled()
+		})
+		it('should not match folder w/o starred items', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.StarredOnly
+				}]
+			}
+			const starredPluginInstance: Partial<Starred_PluginInstance> = {
+				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
+					return filePath.path === 'Some parent folder/References.md' ? {} as TFile : null
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1,  // The lastIdx+1, group not determined
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(folder.children.filter(f => (f as any).isRoot === undefined).length)
+		})
+		it('should match folder with one starred item', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.StarredOnly
+				}]
+			}
+			const starredPluginInstance: Partial<Starred_PluginInstance> = {
+				findStarredFile: jest.fn(function (filePath: findStarredFile_pathParam): TFile | null {
+					return filePath.path === 'Some parent folder/Child file 2 created as newest, not modified at all.md' ? {} as TFile : null
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+				// assume optimized checking of starred items -> first match ends the check
+			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(2)
+		})
+	})
 	describe('when sort by metadata is involved', () => {
 		it('should correctly read direct metadata from File item (order by metadata set on group) alph', () => {
 			// given
@@ -1367,34 +1555,10 @@ describe('determineFolderDatesIfNeeded', () => {
 			}],
 			outsidersGroupIdx: OUTSIDERS_GROUP_IDX
 		}
-		const cardinality = {[OUTSIDERS_GROUP_IDX]: 10}  // Group 0 contains 10 items
 
 		// when
 		const result: FolderItemForSorting = determineSortingGroup(folder, sortSpec)
-		determineFolderDatesIfNeeded([result], sortSpec, cardinality)
-
-		// then
-		expect(result.ctimeOldest).toEqual(DEFAULT_FOLDER_CTIME)
-		expect(result.ctimeNewest).toEqual(DEFAULT_FOLDER_CTIME)
-		expect(result.mtime).toEqual(DEFAULT_FOLDER_CTIME)
-	})
-	it('should not be triggered if not needed - the folder is an only item', () => {
-		// given
-		const folder: TFolder = mockTFolderWithChildren('Test folder 1')
-		const OUTSIDERS_GROUP_IDX = 0
-		const sortSpec: CustomSortSpec = {
-			targetFoldersPaths: ['/'],
-			groups: [{
-				type: CustomSortGroupType.Outsiders,
-				order: CustomSortOrder.byModifiedTimeAdvanced
-			}],
-			outsidersGroupIdx: OUTSIDERS_GROUP_IDX
-		}
-		const cardinality = {[OUTSIDERS_GROUP_IDX]: 1}  // Group 0 contains the folder alone
-
-		// when
-		const result: FolderItemForSorting = determineSortingGroup(folder, sortSpec)
-		determineFolderDatesIfNeeded([result], sortSpec, cardinality)
+		determineFolderDatesIfNeeded([result], sortSpec)
 
 		// then
 		expect(result.ctimeOldest).toEqual(DEFAULT_FOLDER_CTIME)
@@ -1413,11 +1577,10 @@ describe('determineFolderDatesIfNeeded', () => {
 			}],
 			outsidersGroupIdx: OUTSIDERS_GROUP_IDX
 		}
-		const cardinality = {[OUTSIDERS_GROUP_IDX]: 10}  // Group 0 contains 10 items
 
 		// when
 		const result: FolderItemForSorting = determineSortingGroup(folder, sortSpec)
-		determineFolderDatesIfNeeded([result], sortSpec, cardinality)
+		determineFolderDatesIfNeeded([result], sortSpec)
 
 		// then
 		expect(result.ctimeOldest).toEqual(TIMESTAMP_OLDEST)

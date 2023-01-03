@@ -29,6 +29,9 @@ target-folder: tricky folder
  < a-z by-metadata: Some-dedicated-field
 with-metadata: Pages 
  > a-z by-metadata: 
+starred:
+/:files starred:
+/folders starred:
 
 :::: Conceptual model
 /: Entities
@@ -82,6 +85,9 @@ target-folder: tricky folder 2
  < a-z by-metadata: Some-dedicated-field
 % with-metadata: Pages 
  > a-z by-metadata:
+/folders:files starred:
+/:files starred:
+/folders starred:
 
 :::: Conceptual model
 /:files Entities
@@ -166,10 +172,21 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			withMetadataFieldName: 'Pages',
 			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
 		}, {
+			type: CustomSortGroupType.StarredOnly,
+			order: CustomSortOrder.alphabetical
+		}, {
+			type: CustomSortGroupType.StarredOnly,
+			filesOnly: true,
+			order: CustomSortOrder.alphabetical
+		}, {
+			type: CustomSortGroupType.StarredOnly,
+			foldersOnly: true,
+			order: CustomSortOrder.alphabetical
+		}, {
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}],
-		outsidersGroupIdx: 2,
+		outsidersGroupIdx: 5,
 		targetFoldersPaths: [
 			'tricky folder 2'
 		]

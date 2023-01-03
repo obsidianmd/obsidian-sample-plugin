@@ -188,11 +188,14 @@ const FilesWithExtGroupShortLexeme: string = '/:.'
 const FoldersGroupVerboseLexeme: string = '/folders'
 const FoldersGroupShortLexeme: string = '/'
 const AnyTypeGroupLexemeShort: string = '%'  // See % as a combination of / and :
-const AnyTypeGroupLexeme: string = '/%'  // See % as a combination of / and :
+const AnyTypeGroupLexeme1: string = '/folders:files'
+const AnyTypeGroupLexeme2: string = '/%'  // See % as a combination of / and :
 const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
 
 const MetadataFieldIndicatorLexeme: string = 'with-metadata:'
+
+const StarredItemsIndicatorLexeme: string = 'starred:'
 
 const CommentPrefix: string = '//'
 
@@ -232,7 +235,8 @@ const SortingGroupPrefixes: { [key: string]: SortingGroupType } = {
 	[FoldersGroupShortLexeme]: {foldersOnly: true},
 	[FoldersGroupVerboseLexeme]: {foldersOnly: true},
 	[AnyTypeGroupLexemeShort]: {},
-	[AnyTypeGroupLexeme]: {},
+	[AnyTypeGroupLexeme1]: {},
+	[AnyTypeGroupLexeme2]: {},
 	[HideItemShortLexeme]: {itemToHide: true},
 	[HideItemVerboseLexeme]: {itemToHide: true}
 }
@@ -1333,6 +1337,13 @@ export class SortingSpecProcessor {
 					return {
 						type: CustomSortGroupType.HasMetadataField,
 						withMetadataFieldName: metadataFieldName,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
+				} else if (theOnly.startsWith(StarredItemsIndicatorLexeme)) {
+					return {
+						type: CustomSortGroupType.StarredOnly,
 						filesOnly: spec.filesOnly,
 						foldersOnly: spec.foldersOnly,
 						matchFilenameWithExt: spec.matchFilenameWithExt

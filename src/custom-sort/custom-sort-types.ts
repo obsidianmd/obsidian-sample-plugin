@@ -7,7 +7,8 @@ export enum CustomSortGroupType {
 	ExactPrefix,						  // ... while the Outsiders captures items which didn't match any of other defined groups
 	ExactSuffix,
 	ExactHeadAndTail, // Like W...n or Un...ed, which is shorter variant of typing the entire title
-	HasMetadataField  // Notes (or folder's notes) containing a specific metadata field
+	HasMetadataField,  // Notes (or folder's notes) containing a specific metadata field
+	StarredOnly
 }
 
 export enum CustomSortOrder {

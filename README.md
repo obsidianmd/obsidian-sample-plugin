@@ -578,6 +578,12 @@ States of the ribbon icon:
 	- Fix the problem in specification and click the ribbon icon to re-enable custom sorting.
 	- If syntax error is not fixed, the notice baloon with show error details. Syntax error details are also visible in
 	  the developer console
+- ![General Error](./docs/icons/icon-general-error.png) Plugin suspended. General error.
+    - File Explorer not available or other type of general error
+    - File Explorer is a core Obsidian plugin (named __Files__) and thus can be disabled in Obsidian settings
+    - Some community plugins (like __MAKE.md__) also disable the File Explorer by default
+    - See obsidinan developer console for detailed error message
+    - To fix the problem, enable the File Explorer (in Obsidian or in the community plugin responsible for hididing it)
 - ![Sorting not applied](./docs/icons/icon-not-applied.png) Plugin enabled but the custom sorting was not applied.
 	- This can happen when reinstalling the plugin and in similar cases
 	- Click the ribbon icon twice to re-enable the custom sorting.
