@@ -216,6 +216,12 @@ sorting-spec: |
 ---
 ```
 
+> **ADDITIONAL INFO**
+> 
+> Because of UX concerns and additional performance considerations, the order of items in File Explorer  
+> is not updated automatically after starring or un-starring an item. Please click-click the ribbon
+> icon or use the `sort-on` command to refresh and re-apply the sorting rules 
+
 For a broader view, the same effect (as in previous example) can be achieved using the priorities
 of sorting rules:
 
