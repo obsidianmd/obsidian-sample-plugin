@@ -166,10 +166,10 @@ and is used here to logically separate the series of combined groups into to log
 
 ## Matching starred items
 
-The Obsidian core plugin `Starred` allows the user to 'star' files
+The Obsidian core plugin `Starred` allows the user to 'star' files\
 The keyword `starred:` allows matching such items. A folder is considered _starred_ if at least one immediate child file is starred
 
-**Example:**
+**Example**
 
 Consider the below sorting spec:
 ```yaml
