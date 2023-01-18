@@ -6,7 +6,9 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"format:check": "prettier --check .",
+		"format:fix": "prettier --write ."
 	},
 	"keywords": [],
 	"author": "",
@@ -18,6 +20,7 @@
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.14.47",
 		"obsidian": "latest",
+		"prettier": "2.8.3",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
 	}
