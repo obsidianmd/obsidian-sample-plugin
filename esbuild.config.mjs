@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from 'builtin-modules'
+import builtins from "builtin-modules";
 
 const banner =
 `/*
@@ -9,34 +9,34 @@ if you want to view the source, please visit the github repository of this plugi
 */
 `;
 
-const prod = (process.argv[2] === 'production');
+const prod = (process.argv[2] === "production");
 
 esbuild.build({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ['main.ts'],
+	entryPoints: ["main.ts"],
 	bundle: true,
 	external: [
-		'obsidian',
-		'electron',
-		'@codemirror/autocomplete',
-		'@codemirror/collab',
-		'@codemirror/commands',
-		'@codemirror/language',
-		'@codemirror/lint',
-		'@codemirror/search',
-		'@codemirror/state',
-		'@codemirror/view',
-		'@lezer/common',
-		'@lezer/highlight',
-		'@lezer/lr',
+		"obsidian",
+		"electron",
+		"@codemirror/autocomplete",
+		"@codemirror/collab",
+		"@codemirror/commands",
+		"@codemirror/language",
+		"@codemirror/lint",
+		"@codemirror/search",
+		"@codemirror/state",
+		"@codemirror/view",
+		"@lezer/common",
+		"@lezer/highlight",
+		"@lezer/lr",
 		...builtins],
-	format: 'cjs',
+	format: "cjs",
 	watch: !prod,
-	target: 'es2018',
+	target: "es2018",
 	logLevel: "info",
-	sourcemap: prod ? false : 'inline',
+	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outfile: 'main.js',
+	outfile: "main.js",
 }).catch(() => process.exit(1));
