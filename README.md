@@ -2,6 +2,7 @@
 >
 > The [long and much more detailed advanced-README.md is here](./advanced-README.md)
 
+---
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
 
 Take full control of the order of your notes and folders:
@@ -24,6 +25,7 @@ Take full control of the order of your notes and folders:
 - folders not set up for the custom order remain on the standard Obsidian sorting
 - support for imposing inheritance of order specifications with flexible exclusion and overriding logic
 
+---
 ## Basic scenario: set the custom sorting order for a specific folder
 
 Create a new note named `sortspec` in the folder for which you want to configure the sorting
@@ -48,6 +50,7 @@ An illustrative image which shows the reverse alphabetical order applied to the 
 
 ![Basic example](./docs/svg/simplest-example-3.svg)
 
+---
 ### Remarks
 
 > Remarks:
@@ -63,6 +66,7 @@ An illustrative image which shows the reverse alphabetical order applied to the 
 > - indentation matters in YAML -> the two leading spaces in `  order-desc: a-z` are intentional and required
 > - this common example only touches the surface of the rich capabilities of this custom sorting plugin. For more details go to [advanced version of README.md](./advanced-README.md)
 
+---
 ## Basic automatic sorting methods
 
 The list of basic automatic sorting orders includes:
