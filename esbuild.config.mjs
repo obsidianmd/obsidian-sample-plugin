@@ -37,29 +37,31 @@ const buildOptions = {
 		...builtins,
 	],
 	format: "cjs",
-	watch: !prod,
 	target: "es2018",
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
 };
 
-esbuild
-	.build(buildOptions)
-	.catch(() => process.exit(1))
-	.then(() => {
-		/**
-		 * If there is a new version number, copy it to the dist folder
-		 */
-		if (process.env.npm_new_version) {
-			const manifestJsonSrc = path.join(process.cwd(), "manifest.json");
-			const manifestJsonDist = path.join(
-				process.cwd(),
-				buildOptions.outdir,
-				"manifest.json"
-			);
+const context = await esbuild.context(buildOptions);
 
-			// Copy the manifest.json file over to the dist folder
-			copyFileSync(manifestJsonSrc, manifestJsonDist);
-		}
-	});
+if (prod) {
+	await context.rebuild();
+	/**
+	 * If there is a new version number, copy it to the dist folder
+	 */
+	if (process.env.npm_new_version) {
+		const manifestJsonSrc = path.join(process.cwd(), "manifest.json");
+		const manifestJsonDist = path.join(
+			process.cwd(),
+			buildOptions.outdir,
+			"manifest.json"
+		);
+
+		// Copy the manifest.json file over to the dist folder
+		copyFileSync(manifestJsonSrc, manifestJsonDist);
+	}
+	process.exit(0);
+} else {
+	await context.watch();
+}
