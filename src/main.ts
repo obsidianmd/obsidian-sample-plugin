@@ -32,13 +32,15 @@ interface CustomSortPluginSettings {
 	suspended: boolean
 	statusBarEntryEnabled: boolean
 	notificationsEnabled: boolean
+	allowRegexpInTargetFolder: boolean
 }
 
 const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	additionalSortspecFile: '',
 	suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
 	statusBarEntryEnabled: true,
-	notificationsEnabled: true
+	notificationsEnabled: true,
+	allowRegexpInTargetFolder: false
 }
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
