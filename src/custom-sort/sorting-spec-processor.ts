@@ -22,6 +22,7 @@ import {
 	RomanNumberRegexStr
 } from "./matchers";
 import {
+	FolderMatchingRegexp,
 	FolderWildcardMatching,
 	MATCH_ALL_SUFFIX,
 	MATCH_CHILDREN_1_SUFFIX,
@@ -601,7 +602,14 @@ const eatPrefixIfPresent = (expression: string, prefix: string, onDetected: () =
 	}
 }
 
-const consumeFolderByRegexpExpression = (expression: string): {regexp: RegExp, againstName: boolean, priority: number | undefined, log: boolean | undefined} => {
+export interface ConsumedFolderMatchingRegexp {
+	regexp: RegExp
+	againstName: boolean
+	priority: number | undefined
+	log: boolean | undefined
+}
+
+export const consumeFolderByRegexpExpression = (expression: string): ConsumedFolderMatchingRegexp => {
 	let againstName: boolean = false
 	let priority: number | undefined
 	let logMatches: boolean | undefined
@@ -764,8 +772,8 @@ export class SortingSpecProcessor {
 							sortspecByWildcard = sortspecByWildcard ?? new FolderWildcardMatching<CustomSortSpec>()
 							const folderByRegexpExpression: string = path.substring(MatchFolderByRegexpLexeme.length).trim()
 							try {
-								const {regexp, againstName, priority, log} = consumeFolderByRegexpExpression(folderByRegexpExpression)
-								sortspecByWildcard.addRegexpDefinition(regexp, againstName, priority, log, spec)
+								const r: ConsumedFolderMatchingRegexp = consumeFolderByRegexpExpression(folderByRegexpExpression)
+								sortspecByWildcard.addRegexpDefinition(r.regexp, r.againstName, r.priority, r.log, spec)
 							} catch (e) {
 								this.problem(ProblemCode.InvalidOrEmptyFolderMatchingRegexp,
 									`Invalid or empty folder regexp expression <${folderByRegexpExpression}>`)
