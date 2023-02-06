@@ -25,7 +25,8 @@ import {
 	FolderWildcardMatching,
 	MATCH_ALL_SUFFIX,
 	MATCH_CHILDREN_1_SUFFIX,
-	MATCH_CHILDREN_2_SUFFIX
+	MATCH_CHILDREN_2_SUFFIX,
+	NO_PRIORITY
 } from "./folder-matching-rules"
 
 interface ProcessingContext {
@@ -75,13 +76,19 @@ export enum ProblemCode {
 	TooManyGroupTypePrefixes,
 	PriorityPrefixAfterGroupTypePrefix,
 	CombinePrefixAfterGroupTypePrefix,
-	InlineRegexInPrefixAndSuffix
+	InlineRegexInPrefixAndSuffix,
+	DuplicateByNameSortSpecForFolder,
+	EmptyFolderNameToMatch,
+	InvalidOrEmptyFolderMatchingRegexp
 }
 
 const ContextFreeProblems = new Set<ProblemCode>([
 	ProblemCode.DuplicateSortSpecForSameFolder,
 	ProblemCode.DuplicateWildcardSortSpecForSameFolder,
-	ProblemCode.OnlyLastCombinedGroupCanSpecifyOrder
+	ProblemCode.OnlyLastCombinedGroupCanSpecifyOrder,
+	ProblemCode.DuplicateByNameSortSpecForFolder,
+	ProblemCode.EmptyFolderNameToMatch,
+	ProblemCode.InvalidOrEmptyFolderMatchingRegexp
 ])
 
 const ThreeDots = '...';
@@ -157,9 +164,11 @@ enum Attribute {
 	OrderStandardObsidian
 }
 
+const TargetFolderLexeme: string = 'target-folder:'
+
 const AttrLexems: { [key: string]: Attribute } = {
 	// Verbose attr names
-	'target-folder:': Attribute.TargetFolder,
+	[TargetFolderLexeme]: Attribute.TargetFolder,
 	'order-asc:': Attribute.OrderAsc,
 	'order-desc:': Attribute.OrderDesc,
 	'sorting:': Attribute.OrderStandardObsidian,
@@ -203,6 +212,10 @@ const PriorityModifierPrio1Lexeme: string = '/!'
 const PriorityModifierPrio2Lexeme: string = '/!!'
 const PriorityModifierPrio3Lexeme: string = '/!!!'
 
+const PriorityModifierPrio1TargetFolderLexeme: string = '/!:'
+const PriorityModifierPrio2TargetFolderLexeme: string = '/!!:'
+const PriorityModifierPrio3TargetFolderLexeme: string = '/!!!:'
+
 const PRIO_1: number = 1
 const PRIO_2: number = 2
 const PRIO_3: number = 3
@@ -211,6 +224,12 @@ const SortingGroupPriorityPrefixes: { [key: string]: number } = {
 	[PriorityModifierPrio1Lexeme]: PRIO_1,
 	[PriorityModifierPrio2Lexeme]: PRIO_2,
 	[PriorityModifierPrio3Lexeme]: PRIO_3
+}
+
+const TargetFolderRegexpPriorityPrefixes: { [key: string]: number } = {
+	[PriorityModifierPrio1TargetFolderLexeme]: PRIO_1,
+	[PriorityModifierPrio2TargetFolderLexeme]: PRIO_2,
+	[PriorityModifierPrio3TargetFolderLexeme]: PRIO_3
 }
 
 const CombineGroupLexeme: string = '/+'
@@ -491,13 +510,33 @@ export const convertInlineRegexSymbolsAndEscapeTheRest = (s: string): RegexAsStr
 	return regexAsString.join('')
 }
 
+export const MatchFolderNameLexeme: string = 'name:'
+export const MatchFolderByRegexpLexeme: string = 'regexp:'
+export const RegexpAgainstFolderName: string = 'for-name:'
+export const DebugFolderRegexMatchesLexeme: string = 'debug:'
+
+type FolderPath = string
+type FolderName = string
+
 export interface FolderPathToSortSpecMap {
-	[key: string]: CustomSortSpec
+	[key: FolderPath]: CustomSortSpec
+}
+
+export interface FolderNameToSortSpecMap {
+	[key: FolderName]: CustomSortSpec
 }
 
 export interface SortSpecsCollection {
 	sortSpecByPath: FolderPathToSortSpecMap
+	sortSpecByName: FolderNameToSortSpecMap
 	sortSpecByWildcard?: FolderWildcardMatching<CustomSortSpec>
+}
+
+export const newSortSpecsCollection = (): SortSpecsCollection => {
+	return {
+		sortSpecByPath: {},
+		sortSpecByName: {}
+	}
 }
 
 interface AdjacencyInfo {
@@ -524,32 +563,78 @@ enum WildcardPriority {
 	MATCH_ALL
 }
 
-const stripWildcardPatternSuffix = (path: string): [path: string, priority: number] => {
+const stripWildcardPatternSuffix = (path: string): {path: string, detectedWildcardPriority: number} => {
 	if (path.endsWith(MATCH_ALL_SUFFIX)) {
 		path = path.slice(0, -MATCH_ALL_SUFFIX.length)
-		return [
-			path.length > 0 ? path : '/',
-			WildcardPriority.MATCH_ALL
-		]
+		return {
+			path: path.length > 0 ? path : '/',
+			detectedWildcardPriority: WildcardPriority.MATCH_ALL
+		}
 	}
 	if (path.endsWith(MATCH_CHILDREN_1_SUFFIX)) {
 		path = path.slice(0, -MATCH_CHILDREN_1_SUFFIX.length)
-		return [
-			path.length > 0 ? path : '/',
-			WildcardPriority.MATCH_CHILDREN,
-		]
+		return {
+			path: path.length > 0 ? path : '/',
+			detectedWildcardPriority: WildcardPriority.MATCH_CHILDREN,
+		}
 	}
 	if (path.endsWith(MATCH_CHILDREN_2_SUFFIX)) {
 		path = path.slice(0, -MATCH_CHILDREN_2_SUFFIX.length)
-		return [
-			path.length > 0 ? path : '/',
-			WildcardPriority.MATCH_CHILDREN
-		]
+		return {
+			path: path.length > 0 ? path : '/',
+			detectedWildcardPriority: WildcardPriority.MATCH_CHILDREN
+		}
 	}
-	return [
-		path,
-		WildcardPriority.NO_WILDCARD
-	]
+	return {
+		path: path,
+		detectedWildcardPriority: WildcardPriority.NO_WILDCARD
+	}
+}
+
+const eatPrefixIfPresent = (expression: string, prefix: string, onDetected: () => void): string => {
+	const detected: boolean = expression.startsWith(prefix)
+	if (detected) {
+		onDetected()
+		return expression.substring(prefix.length).trim()
+	} else {
+		return expression
+	}
+}
+
+const consumeFolderByRegexpExpression = (expression: string): {regexp: RegExp, againstName: boolean, priority: number | undefined, log: boolean | undefined} => {
+	let againstName: boolean = false
+	let priority: number | undefined
+	let logMatches: boolean | undefined
+
+	// For simplicity, strict imposed order of regexp-specific attributes
+	expression = eatPrefixIfPresent(expression, RegexpAgainstFolderName, () => {
+		againstName = true
+	})
+
+	for (const priorityPrefix of Object.keys(TargetFolderRegexpPriorityPrefixes)) {
+		expression = eatPrefixIfPresent(expression, priorityPrefix, () => {
+			priority = TargetFolderRegexpPriorityPrefixes[priorityPrefix]
+		})
+		if (priority) {
+			break
+		}
+	}
+
+	expression = eatPrefixIfPresent(expression, DebugFolderRegexMatchesLexeme, () => {
+		logMatches = true
+	})
+
+	// do not allow empty regexp
+	if (!expression || expression.trim() === '') {
+		throw new Error('Empty regexp')
+	}
+
+	return {
+		regexp: new RegExp(expression),
+		againstName: againstName,
+		priority: priority === undefined ? NO_PRIORITY : priority,
+		log: !!logMatches
+	}
 }
 
 // Simplistic
@@ -641,12 +726,52 @@ export class SortingSpecProcessor {
 					}
 				}
 
-				let sortspecByWildcard: FolderWildcardMatching<CustomSortSpec> | undefined
+				let sortspecByName: FolderNameToSortSpecMap | undefined
 				for (let spec of this.ctx.specs) {
-					// Consume the folder paths ending with wildcard specs
+					// Consume the folder names prefixed by the designated lexeme
 					for (let idx = 0; idx<spec.targetFoldersPaths.length; idx++) {
 						const path = spec.targetFoldersPaths[idx]
-						if (endsWithWildcardPatternSuffix(path)) {
+						if (path.startsWith(MatchFolderNameLexeme)) {
+							const folderNameToMatch: string = path.substring(MatchFolderNameLexeme.length).trim()
+							if (folderNameToMatch === '') {
+								this.problem(ProblemCode.EmptyFolderNameToMatch,
+									`Empty '${TargetFolderLexeme} ${MatchFolderNameLexeme}' value` )
+								return null // Failure - not allow duplicate by folderNameToMatch specs for the same folder folderNameToMatch
+							}
+							sortspecByName = sortspecByName ?? {}
+							if (sortspecByName[folderNameToMatch]) {
+								this.problem(ProblemCode.DuplicateByNameSortSpecForFolder,
+									`Duplicate '${TargetFolderLexeme} ${MatchFolderNameLexeme}' definition for the same name <${folderNameToMatch}>` )
+								return null // Failure - not allow duplicate by folderNameToMatch specs for the same folder folderNameToMatch
+							} else {
+								sortspecByName[folderNameToMatch] = spec
+							}
+						}
+					}
+				}
+
+				if (sortspecByName) {
+					collection = collection ?? newSortSpecsCollection()
+					collection.sortSpecByName = sortspecByName
+				}
+
+				let sortspecByWildcard: FolderWildcardMatching<CustomSortSpec> | undefined
+				for (let spec of this.ctx.specs) {
+					// Consume the folder paths ending with wildcard specs or regexp-based
+					for (let idx = 0; idx<spec.targetFoldersPaths.length; idx++) {
+						const path = spec.targetFoldersPaths[idx]
+						if (path.startsWith(MatchFolderByRegexpLexeme)) {
+							sortspecByWildcard = sortspecByWildcard ?? new FolderWildcardMatching<CustomSortSpec>()
+							const folderByRegexpExpression: string = path.substring(MatchFolderByRegexpLexeme.length).trim()
+							try {
+								const {regexp, againstName, priority, log} = consumeFolderByRegexpExpression(folderByRegexpExpression)
+								sortspecByWildcard.addRegexpDefinition(regexp, againstName, priority, log, spec)
+							} catch (e) {
+								this.problem(ProblemCode.InvalidOrEmptyFolderMatchingRegexp,
+									`Invalid or empty folder regexp expression <${folderByRegexpExpression}>`)
+								return null
+							}
+						} else if (endsWithWildcardPatternSuffix(path)) {
 							sortspecByWildcard = sortspecByWildcard ?? new FolderWildcardMatching<CustomSortSpec>()
 							const ruleAdded = sortspecByWildcard.addWildcardDefinition(path, spec)
 							if (ruleAdded?.errorMsg) {
@@ -658,31 +783,31 @@ export class SortingSpecProcessor {
 				}
 
 				if (sortspecByWildcard) {
-					collection = collection ?? { sortSpecByPath:{} }
+					collection = collection ?? newSortSpecsCollection()
 					collection.sortSpecByWildcard = sortspecByWildcard
 				}
 
 				for (let spec of this.ctx.specs) {
 					for (let idx = 0; idx < spec.targetFoldersPaths.length; idx++) {
 						const originalPath = spec.targetFoldersPaths[idx]
-						collection = collection ?? { sortSpecByPath: {} }
-						let detectedWildcardPriority: WildcardPriority
-						let path: string
-						[path, detectedWildcardPriority] = stripWildcardPatternSuffix(originalPath)
-						let storeTheSpec: boolean = true
-						const preexistingSortSpecPriority: WildcardPriority = this.pathMatchPriorityForPath[path]
-						if (preexistingSortSpecPriority) {
-							if (preexistingSortSpecPriority === WildcardPriority.NO_WILDCARD && detectedWildcardPriority === WildcardPriority.NO_WILDCARD) {
-								this.problem(ProblemCode.DuplicateSortSpecForSameFolder, `Duplicate sorting spec for folder ${path}`)
-								return null // Failure - not allow duplicate specs for the same no-wildcard folder path
-							} else if (detectedWildcardPriority >= preexistingSortSpecPriority) {
-								// Ignore lower priority rule
-								storeTheSpec = false
+						if (!originalPath.startsWith(MatchFolderNameLexeme) && !originalPath.startsWith(MatchFolderByRegexpLexeme)) {
+							collection = collection ?? newSortSpecsCollection()
+							const {path, detectedWildcardPriority} = stripWildcardPatternSuffix(originalPath)
+							let storeTheSpec: boolean = true
+							const preexistingSortSpecPriority: WildcardPriority = this.pathMatchPriorityForPath[path]
+							if (preexistingSortSpecPriority) {
+								if (preexistingSortSpecPriority === WildcardPriority.NO_WILDCARD && detectedWildcardPriority === WildcardPriority.NO_WILDCARD) {
+									this.problem(ProblemCode.DuplicateSortSpecForSameFolder, `Duplicate sorting spec for folder ${path}`)
+									return null // Failure - not allow duplicate specs for the same no-wildcard folder path
+								} else if (detectedWildcardPriority >= preexistingSortSpecPriority) {
+									// Ignore lower priority rule
+									storeTheSpec = false
+								}
 							}
-						}
-						if (storeTheSpec) {
-							collection.sortSpecByPath[path] = spec
-							this.pathMatchPriorityForPath[path] = detectedWildcardPriority
+							if (storeTheSpec) {
+								collection.sortSpecByPath[path] = spec
+								this.pathMatchPriorityForPath[path] = detectedWildcardPriority
+							}
 						}
 					}
 				}
