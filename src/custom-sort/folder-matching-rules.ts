@@ -1,5 +1,3 @@
-import * as regexpp from "regexpp";
-
 export type DeterminedSortingSpec<SortingSpec> = {
 	spec?: SortingSpec
 }

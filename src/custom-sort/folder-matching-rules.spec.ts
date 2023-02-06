@@ -18,39 +18,6 @@ const PRIO1 = 1
 const PRIO2 = 2
 const PRIO3 = 3
 
-const createMockMatcherRichWithRegexpVersion = (usePriorities?: boolean): FolderWildcardMatching<SortingSpec> => {
-	const matcher: FolderWildcardMatching<SortingSpec> = createMockMatcherRichVersion()
-	let p: RegExp
-	const {row3, row4, row5, row6} = usePriorities ?
-		{row3: PRIO1, row4: PRIO1, row5: PRIO2, row6: PRIO3}
-		:
-		{row3:undefined, row4:undefined, row5:undefined, row6:undefined}
-	p = /.../; matcher.addRegexpDefinition(p, true, undefined, false, `r1`)
-	p = /^\/$/; matcher.addRegexpDefinition(p, false, undefined, false, `r2`)
-	p = /^Arc..ve$/; matcher.addRegexpDefinition(p, true, row3, false, `r3`)
-	p = /^Arc..ve$/; matcher.addRegexpDefinition(p, false, row4, false, `r4`)
-	p = /Reviews\/daily\/a\/.../; matcher.addRegexpDefinition(p, true, row5, false, `r5`)
-	p = /Reviews\/daily\/a\/*/; matcher.addRegexpDefinition(p, true, row6, false, `r6`)
-	return matcher
-}
-
-/*
-tests needed:
-√ regexp-match by name works (ensure regexp input is the name)
-√ regexp-match by path works (ensure regexp input is the path)
-√ regexp-match by name works and has priority over wildcard
-√ regexp-match by path works and has priority over wildcard
-√ regexp-match by name vs by path is equal, order of definition matters (test two variants)
-- priority /!!!: is higher over /!!:
-- priority /!!: is higher over /!:
-- priority /!: is higher over no-priority
-  - test adding priorities in all possible orders
-  - within the same priority the order of definition matters
-
-- edge case -> root folder, has no name, has specific path '/', matching by name should not work, only by path
-  - what is the root folder name ???
- */
-
 const createMockMatcherSimplestVersion = (): FolderWildcardMatching<SortingSpec> => {
 	const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
 	matcher.addWildcardDefinition('/Reviews/daily/*', '/Reviews/daily/*')
