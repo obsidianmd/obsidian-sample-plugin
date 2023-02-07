@@ -614,23 +614,33 @@ export const consumeFolderByRegexpExpression = (expression: string): ConsumedFol
 	let priority: number | undefined
 	let logMatches: boolean | undefined
 
-	// For simplicity, strict imposed order of regexp-specific attributes
-	expression = eatPrefixIfPresent(expression, RegexpAgainstFolderName, () => {
-		againstName = true
-	})
+	let nextRoundNeeded: boolean
 
-	for (const priorityPrefix of Object.keys(TargetFolderRegexpPriorityPrefixes)) {
-		expression = eatPrefixIfPresent(expression, priorityPrefix, () => {
-			priority = TargetFolderRegexpPriorityPrefixes[priorityPrefix]
+	do {
+		nextRoundNeeded = false
+
+		expression = eatPrefixIfPresent(expression, RegexpAgainstFolderName, () => {
+			againstName = true
+			nextRoundNeeded = true
 		})
-		if (priority) {
-			break
-		}
-	}
 
-	expression = eatPrefixIfPresent(expression, DebugFolderRegexMatchesLexeme, () => {
-		logMatches = true
-	})
+		for (const priorityPrefix of Object.keys(TargetFolderRegexpPriorityPrefixes)) {
+			let doBreak: boolean = false
+			expression = eatPrefixIfPresent(expression, priorityPrefix, () => {
+				priority = TargetFolderRegexpPriorityPrefixes[priorityPrefix]
+				nextRoundNeeded = true
+				doBreak = true
+			})
+			if (doBreak) {
+				break
+			}
+		}
+
+		expression = eatPrefixIfPresent(expression, DebugFolderRegexMatchesLexeme, () => {
+			logMatches = true
+			nextRoundNeeded = true
+		})
+	} while (nextRoundNeeded)
 
 	// do not allow empty regexp
 	if (!expression || expression.trim() === '') {

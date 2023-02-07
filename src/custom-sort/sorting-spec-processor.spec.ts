@@ -1,7 +1,7 @@
 import {
 	CompoundDashNumberNormalizerFn,
 	CompoundDashRomanNumberNormalizerFn,
-	CompoundDotNumberNormalizerFn,
+	CompoundDotNumberNormalizerFn, ConsumedFolderMatchingRegexp, consumeFolderByRegexpExpression,
 	convertPlainStringToRegex,
 	detectNumericSortingSymbols,
 	escapeRegexUnsafeCharacters,
@@ -13,7 +13,7 @@ import {
 	SortingSpecProcessor
 } from "./sorting-spec-processor"
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
-import {FolderMatchingTreeNode} from "./folder-matching-rules";
+import {FolderMatchingRegexp, FolderMatchingTreeNode} from "./folder-matching-rules";
 
 const txtInputExampleA: string = `
 order-asc: a-z
@@ -849,7 +849,7 @@ const expectedSortSpecForRegexpTextCase = {
 	]
 }
 
-const expectedTargetFolderRegexpArr = [
+const expectedTargetFolderRegexpArr: Array<FolderMatchingRegexp<CustomSortSpec>> = [
 	{
 		regexp: /r9 [abc]+/,
 		againstName: true,
@@ -941,6 +941,64 @@ describe('SortingSpecProcessor target-folder by name and regex', () => {
 		expect(result?.sortSpecByName).toEqual(expectedSortSpecsTargetFolderByName)
 		expect(result?.sortSpecByWildcard?.tree).toEqual({subtree: {}})
 		expect(result?.sortSpecByWildcard?.regexps).toEqual(expectedTargetFolderRegexpArr)
+	})
+})
+
+const NOPRIO = 0
+const PRIO1 = 1
+const PRIO2 = 2
+const PRIO3 = 3
+
+const consumedTargetFolderRegexp: Array<ConsumedFolderMatchingRegexp> = [
+	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: undefined,
+		log: true
+	},	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: PRIO1,
+		log: true
+	},	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: PRIO2,
+		log: true
+	},	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: PRIO3,
+		log: true
+	},
+]
+
+describe( 'consumeFolderByRegexpExpression', () => {
+	// and accept priority in any order
+	//    the last one is in effect
+	// and accept multiple
+	it.each([
+			// Plain cases
+		['for-name: /!: debug: r4\\d', PRIO1],
+		['for-name: /!: debug: r4\\d', PRIO1],
+		['/!!: for-name: debug: r4\\d', PRIO2],
+		['/!: debug: for-name: r4\\d', PRIO1],
+		['debug: for-name: /!!!: r4\\d', PRIO3],
+		['debug: /!: for-name: r4\\d', PRIO1],
+			// Cases with duplication of same
+		['for-name: for-name: /!: debug: r4\\d', PRIO1],
+		['for-name: /!: /!: debug: debug: r4\\d', PRIO1],
+		['/!!: for-name: /!!: debug: r4\\d', PRIO2],
+		['/!: debug: debug: for-name: r4\\d', PRIO1],
+		['debug: for-name: /!!!:/!!!: r4\\d', PRIO3],
+		['debug: /!: for-name: /!: r4\\d', PRIO1],
+			// Cases with duplication of different priority
+		['debug: /!!!: for-name: /!: r4\\d', PRIO1],
+		['debug: /!: for-name: /!!: r4\\d', PRIO2],
+		['debug: /!: for-name: /!!: /!!!: /!: /!!!: r4\\d', PRIO3],
+	])('should recognize all modifiers in >%s< of priority %s', (regexpExpr: string, prio: number) => {
+		const result: ConsumedFolderMatchingRegexp = consumeFolderByRegexpExpression(regexpExpr)
+		expect(result).toEqual(consumedTargetFolderRegexp[prio])
 	})
 })
 
