@@ -32,15 +32,13 @@ interface CustomSortPluginSettings {
 	suspended: boolean
 	statusBarEntryEnabled: boolean
 	notificationsEnabled: boolean
-	allowRegexpInTargetFolder: boolean
 }
 
 const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	additionalSortspecFile: '',
 	suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
 	statusBarEntryEnabled: true,
-	notificationsEnabled: true,
-	allowRegexpInTargetFolder: false
+	notificationsEnabled: true
 }
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
@@ -323,15 +321,16 @@ export default class CustomSortPlugin extends Plugin {
 						// if custom sort is not specified, use the UI-selected
 						const folder: TFolder = this.file
 						let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath[folder.path]
+						sortSpec = sortSpec ?? plugin.sortSpecCache?.sortSpecByName[folder.name]
 						if (sortSpec) {
 							if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
 								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
 							}
 						} else if (plugin.sortSpecCache?.sortSpecByWildcard) {
 							// when no sorting spec found directly by folder path, check for wildcard-based match
-							sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path)
+							sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path, folder.name)
 							if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
-								sortSpec = null // A folder subtree can be also explicitly excluded from custom sorting plugin
+								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
 							}
 						}
 						if (sortSpec) {

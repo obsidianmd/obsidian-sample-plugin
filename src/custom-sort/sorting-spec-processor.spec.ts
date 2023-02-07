@@ -1,7 +1,7 @@
 import {
 	CompoundDashNumberNormalizerFn,
 	CompoundDashRomanNumberNormalizerFn,
-	CompoundDotNumberNormalizerFn,
+	CompoundDotNumberNormalizerFn, ConsumedFolderMatchingRegexp, consumeFolderByRegexpExpression,
 	convertPlainStringToRegex,
 	detectNumericSortingSymbols,
 	escapeRegexUnsafeCharacters,
@@ -13,7 +13,7 @@ import {
 	SortingSpecProcessor
 } from "./sorting-spec-processor"
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
-import {FolderMatchingTreeNode} from "./folder-matching-rules";
+import {FolderMatchingRegexp, FolderMatchingTreeNode} from "./folder-matching-rules";
 
 const txtInputExampleA: string = `
 order-asc: a-z
@@ -777,6 +777,228 @@ describe('SortingSpecProcessor edge case', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsTargetFolderAsDot)
 		expect(result?.sortSpecByWildcard).not.toBeNull()
+	})
+})
+
+const txtInputTargetFolderByName: string = `
+target-folder: name: TheName
+< a-z
+`
+
+const txtInputTargetFolderWithRegex: string = `
+> advanced modified
+target-folder: name: TheName
+< a-z
+target-folder: regexp: r1
+target-folder: regexp: /!!: r2*
+target-folder: regexp: for-name: r3.{2-3}$
+target-folder: regexp: for-name: /!: r4\\d
+target-folder: regexp: for-name: /!!: ^r5[^[]+
+target-folder: regexp: for-name: /!!!: ^r6/+$
+target-folder: regexp: debug: r7 +
+target-folder: regexp: for-name: debug: r8 (aa|bb|cc)
+target-folder: regexp: for-name: /!!!: debug: r9 [abc]+
+target-folder: regexp: /!: debug: ^r10 /[^/]/.+$
+`
+
+const expectedSortSpecTargetFolderRegexAndName1 = {
+	defaultOrder: CustomSortOrder.byModifiedTimeReverseAdvanced,
+	groups: [{
+		order: CustomSortOrder.byModifiedTimeReverseAdvanced,
+		type: CustomSortGroupType.Outsiders
+	}],
+	outsidersGroupIdx: 0,
+	targetFoldersPaths: ['mock-folder']
+}
+
+const expectedSortSpecTargetFolderByName = {
+	defaultOrder: CustomSortOrder.alphabetical,
+	groups: [{
+		order: CustomSortOrder.alphabetical,
+		type: CustomSortGroupType.Outsiders
+	}],
+	outsidersGroupIdx: 0,
+	targetFoldersPaths: ['name: TheName']
+}
+
+const expectedSortSpecsTargetFolderByPathInRegexTestCase: { [key: string]: CustomSortSpec } = {
+	'mock-folder': expectedSortSpecTargetFolderRegexAndName1
+}
+
+const expectedSortSpecsTargetFolderByName: { [key: string]: CustomSortSpec } = {
+	'TheName': expectedSortSpecTargetFolderByName
+}
+
+const expectedSortSpecForRegexpTextCase = {
+	groups: [{
+		order: CustomSortOrder.alphabetical,
+		type: CustomSortGroupType.Outsiders
+	}],
+	outsidersGroupIdx: 0,
+	targetFoldersPaths: [
+		"regexp: r1",
+		"regexp: /!!: r2*",
+		"regexp: for-name: r3.{2-3}$",
+		"regexp: for-name: /!: r4\\d",
+		"regexp: for-name: /!!: ^r5[^[]+",
+		"regexp: for-name: /!!!: ^r6/+$",
+		"regexp: debug: r7 +",
+		"regexp: for-name: debug: r8 (aa|bb|cc)",
+		"regexp: for-name: /!!!: debug: r9 [abc]+",
+		"regexp: /!: debug: ^r10 /[^/]/.+$"
+	]
+}
+
+const expectedTargetFolderRegexpArr: Array<FolderMatchingRegexp<CustomSortSpec>> = [
+	{
+		regexp: /r9 [abc]+/,
+		againstName: true,
+		priority: 3,
+		logMatches: true,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /^r6\/+$/,
+		againstName: true,
+		priority: 3,
+		logMatches: false,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /^r5[^[]+/,
+		againstName: true,
+		priority: 2,
+		logMatches: false,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /r2*/,
+		againstName: false,
+		priority: 2,
+		logMatches: false,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /^r10 \/[^/]\/.+$/,
+		againstName: false,
+		priority: 1,
+		logMatches: true,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: 1,
+		logMatches: false,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /r8 (aa|bb|cc)/,
+		againstName: true,
+		priority: 0,
+		logMatches: true,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /r7 +/,
+		againstName: false,
+		priority: 0,
+		logMatches: true,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /r3.{2-3}$/,
+		againstName: true,
+		priority: 0,
+		logMatches: false,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	},
+	{
+		regexp: /r1/,
+		againstName: false,
+		priority: 0,
+		logMatches: false,
+		sortingSpec: expectedSortSpecForRegexpTextCase
+	}
+]
+
+describe('SortingSpecProcessor target-folder by name and regex', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should correctly handle the by-name only target-folder', () => {
+		const inputTxtArr: Array<string> = txtInputTargetFolderByName.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual({})
+		expect(result?.sortSpecByName).toEqual(expectedSortSpecsTargetFolderByName)
+		expect(result?.sortSpecByWildcard).not.toBeNull()
+	})
+	it('should recognize and correctly parse target folder by name with and w/o regexp variants', () => {
+		const inputTxtArr: Array<string> = txtInputTargetFolderWithRegex.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsTargetFolderByPathInRegexTestCase)
+		expect(result?.sortSpecByName).toEqual(expectedSortSpecsTargetFolderByName)
+		expect(result?.sortSpecByWildcard?.tree).toEqual({subtree: {}})
+		expect(result?.sortSpecByWildcard?.regexps).toEqual(expectedTargetFolderRegexpArr)
+	})
+})
+
+const NOPRIO = 0
+const PRIO1 = 1
+const PRIO2 = 2
+const PRIO3 = 3
+
+const consumedTargetFolderRegexp: Array<ConsumedFolderMatchingRegexp> = [
+	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: undefined,
+		log: true
+	},	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: PRIO1,
+		log: true
+	},	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: PRIO2,
+		log: true
+	},	{
+		regexp: /r4\d/,
+		againstName: true,
+		priority: PRIO3,
+		log: true
+	},
+]
+
+describe( 'consumeFolderByRegexpExpression', () => {
+	// and accept priority in any order
+	//    the last one is in effect
+	// and accept multiple
+	it.each([
+			// Plain cases
+		['for-name: /!: debug: r4\\d', PRIO1],
+		['for-name: /!: debug: r4\\d', PRIO1],
+		['/!!: for-name: debug: r4\\d', PRIO2],
+		['/!: debug: for-name: r4\\d', PRIO1],
+		['debug: for-name: /!!!: r4\\d', PRIO3],
+		['debug: /!: for-name: r4\\d', PRIO1],
+			// Cases with duplication of same
+		['for-name: for-name: /!: debug: r4\\d', PRIO1],
+		['for-name: /!: /!: debug: debug: r4\\d', PRIO1],
+		['/!!: for-name: /!!: debug: r4\\d', PRIO2],
+		['/!: debug: debug: for-name: r4\\d', PRIO1],
+		['debug: for-name: /!!!:/!!!: r4\\d', PRIO3],
+		['debug: /!: for-name: /!: r4\\d', PRIO1],
+			// Cases with duplication of different priority
+		['debug: /!!!: for-name: /!: r4\\d', PRIO1],
+		['debug: /!: for-name: /!!: r4\\d', PRIO2],
+		['debug: /!: for-name: /!!: /!!!: /!: /!!!: r4\\d', PRIO3],
+	])('should recognize all modifiers in >%s< of priority %s', (regexpExpr: string, prio: number) => {
+		const result: ConsumedFolderMatchingRegexp = consumeFolderByRegexpExpression(regexpExpr)
+		expect(result).toEqual(consumedTargetFolderRegexp[prio])
 	})
 })
 
@@ -1693,6 +1915,48 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result).not.toBeNull()
 		expect(errorsLogger).not.toHaveBeenCalled()
+	})
+	it('should recognize empty regexp of target-folder:', () => {
+		const inputTxtArr: Array<string> = `
+		target-folder: regexp:  
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 27:InvalidOrEmptyFolderMatchingRegexp Invalid or empty folder regexp expression <> ${ERR_SUFFIX}`)
+	})
+	it('should recognize error in regexp of target-folder:', () => {
+		const inputTxtArr: Array<string> = `
+		target-folder: regexp: bla (
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 27:InvalidOrEmptyFolderMatchingRegexp Invalid or empty folder regexp expression <bla (> ${ERR_SUFFIX}`)
+	})
+	it('should recognize empty name in target-folder: name:', () => {
+		const inputTxtArr: Array<string> = `
+		target-folder: name:      
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 26:EmptyFolderNameToMatch Empty 'target-folder: name:' value ${ERR_SUFFIX}`)
+	})
+	it('should recognize duplicate name in target-folder: name:', () => {
+		const inputTxtArr: Array<string> = `
+		target-folder: name: 123
+		target-folder: name: xyz
+		target-folder: name: 123
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(1)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 25:DuplicateByNameSortSpecForFolder Duplicate 'target-folder: name:' definition for the same name <123> ${ERR_SUFFIX}`)
 	})
 })
 

@@ -64,6 +64,7 @@ export interface CustomSortGroup {
 }
 
 export interface CustomSortSpec {
+		// plays only informative role about the original parsed 'target-folder:' values
 	targetFoldersPaths: Array<string>   // For root use '/'
 	defaultOrder?: CustomSortOrder
 	byMetadataField?: string            // for 'by-metadata:' if the defaultOrder is by metadata alphabetical or reverse

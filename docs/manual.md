@@ -1,5 +1,5 @@
 > Document is partial, creation in progress
-> Please refer to [README.md](../README.md) for more usage examples
+> Please refer to [README.md](../README.md) and [advanced-README.md](../advanced-README.md) for more usage examples
 > Check also [syntax-reference.md](./syntax-reference.md)
 
 ---
@@ -70,7 +70,7 @@ For clarity: the three available prefixes `/!` and `/!!` and `/!!!` allow for fu
 
 ## Simple wildcards
 
-Currently, the below simple wildcard syntax is supported:
+Currently, the below simple wildcard syntax is supported for sorting group:
 
 ### A single digit (exactly one)
 
@@ -246,5 +246,188 @@ sorting-spec: |
     // If it were not used, the prevoius rule '...' would eat all of the folders and items
     // and the starred items wouldn't be pushed to the bottom
   /! starred:
+---
+```
+
+## Options for target-folder: matching
+
+The `target-folder:` has the following variants, listed in the order of precedence:
+
+1. match by the **exact folder path** (the default)
+2. match by the **exact folder name**
+3. match by **regexp** (for experts, be careful!)
+4. match by **wildcard suffix** (aka match folders subtree)
+
+If a folder in the vault matches more than one `target-folder:` definitions,
+the above list shows the precedence, e.g. 1. has precedence over 2., 3. and 4. for example.
+In other words, match by exact folder path always wins, then goes the match by folder exact name,
+and so on.
+
+If a folder in the vault matches more than one `target-folder:` definitions of the same type,
+see the detailed description below for the behavior
+
+### By folder path (the default)
+
+If no additional modifiers follow the `target-folder:`, the remaining part of the line
+is treated as an exact folder path (leading and trailing spaces are ignored,
+infix spaces are treated literally as part of the folder path)
+
+Within the same vault duplicate definitions of same path in `target-folder:` are detected
+and error is raised in that case, indicating the duplicated path
+
+Examples of `target-folder:` with match by the exact folder path:
+
+- `target-folder: My Folder`
+  - this refers to the folder in the root of the vault and only to it
+- `target-folder: Archive/My Folder`
+  - matches the `My Folder` sub-folder in the `Archive` folder (a sub-folder of the root)
+- `target-folder: .`
+  - this refers to path of the folder where the sorting specification resides (the specification containing the line,
+    keep in mind that the sorting specification can reside in multiple locations in multiple notes) 
+- `target-folder: ./Some Subfolder`
+  - this refers to path of a sub-folder of the folder where the sorting specification resides (the specification containing the line,
+    keep in mind that the sorting specification can reside in multiple locations in multiple notes)
+
+### By folder name
+
+The modifier `name:` tells the `target-folder:` to match the folder name and not the full folder path
+
+This is an exact match of the full folder name, no partial matching
+
+Within the same vault duplicate definitions of same name in `target-folder: name:` are detected
+and error is raised in that case, indicating the duplicated folder name in sorting specification
+
+Examples of `target-folder:` with match by the exact folder name:
+
+- `target-folder: name: My Folder`
+  - matches all the folders with the name `My Folder` regardless of their location within the vault
+
+### By regexp (expert feature)
+
+> WARNING!!! This is an EXPERT FEATURE.
+> 
+> Involving and constructing the regexp-s requires at least basic knowledge about the potential pitfalls.\
+> If you introduce a heavy _regexp-backtracking_ it can **kill performance of Obsidian and even make it unresponsive**\
+> If you don't know what the _regexp-backtracking_ is, be careful when using regexp for `target-folder:`
+
+The modifier `regexp:` tells the `target-folder:` to involve the specified regular expressions in matching
+
+Additional dependent modifiers are supported for `regexp:`:
+- `for-name:`
+  - tells the matching to be done against the folder name, not the full path
+- `debug:`
+  - tells the regexp to report its match in the developer console, so that you can easily investigate
+    why the regexp matches (or why it doesn't match) as expected 
+- `/!:` `/!!:` `/!!!:`
+  - sets the priority of the regexp
+
+By default, the regexp is matched against the full path of the folder, unless the `for-name:` modifiers tells otherwise.
+
+By default, the regexp-es have no priority and are evaluated in the order of their definition.\
+If you store `sorting-spec:` configurations in notes spread all over the vault,
+consider the order of `target-folder: regexp:` to be undefined and - if needed - use
+explicit priority modifiers (`/!:` `/!!:` `/!!!:`) to impose the desired order of matching.
+  - a regexp with modifier `/!!!:` if evaluated before all other regexps, regardless of where they are configured
+    - if two or more regexps are stamped with `/!!!:`, they are matched in the order in which they were defined.\
+      Within a single YAML section of a note the order is obvious.\
+      For sorting specifications spread over many notes in the vault consider the order to be undefined.
+  - a regexp with modifier `/!!:` if evaluated after any `/!!!:` and before all other regexps
+    - the same logic as described above applies when multiple regexps have the `/!!:` stamp
+  - a regexp with modifier `/!:` indicates the lowest of explicitly defined priorities.\
+    Such a regexp is matched after all priority-stamped regexps, before the regexps not having 
+    any explicit priority stamp  
+
+The escape character is \ - the standard one in regexp world.
+
+Examples of `target-folder:` with match by regexp:
+
+- `target-folder: regexp: reading`
+  - matches any folder which contains the word `reading` in its path or name
+- `target-folder: regexp: \d?\d-\d?\d-\d\d\d\d$`
+  - matches any folder which ends with date-alike numerical expression, e.g.:
+    - `1-1-2023`
+    - `Archive/Monthly/12/05-12-2022`
+    - `Inbox/Not digested notes from 20-7-2019`
+- `target-folder: regexp: for-name: I am everywhere`
+  - matches all folders which contain the phrase `I am everywhere` in their name, e.g.:
+    - `Reports/Not processed/What the I am everywhere report from Paul means?`
+    - `Chapters/I am everywhere`
+- `target-folder: regexp: for-name: ^I am (everyw)?here$`
+  - matches all folders with name exactly `I am everywhere` or `I am here` 
+- `target-folder: regexp: for-name: debug: ^...$`
+  - matches all folders with name comprising exactly 3 character
+  - when a folder is matched, a diagnostic line is written to the console - `debug:` modifiers enables the logging
+- `target-folder: regexp: debug: ^.{13,15}$`
+  - matches all folders with path length between 13 and 15 characters
+  - diagnostic line is written to the console due to `debug:`
+- `target-folder: regexp: for-name: /!: ^[aA]`
+  - matches all folders with name starting with `a` or `A`
+  - the priority `/!:` modifier causes the matching to be done before all other regexps
+    which don't have any priority 
+- `target-folder: regexp: /!!!: debug: for-name: abc|def|ghi`
+  - matches all folders with name containing the sequence `abc` or `def` or `ghi`
+  - the modifier `/!!!:` imposes the highest priority of regexp matching
+  - `debug:` tells to report each matching folder in the console
+- `target-folder: regexp: ^[^/]+/[^/]+$`
+  - matches all folders which are at the 2nd level of vault tree, e.g.:
+    - `Inbox/Priority input`
+    - `Archive/2021`
+- `target-folder: regexp: ^[^\/]+(\/[^\/]+){2}$`
+  - matches all folders which are at the 3rd level of vault tree, e.g.:
+  - `Archive/2019/05`
+  - `Aaaa/Bbbb/Test test`
+
+### By wildcard
+
+In the default usage of `target-folder:` with the exact full folder path, if the path contains
+the `/...` or `/*` suffix its meaning is extended to:
+- match the folder and all its immediate (child) subfolders - `/...` suffix
+- match the folder and all its subfolders at any level (all descendants, the entire subtree) - `/*` suffix
+
+For example:
+
+- `target-folder: /*`
+  - matches all folders in the vault (the root folder and all its descendants)
+- `target-folder: /...`
+  - matches the root folder and its immediate children (aka immediate subfolders of the root)
+
+If the sorting specification contains duplicate wildcard-ed path in `target-folder:`
+an error is raised, indicating the duplicate path
+
+If a folder is matched by two (or more) wildcarded paths, the one with more path segments
+(the deeper one) wins. For example:
+- a folder `Book/Chapters/12/a` is matched by:
+  - (a) `target-folder: Book/*`, and
+  - (b) `target-folder: Book/Chapters/*`
+  - In this case the (b) wins, because it contains a deeper path
+
+If the depth of matches specification is the same, the `/...` takes precedence over `/*`
+- a folder `Book/Appendix/III` is matched by:
+  - (a) `target-folder: Book/Appendix/...`, and
+  - (b) `target-folder: Book/Appendix/*`
+  - In this case the (a) wins
+
+## Excluding folders from custom sorting
+
+Having the ability to wildard- and regexp-based match of `target-folder:` in some cases
+you might want to exclude folder(s) from custom sorting.
+
+This can be done by combination of the `target-folder:` (in any of its variants)
+and specification of the sort order as `sorting: standard`
+
+An example piece of YAML frontmatter could look like:
+
+```yaml
+---
+sorting-spec: |
+
+  // ... some sorting specification above
+ 
+  target-folder: Reviews/Attachments
+  target-folder: TODOs
+  sorting: standard
+ 
+  // ... some sorting specification below 
+  
 ---
 ```

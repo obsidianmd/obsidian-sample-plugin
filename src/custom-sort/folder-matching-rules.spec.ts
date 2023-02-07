@@ -14,6 +14,10 @@ const createMockMatcherRichVersion = (): FolderWildcardMatching<SortingSpec> => 
 	return matcher
 }
 
+const PRIO1 = 1
+const PRIO2 = 2
+const PRIO3 = 3
+
 const createMockMatcherSimplestVersion = (): FolderWildcardMatching<SortingSpec> => {
 	const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
 	matcher.addWildcardDefinition('/Reviews/daily/*', '/Reviews/daily/*')
@@ -116,5 +120,138 @@ describe('folderMatch', () => {
 		const result = matcher.addWildcardDefinition('Archive/2019/*', 'Duplicate')
 
 		expect(result).toEqual({errorMsg: "Duplicate wildcard '*' specification for Archive/2019/*"})
+	})
+	it('regexp-match by name works (order of regexp doesn\'t matter) case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^daily$/, false, undefined, false, `r1`)
+		matcher.addRegexpDefinition(/^daily$/, true, undefined, false, `r2`)
+		matcher.addWildcardDefinition('/Reviews/*', `w1`)
+		  // Path with leading /
+		const match1: SortingSpec | null = matcher.folderMatch('/Reviews/daily', 'daily')
+		  // Path w/o leading / - this is how Obsidian supplies the path
+		const match2: SortingSpec | null = matcher.folderMatch('Reviews/daily', 'daily')
+		expect(match1).toBe('r2')
+		expect(match2).toBe('r2')
+	})
+	it('regexp-match by name works (order of regexp doesn\'t matter) reversed case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^daily$/, true, undefined, false, `r2`)
+		matcher.addRegexpDefinition(/^daily$/, false, undefined, false, `r1`)
+		matcher.addWildcardDefinition('/Reviews/*', `w1`)
+		  // Path with leading /
+		const match1: SortingSpec | null = matcher.folderMatch('/Reviews/daily', 'daily')
+		  // Path w/o leading / - this is how Obsidian supplies the path
+		const match2: SortingSpec | null = matcher.folderMatch('Reviews/daily', 'daily')
+		expect(match1).toBe('r2')
+		expect(match2).toBe('r2')
+	})
+	it('regexp-match by path works (order of regexp doesn\'t matter) case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^Reviews\/daily$/, false, undefined, false, `r1`)
+		matcher.addRegexpDefinition(/^Reviews\/daily$/, true, undefined, false, `r2`)
+		matcher.addWildcardDefinition('/Reviews/*', `w1`)
+		  // Path with leading /
+		const match1: SortingSpec | null = matcher.folderMatch('/Reviews/daily', 'daily')
+		  // Path w/o leading / - this is how Obsidian supplies the path
+		const match2: SortingSpec | null = matcher.folderMatch('Reviews/daily', 'daily')
+		expect(match1).toBe('w1')  // The path-based regexp doesn't match the leading /
+		expect(match2).toBe('r1')
+	})
+	it('regexp-match by path works (order of regexp doesn\'t matter) reversed case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^Reviews\/daily$/, true, undefined, false, `r2`)
+		matcher.addRegexpDefinition(/^Reviews\/daily$/, false, undefined, false, `r1`)
+		matcher.addWildcardDefinition('/Reviews/*', `w1`)
+		// Path with leading /
+		const match1: SortingSpec | null = matcher.folderMatch('/Reviews/daily', 'daily')
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match2: SortingSpec | null = matcher.folderMatch('Reviews/daily', 'daily')
+		expect(match1).toBe('w1')  // The path-based regexp doesn't match the leading /
+		expect(match2).toBe('r1')
+	})
+	it('regexp-match by path and name for root level - order of regexp decides - case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^daily$/, false, undefined, false, `r1`)
+		matcher.addRegexpDefinition(/^daily$/, true, undefined, false, `r2`)
+		matcher.addWildcardDefinition('/Reviews/*', `w1`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('daily', 'daily')
+		expect(match).toBe('r2')
+	})
+	it('regexp-match by path and name for root level - order of regexp decides - reversed case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^daily$/, true, undefined, false, `r2`)
+		matcher.addRegexpDefinition(/^daily$/, false, undefined, false, `r1`)
+		matcher.addWildcardDefinition('/Reviews/*', `w1`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('daily', 'daily')
+		expect(match).toBe('r1')
+	})
+	it('regexp-match priorities - order of definitions irrelevant - unique priorities - case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 3, false, `r1p3`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 2, false, `r2p2`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 1, false, `r3p1`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, undefined, false, `r4pNone`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('freq/daily', 'daily')
+		expect(match).toBe('r1p3')
+	})
+	it('regexp-match priorities - order of definitions irrelevant - unique priorities - reversed case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, undefined, false, `r4pNone`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 1, false, `r3p1`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 2, false, `r2p2`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 3, false, `r1p3`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('freq/daily', 'daily')
+		expect(match).toBe('r1p3')
+	})
+	it('regexp-match priorities - order of definitions irrelevant - duplicate priorities - case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^daily$/, true, 3, false, `r1p3a`)
+		matcher.addRegexpDefinition(/^daily$/, true, 3, false, `r1p3b`)
+		matcher.addRegexpDefinition(/^daily$/, true, 2, false, `r2p2a`)
+		matcher.addRegexpDefinition(/^daily$/, true, 2, false, `r2p2b`)
+		matcher.addRegexpDefinition(/^daily$/, true, 1, false, `r3p1a`)
+		matcher.addRegexpDefinition(/^daily$/, true, 1, false, `r3p1b`)
+		matcher.addRegexpDefinition(/^daily$/, true, undefined, false, `r4pNone`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('daily', 'daily')
+		expect(match).toBe('r1p3b')
+	})
+	it('regexp-match priorities - order of definitions irrelevant - unique priorities - reversed case A', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, undefined, false, `r4pNone`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 1, false, `r3p1`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 2, false, `r2p2`)
+		matcher.addRegexpDefinition(/^freq\/daily$/, false, 3, false, `r1p3`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('freq/daily', 'daily')
+		expect(match).toBe('r1p3')
+	})
+	it('regexp-match - edge case of matching the root folder - match by path', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		matcher.addRegexpDefinition(/^\/$/, false, undefined, false, `r1`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('/', '')
+		expect(match).toBe('r1')
+	})
+	it('regexp-match - edge case of matching the root folder - match by name not possible', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		  // Tricky regexp which can return zero length matches
+		matcher.addRegexpDefinition(/.*/, true, undefined, false, `r1`)
+		matcher.addWildcardDefinition('/*', `w1`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('/', '')
+		expect(match).toBe('w1')
+	})
+	it('regexp-match - edge case of no match when only regexp rules present', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching()
+		// Tricky regexp which can return zero length matches
+		matcher.addRegexpDefinition(/abc/, true, undefined, false, `r1`)
+		// Path w/o leading / - this is how Obsidian supplies the path
+		const match: SortingSpec | null = matcher.folderMatch('/', '')
+		expect(match).toBeNull()
 	})
 })
