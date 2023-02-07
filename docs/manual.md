@@ -1,5 +1,5 @@
 > Document is partial, creation in progress
-> Please refer to [README.md](../README.md) for more usage examples
+> Please refer to [README.md](../README.md) and [advanced-README.md](../advanced-README.md) for more usage examples
 > Check also [syntax-reference.md](./syntax-reference.md)
 
 ---
@@ -421,13 +421,13 @@ An example piece of YAML frontmatter could look like:
 ---
 sorting-spec: |
 
- // ... some sorting specification above
+  // ... some sorting specification above
  
- target-folder: Reviews/Attachments
- target-folder: TODOs
- sorting: standard
+  target-folder: Reviews/Attachments
+  target-folder: TODOs
+  sorting: standard
  
- // ... some sorting specification below 
+  // ... some sorting specification below 
   
 ---
 ```
