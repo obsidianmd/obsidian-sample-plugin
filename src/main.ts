@@ -6,6 +6,7 @@ import {
 	normalizePath,
 	Plugin,
 	PluginSettingTab,
+	sanitizeHTMLToDom,
 	setIcon,
 	Setting,
 	TAbstractFile,
@@ -86,12 +87,13 @@ export default class CustomSortPlugin extends Plugin {
 				// - the file(s) explicitly configured by user in plugin settings
 				// Be human-friendly and accept both .md and .md.md file extensions
 				//     (the latter representing a typical confusion between note name vs underlying file name)
-				if (aFile.name === SORTSPEC_FILE_NAME ||
-					aFile.name === `${SORTSPEC_FILE_NAME}.md` ||
-					aFile.basename === parent.name ||
-					aFile.basename === this.settings.additionalSortspecFile ||
-					aFile.path === this.settings.additionalSortspecFile ||
-					aFile.path === `${this.settings.additionalSortspecFile}.md`
+				if (aFile.name === SORTSPEC_FILE_NAME ||                         // file name == sortspec.md ?
+					aFile.name === `${SORTSPEC_FILE_NAME}.md` ||                 // file name == sortspec.md.md ?
+					aFile.basename === parent.name ||           // Folder Note mode: inside folder, same name
+					aFile.basename === this.settings.additionalSortspecFile ||   // when user configured _about_
+					aFile.name === this.settings.additionalSortspecFile ||       // when user configured _about_.md
+					aFile.path === this.settings.additionalSortspecFile ||       // when user configured Inbox/sort.md
+					aFile.path === `${this.settings.additionalSortspecFile}.md`  // when user configured Inbox/sort
 				) {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					if (sortingSpecTxt) {
@@ -390,11 +392,26 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h2', {text: 'Settings for Custom File Explorer Sorting Plugin'});
 
+		const additionalSortspecFileDescr: DocumentFragment = sanitizeHTMLToDom(
+			'A note name or note path to scan (YAML frontmatter) for sorting specification in addition to the `sortspec` notes and Folder Notes<sup><b>*</b></sup>.'
+			+ '<br>'
+			+ ' The `.md` filename suffix is optional.'
+			+ '<p><b>(*)</b>&nbsp;if you employ the <i>Index-File based</i> approach to folder notes (as documented in '
+			+ '<a href="https://github.com/aidenlx/alx-folder-note/wiki/folder-note-pref"'
+			+ '>Aidenlx Folder Note preferences</a>'
+			+ ') you can enter here the index note name, e.g. <b>_about_</b>'
+			+ '<br>'
+			+ 'The <i>Inside Folder, with Same Name Recommended</i> mode of Folder Notes is handled automatically, no additional configuration needed.'
+			+ '</p>'
+			+ '<p>NOTE: After updating this setting remember to refresh the custom sorting via clicking on the ribbon icon or via the <b>sort-on</b> command'
+			+ ' or by restarting Obsidian or reloading the vault</p>'
+		)
+
 		new Setting(containerEl)
-			.setName('Path to the designated note containing sorting specification')
-			.setDesc('The YAML front matter of this note will be scanned for sorting specification, in addition to the `sortspec` notes and folder notes. The `.md` filename suffix is optional.')
+			.setName('Path or name of additional note(s) containing sorting specification')
+			.setDesc(additionalSortspecFileDescr)
 			.addText(text => text
-				.setPlaceholder('e.g. Inbox/sort')
+				.setPlaceholder('e.g. _about_')
 				.setValue(this.plugin.settings.additionalSortspecFile)
 				.onChange(async (value) => {
 					this.plugin.settings.additionalSortspecFile = value.trim() ? normalizePath(value) : '';
