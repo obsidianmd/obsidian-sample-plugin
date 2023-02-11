@@ -133,11 +133,11 @@ For more details on the icon states refer to [Ribbon icon section of the advance
 
 ## Small screen mobile devices remarks
 
-- enable mobile-specific notifications
-- use the 'sort on' Obsidian command palette being easily available 
- (swipe down gesture on small-screen mobiles) allows for quick steering of the plugin via commands: sort-on and sort-off
-
-could need to activate separately, even if on shared vault and active on desktop
+- you might need to activate the custom sorting on your mobile separately, even if on a shared vault the custom sorting was activated on desktop
+- the Obsidian command palette being easily available (swipe down gesture on small-screen mobiles) allows for quick steering of the plugin via commands: sort-on and sort-off.
+This could be easier than navigating to and expanding the ribbon 
+- the ribbon icon is static (![Static icon](./docs/icons/icon-mobile-initial.png)) and doesn't reflect the state of custom sorting.
+You can enable the _plugin state changes_ notifications in settings, for the mobile devices only
 
 ## Installing the plugin
 
