@@ -39,8 +39,8 @@ sorting-spec: |
 ---
 ```
 
-Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png)) to tell the plugin to read the sorting specification and apply it.
-The ribbon icon should turn (![Active](./docs/icons/icon-active.png)) and the sorting should be applied to the folder
+Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png) or ![Static icon](./docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting specification and apply it.
+The sorting should be applied to the folder. On desktops and tablets the ribbon icon should turn (![Active](./docs/icons/icon-active.png))
 
 !!! **Done!** !!!
 
@@ -115,15 +115,29 @@ Refer to the [TL;DR section of advanced README.md](./advanced-README.md#tldr-usa
 
 Click the ribbon icon to toggle the plugin between enabled and suspended states.
 
-States of the ribbon icon:
+States of the ribbon icon on large-screen devices (desktops, laptops and tablets like iPad):
 
 - ![Inactive](./docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
 - ![Active](./docs/icons/icon-active.png) Plugin active, custom sorting applied.
 - ![Error](./docs/icons/icon-error.png) Syntax error in custom sorting configuration.
 - ![General Error](./docs/icons/icon-general-error.png) Plugin suspended. General error.
-- ![Sorting not applied](./docs/icons/icon-not-applied.png) Plugin enabled but the custom sorting was not applied.
+- ![Sorting not applied](./docs/icons/icon-not-applied.png) Plugin enabled, but the custom sorting was not applied.
+- ![Static icon](./docs/icons/icon-mobile-initial.png) (Only on large-screen mobile devices like iPad). 
+  Plugin enabled. but the custom sorting was not applied.
+
+On small-screen mobile devices (phones) the icon is static:
+
+- ![Static icon](./docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
 
 For more details on the icon states refer to [Ribbon icon section of the advanced-README.md](./advanced-README.md#ribbon-icon)
+
+## Small screen mobile devices remarks
+
+- enable mobile-specific notifications
+- use the 'sort on' Obsidian command palette being easily available 
+ (swipe down gesture on small-screen mobiles) allows for quick steering of the plugin via commands: sort-on and sort-off
+
+could need to activate separately, even if on shared vault and active on desktop
 
 ## Installing the plugin
 

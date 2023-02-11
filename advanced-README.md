@@ -72,11 +72,11 @@ can be the root folder. Ensure the exact file name is `sortspec.md`. That file c
 > > ![sortspec.md](./docs/img/sortspec-md-dark.jpg)
 > 2. Enable the plugin in obsidian.
 >
-> 3. Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png)) to tell the plugin to read the sorting
+> 3. Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png) or ![Mobile](./docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting
 specification from `sortspec` note (the `sortspec.md` file which you downloaded a second ago). 
->   - The observable effect should be the change of appearance of the ribbon button to
-(![Active](./docs/icons/icon-active.png)) and reordering
-of items in root vault folder to reverse alphabetical with folders and files treated equally.
+>   - The observable effect should be reordering of items in root vault folder to reverse alphabetical with folders and files treated equally.
+And on computers and tablets be the change of appearance of the ribbon button to
+![Active](./docs/icons/icon-active.png) (on desktop and tablet only) and   
 >   - The notification balloon should confirm success: ![Success](./docs/icons/parsing-succeeded.png)
 > 4. Click the ribbon button again to suspend the plugin. The ribbon button should toggle its appearance again
 and the order of files and folders in the root folder of your vault should get back to the order selected in
@@ -570,7 +570,7 @@ reference.
 
 Click the ribbon icon to toggle the plugin between enabled and suspended states.
 
-States of the ribbon icon:
+States of the ribbon icon on large-screen devices (desktops, laptops and tablets like iPad):
 
 - ![Inactive](./docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
 	- Click to enable and apply custom sorting.
@@ -591,6 +591,14 @@ States of the ribbon icon:
 - ![Sorting not applied](./docs/icons/icon-not-applied.png) Plugin enabled but the custom sorting was not applied.
 	- This can happen when reinstalling the plugin and in similar cases
 	- Click the ribbon icon twice to re-enable the custom sorting.
+- ![Static icon](./docs/icons/icon-mobile-initial.png) Only on large-screen mobile devices like iPad.
+    - Plugin enabled. but the custom sorting was not applied.
+
+On small-screen mobile devices (phones) the icon is static:
+
+- ![Static icon](./docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
+    - Click to enable and apply custom sorting or to disable custom sorting
+    - To get notified about custom sort plugin state, enable the mobile-specific notifications in plugin settings
 
 ## Installing the plugin
 

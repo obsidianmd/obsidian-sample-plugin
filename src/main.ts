@@ -4,6 +4,7 @@ import {
 	MetadataCache,
 	Notice,
 	normalizePath,
+	Platform,
 	Plugin,
 	PluginSettingTab,
 	sanitizeHTMLToDom,
@@ -23,6 +24,7 @@ import {
 	addIcons,
 	ICON_SORT_ENABLED_ACTIVE,
 	ICON_SORT_ENABLED_NOT_APPLIED,
+	ICON_SORT_MOBILE_INITIAL,
 	ICON_SORT_SUSPENDED,
 	ICON_SORT_SUSPENDED_GENERAL_ERROR,
 	ICON_SORT_SUSPENDED_SYNTAX_ERROR
@@ -33,13 +35,15 @@ interface CustomSortPluginSettings {
 	suspended: boolean
 	statusBarEntryEnabled: boolean
 	notificationsEnabled: boolean
+	mobileNotificationsEnabled: boolean
 }
 
 const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	additionalSortspecFile: '',
 	suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
 	statusBarEntryEnabled: true,
-	notificationsEnabled: true
+	notificationsEnabled: true,
+	mobileNotificationsEnabled: false
 }
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
@@ -53,8 +57,8 @@ type MonkeyAroundUninstaller = () => void
 export default class CustomSortPlugin extends Plugin {
 	settings: CustomSortPluginSettings
 	statusBarItemEl: HTMLElement
-	ribbonIconEl: HTMLElement
-	ribbonIconStateInaccurate: boolean
+	ribbonIconEl: HTMLElement     // On small-screen mobile devices this is useless (ribbon is re-created on-the-fly)
+	ribbonIconStateInaccurate: boolean                                             // each time when displayed
 
 	sortSpecCache?: SortSpecsCollection | null
 	initialAutoOrManualSortingTriggered: boolean
@@ -62,7 +66,7 @@ export default class CustomSortPlugin extends Plugin {
 	fileExplorerFolderPatched: boolean
 
 	showNotice(message: string, timeout?: number) {
-		if (this.settings.notificationsEnabled) {
+		if (this.settings.notificationsEnabled || (Platform.isMobile && this.settings.mobileNotificationsEnabled)) {
 			new Notice(message, timeout)
 		}
 	}
@@ -202,6 +206,8 @@ export default class CustomSortPlugin extends Plugin {
 		}
 
 		if (updateRibbonBtnIcon) {
+			// REMARK: on small-screen mobile devices this is void, the handle to ribbon <div> Element is useless,
+			        // as the ribbon (and its icons) get re-created each time when re-displayed (expanded)
 			setIcon(this.ribbonIconEl, iconToSet)
 		}
 
@@ -222,8 +228,14 @@ export default class CustomSortPlugin extends Plugin {
 		addIcons();
 
 		// Create an icon button in the left ribbon.
+		//   REMARK: on small-screen mobile devices, the ribbon is dynamically re-created each time when displayed
+		//           in result, the handle to the ribbon <div> Element is useless
 		this.ribbonIconEl = this.addRibbonIcon(
-			this.settings.suspended ? ICON_SORT_SUSPENDED : ICON_SORT_ENABLED_NOT_APPLIED,
+			Platform.isDesktop ?
+				(this.settings.suspended ? ICON_SORT_SUSPENDED : ICON_SORT_ENABLED_NOT_APPLIED)
+				:
+				ICON_SORT_MOBILE_INITIAL // REMARK: on small-screen mobile devices this icon stays permanent
+			,
 			'Toggle custom sorting', (evt: MouseEvent) => {
 				// Clicking the icon toggles between the states of custom sort plugin
 				this.switchPluginStateTo(this.settings.suspended)
@@ -452,6 +464,16 @@ class CustomSortSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.notificationsEnabled)
 				.onChange(async (value) => {
 					this.plugin.settings.notificationsEnabled = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Enable notifications of plugin state changes for mobile devices only')
+			.setDesc('See above.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.mobileNotificationsEnabled)
+				.onChange(async (value) => {
+					this.plugin.settings.mobileNotificationsEnabled = value;
 					await this.plugin.saveSettings();
 				}));
 	}
