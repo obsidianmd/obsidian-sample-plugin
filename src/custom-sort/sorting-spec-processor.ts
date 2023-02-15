@@ -528,16 +528,33 @@ export interface FolderNameToSortSpecMap {
 }
 
 export interface SortSpecsCollection {
-	sortSpecByPath: FolderPathToSortSpecMap
-	sortSpecByName: FolderNameToSortSpecMap
+	sortSpecByPath?: FolderPathToSortSpecMap
+	sortSpecByName?: FolderNameToSortSpecMap
 	sortSpecByWildcard?: FolderWildcardMatching<CustomSortSpec>
 }
 
-export const newSortSpecsCollection = (): SortSpecsCollection => {
-	return {
-		sortSpecByPath: {},
-		sortSpecByName: {}
+const ensureCollectionHasSortSpecByPath = (collection?: SortSpecsCollection | null) => {
+	collection = collection ?? {}
+	if (!collection.sortSpecByPath) {
+		collection.sortSpecByPath = {}
 	}
+	return collection
+}
+
+const ensureCollectionHasSortSpecByName = (collection?: SortSpecsCollection | null) => {
+	collection = collection ?? {}
+	if (!collection.sortSpecByName) {
+		collection.sortSpecByName = {}
+	}
+	return collection
+}
+
+const ensureCollectionHasSortSpecByWildcard = (collection?: SortSpecsCollection | null) => {
+	collection = collection ?? {}
+	if (!collection.sortSpecByWildcard) {
+		collection.sortSpecByWildcard = new FolderWildcardMatching<CustomSortSpec>()
+	}
+	return collection
 }
 
 interface AdjacencyInfo {
@@ -744,7 +761,6 @@ export class SortingSpecProcessor {
 					}
 				}
 
-				let sortspecByName: FolderNameToSortSpecMap | undefined
 				for (let spec of this.ctx.specs) {
 					// Consume the folder names prefixed by the designated lexeme
 					for (let idx = 0; idx<spec.targetFoldersPaths.length; idx++) {
@@ -756,42 +772,36 @@ export class SortingSpecProcessor {
 									`Empty '${TargetFolderLexeme} ${MatchFolderNameLexeme}' value` )
 								return null // Failure - not allow duplicate by folderNameToMatch specs for the same folder folderNameToMatch
 							}
-							sortspecByName = sortspecByName ?? {}
-							if (sortspecByName[folderNameToMatch]) {
+							collection = ensureCollectionHasSortSpecByName(collection)
+							if (collection.sortSpecByName![folderNameToMatch]) {
 								this.problem(ProblemCode.DuplicateByNameSortSpecForFolder,
 									`Duplicate '${TargetFolderLexeme} ${MatchFolderNameLexeme}' definition for the same name <${folderNameToMatch}>` )
 								return null // Failure - not allow duplicate by folderNameToMatch specs for the same folder folderNameToMatch
 							} else {
-								sortspecByName[folderNameToMatch] = spec
+								collection.sortSpecByName![folderNameToMatch] = spec
 							}
 						}
 					}
 				}
 
-				if (sortspecByName) {
-					collection = collection ?? newSortSpecsCollection()
-					collection.sortSpecByName = sortspecByName
-				}
-
-				let sortspecByWildcard: FolderWildcardMatching<CustomSortSpec> | undefined
 				for (let spec of this.ctx.specs) {
 					// Consume the folder paths ending with wildcard specs or regexp-based
 					for (let idx = 0; idx<spec.targetFoldersPaths.length; idx++) {
 						const path = spec.targetFoldersPaths[idx]
 						if (path.startsWith(MatchFolderByRegexpLexeme)) {
-							sortspecByWildcard = sortspecByWildcard ?? new FolderWildcardMatching<CustomSortSpec>()
+							collection = ensureCollectionHasSortSpecByWildcard(collection)
 							const folderByRegexpExpression: string = path.substring(MatchFolderByRegexpLexeme.length).trim()
 							try {
 								const r: ConsumedFolderMatchingRegexp = consumeFolderByRegexpExpression(folderByRegexpExpression)
-								sortspecByWildcard.addRegexpDefinition(r.regexp, r.againstName, r.priority, r.log, spec)
+								collection.sortSpecByWildcard!.addRegexpDefinition(r.regexp, r.againstName, r.priority, r.log, spec)
 							} catch (e) {
 								this.problem(ProblemCode.InvalidOrEmptyFolderMatchingRegexp,
 									`Invalid or empty folder regexp expression <${folderByRegexpExpression}>`)
 								return null
 							}
 						} else if (endsWithWildcardPatternSuffix(path)) {
-							sortspecByWildcard = sortspecByWildcard ?? new FolderWildcardMatching<CustomSortSpec>()
-							const ruleAdded = sortspecByWildcard.addWildcardDefinition(path, spec)
+							collection = ensureCollectionHasSortSpecByWildcard(collection)
+							const ruleAdded = collection.sortSpecByWildcard!.addWildcardDefinition(path, spec)
 							if (ruleAdded?.errorMsg) {
 								this.problem(ProblemCode.DuplicateWildcardSortSpecForSameFolder, ruleAdded?.errorMsg)
 								return null // Failure - not allow duplicate wildcard specs for the same folder
@@ -800,16 +810,10 @@ export class SortingSpecProcessor {
 					}
 				}
 
-				if (sortspecByWildcard) {
-					collection = collection ?? newSortSpecsCollection()
-					collection.sortSpecByWildcard = sortspecByWildcard
-				}
-
 				for (let spec of this.ctx.specs) {
 					for (let idx = 0; idx < spec.targetFoldersPaths.length; idx++) {
 						const originalPath = spec.targetFoldersPaths[idx]
 						if (!originalPath.startsWith(MatchFolderNameLexeme) && !originalPath.startsWith(MatchFolderByRegexpLexeme)) {
-							collection = collection ?? newSortSpecsCollection()
 							const {path, detectedWildcardPriority} = stripWildcardPatternSuffix(originalPath)
 							let storeTheSpec: boolean = true
 							const preexistingSortSpecPriority: WildcardPriority = this.pathMatchPriorityForPath[path]
@@ -823,7 +827,8 @@ export class SortingSpecProcessor {
 								}
 							}
 							if (storeTheSpec) {
-								collection.sortSpecByPath[path] = spec
+								collection = ensureCollectionHasSortSpecByPath(collection)
+								collection.sortSpecByPath![path] = spec
 								this.pathMatchPriorityForPath[path] = detectedWildcardPriority
 							}
 						}

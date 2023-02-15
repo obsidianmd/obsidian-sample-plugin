@@ -930,7 +930,7 @@ describe('SortingSpecProcessor target-folder by name and regex', () => {
 	it('should correctly handle the by-name only target-folder', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderByName.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result?.sortSpecByPath).toEqual({})
+		expect(result?.sortSpecByPath).toBeUndefined()
 		expect(result?.sortSpecByName).toEqual(expectedSortSpecsTargetFolderByName)
 		expect(result?.sortSpecByWildcard).not.toBeNull()
 	})
