@@ -5,6 +5,16 @@
 ---
 Some sections added ad-hoc, to be integrated later
 
+# Hints, tips & tricks
+
+## Adding visual separators in File Explorer
+
+by @replete
+
+[Instruction and more context](https://github.com/SebastianMC/obsidian-custom-sort/discussions/57#discussioncomment-4983763)
+
+![separators](https://user-images.githubusercontent.com/812139/219181165-09f41420-c7f5-4c3c-a1a9-3116c5c4c9d2.png)
+
 # Advanced features
 
 ## Priorities of sorting groups
