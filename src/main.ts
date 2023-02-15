@@ -334,8 +334,8 @@ export default class CustomSortPlugin extends Plugin {
 
 						// if custom sort is not specified, use the UI-selected
 						const folder: TFolder = this.file
-						let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath[folder.path]
-						sortSpec = sortSpec ?? plugin.sortSpecCache?.sortSpecByName[folder.name]
+						let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath?.[folder.path]
+						sortSpec = sortSpec ?? plugin.sortSpecCache?.sortSpecByName?.[folder.name]
 						if (sortSpec) {
 							if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
 								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
