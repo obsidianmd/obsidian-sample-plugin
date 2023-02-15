@@ -1,0 +1,30 @@
+{
+	"name": "Obsidian Dev",
+	"image": "mcr.microsoft.com/vscode/devcontainers/universal",
+	"features": {
+		"ghcr.io/devcontainers/features/desktop-lite:1": {},
+		"ghcr.io/devcontainers/features/node:1": {},
+		"ghcr.io/devcontainers/features/common-utils:2": {}
+	},
+	//Set the OB_VERSION environment variable if you want to get a specific version.
+	//Otherwise it will just grab the latest release version.
+	/*"containerEnv": {
+		//"OB_VERSION": "1.1.9"
+	},*/
+	 "forwardPorts": [6080],
+	 "privileged": true,
+	 "portsAttributes": {
+		"6080": {
+			"label": "noVNC",
+			"onAutoForward": "openPreview",
+			"protocol": "http"
+		}
+	},
+	"onCreateCommand": "./.devcontainer/getObsidian.sh",
+	"postStartCommand": "./.devcontainer/postStart.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": ["ms-vscode.vscode-typescript-next", "editorconfig.editorconfig", "esbenp.prettier-vscode"]
+		}
+	}
+}

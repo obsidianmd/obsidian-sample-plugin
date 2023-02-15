@@ -1,0 +1,10 @@
+[begin] (  Application Menu  )
+    [exec] (Obsidian) { /bin/Obsidian } <>
+    [exec] (File Manager) { nautilus ~ } <>
+    [exec] (Text Editor) { mousepad } <>
+    [exec] (Terminal) { tilix -w ~ -e $(readlink -f /proc/$$/exe) -il } <>
+    [exec] (Web Browser) { firefox } <>
+    [submenu] (System) {}
+        [exec] (Set Resolution) { tilix -t "Set Resolution" -e bash /usr/local/bin/set-resolution } <>
+    [end]
+[end]
