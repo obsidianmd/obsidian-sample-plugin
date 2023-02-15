@@ -154,3 +154,18 @@ Search the plugin by its name 'CUSTOM FILE EXPLORER SORTING'
 Thanks to [Nothingislost](https://github.com/nothingislost) for the monkey-patching ideas of File Explorer
 in [obsidian-bartender](https://github.com/nothingislost/obsidian-bartender)
 
+## ...and before you go, maybe you'd like the visual separators in File Explorer?
+
+Do you want to have a nice-looking horizontal separators in File Explorer like this?
+
+![separators](./docs/img/separators-by-replete.png)
+
+If so, head on to [Instruction and more context](https://github.com/SebastianMC/obsidian-custom-sort/discussions/57#discussioncomment-4983763)
+by [@replete](https://github.com/replete)\
+Quick & easy!
+
+This feature is not dependent on the Custom Sorting plugin.
+At the same time I'm mentioning it here because it is a side effect of a discussion with [@replete](https://github.com/replete).
+We were considering a direct support of the Separators in the plugin. Eventually this boiled down to a very
+concise and smart CSS-snippet based solution, independent of the plugin. Go, see, copy to the CSS-snippets in Obsidian
+and enjoy the more grouped look
