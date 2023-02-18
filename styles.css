@@ -45,7 +45,11 @@
 .replaceRenderSymbols {
   display: flex;
   width: 100%;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
+}
+
+.setting-item-control.replaceRenderSymbols .bulk_input {
+  min-height: 80px;
 }
 
 .setting-item-control .bulk_preview_textarea {
@@ -74,7 +78,6 @@
   width: 100%;
   resize: none;
   min-width: auto;
-  min-height: auto;
 }
 
 .setting-item-control .bulk_input:first-child {

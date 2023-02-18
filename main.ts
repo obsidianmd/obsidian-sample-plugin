@@ -159,23 +159,20 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
     if (!isViewTypeFolder(this.plugin.settings)) {
       return;
     }
-    new Setting(this.containerEl)
-      .setName('Folder location')
-      .setDesc('Find files within the folder')
-      .addSearch((cb) => {
-        new FolderSuggest(this.app, cb.inputEl, this.plugin);
-        cb.setPlaceholder('Example: folder1/')
-          .setValue(this.plugin.settings.folderName)
-          .onChange((newFolder) => {
-            this.plugin.settings.folderName = newFolder;
-            this.plugin.saveSettings();
-            this.getFilesByFolder();
-          });
-        // @ts-ignore
-        cb.containerEl.addClass('bulk_rename');
-        cb.inputEl.addClass('bulk_input');
-        cb.inputEl.onblur = this.reRenderPreview;
-      });
+    new Setting(this.containerEl).setName('Folder location').addSearch((cb) => {
+      new FolderSuggest(this.app, cb.inputEl, this.plugin);
+      cb.setPlaceholder('Example: folder1/')
+        .setValue(this.plugin.settings.folderName)
+        .onChange((newFolder) => {
+          this.plugin.settings.folderName = newFolder;
+          this.plugin.saveSettings();
+          this.getFilesByFolder();
+        });
+      // @ts-ignore
+      cb.containerEl.addClass('bulk_rename');
+      cb.inputEl.addClass('bulk_input');
+      cb.inputEl.onblur = this.reRenderPreview;
+    });
   }
 
   renderTagNames() {
@@ -183,31 +180,28 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       return;
     }
 
-    new Setting(this.containerEl)
-      .setName('Tag names ')
-      .setDesc('all files with the tags will be found')
-      .addSearch((cb) => {
-        cb.inputEl.addEventListener('keydown', (event) => {
-          if (event.key !== 'Enter') {
-            return;
-          }
-          const target = event.target as HTMLInputElement;
+    new Setting(this.containerEl).setName('Tag names ').addSearch((cb) => {
+      cb.inputEl.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') {
+          return;
+        }
+        const target = event.target as HTMLInputElement;
 
-          this.plugin.settings.tags = target.value.replace(/ /g, '').split(',');
-          this.plugin.saveSettings();
-        });
-        cb.setPlaceholder('Example: #tag, #tag2')
-          .setValue(this.plugin.settings.tags.join(','))
-          .onChange((newFolder) => {
-            this.plugin.settings.tags = newFolder.replace(/ /g, '').split(',');
-            this.plugin.saveSettings();
-            this.getFilesByTags();
-          });
-        // @ts-ignore
-        cb.containerEl.addClass('bulk_rename');
-        cb.inputEl.addClass('bulk_input');
-        cb.inputEl.onblur = this.reRenderPreview;
+        this.plugin.settings.tags = target.value.replace(/ /g, '').split(',');
+        this.plugin.saveSettings();
       });
+      cb.setPlaceholder('Example: #tag, #tag2')
+        .setValue(this.plugin.settings.tags.join(','))
+        .onChange((newFolder) => {
+          this.plugin.settings.tags = newFolder.replace(/ /g, '').split(',');
+          this.plugin.saveSettings();
+          this.getFilesByTags();
+        });
+      // @ts-ignore
+      cb.containerEl.addClass('bulk_rename');
+      cb.inputEl.addClass('bulk_input');
+      cb.inputEl.onblur = this.reRenderPreview;
+    });
   }
 
   renderRegExpInput() {

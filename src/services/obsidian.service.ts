@@ -29,7 +29,7 @@ export const getObsidianFilesByRegExp = (
   const abstractFiles = app.vault.getAllLoadedFiles();
 
   const matchedFileNames = abstractFiles.filter((file) => {
-    if (file instanceof TFile && XRegExp.match(file.path, regExp)) {
+    if (file instanceof TFile && XRegExp.exec(file.path, regExp)) {
       return true;
     }
   }) as TFile[];
