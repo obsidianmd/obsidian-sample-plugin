@@ -106,6 +106,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       this.reRenderPreview();
     });
 
+    this.containerEl.addClass('bulk_rename_plugin');
     this.renderTabs();
     this.renderFileLocation();
     this.renderTagNames();
@@ -214,16 +215,11 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       return;
     }
 
-    const desc = document.createDocumentFragment();
-    desc.append(
-      desc.createEl('b', {
-        text: 'Reg exp will match file Operation System path',
-      }),
-    );
-
-    new Setting(this.containerEl)
+    const settings = new Setting(this.containerEl);
+    settings.infoEl.addClass('bulk_regexp_search');
+    settings.setClass('bulk_regexp_container');
+    settings
       .setName('RegExp Search')
-      .setDesc(desc)
       .addText((cb) => {
         const backslash = createBackslash('/');
         cb.inputEl.insertAdjacentElement('beforebegin', backslash);
@@ -276,9 +272,9 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       return;
     }
 
-    const newSettings2 = new Setting(this.containerEl);
-
-    newSettings2
+    const newSettings = new Setting(this.containerEl);
+    newSettings.setClass('bulk_toggle');
+    newSettings
       .setName('Use RegExp For Existing & Replacement?')
       .setDesc(
         "Only RegExp will work now, however it doesn't prevent you to pass string",
