@@ -1,4 +1,5 @@
 import { App, Notice, TFile } from 'obsidian';
+import XRegExp from 'xregexp';
 import BulkRenamePlugin, { BulkRenamePluginSettings } from '../../main';
 import { isViewTypeFolder } from './settings.service';
 import { ROOT_FOLDER_NAME } from '../constants/folders';
@@ -49,16 +50,24 @@ export const selectFilenamesWithReplacedPath = (plugin: BulkRenamePlugin) => {
 
 export const replaceFilePath = (plugin: BulkRenamePlugin, file: TFile) => {
   const pathWithoutExtension = file.path.split('.').slice(0, -1).join('.');
-  const { replacePattern, existingSymbol } = plugin.settings;
+  const { replacePattern, existingSymbol, regExpState } = plugin.settings;
 
   if (isRootFilesSelected(plugin)) {
     const newPath = replacePattern + pathWithoutExtension;
     return `${newPath}.${file.extension}`;
   }
 
-  const convertedToRegExpString = escapeRegExp(existingSymbol);
-  const regExpSymbol = new RegExp(convertedToRegExpString, 'g');
-  const newPath = pathWithoutExtension?.replace(regExpSymbol, replacePattern);
+  let regExpExistingSymbol: RegExp | string = existingSymbol;
+  if (regExpState.withRegExpForReplaceSymbols) {
+    regExpExistingSymbol = XRegExp(existingSymbol, 'x');
+  }
+
+  const newPath = XRegExp.replace(
+    pathWithoutExtension,
+    regExpExistingSymbol,
+    replacePattern,
+    'all',
+  );
 
   return `${newPath}.${file.extension}`;
 };
@@ -101,13 +110,6 @@ export const renameFilesInObsidian = async (
   }
   success && new Notice('successfully renamed all files');
 };
-
-let reRegExpChar = /[\\^$.*+?()[\]{}]/g,
-  reHasRegExpChar = RegExp(reRegExpChar.source);
-
-export function escapeRegExp(s: string) {
-  return s && reHasRegExpChar.test(s) ? s.replace(reRegExpChar, '\\$&') : s;
-}
 
 const isRootFilesSelected = (plugin: BulkRenamePlugin) => {
   const { existingSymbol, folderName } = plugin.settings;

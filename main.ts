@@ -34,6 +34,7 @@ export interface BulkRenamePluginSettings {
   tags: string[];
   regExpState: {
     regExp: string;
+    withRegExpForReplaceSymbols: boolean;
     flags: RegExpFlag[];
   };
   viewType: 'tags' | 'folder' | 'regexp';
@@ -47,6 +48,7 @@ const DEFAULT_SETTINGS: BulkRenamePluginSettings = {
   regExpState: {
     regExp: '',
     flags: [],
+    withRegExpForReplaceSymbols: false,
   },
   tags: [],
   viewType: 'folder',
@@ -269,20 +271,48 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       .controlEl.addClass('bulk_regexp_control');
   }
 
+  renderUseRegExpForExistingAndReplacement() {
+    if (!isViewTypeRegExp(this.plugin.settings)) {
+      return;
+    }
+
+    const newSettings2 = new Setting(this.containerEl);
+
+    newSettings2
+      .setName('Use RegExp For Existing & Replacement?')
+      .setDesc(
+        "Only RegExp will work now, however it doesn't prevent you to pass string",
+      )
+      .addToggle((toggle) => {
+        toggle
+          .setValue(
+            this.plugin.settings.regExpState.withRegExpForReplaceSymbols,
+          )
+          .setTooltip('Use RegExp For Existing & Replacement?')
+          .onChange((isRegExpForNames) => {
+            this.plugin.settings.regExpState.withRegExpForReplaceSymbols =
+              isRegExpForNames;
+            this.reRenderPreview();
+            this.plugin.saveSettings();
+          });
+      });
+  }
+
   renderReplaceSymbol() {
     const { settings } = this.plugin;
 
+    this.renderUseRegExpForExistingAndReplacement();
     const newSettings = new Setting(this.containerEl);
-    newSettings.infoEl.style.display = 'none';
-
-    newSettings.addText((textComponent) => {
-      if (Platform.isDesktop) {
-        const previewLabel = createPreviewElement('Existing');
-        textComponent.inputEl.insertAdjacentElement(
-          'beforebegin',
-          previewLabel,
-        );
-      }
+    if (Platform.isDesktop) {
+      const previewLabel = createPreviewElement('Existing');
+      const replacementLabel = createPreviewElement('Replacement');
+      newSettings.infoEl.replaceChildren(previewLabel, replacementLabel);
+      newSettings.setClass('flex');
+      newSettings.setClass('flex-col');
+      newSettings.infoEl.addClass('bulk_info');
+    }
+    newSettings.controlEl.addClass('replaceRenderSymbols');
+    newSettings.addTextArea((textComponent) => {
       textComponent.setValue(settings.existingSymbol);
       textComponent.setPlaceholder('existing chars');
       textComponent.onChange((newValue) => {
@@ -293,14 +323,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       textComponent.inputEl.onblur = this.reRenderPreview;
     });
 
-    newSettings.addText((textComponent) => {
-      if (Platform.isDesktop) {
-        const previewLabel = createPreviewElement('Replacement');
-        textComponent.inputEl.insertAdjacentElement(
-          'beforebegin',
-          previewLabel,
-        );
-      }
+    newSettings.addTextArea((textComponent) => {
       textComponent.setValue(settings.replacePattern);
       textComponent.setPlaceholder('replace with');
       textComponent.onChange((newValue) => {
@@ -323,7 +346,7 @@ export class BulkRenameSettingsTab extends PluginSettingTab {
       text: `Total Files: ${this.plugin.settings.fileNames.length}`,
     });
 
-    this.filesAndPreview.infoEl.style.display = 'none';
+    this.filesAndPreview.infoEl.detach();
 
     this.filesAndPreview.controlEl.addClass('bulk_rename_preview');
     this.reRenderPreview();

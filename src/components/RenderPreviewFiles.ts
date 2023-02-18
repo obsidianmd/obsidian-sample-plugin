@@ -52,6 +52,7 @@ export const syncScrolls = (
 ) => {
   existingFilesArea.addEventListener('scroll', (event) => {
     const target = event.target as HTMLTextAreaElement;
+
     if (target.scrollTop !== state.previewScroll) {
       previewArea.scrollTop = target.scrollTop;
       state.previewScroll = target.scrollTop;

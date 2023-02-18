@@ -8,8 +8,36 @@
   gap: 0;
 }
 
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+
+.m-auto {
+  margin: auto;
+}
+
+.bulk_info {
+  display: flex;
+  justify-content: space-between;
+  margin: auto;
+  width: 100%;
+}
+
 .bulk_rename_preview > textarea {
   height: 360px;
+}
+
+.replaceRenderSymbols {
+  display: flex;
+  width: 100%;
+  padding-top: 1rem;
+}
+
+.setting-item-control .bulk_preview_textarea {
+  min-width: 19em;
 }
 
 .bulk_preview_textarea {
@@ -19,9 +47,6 @@
   width: 100%;
   height: 400px;
   resize: none;
-  width: 100%;
-  /*white-space: nowrap;*/
-  /*overflow: auto;*/
 }
 
 .bulk_button {
@@ -33,12 +58,18 @@
   margin-bottom: 5px;
 }
 
-.bulk_input {
+.setting-item-control .bulk_input {
   width: 100%;
+  resize: none;
+  min-width: auto;
+  min-height: auto;
+}
+
+.setting-item-control .bulk_input:first-child {
   margin-right: 15px;
 }
 
-.bulk_preview_label {
+.bulk_preview_label:first-child {
   margin-right: 15px;
 }
 
