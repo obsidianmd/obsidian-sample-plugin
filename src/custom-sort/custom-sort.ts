@@ -1,5 +1,6 @@
 import {
 	App,
+	CommunityPlugin,
 	FrontMatterCache,
 	InstalledPlugin,
 	requireApiVersion,
@@ -8,9 +9,19 @@ import {
 	TFolder
 } from 'obsidian';
 import {
+	determineStarredStatusOf,
+	getStarredPlugin,
 	Starred_PluginInstance,
 	StarredPlugin_findStarredFile_methodName
-} from '../utils/StarredPluginSignature'
+} from '../utils/StarredPluginSignature';
+import {
+	determineIconOf,
+	getIconFolderPlugin,
+	FolderIconObject,
+	ObsidianIconFolder_PluginInstance,
+	ObsidianIconFolderPlugin_Data,
+	ObsidianIconFolderPlugin_getData_methodName
+} from '../utils/ObsidianIconFolderPluginSignature'
 import {
 	CustomSortGroup,
 	CustomSortGroupType,
@@ -154,6 +165,7 @@ export const matchGroupRegex = (theRegex: RegExpSpec, nameForMatching: string): 
 
 export interface Context {
 	starredPluginInstance?: Starred_PluginInstance
+	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
 
 export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: Context): FolderItemForSorting {
@@ -253,14 +265,21 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				break
 			case CustomSortGroupType.StarredOnly:
 				if (ctx?.starredPluginInstance) {
-					let starred: boolean
-					if (aFile) {
-						starred = !!ctx.starredPluginInstance[StarredPlugin_findStarredFile_methodName]({path: entry.path})
-					} else { // aFolder
-						starred = determineStarredStatusOfFolder(entry as TFolder, ctx.starredPluginInstance)
-					}
+					let starred: boolean = determineStarredStatusOf(entry, aFile, ctx.starredPluginInstance)
 					if (starred) {
 						determined = true
+					}
+				}
+				break
+			case CustomSortGroupType.IconFolderPlugin:
+				if(ctx?.iconFolderPluginInstance) {
+					let iconName: string | undefined = determineIconOf(entry, ctx.iconFolderPluginInstance)
+					if (iconName) {
+						if (group.folderIconName) {
+							determined = iconName === group.folderIconName
+						} else {
+							determined = true
+						}
 					}
 				}
 				break
@@ -389,25 +408,6 @@ export const determineDatesForFolder = (folder: TFolder, now: number): [Modified
 	return [mtimeOfFolder, ctimeNewestOfFolder, ctimeOldestOfFolder]
 }
 
-export const StarredCorePluginId: string = 'starred'
-
-export const getStarredPlugin = (app?: App): Starred_PluginInstance | undefined => {
-	const starredPlugin: InstalledPlugin | undefined = app?.internalPlugins?.getPluginById(StarredCorePluginId)
-	if (starredPlugin && starredPlugin.enabled && starredPlugin.instance) {
-		const starredPluginInstance: Starred_PluginInstance = starredPlugin.instance as Starred_PluginInstance
-		// defensive programming, in case Obsidian changes its internal APIs
-		if (typeof starredPluginInstance?.[StarredPlugin_findStarredFile_methodName] === 'function') {
-			return starredPluginInstance
-		}
-	}
-}
-
-export const determineStarredStatusOfFolder = (folder: TFolder, starredPluginInstance: Starred_PluginInstance): boolean => {
-	return folder.children.some((folderItem) => {
-		return !isFolder(folderItem) && starredPluginInstance[StarredPlugin_findStarredFile_methodName]({path: folderItem.path})
-	})
-}
-
 export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec) => {
 	const Now: number = Date.now()
 	folderItems.forEach((item) => {
@@ -427,6 +427,7 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 	let fileExplorer = this.fileExplorer
 	sortingSpec._mCache = sortingSpec.plugin?.app.metadataCache
 	const starredPluginInstance: Starred_PluginInstance | undefined = getStarredPlugin(sortingSpec?.plugin?.app)
+	const iconFolderPluginInstance: ObsidianIconFolder_PluginInstance | undefined = getIconFolderPlugin(sortingSpec?.plugin?.app)
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
 		this.file.children.filter((entry: TFile | TFolder) => {
@@ -436,7 +437,8 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 		this.file.children)
 		.map((entry: TFile | TFolder) => {
 			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, {
-				starredPluginInstance: starredPluginInstance
+				starredPluginInstance: starredPluginInstance,
+				iconFolderPluginInstance: iconFolderPluginInstance
 			})
 			return itemForSorting
 		})
