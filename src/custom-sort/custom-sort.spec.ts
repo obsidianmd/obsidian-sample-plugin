@@ -1071,14 +1071,14 @@ describe('determineSortingGroup', () => {
 			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(2)
 		})
 	})
-	describe('CustomSortGroupType.IconFolderPlugin', () => {
+	describe('CustomSortGroupType.HasIcon', () => {
 		it('should not match file w/o icon', () => {
 			// given
 			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin
+					type: CustomSortGroupType.HasIcon
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1110,8 +1110,8 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin,
-					folderIconName: 'IncorrectIconName'
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'IncorrectIconName'
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1146,7 +1146,7 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin
+					type: CustomSortGroupType.HasIcon
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1181,8 +1181,8 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin,
-					folderIconName: 'CorrectIconName'
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'CorrectIconName'
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1217,7 +1217,7 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin
+					type: CustomSortGroupType.HasIcon
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1257,7 +1257,7 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin
+					type: CustomSortGroupType.HasIcon
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1300,7 +1300,7 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin
+					type: CustomSortGroupType.HasIcon
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1346,8 +1346,8 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin,
-					folderIconName: 'ConfiguredIcon-by-string'
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon-by-string'
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1390,8 +1390,8 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin,
-					folderIconName: 'ConfiguredIcon'
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon'
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1437,8 +1437,8 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin,
-					folderIconName: 'ConfiguredIcon-by-string'
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon-by-string'
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
@@ -1481,8 +1481,8 @@ describe('determineSortingGroup', () => {
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.IconFolderPlugin,
-					folderIconName: 'ConfiguredIcon'
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon'
 				}]
 			}
 			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {

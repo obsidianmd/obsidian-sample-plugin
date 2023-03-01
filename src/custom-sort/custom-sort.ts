@@ -271,12 +271,12 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 					}
 				}
 				break
-			case CustomSortGroupType.IconFolderPlugin:
+			case CustomSortGroupType.HasIcon:
 				if(ctx?.iconFolderPluginInstance) {
 					let iconName: string | undefined = determineIconOf(entry, ctx.iconFolderPluginInstance)
 					if (iconName) {
-						if (group.folderIconName) {
-							determined = iconName === group.folderIconName
+						if (group.iconName) {
+							determined = iconName === group.iconName
 						} else {
 							determined = true
 						}

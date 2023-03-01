@@ -9,7 +9,7 @@ export enum CustomSortGroupType {
 	ExactHeadAndTail, // Like W...n or Un...ed, which is shorter variant of typing the entire title
 	HasMetadataField,  // Notes (or folder's notes) containing a specific metadata field
 	StarredOnly,
-	IconFolderPlugin
+	HasIcon
 }
 
 export enum CustomSortOrder {
@@ -60,7 +60,7 @@ export interface CustomSortGroup {
 	matchFilenameWithExt?: boolean
 	foldersOnly?: boolean
 	withMetadataFieldName?: string // for 'with-metadata:' grouping
-	folderIconName?: string // for integration with obsidian-folder-icon community plugin
+	iconName?: string // for integration with obsidian-folder-icon community plugin
 	priority?: number
 	combineWithIdx?: number
 }

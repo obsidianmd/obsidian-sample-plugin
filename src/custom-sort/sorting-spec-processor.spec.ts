@@ -1,7 +1,9 @@
 import {
 	CompoundDashNumberNormalizerFn,
 	CompoundDashRomanNumberNormalizerFn,
-	CompoundDotNumberNormalizerFn, ConsumedFolderMatchingRegexp, consumeFolderByRegexpExpression,
+	CompoundDotNumberNormalizerFn,
+	ConsumedFolderMatchingRegexp,
+	consumeFolderByRegexpExpression,
 	convertPlainStringToRegex,
 	detectNumericSortingSymbols,
 	escapeRegexUnsafeCharacters,
@@ -29,6 +31,8 @@ target-folder: tricky folder
  < a-z by-metadata: Some-dedicated-field
 with-metadata: Pages 
  > a-z by-metadata: 
+/: with-icon:
+with-icon: RiClock24
 starred:
 /:files starred:
 /folders starred:
@@ -85,6 +89,8 @@ target-folder: tricky folder 2
  < a-z by-metadata: Some-dedicated-field
 % with-metadata: Pages 
  > a-z by-metadata:
+/:files with-icon:
+/folders:files with-icon: RiClock24 
 /folders:files starred:
 /:files starred:
 /folders starred:
@@ -172,6 +178,14 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			withMetadataFieldName: 'Pages',
 			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
 		}, {
+			type: CustomSortGroupType.HasIcon,
+			order: CustomSortOrder.alphabetical,
+			filesOnly: true
+		}, {
+			type: CustomSortGroupType.HasIcon,
+			order: CustomSortOrder.alphabetical,
+			iconName: 'RiClock24'
+		}, {
 			type: CustomSortGroupType.StarredOnly,
 			order: CustomSortOrder.alphabetical
 		}, {
@@ -186,7 +200,7 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			order: CustomSortOrder.alphabetical,
 			type: CustomSortGroupType.Outsiders
 		}],
-		outsidersGroupIdx: 5,
+		outsidersGroupIdx: 7,
 		targetFoldersPaths: [
 			'tricky folder 2'
 		]
