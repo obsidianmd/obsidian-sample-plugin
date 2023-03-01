@@ -207,6 +207,8 @@ const MetadataFieldIndicatorLexeme: string = 'with-metadata:'
 
 const StarredItemsIndicatorLexeme: string = 'starred:'
 
+const IconIndicatorLexeme: string = 'with-icon:'
+
 const CommentPrefix: string = '//'
 
 const PriorityModifierPrio1Lexeme: string = '/!'
@@ -1485,6 +1487,15 @@ export class SortingSpecProcessor {
 					return {
 						type: CustomSortGroupType.HasMetadataField,
 						withMetadataFieldName: metadataFieldName,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
+				} else if (theOnly.startsWith(IconIndicatorLexeme)) {
+					const iconName: string | undefined = extractIdentifier(theOnly.substring(IconIndicatorLexeme.length))
+					return {
+						type: CustomSortGroupType.HasIcon,
+						iconName: iconName,
 						filesOnly: spec.filesOnly,
 						foldersOnly: spec.foldersOnly,
 						matchFilenameWithExt: spec.matchFilenameWithExt

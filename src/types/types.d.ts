@@ -12,7 +12,24 @@ declare module 'obsidian' {
 		id: string;
 	}
 
+	export type CommunityPluginId = string
+
+	// undocumented internal interface - for experimental features
+	export interface CommunityPlugin {
+		manifest: {
+			id: CommunityPluginId
+		}
+		_loaded: boolean
+	}
+
+	// undocumented internal interface - for experimental features
+	export interface CommunityPlugins {
+		enabledPlugins: Set<CommunityPluginId>
+		plugins: {[key: CommunityPluginId]: CommunityPlugin}
+	}
+
 	export interface App {
+		plugins: CommunityPlugins;
 		internalPlugins: InternalPlugins; // undocumented internal API - for experimental features
 		viewRegistry: ViewRegistry;
 	}

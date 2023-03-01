@@ -12,6 +12,10 @@ import {
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, RegExpSpec} from './custom-sort-types';
 import {CompoundDashNumberNormalizerFn, CompoundDotRomanNumberNormalizerFn} from "./sorting-spec-processor";
 import {findStarredFile_pathParam, Starred_PluginInstance} from "../utils/StarredPluginSignature";
+import {
+	ObsidianIconFolder_PluginInstance,
+	ObsidianIconFolderPlugin_Data
+} from "../utils/ObsidianIconFolderPluginSignature";
 
 const mockTFile = (basename: string, ext: string, size?: number, ctime?: number, mtime?: number): TFile => {
 	return {
@@ -1065,6 +1069,458 @@ describe('determineSortingGroup', () => {
 			});
 				// assume optimized checking of starred items -> first match ends the check
 			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(2)
+		})
+	})
+	describe('CustomSortGroupType.HasIcon', () => {
+		it('should not match file w/o icon', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {settings: {}}  // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1,  // The lastIdx+1, group not determined
+				isFolder: false,
+				sortString: "References.md",
+				ctimeNewest: MOCK_TIMESTAMP + 222,
+				ctimeOldest: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md'
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should not match file with icon of different name', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'IncorrectIconName'
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'Some parent folder/References.md': 'CorrectIconName'
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1,  // The lastIdx+1, group not determined
+				isFolder: false,
+				sortString: "References.md",
+				ctimeNewest: MOCK_TIMESTAMP + 222,
+				ctimeOldest: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md'
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should match file with any icon', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'Some parent folder/References.md': 'Irrelevant icon name, only presence matters'
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctimeNewest: MOCK_TIMESTAMP + 222,
+				ctimeOldest: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md'
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should match file with icon of expected name', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'CorrectIconName'
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'Some parent folder/References.md': 'CorrectIconName'
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctimeNewest: MOCK_TIMESTAMP + 222,
+				ctimeOldest: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md'
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should not match folder w/o icon', () => {
+			// given
+			const folder: TFolder = mockTFolder('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {settings: {}}  // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1,  // The lastIdx+1, group not determined
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: [],
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should match folder with any icon (icon specified by string alone)', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'TestEmptyFolder': 'Irrelevant icon name, only presence matters'
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should match folder with any icon (icon specified together with inheritance)', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'TestEmptyFolder': {
+							iconName: 'ConfiguredIcon',
+							inheritanceIcon: 'ConfiguredInheritanceIcon'
+						}
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should match folder with specified icon (icon specified by string alone)', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon-by-string'
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'TestEmptyFolder': 'ConfiguredIcon-by-string'
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should match folder with specified icon (icon specified together with inheritance)', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon'
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'TestEmptyFolder': {
+							iconName: 'ConfiguredIcon',
+							inheritanceIcon: 'ConfiguredInheritanceIcon'
+						}
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should not match folder with different icon (icon specified by string alone)', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon-by-string'
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'TestEmptyFolder': 'AnotherConfiguredIcon-by-string'
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1, // lastIdx+1 - no match
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
+		})
+		it('should not match folder with different icon (icon specified together with inheritance)', () => {
+			// given
+			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasIcon,
+					iconName: 'ConfiguredIcon'
+				}]
+			}
+			const obsidianIconFolderPluginInstance: Partial<ObsidianIconFolder_PluginInstance> = {
+				getData: jest.fn( function(): ObsidianIconFolderPlugin_Data {
+					return {
+						settings: {}, // The obsidian-folder-icon plugin keeps the settings there indeed ;-)
+						'TestEmptyFolder': {
+							iconName: 'OtherConfiguredIcon',
+							inheritanceIcon: 'ConfiguredInheritanceIcon'
+						}
+					}
+				})
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, {
+				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
+			})
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 1,  // lastIdx+1 - no match
+				isFolder: true,
+				sortString: "TestEmptyFolder",
+				ctimeNewest: 0,
+				ctimeOldest: 0,
+				mtime: 0,
+				path: 'TestEmptyFolder',
+				folder: {
+					children: expect.any(Array),
+					isRoot: expect.any(Function),
+					name: "TestEmptyFolder",
+					parent: {},
+					path: "TestEmptyFolder",
+					vault: {}
+				}
+			});
+			expect(obsidianIconFolderPluginInstance.getData).toHaveBeenCalledTimes(1)
 		})
 	})
 	describe('when sort by metadata is involved', () => {
