@@ -3,15 +3,22 @@ import {
 	getNormalizedRomanNumber,
 	prependWithZeros,
 	romanToIntStr,
-	NumberRegex,
-	CompoundNumberDotRegex,
-	CompoundNumberDashRegex,
-	RomanNumberRegex,
-	CompoundRomanNumberDotRegex,
-	CompoundRomanNumberDashRegex
+	NumberRegexStr,
+	CompoundNumberDotRegexStr,
+	CompoundNumberDashRegexStr,
+	RomanNumberRegexStr,
+	CompoundRomanNumberDotRegexStr,
+	CompoundRomanNumberDashRegexStr,
+	WordInASCIIRegexStr,
+	WordInAnyLanguageRegexStr
 } from "./matchers";
+import {SortingSpecProcessor} from "./sorting-spec-processor";
 
 describe('Plain numbers regexp', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + NumberRegexStr, 'i');
+	});
 	it.each([
 		['', null],
 		[' ', null],
@@ -23,7 +30,7 @@ describe('Plain numbers regexp', () => {
 		['9', '9'],
 		['7328964783268794325496783', '7328964783268794325496783']
 	])('%s => %s', (s: string, out: string | null) => {
-		const match: RegExpMatchArray | null = s.match(NumberRegex)
+		const match: RegExpMatchArray | null = s.match(regexp)
 		if (out) {
 			expect(match).not.toBeNull()
 			expect(match?.[1]).toBe(out)
@@ -34,6 +41,10 @@ describe('Plain numbers regexp', () => {
 })
 
 describe('Plain compound numbers regexp (dot)', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + CompoundNumberDotRegexStr, 'i');
+	});
 	it.each([
 		['', null],
 		[' ', null],
@@ -55,7 +66,7 @@ describe('Plain compound numbers regexp (dot)', () => {
 		['56.78.-.1abc', '56.78'],
 		['56.78-.1abc', '56.78'],
 	])('%s => %s', (s: string, out: string | null) => {
-		const match: RegExpMatchArray | null = s.match(CompoundNumberDotRegex)
+		const match: RegExpMatchArray | null = s.match(regexp)
 		if (out) {
 			expect(match).not.toBeNull()
 			expect(match?.[1]).toBe(out)
@@ -66,6 +77,10 @@ describe('Plain compound numbers regexp (dot)', () => {
 })
 
 describe('Plain compound numbers regexp (dash)', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + CompoundNumberDashRegexStr, 'i');
+	});
 	it.each([
 		['', null],
 		[' ', null],
@@ -87,7 +102,7 @@ describe('Plain compound numbers regexp (dash)', () => {
 		['56-78-.-1abc', '56-78'],
 		['56-78.-1abc', '56-78'],
 	])('%s => %s', (s: string, out: string | null) => {
-		const match: RegExpMatchArray | null = s.match(CompoundNumberDashRegex)
+		const match: RegExpMatchArray | null = s.match(regexp)
 		if (out) {
 			expect(match).not.toBeNull()
 			expect(match?.[1]).toBe(out)
@@ -98,6 +113,10 @@ describe('Plain compound numbers regexp (dash)', () => {
 })
 
 describe('Plain Roman numbers regexp', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + RomanNumberRegexStr, 'i');
+	});
 	it.each([
 		['', null],
 		[' ', null],
@@ -109,7 +128,7 @@ describe('Plain Roman numbers regexp', () => {
 		['iiiii', 'iiiii'],
 		['viviviv794325496783', 'viviviv']
 	])('%s => %s', (s: string, out: string | null) => {
-		const match: RegExpMatchArray | null = s.match(RomanNumberRegex)
+		const match: RegExpMatchArray | null = s.match(regexp)
 		if (out) {
 			expect(match).not.toBeNull()
 			expect(match?.[1]).toBe(out)
@@ -120,6 +139,10 @@ describe('Plain Roman numbers regexp', () => {
 })
 
 describe('Roman compound numbers regexp (dot)', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + CompoundRomanNumberDotRegexStr, 'i');
+	});
 	it.each([
 		['', null],
 		[' ', null],
@@ -143,7 +166,7 @@ describe('Roman compound numbers regexp (dot)', () => {
 		['xvx.d-.iabc', 'xvx.d'],
 		['xvx.d..iabc', 'xvx.d'],
 	])('%s => %s', (s: string, out: string | null) => {
-		const match: RegExpMatchArray | null = s.match(CompoundRomanNumberDotRegex)
+		const match: RegExpMatchArray | null = s.match(regexp)
 		if (out) {
 			expect(match).not.toBeNull()
 			expect(match?.[1]).toBe(out)
@@ -154,6 +177,10 @@ describe('Roman compound numbers regexp (dot)', () => {
 })
 
 describe('Roman compound numbers regexp (dash)', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + CompoundRomanNumberDashRegexStr, 'i');
+	});
 	it.each([
 		['', null],
 		[' ', null],
@@ -177,7 +204,65 @@ describe('Roman compound numbers regexp (dash)', () => {
 		['xvx-d.-iabc', 'xvx-d'],
 		['xvx-d--iabc', 'xvx-d']
 	])('%s => %s', (s: string, out: string | null) => {
-		const match: RegExpMatchArray | null = s.match(CompoundRomanNumberDashRegex)
+		const match: RegExpMatchArray | null = s.match(regexp)
+		if (out) {
+			expect(match).not.toBeNull()
+			expect(match?.[1]).toBe(out)
+		} else {
+			expect(match).toBeNull()
+		}
+	})
+})
+
+describe('ASCII word regexp', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + WordInASCIIRegexStr, 'i');
+	});
+	it.each([
+		['', null],
+		[' ', null],
+		[' I', null], // leading spaces are not swallowed
+		['I ', 'I'], // trailing spaces are swallowed
+		['Abc', 'Abc'],
+		['Sun', 'Sun'],
+		['Hello123', 'Hello'],
+		['John_', 'John'],
+		['Title.', 'Title'],
+		['Deutschstäder', 'Deutschst'],
+		['ItalianoàèéìòùÈ', 'Italiano'],
+		['PolskićśńĄł', 'Polski']
+	])('%s => %s', (s: string, out: string | null) => {
+		const match: RegExpMatchArray | null = s.match(regexp)
+		if (out) {
+			expect(match).not.toBeNull()
+			expect(match?.[1]).toBe(out)
+		} else {
+			expect(match).toBeNull()
+		}
+	})
+})
+
+describe('Unicode word regexp', () => {
+	let regexp: RegExp;
+	beforeEach(() => {
+		regexp = new RegExp('^' + WordInAnyLanguageRegexStr, 'ui');
+	});
+	it.each([
+		['', null],
+		[' ', null],
+		[' I', null], // leading spaces are not swallowed
+		['I ', 'I'], // trailing characters are ignored in unit test
+		['Abc', 'Abc'],
+		['Sun', 'Sun'],
+		['Hello123', 'Hello'],
+		['John_', 'John'],
+		['Title.', 'Title'],
+		['Deutschstäder_', 'Deutschstäder'],
+		['ItalianoàèéìòùÈ', 'ItalianoàèéìòùÈ'],
+		['PolskićśńĄł', 'PolskićśńĄł']
+	])('%s => %s', (s: string, out: string | null) => {
+		const match: RegExpMatchArray | null = s.match(regexp)
 		if (out) {
 			expect(match).not.toBeNull()
 			expect(match?.[1]).toBe(out)

@@ -4,6 +4,7 @@ import {
 	CustomSortOrder,
 	CustomSortSpec,
 	DEFAULT_METADATA_FIELD_FOR_SORTING,
+	IdentityNormalizerFn,
 	NormalizerFn,
 	RecognizedOrderValue,
 	RegExpSpec
@@ -19,10 +20,11 @@ import {
 	getNormalizedNumber,
 	getNormalizedRomanNumber,
 	NumberRegexStr,
-	RomanNumberRegexStr
+	RomanNumberRegexStr,
+	WordInAnyLanguageRegexStr,
+	WordInASCIIRegexStr
 } from "./matchers";
 import {
-	FolderMatchingRegexp,
 	FolderWildcardMatching,
 	MATCH_ALL_SUFFIX,
 	MATCH_CHILDREN_1_SUFFIX,
@@ -62,8 +64,8 @@ export enum ProblemCode {
 	NoSpaceBetweenAttributeAndValue,
 	InvalidAttributeValue,
 	TargetFolderNestedSpec,
-	TooManyNumericSortingSymbols,
-	NumericalSymbolAdjacentToWildcard,
+	TooManySortingSymbols,
+	SortingSymbolAdjacentToWildcard,
 	ItemToHideExactNameWithExtRequired,
 	ItemToHideNoSupportForThreeDots,
 	DuplicateWildcardSortSpecForSameFolder,
@@ -279,6 +281,9 @@ const NumberRegexSymbol: string = '\\d+'               // Plain number
 const CompoundNumberDotRegexSymbol: string = '\\.d+'   // Compound number with dot as separator
 const CompoundNumberDashRegexSymbol: string = '\\-d+'  // Compound number with dash as separator
 
+const WordInASCIIRegexSymbol: string = '\\a+'
+const WordInAnyLanguageRegexSymbol: string = '\\A+'
+
 const InlineRegexSymbol_Digit1: string = '\\d'
 const InlineRegexSymbol_Digit2: string = '\\[0-9]'
 const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
@@ -289,16 +294,18 @@ export const escapeRegexUnsafeCharacters = (s: string): string => {
 	return s.replace(UnsafeRegexCharsRegex, '\\$&')
 }
 
-const numericSortingSymbolsArr: Array<string> = [
+const sortingSymbolsArr: Array<string> = [
 	escapeRegexUnsafeCharacters(NumberRegexSymbol),
 	escapeRegexUnsafeCharacters(RomanNumberRegexSymbol),
 	escapeRegexUnsafeCharacters(CompoundNumberDotRegexSymbol),
 	escapeRegexUnsafeCharacters(CompoundNumberDashRegexSymbol),
 	escapeRegexUnsafeCharacters(CompoundRomanNumberDotRegexSymbol),
 	escapeRegexUnsafeCharacters(CompoundRomanNumberDashRegexSymbol),
+	escapeRegexUnsafeCharacters(WordInASCIIRegexSymbol),
+	escapeRegexUnsafeCharacters(WordInAnyLanguageRegexSymbol)
 ]
 
-const numericSortingSymbolsRegex = new RegExp(numericSortingSymbolsArr.join('|'), 'gi')
+const sortingSymbolsRegex = new RegExp(sortingSymbolsArr.join('|'), 'gi')
 
 const inlineRegexSymbolsArrEscapedForRegex: Array<string> = [
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit1),
@@ -315,13 +322,13 @@ const inlineRegexSymbolsToRegexExpressionsArr: { [key: string]: string} = {
 
 const inlineRegexSymbolsDetectionRegex = new RegExp(inlineRegexSymbolsArrEscapedForRegex.join('|'), 'gi')
 
-export const hasMoreThanOneNumericSortingSymbol = (s: string): boolean => {
-	numericSortingSymbolsRegex.lastIndex = 0
-	return numericSortingSymbolsRegex.test(s) && numericSortingSymbolsRegex.test(s)
+export const hasMoreThanOneSortingSymbol = (s: string): boolean => {
+	sortingSymbolsRegex.lastIndex = 0
+	return sortingSymbolsRegex.test(s) && sortingSymbolsRegex.test(s)
 }
-export const detectNumericSortingSymbols = (s: string): boolean => {
-	numericSortingSymbolsRegex.lastIndex = 0
-	return numericSortingSymbolsRegex.test(s)
+export const detectSortingSymbols = (s: string): boolean => {
+	sortingSymbolsRegex.lastIndex = 0
+	return sortingSymbolsRegex.test(s)
 }
 
 export const detectInlineRegex = (s?: string): boolean => {
@@ -329,10 +336,10 @@ export const detectInlineRegex = (s?: string): boolean => {
 	return s ? inlineRegexSymbolsDetectionRegex.test(s) : false
 }
 
-export const extractNumericSortingSymbol = (s?: string): string | null => {
+export const extractSortingSymbol = (s?: string): string | null => {
 	if (s) {
-		numericSortingSymbolsRegex.lastIndex = 0
-		const matches: RegExpMatchArray | null = numericSortingSymbolsRegex.exec(s)
+		sortingSymbolsRegex.lastIndex = 0
+		const matches: RegExpMatchArray | null = sortingSymbolsRegex.exec(s)
 		return matches ? matches[0] : null
 	} else {
 		return null
@@ -343,6 +350,7 @@ export interface RegExpSpecStr {
 	regexpStr: string
 	normalizerFn: NormalizerFn
 	advancedRegexType: AdvancedRegexType
+	unicodeRegex?: boolean
 }
 
 // Exposed as named exports to allow unit testing
@@ -360,10 +368,12 @@ export enum AdvancedRegexType {
 	CompoundDashNumber,
 	RomanNumber,
 	CompoundDotRomanNumber,
-	CompoundDashRomanNumber
+	CompoundDashRomanNumber,
+	WordInASCII,
+	WordInAnyLanguage
 }
 
-const numericSortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
+const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 	[RomanNumberRegexSymbol.toLowerCase()]: {
 		regexpStr: RomanNumberRegexStr,
 		normalizerFn: RomanNumberNormalizerFn,
@@ -393,6 +403,17 @@ const numericSortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 		regexpStr: CompoundNumberDashRegexStr,
 		normalizerFn: CompoundDashNumberNormalizerFn,
 		advancedRegexType: AdvancedRegexType.CompoundDashNumber
+	},
+	[WordInASCIIRegexSymbol]: {  // Intentionally retain character case
+		regexpStr: WordInASCIIRegexStr,
+		normalizerFn: IdentityNormalizerFn,
+		advancedRegexType: AdvancedRegexType.WordInASCII
+	},
+	[WordInAnyLanguageRegexSymbol]: {  // Intentionally retain character case
+		regexpStr: WordInAnyLanguageRegexStr,
+		normalizerFn: IdentityNormalizerFn,
+		advancedRegexType: AdvancedRegexType.WordInAnyLanguage,
+		unicodeRegex: true
 	}
 }
 
@@ -435,17 +456,19 @@ export const convertPlainStringToFullMatchRegex = (s: string): RegexMatcherInfo 
 export const convertPlainStringToRegex = (s: string, actAs: RegexpUsedAs): RegexMatcherInfo | null => {
 	const regexMatchesStart: boolean = [RegexpUsedAs.Prefix, RegexpUsedAs.FullMatch].includes(actAs)
 	const regexMatchesEnding: boolean = [RegexpUsedAs.Suffix, RegexpUsedAs.FullMatch].includes(actAs)
-	const detectedSymbol: string | null = extractNumericSortingSymbol(s)
+	const detectedSymbol: string | null = extractSortingSymbol(s)
 	if (detectedSymbol) {
-		const replacement: RegExpSpecStr = numericSortingSymbolToRegexpStr[detectedSymbol.toLowerCase()]
+		// for some sorting symbols lower- and upper-case syntax has different meaning, for some others not
+		const replacement: RegExpSpecStr = sortingSymbolToRegexpStr[detectedSymbol] ?? sortingSymbolToRegexpStr[detectedSymbol.toLowerCase()]
 		const [extractedPrefix, extractedSuffix] = s!.split(detectedSymbol)
 		const regexPrefix: string = regexMatchesStart ? '^' : ''
 		const regexSuffix: string = regexMatchesEnding ? '$' : ''
 		const escapedProcessedPrefix: string = convertInlineRegexSymbolsAndEscapeTheRest(extractedPrefix)
 		const escapedProcessedSuffix: string = convertInlineRegexSymbolsAndEscapeTheRest(extractedSuffix)
+		const regexFlags: string = replacement.unicodeRegex ? 'ui' : 'i'
 		return {
 			regexpSpec: {
-				regex: new RegExp(`${regexPrefix}${escapedProcessedPrefix}${replacement.regexpStr}${escapedProcessedSuffix}${regexSuffix}`, 'i'),
+				regex: new RegExp(`${regexPrefix}${escapedProcessedPrefix}${replacement.regexpStr}${escapedProcessedSuffix}${regexSuffix}`, regexFlags),
 				normalizerFn: replacement.normalizerFn
 			},
 			prefix: extractedPrefix,
@@ -680,7 +703,7 @@ const extractIdentifier = (text: string, defaultResult?: string): string | undef
 	return identifier ? identifier : defaultResult
 }
 
-const ADJACENCY_ERROR: string = "Numerical sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case."
+const ADJACENCY_ERROR: string = "Sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case."
 
 export class SortingSpecProcessor {
 	ctx: ProcessingContext
@@ -983,8 +1006,8 @@ export class SortingSpecProcessor {
 	private parseSortingGroupSpec = (line: string): ParsedSortingGroup | null => {
 		let s: string = line.trim()
 
-		if (hasMoreThanOneNumericSortingSymbol(s)) {
-			this.problem(ProblemCode.TooManyNumericSortingSymbols, 'Maximum one numeric sorting indicator allowed per line')
+		if (hasMoreThanOneSortingSymbol(s)) {
+			this.problem(ProblemCode.TooManySortingSymbols, 'Maximum one sorting symbol allowed per line')
 			return null
 		}
 
@@ -1151,7 +1174,7 @@ export class SortingSpecProcessor {
 
 		if (group.itemToHide) {
 			if (!this.consumeParsedItemToHide(group)) {
-				this.problem(ProblemCode.ItemToHideNoSupportForThreeDots, 'For hiding of file or folder, the exact name with ext is required and no numeric sorting indicator allowed')
+				this.problem(ProblemCode.ItemToHideNoSupportForThreeDots, 'For hiding of file or folder, the exact name with ext is required and no sorting symbols allowed')
 				return false
 			} else {
 				return true
@@ -1159,7 +1182,7 @@ export class SortingSpecProcessor {
 		} else { // !group.itemToHide
 			const newGroup: CustomSortGroup | null = this.consumeParsedSortingGroupSpec(group)
 			if (newGroup) {
-				if (this.adjustSortingGroupForNumericSortingSymbol(newGroup)) {
+				if (this.adjustSortingGroupForSortingSymbol(newGroup)) {
 					if (this.ctx.currentSpec) {
 						const groupIdx = this.ctx.currentSpec.groups.push(newGroup) - 1
 						this.ctx.currentSpecGroup = newGroup
@@ -1445,7 +1468,7 @@ export class SortingSpecProcessor {
 			if (!isThreeDots(theOnly)) {
 				const nameWithExt: string = theOnly.trim()
 				if (nameWithExt) { // Sanity check
-					if (!detectNumericSortingSymbols(nameWithExt)) {
+					if (!detectSortingSymbols(nameWithExt)) {
 						if (this.ctx.currentSpec) {
 							const itemsToHide: Set<string> = this.ctx.currentSpec?.itemsToHide ?? new Set<string>()
 							itemsToHide.add(nameWithExt)
@@ -1572,17 +1595,17 @@ export class SortingSpecProcessor {
 
 	// Returns true if no regex will be involved (hence no adjustment) or if correctly adjusted with regex
 	private adjustSortingGroupForRegexBasedMatchers = (group: CustomSortGroup): boolean => {
-		return this.adjustSortingGroupForNumericSortingSymbol(group)
+		return this.adjustSortingGroupForSortingSymbol(group)
 	}
 
-	// Returns true if no numeric sorting symbol (hence no adjustment) or if correctly adjusted with regex
-	private adjustSortingGroupForNumericSortingSymbol = (group: CustomSortGroup): boolean => {
+	// Returns true if no sorting symbol (hence no adjustment) or if correctly adjusted with regex
+	private adjustSortingGroupForSortingSymbol = (group: CustomSortGroup): boolean => {
 		switch (group.type) {
 			case CustomSortGroupType.ExactPrefix:
 				const regexInPrefix = convertPlainStringToLeftRegex(group.exactPrefix!)
 				if (regexInPrefix) {
 					if (regexInPrefix.containsAdvancedRegex && checkAdjacency(regexInPrefix).noSuffix) {
-						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
+						this.problem(ProblemCode.SortingSymbolAdjacentToWildcard, ADJACENCY_ERROR)
 						return false;
 					}
 					delete group.exactPrefix
@@ -1593,7 +1616,7 @@ export class SortingSpecProcessor {
 				const regexInSuffix = convertPlainStringToRightRegex(group.exactSuffix!)
 				if (regexInSuffix) {
 					if (regexInSuffix.containsAdvancedRegex && checkAdjacency(regexInSuffix).noPrefix) {
-						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
+						this.problem(ProblemCode.SortingSymbolAdjacentToWildcard, ADJACENCY_ERROR)
 						return false;
 					}
 					delete group.exactSuffix
@@ -1604,7 +1627,7 @@ export class SortingSpecProcessor {
 				const regexInHead = convertPlainStringToLeftRegex(group.exactPrefix!)
 				if (regexInHead) {
 					if (regexInHead.containsAdvancedRegex && checkAdjacency(regexInHead).noSuffix) {
-						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
+						this.problem(ProblemCode.SortingSymbolAdjacentToWildcard, ADJACENCY_ERROR)
 						return false;
 					}
 					delete group.exactPrefix
@@ -1613,7 +1636,7 @@ export class SortingSpecProcessor {
 				const regexInTail = convertPlainStringToRightRegex(group.exactSuffix!)
 				if (regexInTail) {
 					if (regexInTail.containsAdvancedRegex && checkAdjacency(regexInTail).noPrefix) {
-						this.problem(ProblemCode.NumericalSymbolAdjacentToWildcard, ADJACENCY_ERROR)
+						this.problem(ProblemCode.SortingSymbolAdjacentToWildcard, ADJACENCY_ERROR)
 						return false;
 					}
 					delete group.exactSuffix

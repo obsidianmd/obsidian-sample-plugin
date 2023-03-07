@@ -40,6 +40,7 @@ export interface RecognizedOrderValue {
 }
 
 export type NormalizerFn = (s: string) => string | null
+export const IdentityNormalizerFn: NormalizerFn = (s: string) => s
 
 export interface RegExpSpec {
 	regex: RegExp

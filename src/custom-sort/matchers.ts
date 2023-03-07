@@ -1,16 +1,10 @@
-export const RomanNumberRegex: RegExp = /^ *([MDCLXVI]+)/i;   // Roman number
-export const RomanNumberRegexStr: string = ' *([MDCLXVI]+)';
-export const CompoundRomanNumberDotRegex: RegExp = /^ *([MDCLXVI]+(?:\.[MDCLXVI]+)*)/i;   // Compound Roman number with dot as separator
-export const CompoundRomanNumberDotRegexStr: string = ' *([MDCLXVI]+(?:\\.[MDCLXVI]+)*)';
-export const CompoundRomanNumberDashRegex: RegExp = /^ *([MDCLXVI]+(?:-[MDCLXVI]+)*)/i;   // Compound Roman number with dash as separator
-export const CompoundRomanNumberDashRegexStr: string = ' *([MDCLXVI]+(?:-[MDCLXVI]+)*)';
+export const RomanNumberRegexStr: string = ' *([MDCLXVI]+)'; // Roman number
+export const CompoundRomanNumberDotRegexStr: string = ' *([MDCLXVI]+(?:\\.[MDCLXVI]+)*)';// Compound Roman number with dot as separator
+export const CompoundRomanNumberDashRegexStr: string = ' *([MDCLXVI]+(?:-[MDCLXVI]+)*)'; // Compound Roman number with dash as separator
 
-export const NumberRegex: RegExp = /^ *(\d+)/;  // Plain number
-export const NumberRegexStr: string = ' *(\\d+)';
-export const CompoundNumberDotRegex: RegExp = /^ *(\d+(?:\.\d+)*)/;  // Compound number with dot as separator
-export const CompoundNumberDotRegexStr: string = ' *(\\d+(?:\\.\\d+)*)';
-export const CompoundNumberDashRegex: RegExp = /^ *(\d+(?:-\d+)*)/;  // Compound number with dash as separator
-export const CompoundNumberDashRegexStr: string = ' *(\\d+(?:-\\d+)*)';
+export const NumberRegexStr: string = ' *(\\d+)';  // Plain number
+export const CompoundNumberDotRegexStr: string = ' *(\\d+(?:\\.\\d+)*)'; // Compound number with dot as separator
+export const CompoundNumberDashRegexStr: string = ' *(\\d+(?:-\\d+)*)'; // Compound number with dash as separator
 
 export const DOT_SEPARATOR = '.'
 export const DASH_SEPARATOR = '-'
@@ -19,6 +13,15 @@ const SLASH_SEPARATOR = '/' // ASCII 47
 const PIPE_SEPARATOR = '|'  // ASCII 124
 
 export const DEFAULT_NORMALIZATION_PLACES = 8;  // Fixed width of a normalized number (with leading zeros)
+
+// Property escapes:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Unicode_Property_Escapes
+// https://stackoverflow.com/a/48902765
+//
+// Using Unicode property escapes to express 'a letter in any modern language'
+export const WordInAnyLanguageRegexStr = '(\\p{Letter}+)'   // remember about the /u option -> /\p{Letter}+/u
+
+export const WordInASCIIRegexStr = '([a-zA-Z]+)'
 
 export function prependWithZeros(s: string, minLength: number) {
 	if (s.length < minLength) {
