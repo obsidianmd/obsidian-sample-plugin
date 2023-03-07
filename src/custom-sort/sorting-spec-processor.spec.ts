@@ -5,16 +5,16 @@ import {
 	ConsumedFolderMatchingRegexp,
 	consumeFolderByRegexpExpression,
 	convertPlainStringToRegex,
-	detectNumericSortingSymbols,
+	detectSortingSymbols,
 	escapeRegexUnsafeCharacters,
-	extractNumericSortingSymbol,
-	hasMoreThanOneNumericSortingSymbol,
+	extractSortingSymbol,
+	hasMoreThanOneSortingSymbol,
 	NumberNormalizerFn,
 	RegexpUsedAs,
 	RomanNumberNormalizerFn,
 	SortingSpecProcessor
 } from "./sorting-spec-processor"
-import {CustomSortGroupType, CustomSortOrder, CustomSortSpec} from "./custom-sort-types";
+import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, IdentityNormalizerFn} from "./custom-sort-types";
 import {FolderMatchingRegexp, FolderMatchingTreeNode} from "./folder-matching-rules";
 
 const txtInputExampleA: string = `
@@ -347,7 +347,7 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 	}
 }
 
-const expectedSortSpecsExampleNumericSortingSymbols: { [key: string]: CustomSortSpec } = {
+const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
 		groups: [{
 			foldersOnly: true,
@@ -389,20 +389,36 @@ const expectedSortSpecsExampleNumericSortingSymbols: { [key: string]: CustomSort
 				normalizerFn: NumberNormalizerFn
 			}
 		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^Here goes ASCII word ([a-zA-Z]+)$/i,
+				normalizerFn: IdentityNormalizerFn
+			}
+		}, {
+			order: CustomSortOrder.alphabetical,
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^(\p{Letter}+)\. is for any modern language word$/iu,
+				normalizerFn: IdentityNormalizerFn
+			}
+		}, {
 			type: CustomSortGroupType.Outsiders,
 			order: CustomSortOrder.alphabetical,
 		}],
 		targetFoldersPaths: ['mock-folder'],
-		outsidersGroupIdx: 5
+		outsidersGroupIdx: 7
 	}
 }
 
-const txtInputExampleNumericSortingSymbols: string = `
+const txtInputExampleSortingSymbols: string = `
 /folders Chapter \\.d+ ...  
 /:files ...section \\-r+.
 % Appendix \\-d+ (attachments)
 Plain syntax\\R+ ... works?
 And this kind of... \\D+plain syntax???
+Here goes ASCII word \\a+
+\\A+. is for any modern language word
 `
 
 describe('SortingSpecProcessor', () => {
@@ -420,10 +436,10 @@ describe('SortingSpecProcessor', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleA)
 	})
-	it('should generate correct SortSpecs (example with numerical sorting symbols)', () => {
-		const inputTxtArr: Array<string> = txtInputExampleNumericSortingSymbols.split('\n')
+	it('should generate correct SortSpecs (example with sorting symbols)', () => {
+		const inputTxtArr: Array<string> = txtInputExampleSortingSymbols.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
-		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleNumericSortingSymbols)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleSortingSymbols)
 	})
 })
 
@@ -1735,7 +1751,7 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		expect(result).toBeNull()
 		expect(errorsLogger).toHaveBeenCalledTimes(2)
 		expect(errorsLogger).toHaveBeenNthCalledWith(1,
-			`${ERR_PREFIX} 9:TooManyNumericSortingSymbols Maximum one numeric sorting indicator allowed per line ${ERR_SUFFIX_IN_LINE(2)}`)
+			`${ERR_PREFIX} 9:TooManySortingSymbols Maximum one sorting symbol allowed per line ${ERR_SUFFIX_IN_LINE(2)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('% Chapter\\R+ ... page\\d+ '))
 	})
 	it('should recognize error: nested standard obsidian sorting attribute', () => {
@@ -1916,7 +1932,7 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		expect(result).toBeNull()
 		expect(errorsLogger).toHaveBeenCalledTimes(2)
 		expect(errorsLogger).toHaveBeenNthCalledWith(1,
-			`${ERR_PREFIX} 10:NumericalSymbolAdjacentToWildcard Numerical sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case. ${ERR_SUFFIX_IN_LINE(1)}`)
+			`${ERR_PREFIX} 10:SortingSymbolAdjacentToWildcard Sorting symbol must not be directly adjacent to a wildcard because of potential performance problem. An additional explicit separator helps in such case. ${ERR_SUFFIX_IN_LINE(1)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT(s))
 	})
 	it.each([
@@ -2092,7 +2108,7 @@ describe('escapeRegexUnsafeCharacters', () => {
 	})
 })
 
-describe('detectNumericSortingSymbols', () => {
+describe('detectSortingSymbols', () => {
 	it.each([
 		['', false],
 		['d+', false],
@@ -2107,12 +2123,12 @@ describe('detectNumericSortingSymbols', () => {
 		['\\d+abcd\\d+efgh', true],
 		['\\d+\\.D+\\-d+\\R+\\.r+\\-R+ \\d+', true]
 	])('should correctly detect in >%s< (%s) sorting regex symbols', (s: string, b: boolean) => {
-		const result = detectNumericSortingSymbols(s)
+		const result = detectSortingSymbols(s)
 		expect(result).toBe(b)
 	})
 })
 
-describe('hasMoreThanOneNumericSortingSymbol', () => {
+describe('hasMoreThanOneSortingSymbol', () => {
 	it.each([
 		['', false],
 		[' d+', false],
@@ -2128,12 +2144,12 @@ describe('hasMoreThanOneNumericSortingSymbol', () => {
 		['\\R+abcd\\.R+efgh', true],
 		['\\d+\\.D+\\-d+\\R+\\.r+\\-R+ \\d+', true]
 	])('should correctly detect in >%s< (%s) sorting regex symbols', (s: string, b: boolean) => {
-		const result = hasMoreThanOneNumericSortingSymbol(s)
+		const result = hasMoreThanOneSortingSymbol(s)
 		expect(result).toBe(b)
 	})
 })
 
-describe('extractNumericSortingSymbol', () => {
+describe('extractSortingSymbol', () => {
 	it.each([
 		['', null],
 		['d+', null],
@@ -2144,7 +2160,7 @@ describe('extractNumericSortingSymbol', () => {
 		['--\\.D+\\d+', '\\.D+'],
 		['wdwqwqe\\d+\\.D+\\-d+\\R+\\.r+\\-R+ \\d+', '\\d+']
 	])('should correctly extract from >%s< the numeric sorting symbol (%s)', (s: string, ss: string) => {
-		const result = extractNumericSortingSymbol(s)
+		const result = extractSortingSymbol(s)
 		expect(result).toBe(ss)
 	})
 })
