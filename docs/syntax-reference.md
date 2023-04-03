@@ -107,9 +107,9 @@ Lines starting with `//` are ignored
  For extremely large vaults use with caution, as the sorting needs to scan all files inside a folder to determine the folder's modified date
 - `> advanced modified` - by modified time reverse, the most recently modified item goes first. For folders, their modification date is derived from the most recently modified direct child file.
  For extremely large vaults use with caution, as the sorting needs to scan all files inside a folder to determine the folder's modified date
-- `< advanced created` - by created time, the oldest item goes first. For folders, their creation date is derived from the oldest direct child file.
+- `< advanced created` - by created time, the oldest item goes first. For folders, their creation date is derived from the oldest (ctime) direct child file.
  For extremely large vaults use with caution, as the sorting needs to scan all files inside a folder to determine the folder's created date
-- `> advanced created` - by created time reverse, the newest item goes first. For folders, their creation date is derived from the newest direct child file.
+- `> advanced created` - by created time reverse, the newest item goes first. For folders, their creation date is derived from the oldest (ctime) direct child file.
  For extremely large vaults use with caution, as the sorting needs to scan all files inside a folder to determine the folder's created date
 
 #### At group level only (aka secondary sorting rule)
