@@ -79,15 +79,14 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result: FolderItemForSorting = determineSortingGroup(file, sortSpec)
 
 			// then
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -105,15 +104,14 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result: FolderItemForSorting = determineSortingGroup(file, sortSpec)
 
 			// then
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx (no match)
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/References.md'
 			});
@@ -140,8 +138,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx (no match)
 				isFolder: false,
 				sortString: "Part123:-icle.md",
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
 			});
@@ -169,8 +166,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
 				sortString: "Part123:-icle.md",
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
 			});
@@ -198,8 +194,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "Part123:-icle.md",
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
 			});
@@ -228,8 +223,7 @@ describe('determineSortingGroup', () => {
 				isFolder: false,
 				sortString: "00000123////Part123:-icle.md",
 				matchGroup: '00000123//',
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
 			});
@@ -257,8 +251,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
 				sortString: "Part:123-icle.md",
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
 			});
@@ -287,8 +280,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "Part:123-icle.md",
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
 			});
@@ -319,8 +311,7 @@ describe('determineSortingGroup', () => {
 				isFolder: false,
 				sortString: "00000001|00000023////Part:1 1-23.456-icle.md",
 				matchGroup: '00000001|00000023//',
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:1 1-23.456-icle.md'
 			});
@@ -349,8 +340,7 @@ describe('determineSortingGroup', () => {
 				isFolder: false,
 				sortString: "00000123////Part:123-icle.md",
 				matchGroup: '00000123//',
-				ctimeNewest: MOCK_TIMESTAMP + 555,
-				ctimeOldest: MOCK_TIMESTAMP + 555,
+				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
 			});
@@ -376,8 +366,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -403,8 +392,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "Ref2erences.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Ref2erences.md'
 			});
@@ -432,8 +420,7 @@ describe('determineSortingGroup', () => {
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
 				matchGroup: "00000001|00000030|00000006|00001900//",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
 			});
@@ -456,8 +443,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -483,8 +469,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -510,8 +495,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References 12.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References 12.md'
 			});
@@ -539,8 +523,7 @@ describe('determineSortingGroup', () => {
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
 				matchGroup: "00000001|00000030|00000006|00001900//",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
 			});
@@ -563,8 +546,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -589,8 +571,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -616,8 +597,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -643,8 +623,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References 12.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References 12.md'
 			});
@@ -672,8 +651,7 @@ describe('determineSortingGroup', () => {
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
 				matchGroup: "00000001|00000030|00000006|00001900//",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
 			});
@@ -696,8 +674,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -722,8 +699,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -762,8 +738,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -800,8 +775,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // lastIdx + 1, group not determined
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -838,8 +812,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			} as FolderItemForSorting);
@@ -876,8 +849,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "References",
-				ctimeNewest: DEFAULT_FOLDER_CTIME,
-				ctimeOldest: DEFAULT_FOLDER_CTIME,
+				ctime: DEFAULT_FOLDER_CTIME,
 				mtime: DEFAULT_FOLDER_MTIME,
 				path: 'References',
 				folder: folder
@@ -910,8 +882,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -942,8 +913,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -974,8 +944,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1014,8 +983,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1054,8 +1022,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1097,8 +1064,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -1133,8 +1099,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -1168,8 +1133,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -1204,8 +1168,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
@@ -1236,8 +1199,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1279,8 +1241,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1325,8 +1286,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1369,8 +1329,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1416,8 +1375,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1460,8 +1418,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // lastIdx+1 - no match
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1507,8 +1464,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // lastIdx+1 - no match
 				isFolder: true,
 				sortString: "TestEmptyFolder",
-				ctimeNewest: 0,
-				ctimeOldest: 0,
+				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
 				folder: {
@@ -1557,8 +1513,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file'
@@ -1597,8 +1552,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file'
@@ -1637,8 +1591,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file'
@@ -1677,8 +1630,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file'
@@ -1717,8 +1669,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "References",
-				ctimeNewest: DEFAULT_FOLDER_CTIME,
-				ctimeOldest: DEFAULT_FOLDER_CTIME,
+				ctime: DEFAULT_FOLDER_CTIME,
 				mtime: DEFAULT_FOLDER_MTIME,
 				path: 'References',
 				metadataFieldValue: 'metadata on folder note',
@@ -1759,8 +1710,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file, not obvious'
@@ -1798,8 +1748,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file, tricky'
@@ -1837,8 +1786,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References.md",
-				ctimeNewest: MOCK_TIMESTAMP + 222,
-				ctimeOldest: MOCK_TIMESTAMP + 222,
+				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file, under default name'
@@ -1885,8 +1833,7 @@ describe('determineSortingGroup', () => {
 			groupIdx: 3,
 			isFolder: false,
 			sortString: "Abcdef!.md",
-			ctimeNewest: MOCK_TIMESTAMP + 222,
-			ctimeOldest: MOCK_TIMESTAMP + 222,
+			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Abcdef!.md'
 		});
@@ -1935,8 +1882,7 @@ describe('determineSortingGroup', () => {
 			groupIdx: 1, // Imposed by combined groups
 			isFolder: false,
 			sortString: "Hello :-) ha.md",
-			ctimeNewest: MOCK_TIMESTAMP + 222,
-			ctimeOldest: MOCK_TIMESTAMP + 222,
+			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Hello :-) ha.md'
 		});
@@ -1944,8 +1890,7 @@ describe('determineSortingGroup', () => {
 			groupIdx: 1, // Imposed by combined groups
 			isFolder: false,
 			sortString: "Hello World :-).md",
-			ctimeNewest: MOCK_TIMESTAMP + 222,
-			ctimeOldest: MOCK_TIMESTAMP + 222,
+			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Hello World :-).md'
 		});
@@ -1990,8 +1935,7 @@ describe('determineSortingGroup', () => {
 			groupIdx: 2, // Imposed by combined groups
  			isFolder: false,
 			sortString: "Hello :-).md",
-			ctimeNewest: MOCK_TIMESTAMP + 222,
-			ctimeOldest: MOCK_TIMESTAMP + 222,
+			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Hello :-).md'
 		});
@@ -2017,19 +1961,29 @@ describe('determineFolderDatesIfNeeded', () => {
 		determineFolderDatesIfNeeded([result], sortSpec)
 
 		// then
-		expect(result.ctimeOldest).toEqual(DEFAULT_FOLDER_CTIME)
-		expect(result.ctimeNewest).toEqual(DEFAULT_FOLDER_CTIME)
+		expect(result.ctime).toEqual(DEFAULT_FOLDER_CTIME)
 		expect(result.mtime).toEqual(DEFAULT_FOLDER_CTIME)
 	})
-	it('should correctly determine dates, if triggered', () => {
+	it.each(
+		[
+			[CustomSortOrder.byCreatedTimeReverseAdvanced, undefined],
+			[CustomSortOrder.byCreatedTimeAdvanced, undefined],
+			[CustomSortOrder.byModifiedTimeAdvanced, undefined],
+			[CustomSortOrder.byModifiedTimeReverseAdvanced, undefined],
+			[CustomSortOrder.alphabetical, CustomSortOrder.byCreatedTimeReverseAdvanced],
+			[CustomSortOrder.alphabetical, CustomSortOrder.byCreatedTimeAdvanced],
+			[CustomSortOrder.alphabetical, CustomSortOrder.byModifiedTimeAdvanced],
+			[CustomSortOrder.alphabetical, CustomSortOrder.byModifiedTimeReverseAdvanced]
+	])('should correctly determine dates, if triggered by %s under default %s', (order: CustomSortOrder, folderOrder: CustomSortOrder | undefined) => {
 		// given
 		const folder: TFolder = mockTFolderWithChildren('Test folder 1')
 		const OUTSIDERS_GROUP_IDX = 0
 		const sortSpec: CustomSortSpec = {
 			targetFoldersPaths: ['/'],
+			defaultOrder: folderOrder,
 			groups: [{
 				type: CustomSortGroupType.Outsiders,
-				order: CustomSortOrder.byCreatedTimeReverseAdvanced
+				order: order
 			}],
 			outsidersGroupIdx: OUTSIDERS_GROUP_IDX
 		}
@@ -2039,8 +1993,7 @@ describe('determineFolderDatesIfNeeded', () => {
 		determineFolderDatesIfNeeded([result], sortSpec)
 
 		// then
-		expect(result.ctimeOldest).toEqual(TIMESTAMP_OLDEST)
-		expect(result.ctimeNewest).toEqual(TIMESTAMP_NEWEST)
+		expect(result.ctime).toEqual(TIMESTAMP_OLDEST)
 		expect(result.mtime).toEqual(TIMESTAMP_NEWEST)
 	})
 })
