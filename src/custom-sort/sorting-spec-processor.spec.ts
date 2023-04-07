@@ -37,6 +37,13 @@ starred:
 /:files starred:
 /folders starred:
 
+:::: folder of bookmarks
+< by-bookmarks-order
+/: bookmarked:
+ < by-bookmarks-order 
+/ Abc
+ > by-bookmarks-order
+
 :::: Conceptual model
 /: Entities
 %
@@ -94,6 +101,13 @@ target-folder: tricky folder 2
 /folders:files starred:
 /:files starred:
 /folders starred:
+
+target-folder: folder of bookmarks
+order-asc: by-bookmarks-order
+/:files bookmarked:
+ order-asc: by-bookmarks-order 
+/folders Abc
+ order-desc: by-bookmarks-order
 
 :::: Conceptual model
 /:files Entities
@@ -203,6 +217,30 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 		outsidersGroupIdx: 7,
 		targetFoldersPaths: [
 			'tricky folder 2'
+		]
+	},
+	"folder of bookmarks": {
+		defaultOrder: CustomSortOrder.byBookmarkOrder,
+		groups: [
+			{
+				filesOnly: true,
+				order: CustomSortOrder.byBookmarkOrder,
+				type: CustomSortGroupType.BookmarkedOnly
+			},
+			{
+				exactText: "Abc",
+				foldersOnly: true,
+				order: CustomSortOrder.byBookmarkOrderReverse,
+				type: CustomSortGroupType.ExactName
+			},
+			{
+				order: CustomSortOrder.byBookmarkOrder,
+				type: CustomSortGroupType.Outsiders
+			}
+		],
+		outsidersGroupIdx: 2,
+		targetFoldersPaths: [
+			"folder of bookmarks"
 		]
 	},
 	"Conceptual model": {

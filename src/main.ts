@@ -16,7 +16,7 @@ import {
 	Vault
 } from 'obsidian';
 import {around} from 'monkey-around';
-import {folderSort} from './custom-sort/custom-sort';
+import {folderSort, SORTSPEC_FOR_AUTOMATIC_BOOKMARKS_INTEGRATION} from './custom-sort/custom-sort';
 import {SortingSpecProcessor, SortSpecsCollection} from './custom-sort/sorting-spec-processor';
 import {CustomSortOrder, CustomSortSpec} from './custom-sort/custom-sort-types';
 
@@ -36,6 +36,7 @@ interface CustomSortPluginSettings {
 	statusBarEntryEnabled: boolean
 	notificationsEnabled: boolean
 	mobileNotificationsEnabled: boolean
+	enableAutomaticBookmarksOrderIntegration: boolean
 }
 
 const DEFAULT_SETTINGS: CustomSortPluginSettings = {
@@ -43,7 +44,8 @@ const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
 	statusBarEntryEnabled: true,
 	notificationsEnabled: true,
-	mobileNotificationsEnabled: false
+	mobileNotificationsEnabled: false,
+	enableAutomaticBookmarksOrderIntegration: false
 }
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
@@ -347,6 +349,9 @@ export default class CustomSortPlugin extends Plugin {
 								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
 							}
 						}
+						if (!sortSpec && plugin.settings.enableAutomaticBookmarksOrderIntegration) {
+							sortSpec = SORTSPEC_FOR_AUTOMATIC_BOOKMARKS_INTEGRATION
+						}
 						if (sortSpec) {
 							sortSpec.plugin = plugin
 							return folderSort.call(this, sortSpec, ...args);
@@ -476,5 +481,18 @@ class CustomSortSettingTab extends PluginSettingTab {
 					this.plugin.settings.mobileNotificationsEnabled = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new Setting(containerEl)
+			.setName('Enable automatic integration with core Bookmarks plugin')
+			// TODO: add a nice description here
+			.setDesc('Details TBD. TODO: add a nice description here')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableAutomaticBookmarksOrderIntegration)
+				.onChange(async (value) => {
+					this.plugin.settings.enableAutomaticBookmarksOrderIntegration = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// TODO: expose additional configuration setting to specify group path in Bookmarks, if auto-integration with bookmarks is enabled
 	}
 }

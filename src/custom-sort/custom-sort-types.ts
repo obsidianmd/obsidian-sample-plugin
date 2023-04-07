@@ -9,6 +9,7 @@ export enum CustomSortGroupType {
 	ExactHeadAndTail, // Like W...n or Un...ed, which is shorter variant of typing the entire title
 	HasMetadataField,  // Notes (or folder's notes) containing a specific metadata field
 	StarredOnly,
+	BookmarkedOnly,
 	HasIcon
 }
 
@@ -30,6 +31,8 @@ export enum CustomSortOrder {
 	byMetadataFieldAlphabeticalReverse,
 	byMetadataFieldTrueAlphabeticalReverse,
 	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
+	byBookmarkOrder,
+	byBookmarkOrderReverse,
 	default = alphabetical
 }
 

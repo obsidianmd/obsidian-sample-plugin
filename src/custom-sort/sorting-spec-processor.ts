@@ -114,6 +114,7 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'modified': {asc: CustomSortOrder.byModifiedTime, desc: CustomSortOrder.byModifiedTimeReverse},
 	'advanced modified': {asc: CustomSortOrder.byModifiedTimeAdvanced, desc: CustomSortOrder.byModifiedTimeReverseAdvanced},
 	'advanced created': {asc: CustomSortOrder.byCreatedTimeAdvanced, desc: CustomSortOrder.byCreatedTimeReverseAdvanced},
+	'by-bookmarks-order': {asc: CustomSortOrder.byBookmarkOrder, desc: CustomSortOrder.byBookmarkOrderReverse},
 
 	// Advanced, for edge cases of secondary sorting, when if regexp match is the same, override the alphabetical sorting by full name
 	'a-z, created': {
@@ -206,6 +207,8 @@ const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
 
 const MetadataFieldIndicatorLexeme: string = 'with-metadata:'
+
+const BookmarkedItemIndicatorLexeme: string = 'bookmarked:'
 
 const StarredItemsIndicatorLexeme: string = 'starred:'
 
@@ -1510,6 +1513,13 @@ export class SortingSpecProcessor {
 					return {
 						type: CustomSortGroupType.HasMetadataField,
 						withMetadataFieldName: metadataFieldName,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
+				} else if (theOnly.startsWith(BookmarkedItemIndicatorLexeme)) {
+					return {
+						type: CustomSortGroupType.BookmarkedOnly,
 						filesOnly: spec.filesOnly,
 						foldersOnly: spec.foldersOnly,
 						matchFilenameWithExt: spec.matchFilenameWithExt

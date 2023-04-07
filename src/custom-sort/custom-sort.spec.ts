@@ -5,7 +5,7 @@ import {
 	determineFolderDatesIfNeeded,
 	determineSortingGroup,
 	FolderItemForSorting,
-	matchGroupRegex,
+	matchGroupRegex, sorterByBookmarkOrder, sorterByMetadataField,
 	SorterFn,
 	Sorters
 } from './custom-sort';
@@ -16,6 +16,7 @@ import {
 	ObsidianIconFolder_PluginInstance,
 	ObsidianIconFolderPlugin_Data
 } from "../utils/ObsidianIconFolderPluginSignature";
+import {determineBookmarkOrder} from "../utils/BookmarksCorePluginSignature";
 
 const mockTFile = (basename: string, ext: string, size?: number, ctime?: number, mtime?: number): TFile => {
 	return {
@@ -2216,7 +2217,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			sortString: 'n123'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabeticalReverse]
+		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabetical]
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2225,6 +2226,25 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		// then
 		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
 		expect(result2).toBe(SORT_FIRST_GOES_LATER)
+	})
+	it('should put the item with metadata later if the second one has no metadata (reverse order)', () => {
+		// given
+		const itemA: Partial<FolderItemForSorting> = {
+			metadataFieldValue: '15',
+			sortString: 'n123'
+		}
+		const itemB: Partial<FolderItemForSorting> = {
+			sortString: 'n123'
+		}
+		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabeticalReverse]
+
+		// when
+		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+		const result2: number = sorter(itemB as FolderItemForSorting, itemA as FolderItemForSorting)
+
+		// then
+		expect(result1).toBe(SORT_FIRST_GOES_LATER)
+		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
 	})
 	it('should correctly fallback to alphabetical reverse if no metadata on both items', () => {
 		// given
@@ -2246,4 +2266,75 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
 		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
 	})
+})
+
+describe('sorterByMetadataField', () => {
+	it.each([
+		[true,'abc','def',-1, 'a', 'a'],
+		[true,'xyz','klm',1, 'b', 'b'],
+		[true,'mmm','mmm',0, 'c', 'c'],
+		[true,'mmm','mmm',-1, 'd', 'e'],
+		[true,'mmm','mmm',1, 'e', 'd'],
+		[true,'abc',undefined,-1, 'a','a'],
+		[true,undefined,'klm',1, 'b','b'],
+		[true,undefined,undefined,0, 'a','a'],
+		[true,undefined,undefined,-1, 'a','b'],
+		[true,undefined,undefined,1, 'd','c'],
+		[false,'abc','def',1, 'a', 'a'],
+		[false,'xyz','klm',-1, 'b', 'b'],
+		[false,'mmm','mmm',0, 'c', 'c'],
+		[false,'mmm','mmm',1, 'd', 'e'],
+		[false,'mmm','mmm',-1, 'e', 'd'],
+		[false,'abc',undefined,1, 'a','a'],
+		[false,undefined,'klm',-1, 'b','b'],
+		[false,undefined,undefined,0, 'a','a'],
+		[false,undefined,undefined,1, 'a','b'],
+		[false,undefined,undefined,-1, 'd','c'],
+
+	])('straight order %s, comparing %s and %s should return %s for sortStrings %s and %s',
+		(straight: boolean, metadataA: string|undefined, metadataB: string|undefined, order: number, sortStringA: string, sortStringB) => {
+		const sorterFn = sorterByMetadataField(!straight, false)
+		const itemA: Partial<FolderItemForSorting> = {metadataFieldValue: metadataA, sortString: sortStringA}
+		const itemB: Partial<FolderItemForSorting> = {metadataFieldValue: metadataB, sortString: sortStringB}
+		const result = sorterFn(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+
+		// then
+		expect(result).toBe(order)
+	})
+})
+
+describe('sorterByBookmarkOrder', () => {
+	it.each([
+		[true,10,20,-1, 'a', 'a'],
+		[true,20,10,1, 'b', 'b'],
+		[true,30,30,0, 'c', 'c'],   // not possible in reality - each bookmark order is unique by definition - covered for clarity
+		[true,1,1,0, 'd', 'e'],     //     ----//----
+		[true,2,2,0, 'e', 'd'],     //     ----//----
+		[true,3,undefined,-1, 'a','a'],
+		[true,undefined,4,1, 'b','b'],
+		[true,undefined,undefined,0, 'a','a'],
+		[true,undefined,undefined,-1, 'a','b'],
+		[true,undefined,undefined,1, 'd','c'],
+		[false,10,20,1, 'a', 'a'],
+		[false,20,10,-1, 'b', 'b'],
+		[false,30,30,0, 'c', 'c'],    // not possible in reality - each bookmark order is unique by definition - covered for clarity
+		[false,1,1,0, 'd', 'e'],      //    ------//-----
+		[false,2,2,0, 'e', 'd'],     //    ------//-----
+		[false,3,undefined,1, 'a','a'],
+		[false,undefined,4,-1, 'b','b'],
+		[false,undefined,undefined,0, 'a','a'],
+		[false,undefined,undefined,1, 'a','b'],
+		[false,undefined,undefined,-1, 'd','c'],
+
+	])('straight order %s, comparing %s and %s should return %s for sortStrings %s and %s',
+		(straight: boolean, bookmarkA: number|undefined, bookmarkB: number|undefined, order: number, sortStringA: string, sortStringB) => {
+			const sorterFn = sorterByBookmarkOrder(!straight, false)
+			const itemA: Partial<FolderItemForSorting> = {bookmarkedIdx: bookmarkA, sortString: sortStringA}
+			const itemB: Partial<FolderItemForSorting> = {bookmarkedIdx: bookmarkB, sortString: sortStringB}
+			const result = sorterFn(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+			const normalizedResult = result < 0 ? -1 : ((result > 0) ? 1 : result)
+
+			// then
+			expect(normalizedResult).toBe(order)
+		})
 })

@@ -1,26 +1,9 @@
-import {
-	App,
-	CommunityPlugin,
-	FrontMatterCache,
-	InstalledPlugin,
-	requireApiVersion,
-	TAbstractFile,
-	TFile,
-	TFolder
-} from 'obsidian';
-import {
-	determineStarredStatusOf,
-	getStarredPlugin,
-	Starred_PluginInstance,
-	StarredPlugin_findStarredFile_methodName
-} from '../utils/StarredPluginSignature';
+import {FrontMatterCache, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
+import {determineStarredStatusOf, getStarredPlugin, Starred_PluginInstance} from '../utils/StarredPluginSignature';
 import {
 	determineIconOf,
 	getIconFolderPlugin,
-	FolderIconObject,
-	ObsidianIconFolder_PluginInstance,
-	ObsidianIconFolderPlugin_Data,
-	ObsidianIconFolderPlugin_getData_methodName
+	ObsidianIconFolder_PluginInstance
 } from '../utils/ObsidianIconFolderPluginSignature'
 import {
 	CustomSortGroup,
@@ -32,6 +15,11 @@ import {
 	RegExpSpec
 } from "./custom-sort-types";
 import {isDefined} from "../utils/utils";
+import {
+	Bookmarks_PluginInstance,
+	determineBookmarkOrder,
+	getBookmarksPlugin
+} from "../utils/BookmarksCorePluginSignature";
 
 let CollatorCompare = new Intl.Collator(undefined, {
 	usage: "sort",
@@ -45,6 +33,21 @@ let CollatorTrueAlphabeticalCompare = new Intl.Collator(undefined, {
 	numeric: false,
 }).compare;
 
+
+export const SORTSPEC_FOR_AUTOMATIC_BOOKMARKS_INTEGRATION: CustomSortSpec = {
+	defaultOrder: CustomSortOrder.byBookmarkOrder,
+	groups: [
+		{
+			order: CustomSortOrder.byBookmarkOrder,
+			type: CustomSortGroupType.Outsiders
+		}
+	],
+	outsidersGroupIdx: 0,
+	targetFoldersPaths: [
+		"Spec applied automatically to folder not having explicit spec when automatic integration with bookmarks is enabled"
+	]
+}
+
 export interface FolderItemForSorting {
 	path: string
 	groupIdx?: number  // the index itself represents order for groups
@@ -55,6 +58,7 @@ export interface FolderItemForSorting {
 	mtime: number   // for a file mtime is obvious, for a folder = date of most recently modified child file
 	isFolder: boolean
 	folder?: TFolder
+	bookmarkedIdx?: number // derived from Bookmarks core plugin position
 }
 
 export type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
@@ -65,7 +69,7 @@ const TrueAlphabetical: boolean = true
 const ReverseOrder: boolean = true
 const StraightOrder: boolean = false
 
-const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
+export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
 	const collatorCompareFn: CollatorCompareFn = trueAlphabetical ? CollatorTrueAlphabeticalCompare : CollatorCompare
 	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
 		if (reverseOrder) {
@@ -81,9 +85,27 @@ const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean)
 			}
 		}
 		// Item with metadata goes before the w/o metadata
-		if (a.metadataFieldValue) return reverseOrder ? 1 : -1
-		if (b.metadataFieldValue) return reverseOrder ? -1 : 1
+		if (a.metadataFieldValue) return -1
+		if (b.metadataFieldValue) return 1
 		// Fallback -> requested sort by metadata, yet none of two items contain it, use alphabetical by name
+		return collatorCompareFn(a.sortString, b.sortString)
+	}
+}
+
+export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
+	const collatorCompareFn: CollatorCompareFn = trueAlphabetical ? CollatorTrueAlphabeticalCompare : CollatorCompare
+	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
+		if (reverseOrder) {
+			[a, b] = [b, a]
+		}
+		if (a.bookmarkedIdx && b.bookmarkedIdx) {
+			// By design the bookmark idx is unique per each item, so no need for secondary sorting if they are equal
+			return a.bookmarkedIdx - b.bookmarkedIdx
+		}
+		// Item with bookmark order goes before the w/o bookmark info
+		if (a.bookmarkedIdx) return -1
+		if (b.bookmarkedIdx) return 1
+		// Fallback -> requested sort by bookmark order, yet none of two items contain it, use alphabetical by name
 		return collatorCompareFn(a.sortString, b.sortString)
 	}
 }
@@ -105,6 +127,8 @@ export let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical),
 	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder),
 	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical),
+	[CustomSortOrder.byBookmarkOrder]: sorterByBookmarkOrder(StraightOrder),
+	[CustomSortOrder.byBookmarkOrderReverse]: sorterByBookmarkOrder(ReverseOrder),
 
 	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
@@ -164,6 +188,7 @@ export const matchGroupRegex = (theRegex: RegExpSpec, nameForMatching: string): 
 
 export interface Context {
 	starredPluginInstance?: Starred_PluginInstance
+	bookmarksPluginInstance?: Bookmarks_PluginInstance
 	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
 
@@ -171,6 +196,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	let groupIdx: number
 	let determined: boolean = false
 	let matchedGroup: string | null | undefined
+	let bookmarkedIdx: number | undefined
 	let metadataValueToSortBy: string | undefined
 	const aFolder: boolean = isFolder(entry)
 	const aFile: boolean = !aFolder
@@ -264,12 +290,20 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				break
 			case CustomSortGroupType.StarredOnly:
 				if (ctx?.starredPluginInstance) {
-					let starred: boolean = determineStarredStatusOf(entry, aFile, ctx.starredPluginInstance)
+					const starred: boolean = determineStarredStatusOf(entry, aFile, ctx.starredPluginInstance)
 					if (starred) {
 						determined = true
 					}
 				}
 				break
+			case CustomSortGroupType.BookmarkedOnly:
+				if (ctx?.bookmarksPluginInstance) {
+					const bookmarkOrder: number | undefined = determineBookmarkOrder(entry.path, ctx.bookmarksPluginInstance)
+					if (bookmarkOrder) { // safe ==> orders intentionally start from 1
+						determined = true
+						bookmarkedIdx = bookmarkOrder
+					}
+				}
 			case CustomSortGroupType.HasIcon:
 				if(ctx?.iconFolderPluginInstance) {
 					let iconName: string | undefined = determineIconOf(entry, ctx.iconFolderPluginInstance)
@@ -363,7 +397,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		folder: aFolder ? (entry as TFolder) : undefined,
 		path: entry.path,
 		ctime: aFile ? entryAsTFile.stat.ctime : DEFAULT_FOLDER_CTIME,
-		mtime: aFile ? entryAsTFile.stat.mtime : DEFAULT_FOLDER_MTIME
+		mtime: aFile ? entryAsTFile.stat.mtime : DEFAULT_FOLDER_MTIME,
+		bookmarkedIdx: bookmarkedIdx
 	}
 }
 
@@ -378,6 +413,17 @@ export const sortOrderNeedsFolderDates = (order: CustomSortOrder | undefined, se
 	// The CustomSortOrder.standardObsidian used as default because it doesn't require date on folders
 	return SortOrderRequiringFolderDate.has(order ?? CustomSortOrder.standardObsidian)
 		|| SortOrderRequiringFolderDate.has(secondary ?? CustomSortOrder.standardObsidian)
+}
+
+const SortOrderRequiringBookmarksOrder = new Set<CustomSortOrder>([
+	CustomSortOrder.byBookmarkOrder,
+	CustomSortOrder.byBookmarkOrderReverse
+])
+
+export const sortOrderNeedsBookmarksOrder = (order: CustomSortOrder | undefined, secondary?: CustomSortOrder): boolean => {
+	// The CustomSortOrder.standardObsidian used as default because it doesn't require bookmarks order
+	return SortOrderRequiringBookmarksOrder.has(order ?? CustomSortOrder.standardObsidian)
+		|| SortOrderRequiringBookmarksOrder.has(secondary ?? CustomSortOrder.standardObsidian)
 }
 
 // Syntax sugar for readability
@@ -422,10 +468,32 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 	})
 }
 
+// Order by bookmarks order can be applied independently of grouping by bookmarked status
+//   This function determines the bookmarked order if the sorting criteria (of group or entire folder) requires it
+export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, plugin: Bookmarks_PluginInstance) => {
+	if (!plugin) return
+
+	folderItems.forEach((item) => {
+		const folderDefaultSortRequiresBookmarksOrder: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsBookmarksOrder(sortingSpec.defaultOrder))
+		let groupSortRequiresBookmarksOrder: boolean = false
+		if (!folderDefaultSortRequiresBookmarksOrder) {
+			const groupIdx: number | undefined = item.groupIdx
+			if (groupIdx !== undefined) {
+				const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
+				groupSortRequiresBookmarksOrder = sortOrderNeedsBookmarksOrder(groupOrder)
+			}
+		}
+		if (folderDefaultSortRequiresBookmarksOrder || groupSortRequiresBookmarksOrder) {
+			item.bookmarkedIdx = determineBookmarkOrder(item.path, plugin)
+		}
+	})
+}
+
 export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
 	let fileExplorer = this.fileExplorer
 	sortingSpec._mCache = sortingSpec.plugin?.app.metadataCache
 	const starredPluginInstance: Starred_PluginInstance | undefined = getStarredPlugin(sortingSpec?.plugin?.app)
+	const bookmarksPluginInstance: Bookmarks_PluginInstance | undefined = getBookmarksPlugin(sortingSpec?.plugin?.app)
 	const iconFolderPluginInstance: ObsidianIconFolder_PluginInstance | undefined = getIconFolderPlugin(sortingSpec?.plugin?.app)
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
@@ -437,6 +505,7 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 		.map((entry: TFile | TFolder) => {
 			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, {
 				starredPluginInstance: starredPluginInstance,
+				bookmarksPluginInstance: bookmarksPluginInstance,
 				iconFolderPluginInstance: iconFolderPluginInstance
 			})
 			return itemForSorting
@@ -444,6 +513,10 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 
 	// Finally, for advanced sorting by modified date, for some folders the modified date has to be determined
 	determineFolderDatesIfNeeded(folderItems, sortingSpec)
+
+	if (bookmarksPluginInstance) {
+		determineBookmarksOrderIfNeeded(folderItems, sortingSpec, bookmarksPluginInstance)
+	}
 
 	folderItems.sort(function (itA: FolderItemForSorting, itB: FolderItemForSorting) {
 		return compareTwoItems(itA, itB, sortingSpec);
