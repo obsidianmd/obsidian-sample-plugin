@@ -1706,6 +1706,11 @@ const txtInputErrorPriorityEmptyPattern: string = `
 `
 
 const txtInputEmptySpec: string = ``
+const txtInputOnlyCommentsSpec: string = `
+// Some comment
+
+// Another comment below empty line
+`
 
 describe('SortingSpecProcessor error detection and reporting', () => {
 	let processor: SortingSpecProcessor;
@@ -1942,7 +1947,7 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 			`${ERR_PREFIX} 22:PriorityPrefixAfterGroupTypePrefix Priority prefix must be used before sorting group type indicator ${ERR_SUFFIX_IN_LINE(2)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('/folders /+ /! Hello'))
 	})
-	it('should recognize error: combine prefix after sorting group type prefixe', () => {
+	it('should recognize error: combine prefix after sorting group type prefix', () => {
 		const inputTxtArr: Array<string> = `
 		/folders /+ Hello
 		`.replace(/\t/gi, '').split('\n')
@@ -1955,6 +1960,12 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 	})
 	it('should recognize empty spec', () => {
 		const inputTxtArr: Array<string> = txtInputEmptySpec.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(0)
+	})
+	it('should recognize empty spec', () => {
+		const inputTxtArr: Array<string> = txtInputOnlyCommentsSpec.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result).toBeNull()
 		expect(errorsLogger).toHaveBeenCalledTimes(0)

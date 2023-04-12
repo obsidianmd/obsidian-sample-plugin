@@ -33,21 +33,6 @@ let CollatorTrueAlphabeticalCompare = new Intl.Collator(undefined, {
 	numeric: false,
 }).compare;
 
-
-export const SORTSPEC_FOR_AUTOMATIC_BOOKMARKS_INTEGRATION: CustomSortSpec = {
-	defaultOrder: CustomSortOrder.byBookmarkOrder,
-	groups: [
-		{
-			order: CustomSortOrder.byBookmarkOrder,
-			type: CustomSortGroupType.Outsiders
-		}
-	],
-	outsidersGroupIdx: 0,
-	targetFoldersPaths: [
-		"Spec applied automatically to folder not having explicit spec when automatic integration with bookmarks is enabled"
-	]
-}
-
 export interface FolderItemForSorting {
 	path: string
 	groupIdx?: number  // the index itself represents order for groups

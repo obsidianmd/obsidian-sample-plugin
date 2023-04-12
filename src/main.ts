@@ -2,8 +2,8 @@ import {
 	App,
 	FileExplorerView,
 	MetadataCache,
-	Notice,
 	normalizePath,
+	Notice,
 	Platform,
 	Plugin,
 	PluginSettingTab,
@@ -16,7 +16,7 @@ import {
 	Vault
 } from 'obsidian';
 import {around} from 'monkey-around';
-import {folderSort, SORTSPEC_FOR_AUTOMATIC_BOOKMARKS_INTEGRATION} from './custom-sort/custom-sort';
+import {folderSort} from './custom-sort/custom-sort';
 import {SortingSpecProcessor, SortSpecsCollection} from './custom-sort/sorting-spec-processor';
 import {CustomSortOrder, CustomSortSpec} from './custom-sort/custom-sort-types';
 
@@ -81,6 +81,17 @@ export default class CustomSortPlugin extends Plugin {
 		// reset cache
 		this.sortSpecCache = null
 		const processor: SortingSpecProcessor = new SortingSpecProcessor()
+
+		if (this.settings.enableAutomaticBookmarksOrderIntegration) {
+			this.sortSpecCache = processor.parseSortSpecFromText(
+				'target-folder: /*\n< by-bookmarks-order'.split('\n'),
+				'System internal path', // Dummy unused value, there are no errors in the internal spec
+				'System internal file', // Dummy unused value, there are no errors in the internal spec
+				this.sortSpecCache
+			)
+			console.log('Auto injected sort spec')
+			console.log(this.sortSpecCache)
+		}
 
 		Vault.recurseChildren(this.app.vault.getRoot(), (file: TAbstractFile) => {
 			if (failed) return
@@ -348,9 +359,6 @@ export default class CustomSortPlugin extends Plugin {
 							if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
 								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
 							}
-						}
-						if (!sortSpec && plugin.settings.enableAutomaticBookmarksOrderIntegration) {
-							sortSpec = SORTSPEC_FOR_AUTOMATIC_BOOKMARKS_INTEGRATION
 						}
 						if (sortSpec) {
 							sortSpec.plugin = plugin
