@@ -181,6 +181,48 @@ sorting-spec: |
 The artificial separator `---+---` defines a sorting group, which will not match any folders or files
 and is used here to logically separate the series of combined groups into to logical sets
 
+## Bookmarks plugin integration
+
+Integration with the __Bookmarks core plugin__ allows for ordering of items via drag & drop in Bookmarks view and reflecting the same order in File Explorer automatically
+
+TODO: the simple scenario presented on movie
+
+A separate group of bookmarks is designated by default, to separate from ...
+
+If at least one item in folder is bookmarked and the auto-enabled, the order of the items becomes managed by the custom sort plugin
+
+Auto-integration works without any need for sorting configuration files. Under the hood it is equivalent to applying the following global sorting specification:
+```yaml
+---
+sorting-spec: |
+  target-folder: /*
+  bookmarked:
+    < by-bookmarks-order
+  sorting: standard
+---
+```
+
+Auto-integration doesn't apply to folders, for which explicit sorting specification is defined in YAML.
+In that case, if you want to employ the grouping and/or ordering by bookmarks order, you need to use explicit syntax:
+
+```yaml
+---
+sorting-spec: |
+  target-folder: My folder
+  bookmarked:
+    < by-bookmarks-order
+---
+```
+
+TODO: more instructions plus movie of advanced integration, where bookmarks reflect the folders structure
+
+Also hints for updating
+
+A folder is excluded from auto-integration if:
+- has custom sorting spec
+  - you can (if needed) enable the auto-integration for part of the items
+- has explicitly applied 'sorting: standard'
+
 ## Matching starred items
 
 The Obsidian core plugin `Starred` allows the user to 'star' files\

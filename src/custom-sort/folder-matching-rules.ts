@@ -35,6 +35,8 @@ export interface AddingWildcardFailure {
 	errorMsg: string
 }
 
+export type CheckIfImplicitSpec<SortingSpec> = (s: SortingSpec) => boolean
+
 export class FolderWildcardMatching<SortingSpec> {
 
 	// mimics the structure of folders, so for example tree.matchAll contains the matchAll flag for the root '/'
@@ -43,6 +45,9 @@ export class FolderWildcardMatching<SortingSpec> {
 	}
 
 	regexps: Array<FolderMatchingRegexp<SortingSpec>>
+
+	constructor(private checkIfImplicitSpec: CheckIfImplicitSpec<SortingSpec>) {
+	}
 
 	// cache
 	determinedWildcardRules: { [key: string]: DeterminedSortingSpec<SortingSpec> } = {}
@@ -68,13 +73,13 @@ export class FolderWildcardMatching<SortingSpec> {
 			}
 		})
 		if (lastComponent === MATCH_CHILDREN_PATH_TOKEN) {
-			if (leafNode.matchChildren) {
+			if (leafNode.matchChildren && !this.checkIfImplicitSpec(leafNode.matchChildren)) {
 				return {errorMsg: `Duplicate wildcard '${lastComponent}' specification for ${wilcardDefinition}`}
 			} else {
 				leafNode.matchChildren = rule
 			}
 		} else { // Implicitly: MATCH_ALL_PATH_TOKEN
-			if (leafNode.matchAll) {
+			if (leafNode.matchAll && !this.checkIfImplicitSpec(leafNode.matchAll)) {
 				return {errorMsg: `Duplicate wildcard '${lastComponent}' specification for ${wilcardDefinition}`}
 			} else {
 				leafNode.matchAll = rule

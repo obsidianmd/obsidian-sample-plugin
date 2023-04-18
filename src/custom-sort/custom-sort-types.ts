@@ -1,5 +1,3 @@
-import {MetadataCache, Plugin} from "obsidian";
-
 export enum CustomSortGroupType {
 	Outsiders, // Not belonging to any of other groups
 	MatchAll, // like a wildard *, used in connection with foldersOnly or filesOnly. The difference between the MatchAll and Outsiders is
@@ -30,7 +28,7 @@ export enum CustomSortOrder {
 	byMetadataFieldTrueAlphabetical,
 	byMetadataFieldAlphabeticalReverse,
 	byMetadataFieldTrueAlphabeticalReverse,
-	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
+	standardObsidian,  // whatever user selected in the UI
 	byBookmarkOrder,
 	byBookmarkOrderReverse,
 	default = alphabetical
@@ -80,10 +78,7 @@ export interface CustomSortSpec {
 	outsidersFoldersGroupIdx?: number
 	itemsToHide?: Set<string>
 	priorityOrder?: Array<number>       // Indexes of groups in evaluation order
-
-		// For internal transient use
-	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
-	_mCache?: MetadataCache
+	implicit?: boolean // spec applied automatically (e.g. auto integration with a plugin)
 }
 
 export const DEFAULT_METADATA_FIELD_FOR_SORTING: string = 'sort-index-value'

@@ -86,27 +86,29 @@ export const getBookmarksPlugin = (app?: App): Bookmarks_PluginInstance | undefi
     }
 }
 
-type TraverseCallback = (item: BookmarkedItem) => boolean | void
+type TraverseCallback = (item: BookmarkedItem, groupPath: string) => boolean | void
 
 const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callback: TraverseCallback) => {
-    const recursiveTraversal = (collection: Array<BookmarkedItem>) => {
+    const recursiveTraversal = (collection: Array<BookmarkedItem>, groupPath: string) => {
         for (let idx = 0, collectionRef = collection; idx < collectionRef.length; idx++) {
             const item = collectionRef[idx];
-            if (callback(item)) return;
-            if ('group' === item.type) recursiveTraversal(item.items);
+            if (callback(item, groupPath)) return;
+            if ('group' === item.type) recursiveTraversal(item.items, `${groupPath}${groupPath ? '/' : ''}${item.title}`);
         }
     };
-    recursiveTraversal(items);
+    recursiveTraversal(items, '');
 }
 
-// TODO: extend this function to take a scope as parameter: a path to Bookmarks group to start from
-//       Initially consuming all bookmarks is ok - finally the starting point (group) should be configurable
-const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance): OrderedBookmarks | undefined => {
+const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroup?: string): OrderedBookmarks | undefined => {
     const bookmarks: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_getBookmarks_methodName]()
     if (bookmarks) {
         const orderedBookmarks: OrderedBookmarks = {}
         let order: number = 0
-        const consumeItem = (item: BookmarkedItem) => {
+        const groupNamePrefix: string = bookmarksGroup ? `${bookmarksGroup}/` : ''
+        const consumeItem = (item: BookmarkedItem, groupPath: string) => {
+            if (groupNamePrefix && !groupPath.startsWith(groupNamePrefix)) {
+                return
+            }
             const isFile: boolean = item.type === 'file'
             const isAnchor: boolean = isFile && !!(item as BookmarkedFile).subpath
             const isFolder: boolean = item.type === 'folder'
@@ -133,9 +135,9 @@ const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance): OrderedBookmarks
 //    undefined ==> item not found in bookmarks
 //    > 0 ==> item found in bookmarks at returned position
 // Intentionally not returning 0 to allow simple syntax of processing the result
-export const determineBookmarkOrder = (path: string, plugin: Bookmarks_PluginInstance): number | undefined => {
+export const determineBookmarkOrder = (path: string, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string): number | undefined => {
     if (!bookmarksCache) {
-        bookmarksCache = getOrderedBookmarks(plugin)
+        bookmarksCache = getOrderedBookmarks(plugin, bookmarksGroup)
         bookmarksCacheTimestamp = Date.now()
     }
 

@@ -7,7 +7,7 @@ import {
 	FolderItemForSorting,
 	matchGroupRegex, sorterByBookmarkOrder, sorterByMetadataField,
 	SorterFn,
-	Sorters
+	getSorterFnFor, ProcessingContext
 } from './custom-sort';
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, RegExpSpec} from './custom-sort-types';
 import {CompoundDashNumberNormalizerFn, CompoundDotRomanNumberNormalizerFn} from "./sorting-spec-processor";
@@ -716,7 +716,9 @@ describe('determineSortingGroup', () => {
 					type: CustomSortGroupType.HasMetadataField,
 					withMetadataFieldName: "metadataField1",
 					exactPrefix: 'Ref'
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -732,7 +734,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -753,7 +755,9 @@ describe('determineSortingGroup', () => {
 					type: CustomSortGroupType.HasMetadataField,
 					withMetadataFieldName: "metadataField1",
 					exactPrefix: 'Ref'
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -769,7 +773,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -790,7 +794,9 @@ describe('determineSortingGroup', () => {
 					type: CustomSortGroupType.HasMetadataField,
 					withMetadataFieldName: "metadataField1",
 					exactPrefix: 'Ref'
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -806,7 +812,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -827,7 +833,9 @@ describe('determineSortingGroup', () => {
 					type: CustomSortGroupType.HasMetadataField,
 					withMetadataFieldName: "metadataField1",
 					exactPrefix: 'Ref'
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -843,7 +851,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(folder, sortSpec)
+			const result = determineSortingGroup(folder, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -876,7 +884,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
 				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -907,7 +915,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
 				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -938,7 +946,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -977,7 +985,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1016,7 +1024,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1058,7 +1066,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1093,7 +1101,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1127,7 +1135,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1162,7 +1170,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1193,7 +1201,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1235,7 +1243,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1280,7 +1288,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1323,7 +1331,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1369,7 +1377,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1412,7 +1420,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1458,7 +1466,7 @@ describe('determineSortingGroup', () => {
 			// when
 			const result = determineSortingGroup(folder, sortSpec, {
 				iconFolderPluginInstance: obsidianIconFolderPluginInstance as ObsidianIconFolder_PluginInstance
-			})
+			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1491,7 +1499,9 @@ describe('determineSortingGroup', () => {
 					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
 					order: CustomSortOrder.byMetadataFieldAlphabetical
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1507,7 +1517,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1530,7 +1540,9 @@ describe('determineSortingGroup', () => {
 					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
 					order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1546,7 +1558,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1569,7 +1581,9 @@ describe('determineSortingGroup', () => {
 					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
 					order: CustomSortOrder.byMetadataFieldTrueAlphabetical
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1585,7 +1599,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1608,7 +1622,9 @@ describe('determineSortingGroup', () => {
 					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
 					order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1624,7 +1640,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1647,7 +1663,9 @@ describe('determineSortingGroup', () => {
 					exactPrefix: 'Ref',
 					byMetadataField: 'metadata-field-for-sorting',
 					order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1663,7 +1681,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(folder, sortSpec)
+			const result = determineSortingGroup(folder, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1687,6 +1705,10 @@ describe('determineSortingGroup', () => {
 					exactPrefix: 'Ref',
 					order: CustomSortOrder.byMetadataFieldAlphabetical
 				}],
+				defaultOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+				byMetadataField: 'metadata-field-for-sorting-specified-on-target-folder'
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1698,13 +1720,11 @@ describe('determineSortingGroup', () => {
 							}
 						}[path]
 					}
-				} as MetadataCache,
-				defaultOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-				byMetadataField: 'metadata-field-for-sorting-specified-on-target-folder',
+				} as MetadataCache
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1726,7 +1746,9 @@ describe('determineSortingGroup', () => {
 					type: CustomSortGroupType.HasMetadataField,
 					order: CustomSortOrder.byMetadataFieldAlphabetical,
 					withMetadataFieldName: 'field-used-with-with-metadata-syntax'
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1742,7 +1764,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -1764,7 +1786,9 @@ describe('determineSortingGroup', () => {
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
 					order: CustomSortOrder.byMetadataFieldAlphabetical
-				}],
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
 					getCache: function (path: string): CachedMetadata | undefined {
 						return {
@@ -1780,7 +1804,7 @@ describe('determineSortingGroup', () => {
 			}
 
 			// when
-			const result = determineSortingGroup(file, sortSpec)
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
@@ -2094,7 +2118,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			metadataFieldValue: 'B'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabetical]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabetical)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2114,7 +2138,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 			metadataFieldValue: 'Aaa',
 			sortString: 'a123'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabetical]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabetical)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2135,7 +2159,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			sortString: 'n123'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabetical]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabetical)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2153,7 +2177,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			sortString: 'ccc '
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabetical]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabetical)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2176,7 +2200,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			metadataFieldValue: 'B'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabeticalReverse]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabeticalReverse)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2196,7 +2220,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 			metadataFieldValue: 'Aaa',
 			sortString: 'a123'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabeticalReverse]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabeticalReverse)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2217,7 +2241,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			sortString: 'n123'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabetical]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabetical)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2236,7 +2260,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			sortString: 'n123'
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabeticalReverse]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabeticalReverse)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
@@ -2254,7 +2278,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const itemB: Partial<FolderItemForSorting> = {
 			sortString: 'ccc '
 		}
-		const sorter: SorterFn = Sorters[CustomSortOrder.byMetadataFieldAlphabeticalReverse]
+		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabeticalReverse)
 
 		// when
 		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)

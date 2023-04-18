@@ -1,8 +1,7 @@
-import {FrontMatterCache, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
-import {determineStarredStatusOf, getStarredPlugin, Starred_PluginInstance} from '../utils/StarredPluginSignature';
+import {FrontMatterCache, MetadataCache, Plugin, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
+import {determineStarredStatusOf, Starred_PluginInstance} from '../utils/StarredPluginSignature';
 import {
 	determineIconOf,
-	getIconFolderPlugin,
 	ObsidianIconFolder_PluginInstance
 } from '../utils/ObsidianIconFolderPluginSignature'
 import {
@@ -17,9 +16,20 @@ import {
 import {isDefined} from "../utils/utils";
 import {
 	Bookmarks_PluginInstance,
-	determineBookmarkOrder,
-	getBookmarksPlugin
+	determineBookmarkOrder
 } from "../utils/BookmarksCorePluginSignature";
+
+export interface ProcessingContext {
+	// For internal transient use
+	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
+	_mCache?: MetadataCache
+	starredPluginInstance?: Starred_PluginInstance
+	bookmarksPlugin: {
+		instance?: Bookmarks_PluginInstance,
+		groupNameForSorting?: string
+	}
+	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
+}
 
 let CollatorCompare = new Intl.Collator(undefined, {
 	usage: "sort",
@@ -95,7 +105,7 @@ export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: b
 	}
 }
 
-export let Sorters: { [key in CustomSortOrder]: SorterFn } = {
+let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
 	[CustomSortOrder.trueAlphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortString, a.sortString),
@@ -115,29 +125,62 @@ export let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byBookmarkOrder]: sorterByBookmarkOrder(StraightOrder),
 	[CustomSortOrder.byBookmarkOrderReverse]: sorterByBookmarkOrder(ReverseOrder),
 
-	// This is a fallback entry which should not be used - the plugin code should refrain from custom sorting at all
+	// This is a fallback entry which should not be used - the getSorterFor() function below should protect against it
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
 };
 
-function compareTwoItems(itA: FolderItemForSorting, itB: FolderItemForSorting, sortSpec: CustomSortSpec) {
-	if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
-		if (itA.groupIdx === itB.groupIdx) {
-			const group: CustomSortGroup | undefined = sortSpec.groups[itA.groupIdx]
-			const matchingGroupPresentOnBothSidesAndEqual: boolean = itA.matchGroup !== undefined && itA.matchGroup === itB.matchGroup
-			if (matchingGroupPresentOnBothSidesAndEqual && group.secondaryOrder) {
-				return Sorters[group.secondaryOrder ?? CustomSortOrder.default](itA, itB)
+const StandardObsidianToCustomSort: {[key: string]: CustomSortOrder} = {
+	"alphabetical": CustomSortOrder.alphabetical,
+	"alphabeticalReverse": CustomSortOrder.alphabeticalReverse,
+	"byModifiedTime": CustomSortOrder.byModifiedTimeReverse,     // In Obsidian labeled as 'Modified time (new to old)'
+	"byModifiedTimeReverse": CustomSortOrder.byModifiedTime,     // In Obsidian labeled as 'Modified time (old to new)'
+	"byCreatedTime": CustomSortOrder.byCreatedTimeReverse,       // In Obsidian labeled as 'Created time (new to old)'
+	"byCreatedTimeReverse": CustomSortOrder.byCreatedTime        // In Obsidian labeled as 'Created time (old to new)'
+}
+
+// Standard Obsidian comparator keeps folders in the top sorted alphabetically
+const StandardObsidianComparator = (order: CustomSortOrder): SorterFn => {
+	const customSorterFn = Sorters[order]
+	return (a: FolderItemForSorting, b: FolderItemForSorting): number => {
+		return a.isFolder || b.isFolder
+			?
+			(a.isFolder && !b.isFolder ? -1 : (b.isFolder && !a.isFolder ? 1 : Sorters[CustomSortOrder.alphabetical](a,b)))
+			:
+			customSorterFn(a, b);
+	}
+}
+
+export const getSorterFnFor = (sorting: CustomSortOrder, currentUIselectedSorting?: string): SorterFn => {
+	if (sorting === CustomSortOrder.standardObsidian) {
+		sorting = StandardObsidianToCustomSort[currentUIselectedSorting ?? 'alphabetical'] ?? CustomSortOrder.alphabetical
+		return StandardObsidianComparator(sorting)
+	} else {
+		return Sorters[sorting]
+	}
+}
+
+function getComparator(sortSpec: CustomSortSpec, currentUIselectedSorting?: string): SorterFn {
+	const compareTwoItems = (itA: FolderItemForSorting, itB: FolderItemForSorting) => {
+		if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
+			if (itA.groupIdx === itB.groupIdx) {
+				const group: CustomSortGroup | undefined = sortSpec.groups[itA.groupIdx]
+				const matchingGroupPresentOnBothSidesAndEqual: boolean = itA.matchGroup !== undefined && itA.matchGroup === itB.matchGroup
+				if (matchingGroupPresentOnBothSidesAndEqual && group.secondaryOrder) {
+					return getSorterFnFor(group.secondaryOrder ?? CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
+				} else {
+					return getSorterFnFor(group?.order ?? CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
+				}
 			} else {
-				return Sorters[group?.order ?? CustomSortOrder.default](itA, itB)
+				return itA.groupIdx - itB.groupIdx;
 			}
 		} else {
-			return itA.groupIdx - itB.groupIdx;
+			// should never happen - groupIdx is not known for at least one of items to compare.
+			// The logic of determining the index always sets some idx
+			// Yet for sanity and to satisfy TS code analyzer a fallback to default behavior below
+			return getSorterFnFor(CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
 		}
-	} else {
-		// should never happen - groupIdx is not known for at least one of items to compare.
-		// The logic of determining the index always sets some idx
-		// Yet for sanity and to satisfy TS code analyzer a fallback to default behavior below
-		return Sorters[CustomSortOrder.default](itA, itB)
 	}
+	return compareTwoItems
 }
 
 const isFolder = (entry: TAbstractFile) => {
@@ -171,13 +214,7 @@ export const matchGroupRegex = (theRegex: RegExpSpec, nameForMatching: string): 
 	return [false, undefined, undefined]
 }
 
-export interface Context {
-	starredPluginInstance?: Starred_PluginInstance
-	bookmarksPluginInstance?: Bookmarks_PluginInstance
-	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
-}
-
-export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: Context): FolderItemForSorting {
+export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: ProcessingContext): FolderItemForSorting {
 	let groupIdx: number
 	let determined: boolean = false
 	let matchedGroup: string | null | undefined
@@ -261,10 +298,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				break
 			case CustomSortGroupType.HasMetadataField:
 				if (group.withMetadataFieldName) {
-					if (spec._mCache) {
+					if (ctx?._mCache) {
 						// For folders - scan metadata of 'folder note'
 						const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
-						const frontMatterCache: FrontMatterCache | undefined = spec._mCache.getCache(notePathToScan)?.frontmatter
+						const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
 						const hasMetadata: boolean | undefined = frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
 
 						if (hasMetadata) {
@@ -282,8 +319,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				}
 				break
 			case CustomSortGroupType.BookmarkedOnly:
-				if (ctx?.bookmarksPluginInstance) {
-					const bookmarkOrder: number | undefined = determineBookmarkOrder(entry.path, ctx.bookmarksPluginInstance)
+				if (ctx?.bookmarksPlugin?.instance) {
+					const bookmarkOrder: number | undefined = determineBookmarkOrder(entry.path, ctx.bookmarksPlugin?.instance, ctx.bookmarksPlugin?.groupNameForSorting)
 					if (bookmarkOrder) { // safe ==> orders intentionally start from 1
 						determined = true
 						bookmarkedIdx = bookmarkOrder
@@ -362,10 +399,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				metadataFieldName = DEFAULT_METADATA_FIELD_FOR_SORTING
 			}
 			if (metadataFieldName) {
-				if (spec._mCache) {
+				if (ctx?._mCache) {
 					// For folders - scan metadata of 'folder note'
 					const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
-					const frontMatterCache: FrontMatterCache | undefined = spec._mCache.getCache(notePathToScan)?.frontmatter
+					const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
 					metadataValueToSortBy = frontMatterCache?.[metadataFieldName]
 				}
 			}
@@ -455,7 +492,7 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 
 // Order by bookmarks order can be applied independently of grouping by bookmarked status
 //   This function determines the bookmarked order if the sorting criteria (of group or entire folder) requires it
-export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, plugin: Bookmarks_PluginInstance) => {
+export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
 	if (!plugin) return
 
 	folderItems.forEach((item) => {
@@ -469,17 +506,13 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 			}
 		}
 		if (folderDefaultSortRequiresBookmarksOrder || groupSortRequiresBookmarksOrder) {
-			item.bookmarkedIdx = determineBookmarkOrder(item.path, plugin)
+			item.bookmarkedIdx = determineBookmarkOrder(item.path, plugin, bookmarksGroup)
 		}
 	})
 }
 
-export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
+export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
 	let fileExplorer = this.fileExplorer
-	sortingSpec._mCache = sortingSpec.plugin?.app.metadataCache
-	const starredPluginInstance: Starred_PluginInstance | undefined = getStarredPlugin(sortingSpec?.plugin?.app)
-	const bookmarksPluginInstance: Bookmarks_PluginInstance | undefined = getBookmarksPlugin(sortingSpec?.plugin?.app)
-	const iconFolderPluginInstance: ObsidianIconFolder_PluginInstance | undefined = getIconFolderPlugin(sortingSpec?.plugin?.app)
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
 		this.file.children.filter((entry: TFile | TFolder) => {
@@ -488,24 +521,20 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 		:
 		this.file.children)
 		.map((entry: TFile | TFolder) => {
-			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, {
-				starredPluginInstance: starredPluginInstance,
-				bookmarksPluginInstance: bookmarksPluginInstance,
-				iconFolderPluginInstance: iconFolderPluginInstance
-			})
+			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, ctx)
 			return itemForSorting
 		})
 
 	// Finally, for advanced sorting by modified date, for some folders the modified date has to be determined
 	determineFolderDatesIfNeeded(folderItems, sortingSpec)
 
-	if (bookmarksPluginInstance) {
-		determineBookmarksOrderIfNeeded(folderItems, sortingSpec, bookmarksPluginInstance)
+	if (ctx.bookmarksPlugin?.instance) {
+		determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPlugin.instance, ctx.bookmarksPlugin.groupNameForSorting)
 	}
 
-	folderItems.sort(function (itA: FolderItemForSorting, itB: FolderItemForSorting) {
-		return compareTwoItems(itA, itB, sortingSpec);
-	});
+	const comparator: SorterFn = getComparator(sortingSpec, fileExplorer.sortOrder)
+
+	folderItems.sort(comparator)
 
 	const items = folderItems
 		.map((item: FolderItemForSorting) => fileExplorer.fileItems[item.path])
@@ -515,8 +544,4 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 	} else {
 		this.children = items;
 	}
-
-	// release risky references
-	sortingSpec._mCache = undefined
-	sortingSpec.plugin = undefined
 };
