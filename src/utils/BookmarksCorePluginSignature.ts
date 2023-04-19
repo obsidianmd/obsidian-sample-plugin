@@ -1,6 +1,9 @@
-import {App, InstalledPlugin, PluginInstance} from "obsidian";
+import {App, InstalledPlugin, Plugin, PluginInstance, TAbstractFile, TFolder} from "obsidian";
+import {lastPathComponent} from "./utils";
 
 const BookmarksPlugin_getBookmarks_methodName = 'getBookmarks'
+
+const BookmarksPlugin_items_collectionName = 'items'
 
 type Path = string
 
@@ -16,20 +19,23 @@ interface BookmarkWithPath {
 interface BookmarkedFile {
     type: 'file'
     path: Path
-    subpath?: string  // Anchor within the file
+    subpath?: string  // Anchor within the file (heading and/or block ref)
     title?: string
+    ctime: number
 }
 
 interface BookmarkedFolder {
     type: 'folder'
     path: Path
     title?: string
+    ctime: number
 }
 
 interface BookmarkedGroup {
     type: 'group'
     items: Array<BookmarkedItem>
     title?: string
+    ctime: number
 }
 
 export type BookmarkedItemPath = string
@@ -37,6 +43,7 @@ export type BookmarkedItemPath = string
 export interface OrderedBookmarkedItem {
     file: boolean
     folder: boolean
+    group: boolean
     path: BookmarkedItemPath
     order: number
 }
@@ -47,6 +54,8 @@ interface OrderedBookmarks {
 
 export interface Bookmarks_PluginInstance extends PluginInstance {
     [BookmarksPlugin_getBookmarks_methodName]: () => Array<BookmarkedItem> | undefined
+    [BookmarksPlugin_items_collectionName]: Array<BookmarkedItem>
+    saveData(): void
 }
 
 let bookmarksCache: OrderedBookmarks | undefined = undefined
@@ -86,48 +95,55 @@ export const getBookmarksPlugin = (app?: App): Bookmarks_PluginInstance | undefi
     }
 }
 
-type TraverseCallback = (item: BookmarkedItem, groupPath: string) => boolean | void
+type TraverseCallback = (item: BookmarkedItem, parentsGroupsPath: string) => boolean | void
 
 const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callback: TraverseCallback) => {
-    const recursiveTraversal = (collection: Array<BookmarkedItem>, groupPath: string) => {
+    const recursiveTraversal = (collection: Array<BookmarkedItem>, groupsPath: string) => {
         for (let idx = 0, collectionRef = collection; idx < collectionRef.length; idx++) {
             const item = collectionRef[idx];
-            if (callback(item, groupPath)) return;
-            if ('group' === item.type) recursiveTraversal(item.items, `${groupPath}${groupPath ? '/' : ''}${item.title}`);
+            if (callback(item, groupsPath)) return;
+            if ('group' === item.type) recursiveTraversal(item.items, `${groupsPath}${groupsPath?'/':''}${item.title}`);
         }
     };
     recursiveTraversal(items, '');
 }
 
-const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroup?: string): OrderedBookmarks | undefined => {
-    const bookmarks: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_getBookmarks_methodName]()
+const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupName?: string): OrderedBookmarks | undefined => {
+    console.log(`Populating bookmarks cache with group scope ${bookmarksGroupName}`)
+    let bookmarks: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_getBookmarks_methodName]()
     if (bookmarks) {
-        const orderedBookmarks: OrderedBookmarks = {}
-        let order: number = 0
-        const groupNamePrefix: string = bookmarksGroup ? `${bookmarksGroup}/` : ''
-        const consumeItem = (item: BookmarkedItem, groupPath: string) => {
-            if (groupNamePrefix && !groupPath.startsWith(groupNamePrefix)) {
-                return
-            }
-            const isFile: boolean = item.type === 'file'
-            const isAnchor: boolean = isFile && !!(item as BookmarkedFile).subpath
-            const isFolder: boolean = item.type === 'folder'
-            if ((isFile && !isAnchor) || isFolder) {
-                const path = (item as BookmarkWithPath).path
-                // Consume only the first occurrence of a path in bookmarks, even if many duplicates can exist
-                const alreadyConsumed = orderedBookmarks[path]
-                if (!alreadyConsumed) {
-                    orderedBookmarks[path] = {
-                        path: path,
-                        order: order++,
-                        file: isFile,
-                        folder: isFile
+        if (bookmarksGroupName) {
+            const bookmarksGroup: BookmarkedGroup|undefined = bookmarks.find(
+                (item) => item.type === 'group' && item.title === bookmarksGroupName) as BookmarkedGroup
+            bookmarks = bookmarksGroup ? bookmarksGroup.items : undefined
+        }
+        if (bookmarks) {
+            const orderedBookmarks: OrderedBookmarks = {}
+            let order: number = 0
+            const consumeItem = (item: BookmarkedItem, parentGroupsPath: string) => {
+                const isFile: boolean = item.type === 'file'
+                const isAnchor: boolean = isFile && !!(item as BookmarkedFile).subpath
+                const isFolder: boolean = item.type === 'folder'
+                const isGroup: boolean = item.type === 'group'
+                if ((isFile && !isAnchor) || isFolder || isGroup) {
+                    const pathOfGroup: string = `${parentGroupsPath}${parentGroupsPath?'/':''}${item.title}`
+                    const path = isGroup ? pathOfGroup : (item as BookmarkWithPath).path
+                    // Consume only the first occurrence of a path in bookmarks, even if many duplicates can exist
+                    const alreadyConsumed = orderedBookmarks[path]
+                    if (!alreadyConsumed) {
+                        orderedBookmarks[path] = {
+                            path: path,
+                            order: order++,
+                            file: isFile,
+                            folder: isFile,
+                            group: isGroup
+                        }
                     }
                 }
             }
+            traverseBookmarksCollection(bookmarks, consumeItem)
+            return orderedBookmarks
         }
-        traverseBookmarksCollection(bookmarks, consumeItem)
-        return orderedBookmarks
     }
 }
 
@@ -144,4 +160,58 @@ export const determineBookmarkOrder = (path: string, plugin: Bookmarks_PluginIns
     const bookmarkedItemPosition: number | undefined = bookmarksCache?.[path]?.order
 
     return (bookmarkedItemPosition !== undefined && bookmarkedItemPosition >= 0) ? (bookmarkedItemPosition + 1) : undefined
+}
+
+// EXPERIMENTAL - operates on internal structures of core Bookmarks plugin
+
+const createBookmarkFileEntry = (path: string): BookmarkedFile => {
+    return { type: "file", ctime: Date.now(), path: path }
+}
+
+const createBookmarkGroupEntry = (title: string): BookmarkedGroup => {
+    return { type: "group", ctime: Date.now(), items: [], title: title }
+}
+
+export const bookmarkFolderItem = (item: TAbstractFile, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
+    bookmarkSiblings([item], plugin, bookmarksGroup)
+}
+
+export const bookmarkSiblings = (siblings: Array<TAbstractFile>, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
+    let items = plugin[BookmarksPlugin_items_collectionName]
+
+    if (siblings.length === 0) return // for sanity
+
+    const parentPathComponents: Array<string> = siblings[0].path.split('/')!
+    parentPathComponents.pop()
+
+    if (bookmarksGroup) {
+        parentPathComponents.unshift(bookmarksGroup)
+    }
+
+    parentPathComponents.forEach((pathSegment) => {
+        let group: BookmarkedGroup|undefined = items.find((it) => it.type === 'group' && it.title === pathSegment) as BookmarkedGroup
+        if (!group) {
+            group = createBookmarkGroupEntry(pathSegment)
+            items.push(group)
+        }
+        items = group.items
+    })
+
+    siblings.forEach((aSibling) => {
+        const siblingName = lastPathComponent(aSibling.path)
+        if (!items.find((it) =>
+            ((it.type === 'folder' || it.type === 'file') && it.path === aSibling.path) ||
+            (it.type === 'group' && it.title === siblingName))) {
+            const newEntry: BookmarkedItem = (aSibling instanceof TFolder) ? createBookmarkGroupEntry(siblingName) : createBookmarkFileEntry(aSibling.path)
+            items.push(newEntry)
+        }
+    });
+}
+
+export const saveDataAndUpdateBookmarkViews = (plugin: Bookmarks_PluginInstance, app: App) => {
+    plugin.saveData()
+    const bookmarksLeafs = app.workspace.getLeavesOfType('bookmarks')
+    bookmarksLeafs?.forEach((leaf) => {
+        (leaf.view as any)?.update?.()
+    })
 }

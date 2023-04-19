@@ -16,9 +16,14 @@ import {
 	Vault, WorkspaceLeaf
 } from 'obsidian';
 import {around} from 'monkey-around';
-import {folderSort, ProcessingContext} from './custom-sort/custom-sort';
+import {
+	folderSort,
+	ObsidianStandardDefaultSortingName,
+	ProcessingContext,
+	sortFolderItemsForBookmarking
+} from './custom-sort/custom-sort';
 import {SortingSpecProcessor, SortSpecsCollection} from './custom-sort/sorting-spec-processor';
-import {CustomSortOrder, CustomSortSpec} from './custom-sort/custom-sort-types';
+import {CustomSortSpec} from './custom-sort/custom-sort-types';
 
 import {
 	addIcons,
@@ -30,8 +35,14 @@ import {
 	ICON_SORT_SUSPENDED_SYNTAX_ERROR
 } from "./custom-sort/icons";
 import {getStarredPlugin} from "./utils/StarredPluginSignature";
-import {getBookmarksPlugin} from "./utils/BookmarksCorePluginSignature";
+import {
+	getBookmarksPlugin,
+	bookmarkFolderItem,
+	saveDataAndUpdateBookmarkViews,
+	bookmarkSiblings
+} from "./utils/BookmarksCorePluginSignature";
 import {getIconFolderPlugin} from "./utils/ObsidianIconFolderPluginSignature";
+import {lastPathComponent} from "./utils/utils";
 
 interface CustomSortPluginSettings {
 	additionalSortspecFile: string
@@ -317,14 +328,25 @@ export default class CustomSortPlugin extends Plugin {
 					item.setTitle('Custom sort: bookmark for sorting.');
 					item.setIcon('hashtag');
 					item.onClick(() => {
-						console.log(`custom-sort: bookmark this clicked ${source}`)
+						const bookmarksPlugin = getBookmarksPlugin(plugin.app)
+						console.log(`custom-sort: bookmark this clicked ${source} and the leaf is`)
+						if (bookmarksPlugin) {
+							bookmarkFolderItem(file, bookmarksPlugin, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+							saveDataAndUpdateBookmarkViews(bookmarksPlugin, plugin.app)
+						}
 					});
 				};
 				const bookmarkAllMenuItem = (item: MenuItem) => {
-					item.setTitle('Custom sort: bookmark all siblings for sorting.');
+					item.setTitle('Custom sort: bookmark+siblings for sorting.');
 					item.setIcon('hashtag');
 					item.onClick(() => {
 						console.log(`custom-sort: bookmark all siblings clicked ${source}`)
+						const bookmarksPlugin = getBookmarksPlugin(plugin.app)
+						if (bookmarksPlugin) {
+							const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent)
+							bookmarkSiblings(orderedChildren, bookmarksPlugin, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+							saveDataAndUpdateBookmarkViews(bookmarksPlugin, plugin.app)
+						}
 					});
 				};
 
@@ -358,6 +380,32 @@ export default class CustomSortPlugin extends Plugin {
 		})
 	}
 
+	determineSortSpecForFolder(folderPath: string, folderName?: string): CustomSortSpec|null|undefined {
+		folderName = folderName ?? lastPathComponent(folderPath)
+		let sortSpec: CustomSortSpec | null | undefined = this.sortSpecCache?.sortSpecByPath?.[folderPath]
+		sortSpec = sortSpec ?? this.sortSpecCache?.sortSpecByName?.[folderName]
+
+		if (!sortSpec && this.sortSpecCache?.sortSpecByWildcard) {
+			// when no sorting spec found directly by folder path, check for wildcard-based match
+			sortSpec = this.sortSpecCache?.sortSpecByWildcard.folderMatch(folderPath, folderName)
+		}
+		return sortSpec
+	}
+
+	createProcessingContextForSorting(): ProcessingContext {
+		const ctx: ProcessingContext = {
+			_mCache: this.app.metadataCache,
+			starredPluginInstance: getStarredPlugin(this.app),
+			bookmarksPlugin: {
+				instance: this.settings.automaticBookmarksIntegration ? getBookmarksPlugin(this.app) : undefined,
+				groupNameForSorting: this.settings.bookmarksGroupToConsumeAsOrderingReference
+			},
+			iconFolderPluginInstance: getIconFolderPlugin(this.app),
+			plugin: this
+		}
+		return ctx
+	}
+
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
 	patchFileExplorerFolder(patchableFileExplorer?: FileExplorerView): boolean {
 		let plugin = this;
@@ -371,10 +419,6 @@ export default class CustomSortPlugin extends Plugin {
 			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
 				sort(old: any) {
 					return function (...args: any[]) {
-						console.log(this)
-						console.log(this.fileExplorer.sortOrder)
-
-
 						// quick check for plugin status
 						if (plugin.settings.suspended) {
 							return old.call(this, ...args);
@@ -385,38 +429,12 @@ export default class CustomSortPlugin extends Plugin {
 							setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
 						}
 
-						// if custom sort is not specified, use the UI-selected
 						const folder: TFolder = this.file
-						let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath?.[folder.path]
-						sortSpec = sortSpec ?? plugin.sortSpecCache?.sortSpecByName?.[folder.name]
-
-						if (!sortSpec && plugin.sortSpecCache?.sortSpecByWildcard) {
-							// when no sorting spec found directly by folder path, check for wildcard-based match
-							sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path, folder.name)
-							/* SM??? if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
-								explicitlyStandardSort = true
-								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
-							}*/
-						}
-
-						// TODO: ensure that explicitly configured standard sort excludes the auto-applied on-the-fly
+						let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
 
 						if (sortSpec) {
-							console.log(`Sortspec for folder ${folder.path}`)
-							console.log(sortSpec)
-							const ctx: ProcessingContext = {
-								_mCache: plugin.app.metadataCache,
-								starredPluginInstance: getStarredPlugin(plugin.app),
-								bookmarksPlugin: {
-									instance: plugin.settings.automaticBookmarksIntegration ? getBookmarksPlugin(this.app) : undefined,
-									groupNameForSorting: plugin.settings.bookmarksGroupToConsumeAsOrderingReference
-								},
-								iconFolderPluginInstance: getIconFolderPlugin(this.app),
-								plugin: plugin
-							}
-							return folderSort.call(this, sortSpec, ctx);
+							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting());
 						} else {
-							console.log(`NO Sortspec for folder ${folder.path}`)
 							return old.call(this, ...args);
 						}
 					};
@@ -429,6 +447,16 @@ export default class CustomSortPlugin extends Plugin {
 		}
 	}
 
+	orderedFolderItemsForBookmarking(folder: TFolder): Array<TAbstractFile> {
+		let sortSpec: CustomSortSpec | null | undefined = undefined
+		if (!this.settings.suspended) {
+			sortSpec = this.determineSortSpecForFolder(folder.path, folder.name)
+		}
+		let uiSortOrder: string = this.getFileExplorer()?.sortOrder || ObsidianStandardDefaultSortingName
+
+		return sortFolderItemsForBookmarking(folder.children, sortSpec, this.createProcessingContextForSorting(), uiSortOrder)
+	}
+
 	// Credits go to https://github.com/nothingislost/obsidian-bartender
 	getFileExplorer(): FileExplorerView | undefined {
 		let fileExplorer: FileExplorerView | undefined = this.app.workspace.getLeavesOfType("file-explorer")?.first()
@@ -437,7 +465,6 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	onunload() {
-
 	}
 
 	updateStatusBar() {
@@ -453,6 +480,10 @@ export default class CustomSortPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+}
+
+const pathToFlatString = (path: string): string => {
+	return path.replace('/','_').replace('\\', '_')
 }
 
 class CustomSortSettingTab extends PluginSettingTab {
@@ -577,33 +608,23 @@ class CustomSortSettingTab extends PluginSettingTab {
 				.setPlaceholder('e.g. Group for sorting')
 				.setValue(this.plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 				.onChange(async (value) => {
-					this.plugin.settings.bookmarksGroupToConsumeAsOrderingReference = value.trim();
+					this.plugin.settings.bookmarksGroupToConsumeAsOrderingReference = value.trim() ? pathToFlatString(normalizePath(value)) : '';
 					await this.plugin.saveSettings();
 				}));
 	}
 }
 
-
 // TODO: clear bookmarks cache upon each tap on ribbon or on the command of 'sorting-on'
 
-// TODO: clear bookmarks cache upon each context menu - before and after (maybe after is not needed, implicitlty empty after first clearing)
-
-// TODO: if a folder doesn't have any bookmarked items, it should remain under control of standard obsidian sorting
+// TODO: clear bookmarks cache upon each context menu - before and after (maybe after is not needed, implicitly empty after first clearing)
 
 // TODO: in discussion sections add (and pin) announcement "DRAG & DROP ORDERING AVAILABLE VIA THE BOOKMARKS CORE PLUGIN INTEGRATION"
 
 // TODO: in community, add update message with announcement of drag & drop support via Bookmarks plugin
 
-// TODO: if folder has explicit sorting: standard, don't apply bookmarks
+// TODO: context menu only if bookmarks plugin enabled and new setting (yet to be exposed) doesn't disable it
 
-// TODO: fix error
-//        bookmarks integration - for root folder and for other folders
-//       (check for the case:
-//       target-folder: /*
-//       sorting: standard
+// TODO: defensive programming with ?. and equivalents to protect against crash if Obsidian API changes
+//    Better the plugin to fail an operation than crash with errors
 
-// TODO: unbookmarked items in partially bookmarked -> can it apply the system sort ???
-
-// TODO: unblock syntax 'sorting: standard' also for groups --> since I have access to currently configured sorting :-)
-
-// TODO: bug? On auto-bookmark integration strange behavior
+// TODO: remove console.log (many places added)

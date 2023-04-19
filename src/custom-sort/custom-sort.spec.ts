@@ -16,7 +16,6 @@ import {
 	ObsidianIconFolder_PluginInstance,
 	ObsidianIconFolderPlugin_Data
 } from "../utils/ObsidianIconFolderPluginSignature";
-import {determineBookmarkOrder} from "../utils/BookmarksCorePluginSignature";
 
 const mockTFile = (basename: string, ext: string, size?: number, ctime?: number, mtime?: number): TFile => {
 	return {

@@ -57,6 +57,8 @@ export interface FolderItemForSorting {
 }
 
 export type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
+export type PlainSorterFn = (a: TAbstractFile, b: TAbstractFile) => number
+export type PlainFileOnlySorterFn = (a: TFile, b: TFile) => number
 export type CollatorCompareFn = (a: string, b: string) => number
 
 // Syntax sugar
@@ -129,13 +131,32 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
 };
 
+// OS - Obsidian Sort
+const OS_alphabetical = 'alphabetical'
+const OS_alphabeticalReverse = 'alphabeticalReverse'
+const OS_byModifiedTime = 'byModifiedTime'
+const OS_byModifiedTimeReverse = 'byModifiedTimeReverse'
+const OS_byCreatedTime = 'byCreatedTime'
+const OS_byCreatedTimeReverse = 'byCreatedTimeReverse'
+
+export const ObsidianStandardDefaultSortingName = OS_alphabetical
+
 const StandardObsidianToCustomSort: {[key: string]: CustomSortOrder} = {
-	"alphabetical": CustomSortOrder.alphabetical,
-	"alphabeticalReverse": CustomSortOrder.alphabeticalReverse,
-	"byModifiedTime": CustomSortOrder.byModifiedTimeReverse,     // In Obsidian labeled as 'Modified time (new to old)'
-	"byModifiedTimeReverse": CustomSortOrder.byModifiedTime,     // In Obsidian labeled as 'Modified time (old to new)'
-	"byCreatedTime": CustomSortOrder.byCreatedTimeReverse,       // In Obsidian labeled as 'Created time (new to old)'
-	"byCreatedTimeReverse": CustomSortOrder.byCreatedTime        // In Obsidian labeled as 'Created time (old to new)'
+	[OS_alphabetical]: CustomSortOrder.alphabetical,
+	[OS_alphabeticalReverse]: CustomSortOrder.alphabeticalReverse,
+	[OS_byModifiedTime]: CustomSortOrder.byModifiedTimeReverse,     // In Obsidian labeled as 'Modified time (new to old)'
+	[OS_byModifiedTimeReverse]: CustomSortOrder.byModifiedTime,     // In Obsidian labeled as 'Modified time (old to new)'
+	[OS_byCreatedTime]: CustomSortOrder.byCreatedTimeReverse,       // In Obsidian labeled as 'Created time (new to old)'
+	[OS_byCreatedTimeReverse]: CustomSortOrder.byCreatedTime        // In Obsidian labeled as 'Created time (old to new)'
+}
+
+const StandardObsidianToPlainSortFn: {[key: string]: PlainFileOnlySorterFn} = {
+	[OS_alphabetical]: (a: TFile, b: TFile) => CollatorCompare(a.basename, b.basename),
+	[OS_alphabeticalReverse]: (a: TFile, b: TFile) => -StandardObsidianToPlainSortFn[OS_alphabetical](a,b),
+	[OS_byModifiedTime]: (a: TFile, b: TFile) => b.stat.mtime - a.stat.mtime,
+	[OS_byModifiedTimeReverse]: (a: TFile, b: TFile) => -StandardObsidianToPlainSortFn[OS_byModifiedTime](a,b),
+	[OS_byCreatedTime]: (a: TFile, b: TFile) => b.stat.ctime - a.stat.ctime,
+	[OS_byCreatedTimeReverse]: (a: TFile, b: TFile) => -StandardObsidianToPlainSortFn[OS_byCreatedTime](a,b)
 }
 
 // Standard Obsidian comparator keeps folders in the top sorted alphabetically
@@ -147,6 +168,20 @@ const StandardObsidianComparator = (order: CustomSortOrder): SorterFn => {
 			(a.isFolder && !b.isFolder ? -1 : (b.isFolder && !a.isFolder ? 1 : Sorters[CustomSortOrder.alphabetical](a,b)))
 			:
 			customSorterFn(a, b);
+	}
+}
+
+// Equivalent of StandardObsidianComparator working directly on TAbstractFile items
+export const StandardPlainObsidianComparator = (order: string): PlainSorterFn => {
+	const fileSorterFn = StandardObsidianToPlainSortFn[order] || StandardObsidianToCustomSort[OS_alphabetical]
+	return (a: TAbstractFile, b: TAbstractFile): number => {
+		const aIsFolder: boolean = a instanceof TFolder
+		const bIsFolder: boolean = b instanceof TFolder
+		return aIsFolder || bIsFolder
+			?
+			(aIsFolder && !bIsFolder ? -1 : (bIsFolder && !aIsFolder ? 1 : CollatorCompare(a.name,b.name)))
+			:
+			fileSorterFn(a as TFile, b as TFile);
 	}
 }
 
@@ -543,5 +578,38 @@ export const folderSort = function (sortingSpec: CustomSortSpec, ctx: Processing
 		this.vChildren.setChildren(items);
 	} else {
 		this.children = items;
+	}
+};
+
+// Returns a sorted copy of the input array, intentionally to keep it intact
+export const sortFolderItemsForBookmarking = function (items: Array<TAbstractFile>, sortingSpec: CustomSortSpec|null|undefined, ctx: ProcessingContext, uiSortOrder: string): Array<TAbstractFile> {
+	if (sortingSpec) {
+		const folderItemsByPath: { [key: string]: TAbstractFile } = {}
+
+		const folderItems: Array<FolderItemForSorting> = items.map((entry: TFile | TFolder) => {
+			folderItemsByPath[entry.path] = entry
+			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, ctx)
+			return itemForSorting
+		})
+
+		// Finally, for advanced sorting by modified date, for some folders the modified date has to be determined
+		determineFolderDatesIfNeeded(folderItems, sortingSpec)
+
+		if (ctx.bookmarksPlugin?.instance) {
+			determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPlugin.instance, ctx.bookmarksPlugin.groupNameForSorting)
+		}
+
+		const comparator: SorterFn = getComparator(sortingSpec, uiSortOrder)
+
+		folderItems.sort(comparator)
+
+		const sortedItems: Array<TAbstractFile> = folderItems.map((entry) => folderItemsByPath[entry.path])
+
+		return sortedItems
+	} else { // No custom sorting or the custom sort disabled - apply standard Obsidian sorting (internally 1:1 recreated implementation)
+		const folderItems: Array<TAbstractFile> = items.map((entry: TFile | TFolder) => entry)
+		const plainSorterFn: PlainSorterFn = StandardPlainObsidianComparator(uiSortOrder)
+		folderItems.sort(plainSorterFn)
+		return folderItems
 	}
 };
