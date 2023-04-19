@@ -1,5 +1,15 @@
-import {FrontMatterCache, MetadataCache, Plugin, requireApiVersion, TAbstractFile, TFile, TFolder} from 'obsidian';
-import {determineStarredStatusOf, Starred_PluginInstance} from '../utils/StarredPluginSignature';
+import {
+	FrontMatterCache,
+	MetadataCache,
+	Plugin,
+	requireApiVersion,
+	TAbstractFile,
+	TFile,
+	TFolder} from 'obsidian';
+import {
+	determineStarredStatusOf,
+	Starred_PluginInstance
+} from '../utils/StarredPluginSignature';
 import {
 	determineIconOf,
 	ObsidianIconFolder_PluginInstance

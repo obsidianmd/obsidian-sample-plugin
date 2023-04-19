@@ -5,9 +5,12 @@ import {
 	determineFolderDatesIfNeeded,
 	determineSortingGroup,
 	FolderItemForSorting,
-	matchGroupRegex, sorterByBookmarkOrder, sorterByMetadataField,
+	matchGroupRegex,
+	sorterByBookmarkOrder,
+	sorterByMetadataField,
 	SorterFn,
-	getSorterFnFor, ProcessingContext
+	getSorterFnFor,
+	ProcessingContext
 } from './custom-sort';
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, RegExpSpec} from './custom-sort-types';
 import {CompoundDashNumberNormalizerFn, CompoundDotRomanNumberNormalizerFn} from "./sorting-spec-processor";
