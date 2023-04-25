@@ -1,5 +1,5 @@
 import {App, InstalledPlugin, Plugin, PluginInstance, TAbstractFile, TFolder} from "obsidian";
-import {lastPathComponent} from "./utils";
+import {extractParentFolderPath, lastPathComponent} from "./utils";
 
 const BookmarksPlugin_getBookmarks_methodName = 'getBookmarks'
 
@@ -56,6 +56,7 @@ export interface Bookmarks_PluginInstance extends PluginInstance {
     [BookmarksPlugin_getBookmarks_methodName]: () => Array<BookmarkedItem> | undefined
     [BookmarksPlugin_items_collectionName]: Array<BookmarkedItem>
     saveData(): void
+    onItemsChanged(saveData: boolean): void
 }
 
 let bookmarksCache: OrderedBookmarks | undefined = undefined
@@ -108,6 +109,8 @@ const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callback: Tra
     recursiveTraversal(items, '');
 }
 
+const ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR = '#^.'
+
 const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupName?: string): OrderedBookmarks | undefined => {
     console.log(`Populating bookmarks cache with group scope ${bookmarksGroupName}`)
     let bookmarks: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_getBookmarks_methodName]()
@@ -122,10 +125,10 @@ const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupNam
             let order: number = 0
             const consumeItem = (item: BookmarkedItem, parentGroupsPath: string) => {
                 const isFile: boolean = item.type === 'file'
-                const isAnchor: boolean = isFile && !!(item as BookmarkedFile).subpath
+                const hasSortspecAnchor: boolean = isFile && (item as BookmarkedFile).subpath === ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR
                 const isFolder: boolean = item.type === 'folder'
                 const isGroup: boolean = item.type === 'group'
-                if ((isFile && !isAnchor) || isFolder || isGroup) {
+                if ((isFile && hasSortspecAnchor) || isFolder || isGroup) {
                     const pathOfGroup: string = `${parentGroupsPath}${parentGroupsPath?'/':''}${item.title}`
                     const path = isGroup ? pathOfGroup : (item as BookmarkWithPath).path
                     // Consume only the first occurrence of a path in bookmarks, even if many duplicates can exist
@@ -165,7 +168,9 @@ export const determineBookmarkOrder = (path: string, plugin: Bookmarks_PluginIns
 // EXPERIMENTAL - operates on internal structures of core Bookmarks plugin
 
 const createBookmarkFileEntry = (path: string): BookmarkedFile => {
-    return { type: "file", ctime: Date.now(), path: path }
+    // Artificial subpath added intentionally to prevent Bookmarks context menu from finding this item in bookmarks
+    //    and - in turn - allow bookmarking it by the user for regular (non sorting) purposes
+    return { type: "file", ctime: Date.now(), path: path, subpath: ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR }
 }
 
 const createBookmarkGroupEntry = (title: string): BookmarkedGroup => {
@@ -176,42 +181,127 @@ export const bookmarkFolderItem = (item: TAbstractFile, plugin: Bookmarks_Plugin
     bookmarkSiblings([item], plugin, bookmarksGroup)
 }
 
-export const bookmarkSiblings = (siblings: Array<TAbstractFile>, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
+interface BookmarkedParentFolder {
+    group?: BookmarkedGroup  // undefined when the item is at root level of bookmarks
+    items: Array<BookmarkedItem> // reference to group.items or to root collection of bookmarks
+}
+
+interface ItemInBookmarks {
+    parentItemsCollection: Array<BookmarkedItem>
+    item: BookmarkedItem
+}
+
+const findGroupForItemPathInBookmarks = (itemPath: string, createIfMissing: boolean, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string): BookmarkedParentFolder|undefined => {
     let items = plugin[BookmarksPlugin_items_collectionName]
 
-    if (siblings.length === 0) return // for sanity
+    if (!itemPath || !itemPath.trim()) return undefined // for sanity
 
-    const parentPathComponents: Array<string> = siblings[0].path.split('/')!
-    parentPathComponents.pop()
+    const parentPath: string = extractParentFolderPath(itemPath)
+
+    const parentPathComponents: Array<string> = parentPath ? parentPath.split('/')! : []
 
     if (bookmarksGroup) {
         parentPathComponents.unshift(bookmarksGroup)
     }
 
+    let group: BookmarkedGroup|undefined = undefined
+
     parentPathComponents.forEach((pathSegment) => {
         let group: BookmarkedGroup|undefined = items.find((it) => it.type === 'group' && it.title === pathSegment) as BookmarkedGroup
         if (!group) {
-            group = createBookmarkGroupEntry(pathSegment)
-            items.push(group)
+            if (createIfMissing) {
+                group = createBookmarkGroupEntry(pathSegment)
+                items.push(group)
+            } else {
+                return undefined
+            }
         }
+
         items = group.items
     })
 
-    siblings.forEach((aSibling) => {
-        const siblingName = lastPathComponent(aSibling.path)
-        if (!items.find((it) =>
-            ((it.type === 'folder' || it.type === 'file') && it.path === aSibling.path) ||
-            (it.type === 'group' && it.title === siblingName))) {
-            const newEntry: BookmarkedItem = (aSibling instanceof TFolder) ? createBookmarkGroupEntry(siblingName) : createBookmarkFileEntry(aSibling.path)
-            items.push(newEntry)
-        }
-    });
+    return {
+        items: items,
+        group: group
+    }
+}
+
+const CreateIfMissing = true
+const DontCreateIfMissing = false
+
+export const bookmarkSiblings = (siblings: Array<TAbstractFile>, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
+    if (siblings.length === 0) return // for sanity
+
+    const bookmarksContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(siblings[0].path, CreateIfMissing, plugin, bookmarksGroup)
+
+    if (bookmarksContainer) {  // for sanity, the group should be always created if missing
+        siblings.forEach((aSibling) => {
+            const siblingName = lastPathComponent(aSibling.path)
+            if (!bookmarksContainer.items.find((it) =>
+                ((it.type === 'folder' || it.type === 'file') && it.path === aSibling.path) ||
+                (it.type === 'group' && it.title === siblingName))) {
+                const newEntry: BookmarkedItem = (aSibling instanceof TFolder) ? createBookmarkGroupEntry(siblingName) : createBookmarkFileEntry(aSibling.path)
+                bookmarksContainer.items.push(newEntry)
+            }
+        });
+    }
 }
 
 export const saveDataAndUpdateBookmarkViews = (plugin: Bookmarks_PluginInstance, app: App) => {
-    plugin.saveData()
+    plugin.onItemsChanged(true)
     const bookmarksLeafs = app.workspace.getLeavesOfType('bookmarks')
     bookmarksLeafs?.forEach((leaf) => {
         (leaf.view as any)?.update?.()
     })
+}
+
+export const updateSortingBookmarksAfterItemRename = (plugin: Bookmarks_PluginInstance, renamedItem: TAbstractFile, oldPath: string, bookmarksGroup?: string) => {
+
+    if (renamedItem.path === oldPath) return; // sanity
+
+    let items = plugin[BookmarksPlugin_items_collectionName]
+    const aFolder: boolean = renamedItem instanceof TFolder
+    const aFolderWithChildren: boolean = aFolder && (renamedItem as TFolder).children.length > 0
+    const aFile: boolean = !aFolder
+    const oldParentPath: string = extractParentFolderPath(oldPath)
+    const oldName: string = lastPathComponent(oldPath)
+    const newParentPath: string = extractParentFolderPath(renamedItem.path)
+    const newName: string = lastPathComponent(renamedItem.path)
+    const moved: boolean = oldParentPath !== newParentPath
+    const renamed: boolean = oldName !== newName
+
+    const originalContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(oldPath, DontCreateIfMissing, plugin, bookmarksGroup)
+
+    if (!originalContainer) return;
+
+    const item: BookmarkedItem|undefined = originalContainer.items.find((it) => {
+        if (aFolder && it.type === 'group' && it.title === oldName) return true;
+        if (aFile && it.type === 'file' && it.path === oldPath) return true;
+    })
+
+    if (!item) return;
+
+    // The renamed/moved item was located in bookmarks, apply the necessary bookmarks updates
+
+    let itemRemovedFromBookmarks: boolean = false
+    if (moved) {
+        originalContainer.items.remove(item)
+        const createTargetLocation: boolean = aFolderWithChildren
+        const targetContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(renamedItem.path, createTargetLocation, plugin, bookmarksGroup)
+        if (targetContainer) {
+            targetContainer.items.push(item)
+        } else {
+            itemRemovedFromBookmarks = true  // open question: remove from bookmarks indeed, if target location was not under bookmarks control?
+        }
+    }
+
+    if (aFolder && renamed && !itemRemovedFromBookmarks) {
+        // Renames of files are handled automatically by Bookmarks core plugin, only need to handle folder rename
+        //    because folders are represented (for sorting purposes) by groups with exact name
+        (item as BookmarkedGroup).title = newName
+    }
+
+    console.log(`Folder renamel from ${oldPath} to ${renamedItem.path}`)
+
+    plugin.onItemsChanged(true)
 }

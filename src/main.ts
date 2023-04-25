@@ -39,7 +39,8 @@ import {
 	getBookmarksPlugin,
 	bookmarkFolderItem,
 	saveDataAndUpdateBookmarkViews,
-	bookmarkSiblings
+	bookmarkSiblings,
+	updateSortingBookmarksAfterItemRename
 } from "./utils/BookmarksCorePluginSignature";
 import {getIconFolderPlugin} from "./utils/ObsidianIconFolderPluginSignature";
 import {lastPathComponent} from "./utils/utils";
@@ -354,6 +355,15 @@ export default class CustomSortPlugin extends Plugin {
 				menu.addItem(bookmarkAllMenuItem)
 			})
 		)
+
+		this.registerEvent(
+			this.app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
+				const bookmarksPlugin = getBookmarksPlugin(plugin.app)
+				if (bookmarksPlugin) {
+					updateSortingBookmarksAfterItemRename(bookmarksPlugin, file, oldPath, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+				}
+			})
+		)
 	}
 
 	registerCommands() {
@@ -628,3 +638,5 @@ class CustomSortSettingTab extends PluginSettingTab {
 //    Better the plugin to fail an operation than crash with errors
 
 // TODO: remove console.log (many places added)
+
+// Invoke 'onItemsChanged' consciously for the bookmarks plugin
