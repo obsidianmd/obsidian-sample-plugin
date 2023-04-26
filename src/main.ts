@@ -640,3 +640,9 @@ class CustomSortSettingTab extends PluginSettingTab {
 // TODO: remove console.log (many places added)
 
 // Invoke 'onItemsChanged' consciously for the bookmarks plugin
+
+// TODO: on delete - delete from bkmrks
+
+// TODO: ctx menu 'show in bookmarks' instead of 'bookmrk this'
+
+// TODO: new items bkmrkd in the top instead of in the bottom. Or maybe at actual location (???)
