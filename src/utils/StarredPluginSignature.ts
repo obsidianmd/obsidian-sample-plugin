@@ -1,4 +1,4 @@
-import {App, InstalledPlugin, PluginInstance, TAbstractFile, TFile, TFolder} from "obsidian";
+import {InstalledPlugin, PluginInstance, TAbstractFile, TFile, TFolder} from "obsidian";
 
 export const StarredPlugin_findStarredFile_methodName = 'findStarredFile'
 
@@ -12,7 +12,7 @@ export interface Starred_PluginInstance extends PluginInstance {
 
 export const StarredCorePluginId: string = 'starred'
 
-export const getStarredPlugin = (app?: App): Starred_PluginInstance | undefined => {
+export const getStarredPlugin = (): Starred_PluginInstance | undefined => {
     const starredPlugin: InstalledPlugin | undefined = app?.internalPlugins?.getPluginById(StarredCorePluginId)
     if (starredPlugin && starredPlugin.enabled && starredPlugin.instance) {
         const starredPluginInstance: Starred_PluginInstance = starredPlugin.instance as Starred_PluginInstance

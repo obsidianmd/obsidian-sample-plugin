@@ -1,4 +1,4 @@
-import {App, InstalledPlugin, Plugin, PluginInstance, TAbstractFile, TFolder} from "obsidian";
+import {InstalledPlugin, PluginInstance, TAbstractFile, TFile, TFolder} from "obsidian";
 import {extractParentFolderPath, lastPathComponent} from "./utils";
 
 const BookmarksPlugin_getBookmarks_methodName = 'getBookmarks'
@@ -46,25 +46,131 @@ export interface OrderedBookmarkedItem {
     group: boolean
     path: BookmarkedItemPath
     order: number
+    pathOfBookmarkGroupsMatches: boolean
 }
 
 interface OrderedBookmarks {
     [key: BookmarkedItemPath]: OrderedBookmarkedItem
 }
 
-export interface Bookmarks_PluginInstance extends PluginInstance {
+interface Bookmarks_PluginInstance extends PluginInstance {
     [BookmarksPlugin_getBookmarks_methodName]: () => Array<BookmarkedItem> | undefined
     [BookmarksPlugin_items_collectionName]: Array<BookmarkedItem>
     saveData(): void
     onItemsChanged(saveData: boolean): void
 }
 
+export interface BookmarksPluginInterface {
+    determineBookmarkOrder(path: string): number|undefined
+    bookmarkFolderItem(item: TAbstractFile): void
+    saveDataAndUpdateBookmarkViews(updateBookmarkViews: boolean): void
+    bookmarkSiblings(siblings: Array<TAbstractFile>, inTheTop?: boolean): void
+    updateSortingBookmarksAfterItemRenamed(renamedItem: TAbstractFile, oldPath: string): void
+    updateSortingBookmarksAfterItemDeleted(deletedItem: TAbstractFile): void
+}
+
+class BookmarksPluginWrapper implements BookmarksPluginInterface {
+
+    plugin: Bookmarks_PluginInstance|undefined
+    groupNameForSorting: string|undefined
+
+    constructor () {
+    }
+
+    // Result:
+    //    undefined ==> item not found in bookmarks
+    //    > 0 ==> item found in bookmarks at returned position
+    // Intentionally not returning 0 to allow simple syntax of processing the result
+    determineBookmarkOrder = (path: string): number | undefined => {
+        if (!bookmarksCache) {
+            bookmarksCache = getOrderedBookmarks(this.plugin!, this.groupNameForSorting)
+            bookmarksCacheTimestamp = Date.now()
+        }
+
+        const bookmarkedItemPosition: number | undefined = bookmarksCache?.[path]?.order
+
+        return (bookmarkedItemPosition !== undefined && bookmarkedItemPosition >= 0) ? (bookmarkedItemPosition + 1) : undefined
+    }
+
+    bookmarkFolderItem = (item: TAbstractFile) => {
+        this.bookmarkSiblings([item], true)
+    }
+
+    saveDataAndUpdateBookmarkViews = (updateBookmarkViews: boolean = true) => {
+        this.plugin!.onItemsChanged(true)
+        if (updateBookmarkViews) {
+            const bookmarksLeafs = app.workspace.getLeavesOfType('bookmarks')
+            bookmarksLeafs?.forEach((leaf) => {
+                (leaf.view as any)?.update?.()
+            })
+        }
+    }
+
+    bookmarkSiblings = (siblings: Array<TAbstractFile>, inTheTop?: boolean) => {
+        console.log('In this.bookmarksSiblings()')
+        if (siblings.length === 0) return // for sanity
+
+        const bookmarksContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(
+            siblings[0].path,
+            CreateIfMissing,
+            this.plugin!,
+            this.groupNameForSorting
+        )
+
+        if (bookmarksContainer) {  // for sanity, the group should be always created if missing
+            siblings.forEach((aSibling) => {
+                const siblingName = lastPathComponent(aSibling.path)
+                if (!bookmarksContainer.items.find((it) =>
+                    ((it.type === 'folder' || it.type === 'file') && it.path === aSibling.path) ||
+                    (it.type === 'group' && it.title === siblingName))) {
+                    const newEntry: BookmarkedItem = (aSibling instanceof TFolder) ? createBookmarkGroupEntry(siblingName) : createBookmarkFileEntry(aSibling.path);
+                    if (inTheTop) {
+                        bookmarksContainer.items.unshift(newEntry)
+                    } else {
+                        bookmarksContainer.items.push(newEntry)
+                    }
+                }
+            });
+        }
+    }
+
+    updateSortingBookmarksAfterItemRenamed = (renamedItem: TAbstractFile, oldPath: string): void => {
+        updateSortingBookmarksAfterItemRenamed(this.plugin!, renamedItem, oldPath, this.groupNameForSorting)
+    }
+
+    updateSortingBookmarksAfterItemDeleted = (deletedItem: TAbstractFile): void => {
+        updateSortingBookmarksAfterItemDeleted(this.plugin!, deletedItem, this.groupNameForSorting)
+    }
+}
+
+export const BookmarksCorePluginId: string = 'bookmarks'
+
+export const getBookmarksPlugin = (bookmarksGroupName?: string): BookmarksPluginInterface | undefined => {
+    invalidateExpiredBookmarksCache()
+    const installedBookmarksPlugin: InstalledPlugin | undefined = app?.internalPlugins?.getPluginById(BookmarksCorePluginId)
+    console.log(installedBookmarksPlugin)
+    const bookmarks = (installedBookmarksPlugin?.instance as any) ?.['getBookmarks']()
+    console.log(bookmarks)
+    if (installedBookmarksPlugin && installedBookmarksPlugin.enabled && installedBookmarksPlugin.instance) {
+        const bookmarksPluginInstance: Bookmarks_PluginInstance = installedBookmarksPlugin.instance as Bookmarks_PluginInstance
+        // defensive programming, in case Obsidian changes its internal APIs
+        if (typeof bookmarksPluginInstance?.[BookmarksPlugin_getBookmarks_methodName] === 'function') {
+            bookmarksPlugin.plugin = bookmarksPluginInstance
+            bookmarksPlugin.groupNameForSorting = bookmarksGroupName
+            return bookmarksPlugin
+        }
+    }
+}
+
+// cache can outlive the wrapper instances
 let bookmarksCache: OrderedBookmarks | undefined = undefined
 let bookmarksCacheTimestamp: number | undefined = undefined
 
+const bookmarksPlugin: BookmarksPluginWrapper = new BookmarksPluginWrapper()
+
 const CacheExpirationMilis = 1000  // One second seems to be reasonable
 
-export const invalidateExpiredBookmarksCache = (force?: boolean): void => {
+const invalidateExpiredBookmarksCache = (force?: boolean): void => {
     if (bookmarksCache) {
         let flush: boolean = true
         if (!force && !!bookmarksCacheTimestamp) {
@@ -75,23 +181,6 @@ export const invalidateExpiredBookmarksCache = (force?: boolean): void => {
         if (flush) {
             bookmarksCache = undefined
             bookmarksCacheTimestamp = undefined
-        }
-    }
-}
-
-export const BookmarksCorePluginId: string = 'bookmarks'
-
-export const getBookmarksPlugin = (app?: App): Bookmarks_PluginInstance | undefined => {
-    invalidateExpiredBookmarksCache()
-    const bookmarksPlugin: InstalledPlugin | undefined = app?.internalPlugins?.getPluginById(BookmarksCorePluginId)
-    console.log(bookmarksPlugin)
-    const bookmarks = (bookmarksPlugin?.instance as any) ?.['getBookmarks']()
-    console.log(bookmarks)
-    if (bookmarksPlugin && bookmarksPlugin.enabled && bookmarksPlugin.instance) {
-        const bookmarksPluginInstance: Bookmarks_PluginInstance = bookmarksPlugin.instance as Bookmarks_PluginInstance
-        // defensive programming, in case Obsidian changes its internal APIs
-        if (typeof bookmarksPluginInstance?.[BookmarksPlugin_getBookmarks_methodName] === 'function') {
-            return bookmarksPluginInstance
         }
     }
 }
@@ -132,14 +221,18 @@ const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupNam
                     const pathOfGroup: string = `${parentGroupsPath}${parentGroupsPath?'/':''}${item.title}`
                     const path = isGroup ? pathOfGroup : (item as BookmarkWithPath).path
                     // Consume only the first occurrence of a path in bookmarks, even if many duplicates can exist
+                    // TODO: consume the occurrence at correct folders (groups) location resembling the original structure with highest prio
+                    //     and only if not found, consider any (first) occurrence
                     const alreadyConsumed = orderedBookmarks[path]
-                    if (!alreadyConsumed) {
+                    const pathOfBookmarkGroupsMatches: boolean = true // TODO: !!! with fresh head determine the condition to check here
+                    if (!alreadyConsumed || (pathOfBookmarkGroupsMatches && !alreadyConsumed.pathOfBookmarkGroupsMatches)) {
                         orderedBookmarks[path] = {
                             path: path,
                             order: order++,
                             file: isFile,
                             folder: isFile,
-                            group: isGroup
+                            group: isGroup,
+                            pathOfBookmarkGroupsMatches: pathOfBookmarkGroupsMatches
                         }
                     }
                 }
@@ -150,23 +243,6 @@ const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupNam
     }
 }
 
-// Result:
-//    undefined ==> item not found in bookmarks
-//    > 0 ==> item found in bookmarks at returned position
-// Intentionally not returning 0 to allow simple syntax of processing the result
-export const determineBookmarkOrder = (path: string, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string): number | undefined => {
-    if (!bookmarksCache) {
-        bookmarksCache = getOrderedBookmarks(plugin, bookmarksGroup)
-        bookmarksCacheTimestamp = Date.now()
-    }
-
-    const bookmarkedItemPosition: number | undefined = bookmarksCache?.[path]?.order
-
-    return (bookmarkedItemPosition !== undefined && bookmarkedItemPosition >= 0) ? (bookmarkedItemPosition + 1) : undefined
-}
-
-// EXPERIMENTAL - operates on internal structures of core Bookmarks plugin
-
 const createBookmarkFileEntry = (path: string): BookmarkedFile => {
     // Artificial subpath added intentionally to prevent Bookmarks context menu from finding this item in bookmarks
     //    and - in turn - allow bookmarking it by the user for regular (non sorting) purposes
@@ -175,10 +251,6 @@ const createBookmarkFileEntry = (path: string): BookmarkedFile => {
 
 const createBookmarkGroupEntry = (title: string): BookmarkedGroup => {
     return { type: "group", ctime: Date.now(), items: [], title: title }
-}
-
-export const bookmarkFolderItem = (item: TAbstractFile, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
-    bookmarkSiblings([item], plugin, bookmarksGroup)
 }
 
 interface BookmarkedParentFolder {
@@ -229,33 +301,9 @@ const findGroupForItemPathInBookmarks = (itemPath: string, createIfMissing: bool
 const CreateIfMissing = true
 const DontCreateIfMissing = false
 
-export const bookmarkSiblings = (siblings: Array<TAbstractFile>, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
-    if (siblings.length === 0) return // for sanity
 
-    const bookmarksContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(siblings[0].path, CreateIfMissing, plugin, bookmarksGroup)
 
-    if (bookmarksContainer) {  // for sanity, the group should be always created if missing
-        siblings.forEach((aSibling) => {
-            const siblingName = lastPathComponent(aSibling.path)
-            if (!bookmarksContainer.items.find((it) =>
-                ((it.type === 'folder' || it.type === 'file') && it.path === aSibling.path) ||
-                (it.type === 'group' && it.title === siblingName))) {
-                const newEntry: BookmarkedItem = (aSibling instanceof TFolder) ? createBookmarkGroupEntry(siblingName) : createBookmarkFileEntry(aSibling.path)
-                bookmarksContainer.items.push(newEntry)
-            }
-        });
-    }
-}
-
-export const saveDataAndUpdateBookmarkViews = (plugin: Bookmarks_PluginInstance, app: App) => {
-    plugin.onItemsChanged(true)
-    const bookmarksLeafs = app.workspace.getLeavesOfType('bookmarks')
-    bookmarksLeafs?.forEach((leaf) => {
-        (leaf.view as any)?.update?.()
-    })
-}
-
-export const updateSortingBookmarksAfterItemRename = (plugin: Bookmarks_PluginInstance, renamedItem: TAbstractFile, oldPath: string, bookmarksGroup?: string) => {
+const updateSortingBookmarksAfterItemRenamed = (plugin: Bookmarks_PluginInstance, renamedItem: TAbstractFile, oldPath: string, bookmarksGroup?: string) => {
 
     if (renamedItem.path === oldPath) return; // sanity
 
@@ -302,6 +350,29 @@ export const updateSortingBookmarksAfterItemRename = (plugin: Bookmarks_PluginIn
     }
 
     console.log(`Folder renamel from ${oldPath} to ${renamedItem.path}`)
+}
 
-    plugin.onItemsChanged(true)
+const updateSortingBookmarksAfterItemDeleted = (plugin: Bookmarks_PluginInstance, deletedItem: TAbstractFile, bookmarksGroup?: string) => {
+
+    // Obsidian automatically deletes all bookmark instances of a file, nothing to be done here
+    if (deletedItem instanceof TFile) return;
+
+    let items = plugin[BookmarksPlugin_items_collectionName]
+    const aFolder: boolean = deletedItem instanceof TFolder
+    const aFile: boolean = !aFolder
+
+    const originalContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(deletedItem.path, DontCreateIfMissing, plugin, bookmarksGroup)
+
+    if (!originalContainer) return;
+
+    const item: BookmarkedItem|undefined = originalContainer.items.find((it) => {
+        if (aFolder && it.type === 'group' && it.title === deletedItem.name) return true;
+        if (aFile && it.type === 'file' && it.path === deletedItem.path) return true;
+    })
+
+    if (!item) return;
+
+    originalContainer.items.remove(item)
+
+    console.log(`Folder deletel ${deletedItem.path}`)
 }

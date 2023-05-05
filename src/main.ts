@@ -36,11 +36,7 @@ import {
 } from "./custom-sort/icons";
 import {getStarredPlugin} from "./utils/StarredPluginSignature";
 import {
-	getBookmarksPlugin,
-	bookmarkFolderItem,
-	saveDataAndUpdateBookmarkViews,
-	bookmarkSiblings,
-	updateSortingBookmarksAfterItemRename
+	getBookmarksPlugin
 } from "./utils/BookmarksCorePluginSignature";
 import {getIconFolderPlugin} from "./utils/ObsidianIconFolderPluginSignature";
 import {lastPathComponent} from "./utils/utils";
@@ -98,7 +94,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	readAndParseSortingSpec() {
-		const mCache: MetadataCache = this.app.metadataCache
+		const mCache: MetadataCache = app.metadataCache
 		let failed: boolean = false
 		let anySortingSpecFound: boolean = false
 		let errorMessage: string | null = null
@@ -118,7 +114,7 @@ export default class CustomSortPlugin extends Plugin {
 			console.log(this.sortSpecCache)
 		}
 
-		Vault.recurseChildren(this.app.vault.getRoot(), (file: TAbstractFile) => {
+		Vault.recurseChildren(app.vault.getRoot(), (file: TAbstractFile) => {
 			if (failed) return
 			if (file instanceof TFile) {
 				const aFile: TFile = file as TFile
@@ -283,7 +279,7 @@ export default class CustomSortPlugin extends Plugin {
 			this.ribbonIconStateInaccurate = true
 		}
 
-		this.addSettingTab(new CustomSortSettingTab(this.app, this));
+		this.addSettingTab(new CustomSortSettingTab(app, this));
 
 		this.registerEventHandlers()
 
@@ -296,7 +292,7 @@ export default class CustomSortPlugin extends Plugin {
 		const plugin: CustomSortPlugin = this
 		this.registerEvent(
 			// Keep in mind: this event is triggered once after app starts and then after each modification of _any_ metadata
-			this.app.metadataCache.on("resolved", () => {
+			app.metadataCache.on("resolved", () => {
 				if (!this.settings.suspended) {
 					if (!this.initialAutoOrManualSortingTriggered) {
 						this.readAndParseSortingSpec()
@@ -323,17 +319,17 @@ export default class CustomSortPlugin extends Plugin {
 		);
 
 		this.registerEvent(
-			this.app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile, source: string, leaf?: WorkspaceLeaf) => {
+			app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile, source: string, leaf?: WorkspaceLeaf) => {
 				const bookmarkThisMenuItem = (item: MenuItem) => {
 					// TODO: if already bookmarked in the 'custom sort' group (or its descendants) don't show
 					item.setTitle('Custom sort: bookmark for sorting.');
 					item.setIcon('hashtag');
 					item.onClick(() => {
-						const bookmarksPlugin = getBookmarksPlugin(plugin.app)
+						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 						console.log(`custom-sort: bookmark this clicked ${source} and the leaf is`)
 						if (bookmarksPlugin) {
-							bookmarkFolderItem(file, bookmarksPlugin, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
-							saveDataAndUpdateBookmarkViews(bookmarksPlugin, plugin.app)
+							bookmarksPlugin.bookmarkFolderItem(file)
+							bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 						}
 					});
 				};
@@ -342,11 +338,11 @@ export default class CustomSortPlugin extends Plugin {
 					item.setIcon('hashtag');
 					item.onClick(() => {
 						console.log(`custom-sort: bookmark all siblings clicked ${source}`)
-						const bookmarksPlugin = getBookmarksPlugin(plugin.app)
+						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 						if (bookmarksPlugin) {
 							const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent)
-							bookmarkSiblings(orderedChildren, bookmarksPlugin, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
-							saveDataAndUpdateBookmarkViews(bookmarksPlugin, plugin.app)
+							bookmarksPlugin.bookmarkSiblings(orderedChildren)
+							bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 						}
 					});
 				};
@@ -357,13 +353,21 @@ export default class CustomSortPlugin extends Plugin {
 		)
 
 		this.registerEvent(
-			this.app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
-				const bookmarksPlugin = getBookmarksPlugin(plugin.app)
+			app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
+				const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 				if (bookmarksPlugin) {
-					updateSortingBookmarksAfterItemRename(bookmarksPlugin, file, oldPath, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					bookmarksPlugin.updateSortingBookmarksAfterItemRenamed(file, oldPath)
+					bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 				}
 			})
 		)
+		app.vault.on("delete", (file: TAbstractFile) => {
+			const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+			if (bookmarksPlugin) {
+				bookmarksPlugin.updateSortingBookmarksAfterItemDeleted(file)
+				bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
+			}
+		})
 	}
 
 	registerCommands() {
@@ -385,7 +389,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	initialize() {
-		this.app.workspace.onLayoutReady(() => {
+		app.workspace.onLayoutReady(() => {
 			this.fileExplorerFolderPatched = this.patchFileExplorerFolder();
 		})
 	}
@@ -404,13 +408,10 @@ export default class CustomSortPlugin extends Plugin {
 
 	createProcessingContextForSorting(): ProcessingContext {
 		const ctx: ProcessingContext = {
-			_mCache: this.app.metadataCache,
-			starredPluginInstance: getStarredPlugin(this.app),
-			bookmarksPlugin: {
-				instance: this.settings.automaticBookmarksIntegration ? getBookmarksPlugin(this.app) : undefined,
-				groupNameForSorting: this.settings.bookmarksGroupToConsumeAsOrderingReference
-			},
-			iconFolderPluginInstance: getIconFolderPlugin(this.app),
+			_mCache: app.metadataCache,
+			starredPluginInstance: getStarredPlugin(),
+			bookmarksPluginInstance: getBookmarksPlugin(this.settings.bookmarksGroupToConsumeAsOrderingReference),
+			iconFolderPluginInstance: getIconFolderPlugin(),
 			plugin: this
 		}
 		return ctx
@@ -469,7 +470,7 @@ export default class CustomSortPlugin extends Plugin {
 
 	// Credits go to https://github.com/nothingislost/obsidian-bartender
 	getFileExplorer(): FileExplorerView | undefined {
-		let fileExplorer: FileExplorerView | undefined = this.app.workspace.getLeavesOfType("file-explorer")?.first()
+		let fileExplorer: FileExplorerView | undefined = app.workspace.getLeavesOfType("file-explorer")?.first()
 			?.view as unknown as FileExplorerView;
 		return fileExplorer;
 	}
@@ -639,10 +640,4 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 // TODO: remove console.log (many places added)
 
-// Invoke 'onItemsChanged' consciously for the bookmarks plugin
-
-// TODO: on delete - delete from bkmrks
-
 // TODO: ctx menu 'show in bookmarks' instead of 'bookmrk this'
-
-// TODO: new items bkmrkd in the top instead of in the bottom. Or maybe at actual location (???)

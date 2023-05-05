@@ -25,8 +25,7 @@ import {
 } from "./custom-sort-types";
 import {isDefined} from "../utils/utils";
 import {
-	Bookmarks_PluginInstance,
-	determineBookmarkOrder
+	BookmarksPluginInterface
 } from "../utils/BookmarksCorePluginSignature";
 
 export interface ProcessingContext {
@@ -34,10 +33,7 @@ export interface ProcessingContext {
 	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
 	_mCache?: MetadataCache
 	starredPluginInstance?: Starred_PluginInstance
-	bookmarksPlugin: {
-		instance?: Bookmarks_PluginInstance,
-		groupNameForSorting?: string
-	}
+	bookmarksPluginInstance?: BookmarksPluginInterface,
 	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
 
@@ -364,8 +360,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				}
 				break
 			case CustomSortGroupType.BookmarkedOnly:
-				if (ctx?.bookmarksPlugin?.instance) {
-					const bookmarkOrder: number | undefined = determineBookmarkOrder(entry.path, ctx.bookmarksPlugin?.instance, ctx.bookmarksPlugin?.groupNameForSorting)
+				if (ctx?.bookmarksPluginInstance) {
+					const bookmarkOrder: number | undefined = ctx?.bookmarksPluginInstance.determineBookmarkOrder(entry.path)
 					if (bookmarkOrder) { // safe ==> orders intentionally start from 1
 						determined = true
 						bookmarkedIdx = bookmarkOrder
@@ -537,7 +533,7 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 
 // Order by bookmarks order can be applied independently of grouping by bookmarked status
 //   This function determines the bookmarked order if the sorting criteria (of group or entire folder) requires it
-export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
+export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, plugin: BookmarksPluginInterface) => {
 	if (!plugin) return
 
 	folderItems.forEach((item) => {
@@ -551,7 +547,7 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 			}
 		}
 		if (folderDefaultSortRequiresBookmarksOrder || groupSortRequiresBookmarksOrder) {
-			item.bookmarkedIdx = determineBookmarkOrder(item.path, plugin, bookmarksGroup)
+			item.bookmarkedIdx = plugin.determineBookmarkOrder(item.path)
 		}
 	})
 }
@@ -573,8 +569,8 @@ export const folderSort = function (sortingSpec: CustomSortSpec, ctx: Processing
 	// Finally, for advanced sorting by modified date, for some folders the modified date has to be determined
 	determineFolderDatesIfNeeded(folderItems, sortingSpec)
 
-	if (ctx.bookmarksPlugin?.instance) {
-		determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPlugin.instance, ctx.bookmarksPlugin.groupNameForSorting)
+	if (ctx.bookmarksPluginInstance) {
+		determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPluginInstance)
 	}
 
 	const comparator: SorterFn = getComparator(sortingSpec, fileExplorer.sortOrder)
@@ -605,8 +601,8 @@ export const sortFolderItemsForBookmarking = function (items: Array<TAbstractFil
 		// Finally, for advanced sorting by modified date, for some folders the modified date has to be determined
 		determineFolderDatesIfNeeded(folderItems, sortingSpec)
 
-		if (ctx.bookmarksPlugin?.instance) {
-			determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPlugin.instance, ctx.bookmarksPlugin.groupNameForSorting)
+		if (ctx.bookmarksPluginInstance) {
+			determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPluginInstance)
 		}
 
 		const comparator: SorterFn = getComparator(sortingSpec, uiSortOrder)
