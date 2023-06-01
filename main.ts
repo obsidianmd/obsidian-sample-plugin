@@ -1,4 +1,7 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, EventRef, Plugin, PluginSettingTab, Setting, View, Workspace, WorkspaceLeaf, getAllTags, MetadataCache, CachedMetadata } from 'obsidian';
+import { PromptModal } from 'src/Modals/PromptModal';
+import { Notes } from 'src/Models/Notes';
+import { VIEW_TYPE_EXAMPLE, PromptView } from 'src/PromptView';
 
 // Remember to rename these classes and interfaces!
 
@@ -10,16 +13,53 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default'
 }
 
-export default class MyPlugin extends Plugin {
+export default class Learning extends Plugin {
 	settings: MyPluginSettings;
+	private notes:Array<Notes>
 
+	async activateView() {
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_EXAMPLE);
+
+		await this.app.workspace.getLeaf(false).setViewState({
+			type: VIEW_TYPE_EXAMPLE,
+			active: true,
+		});
+
+		this.app.workspace.revealLeaf(
+			this.app.workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE)[0]
+		);
+	}
+	
 	async onload() {
 		await this.loadSettings();
+		this.notes = []
+
+		this.registerView(
+			VIEW_TYPE_EXAMPLE,
+			(leaf) => new PromptView(leaf)
+		)
+
+		this.app.workspace.onLayoutReady( () => {
+				const files =  this.app.vault.getMarkdownFiles()
+				let notes: Notes[] = [];
+
+				let i = 0;
+				 files.forEach( (file) => {
+					const cache = this.app.metadataCache.getCache(file.path)
+					const tags = getAllTags(cache as CachedMetadata)
+
+					notes.push({ id: i, tags: tags, title: file.path, path: this.app.vault.getResourcePath(file)})
+					i++
+				 })
+
+				 this.notes = notes
+		})
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
+		const ribbonIconEl = this.addRibbonIcon('star', 'Learning', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			this.app.workspace.detachLeavesOfType(VIEW_TYPE_EXAMPLE);
+			new PromptModal(this.app, this.notes).open()
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -41,7 +81,6 @@ export default class MyPlugin extends Plugin {
 			id: 'sample-editor-command',
 			name: 'Sample editor command',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
 				editor.replaceSelection('Sample Editor Command');
 			}
 		});
@@ -108,9 +147,9 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: Learning;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: Learning) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
