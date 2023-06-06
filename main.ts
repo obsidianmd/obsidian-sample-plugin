@@ -1,7 +1,9 @@
-import { App, Editor, MarkdownView, Modal, EventRef, Plugin, PluginSettingTab, Setting, View, Workspace, WorkspaceLeaf, getAllTags, MetadataCache, CachedMetadata } from 'obsidian';
+import { Console } from 'console';
+import { App, Editor, MarkdownView, Modal, FrontMatterCache, Plugin, PluginSettingTab, Setting, View, Workspace, WorkspaceLeaf, getAllTags, MetadataCache, CachedMetadata, TagCache, TAbstractFile, TFile } from 'obsidian';
 import { PromptModal } from 'src/Modals/PromptModal';
 import { Notes } from 'src/Models/Notes';
-import { VIEW_TYPE_EXAMPLE, PromptView } from 'src/PromptView';
+import { LEARNING_TYPE, PromptView } from 'src/PromptView';
+import { json } from 'stream/consumers';
 
 // Remember to rename these classes and interfaces!
 
@@ -15,29 +17,11 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 
 export default class Learning extends Plugin {
 	settings: MyPluginSettings;
-	private notes:Array<Notes>
+	private notes: Array<Notes>
 
-	async activateView() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_EXAMPLE);
-
-		await this.app.workspace.getLeaf(false).setViewState({
-			type: VIEW_TYPE_EXAMPLE,
-			active: true,
-		});
-
-		this.app.workspace.revealLeaf(
-			this.app.workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE)[0]
-		);
-	}
-	
 	async onload() {
 		await this.loadSettings();
 		this.notes = []
-
-		this.registerView(
-			VIEW_TYPE_EXAMPLE,
-			(leaf) => new PromptView(leaf)
-		)
 
 		this.app.workspace.onLayoutReady( () => {
 				const files =  this.app.vault.getMarkdownFiles()
@@ -58,7 +42,6 @@ export default class Learning extends Plugin {
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('star', 'Learning', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			this.app.workspace.detachLeavesOfType(VIEW_TYPE_EXAMPLE);
 			new PromptModal(this.app, this.notes).open()
 		});
 		// Perform additional things with the ribbon
@@ -76,6 +59,7 @@ export default class Learning extends Plugin {
 				new SampleModal(this.app).open();
 			}
 		});
+
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
 			id: 'sample-editor-command',
@@ -84,6 +68,7 @@ export default class Learning extends Plugin {
 				editor.replaceSelection('Sample Editor Command');
 			}
 		});
+
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
 		this.addCommand({
 			id: 'open-sample-modal-complex',
@@ -95,7 +80,7 @@ export default class Learning extends Plugin {
 					// If checking is true, we're simply "checking" if the command can be run.
 					// If checking is false, then we want to actually perform the operation.
 					if (!checking) {
-						new SampleModal(this.app).open();
+						new PromptModal(this.app, this.notes).open()
 					}
 
 					// This command will only show up in Command Palette when the check function returns true
@@ -109,12 +94,45 @@ export default class Learning extends Plugin {
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
+		this.registerDomEvent(document, 'click', async (evt: PointerEvent) => {
+			const element = evt.composedPath()[0] as HTMLInputElement;
+			if(element.id.contains("learning-plugin")){
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView) {
+					const file = activeView.file;
+					const metadata = this.app.metadataCache.getFileCache(file);
+
+					const newTag = { tag: "hm", position: { start: { line: 0, col: 0, offset: 0 }, end: { line: 0, col: 0, offset: 0 } } };
+					metadata?.tags?.push(newTag)
+
+					let content = await this.app.vault.read(file)
+					let finalContent = ""
+
+					if (content.includes('learning-score')){
+						const regex = /#learning-score-\d+/g
+						finalContent = content.replace(regex, `#learning-score-${element.value}`)
+						
+					} else
+					{
+						finalContent = content + `\n\n\n #learning-score-${element.value}`
+					}
+					
+					this.app.vault.modify(file, finalContent)
+				}
+			}
 		});
+
+		
+		this.registerEvent(
+			this.app.workspace.on('file-open', this.onFileOpen)
+		)
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+	}
+
+	onFileOpen = async (file: TFile) => {
+		// Do something on file open
 	}
 
 	onunload() {

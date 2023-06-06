@@ -1,13 +1,11 @@
-import { Modal, App, DropdownComponent } from 'obsidian'
+import { Modal, App, TAbstractFile, TFile } from 'obsidian'
 import { Notes } from 'src/Models/Notes'
-const myTokenizer = (text: string) => {
-    const tokens = text.split(/\s+/);
-    return tokens.filter((token) => token.includes('_') || token.includes('-') || token.length > 1);
-  };
+import { PromptView, LEARNING_TYPE } from 'src/PromptView';
 
 export class PromptModal extends Modal {
-    private notes:Array<Notes>
+    private notes: Array<Notes>
     private docs: Array<any>
+    private file: TAbstractFile | null
 
     constructor(app: App, notes: Notes[]) {
         super(app);
@@ -21,7 +19,7 @@ export class PromptModal extends Modal {
               titles: this.notes.filter((o) => o.tags?.includes(tag)).map((o) => o.title),
               paths: this.notes.filter((o) => o.tags?.includes(tag)).map((o) => o.path)
             }));
-          });
+        });
     }
 
     calculateSuggestions(input: string): any[] {
@@ -31,7 +29,8 @@ export class PromptModal extends Modal {
             const value = (doc as { value: String }).value
             const lowerCase = value.toLowerCase()
             const formattedValue = lowerCase.substring(1)
-            if (formattedValue.contains(input) || value.contains(input)) {
+
+            if ((formattedValue.contains(input) || value.contains(input)) && !value.contains("learning-score")) {
                 if(!suggestions.contains(value.toString())) {
                     suggestions.push({tag: value.toString(), titles: doc.titles, paths: doc.paths })
                 }
@@ -76,13 +75,12 @@ export class PromptModal extends Modal {
                 suggestionsContainer.style.visibility = 'hidden'
             }
 
-            suggestions.forEach((sugg) => {
+            suggestions.forEach((suggestion) => {
                 const item = document.createElement('div')
-                item.textContent = sugg.tag
+                item.textContent = suggestion.tag
 
                 item.addEventListener('mouseenter', () => {
                     item.style.color = 'grey'
-                    console.log("hover: " + item.textContent)
                 })
 
                 item.addEventListener('mouseleave', () => {
@@ -90,16 +88,13 @@ export class PromptModal extends Modal {
                 })
 
                 item.addEventListener('click', async () => {
-                    const VIEW_TYPE_EXAMPLE = "LearningView";
-
                     await this.app.workspace.getLeaf(false).setViewState({
-                        type: VIEW_TYPE_EXAMPLE,
+                        type: LEARNING_TYPE,
                         active: true,
                     });
 
-                    this.app.workspace.revealLeaf(
-                        this.app.workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE)[0]
-                    );
+                    const leaf = this.app.workspace.getLeavesOfType(LEARNING_TYPE)[0]
+                    this.app.workspace.getLeaf().open(new PromptView(leaf, suggestion))
 
                     this.app.workspace.onLayoutReady( () => {
                         this.close();
