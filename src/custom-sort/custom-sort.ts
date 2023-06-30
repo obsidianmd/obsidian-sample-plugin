@@ -23,7 +23,12 @@ import {
 	NormalizerFn,
 	RegExpSpec
 } from "./custom-sort-types";
-import {isDefined} from "../utils/utils";
+import {
+	isDefined
+} from "../utils/utils";
+import {
+	expandMacros
+} from "./macros";
 import {
 	BookmarksPluginInterface
 } from "../utils/BookmarksCorePluginSignature";
@@ -273,7 +278,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	for (let idx = 0; idx < numOfGroupsToCheck; idx++) {
 		matchedGroup = null
 		groupIdx = spec.priorityOrder ? spec.priorityOrder[idx] : idx
-		const group: CustomSortGroup = spec.groups[groupIdx];
+		const group: CustomSortGroup = spec.groupsShadow ? spec.groupsShadow[groupIdx] : spec.groups[groupIdx];
 		if (group.foldersOnly && aFile) continue;
 		if (group.filesOnly && aFolder) continue;
 		const nameForMatching: string = group.matchFilenameWithExt ? entry.name : basename;
@@ -554,6 +559,13 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 
 export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
 	let fileExplorer = this.fileExplorer
+
+	// shallow copy of groups
+	sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
+
+	// expand folder-specific macros
+	const parentFolderName: string|undefined = this.file.name
+	expandMacros(sortingSpec, parentFolderName)
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
 		this.file.children.filter((entry: TFile | TFolder) => {
