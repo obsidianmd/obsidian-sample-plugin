@@ -704,6 +704,33 @@ describe('determineSortingGroup', () => {
 				path: 'Some parent folder/References.md'
 			});
 		})
+		it('should consume shadow group instead of group, if shadow is present', () => {
+			// given
+			const file: TFile = mockTFile('gs-123', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactName,
+					exactText: 'g-123'
+				}],
+				groupsShadow: [{
+					type: CustomSortGroupType.ExactName,
+					exactText: 'gs-123'
+				}]
+			}
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // This indicates match!
+				isFolder: false,
+				sortString: "gs-123.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/gs-123.md'
+			});
+		})
 	})
 	describe('CustomSortGroupType.byMetadataFieldAlphabetical', () => {
 		it('should ignore the file item if it has no direct metadata', () => {

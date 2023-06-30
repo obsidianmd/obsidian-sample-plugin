@@ -72,6 +72,8 @@ export interface CustomSortSpec {
 	defaultOrder?: CustomSortOrder
 	byMetadataField?: string            // for 'by-metadata:' if the defaultOrder is by metadata alphabetical or reverse
 	groups: Array<CustomSortGroup>
+	groupsShadow?: Array<CustomSortGroup>   // A shallow copy of groups, used at applying sorting for items in a folder.
+	                                        // Stores folder-specific values (e.g. macros expanded with folder-specific values)
 	outsidersGroupIdx?: number
 	outsidersFilesGroupIdx?: number
 	outsidersFoldersGroupIdx?: number
