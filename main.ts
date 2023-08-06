@@ -83,7 +83,9 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = {
+			...await this.loadData(), DEFAULT_SETTINGS
+		}		
 	}
 
 	async saveSettings() {
@@ -108,9 +110,7 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, public plugin: MyPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
