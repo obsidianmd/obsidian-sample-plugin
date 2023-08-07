@@ -84,7 +84,7 @@ export default class MyPlugin extends Plugin {
 
 	async loadSettings() {
 		this.settings = {
-			...await this.loadData(), DEFAULT_SETTINGS
+			...DEFAULT_SETTINGS, ...await this.loadData()
 		}		
 	}
 
