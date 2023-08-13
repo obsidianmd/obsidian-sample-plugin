@@ -32,7 +32,7 @@ jobs:
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: obsidian-sample-plugin-artifacts
+        name: obsidian-sample-plugin
         path: |
           main.js
           manifest.json
