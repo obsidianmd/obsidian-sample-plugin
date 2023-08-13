@@ -26,6 +26,13 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm i
+    - run: npm ci
     - run: npm run build     
     - run: npm test --if-present
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: obsidian-sample-plugin-artifacts
+        path: |
+          main.js
+          manifest.json
