@@ -72,7 +72,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	readAndParseSortingSpec() {
-		const mCache: MetadataCache = this.app.metadataCache
+		const mCache: MetadataCache = app.metadataCache
 		let failed: boolean = false
 		let anySortingSpecFound: boolean = false
 		let errorMessage: string | null = null
@@ -80,7 +80,7 @@ export default class CustomSortPlugin extends Plugin {
 		this.sortSpecCache = null
 		const processor: SortingSpecProcessor = new SortingSpecProcessor()
 
-		Vault.recurseChildren(this.app.vault.getRoot(), (file: TAbstractFile) => {
+		Vault.recurseChildren(app.vault.getRoot(), (file: TAbstractFile) => {
 			if (failed) return
 			if (file instanceof TFile) {
 				const aFile: TFile = file as TFile
@@ -245,7 +245,7 @@ export default class CustomSortPlugin extends Plugin {
 			this.ribbonIconStateInaccurate = true
 		}
 
-		this.addSettingTab(new CustomSortSettingTab(this.app, this));
+		this.addSettingTab(new CustomSortSettingTab(app, this));
 
 		this.registerEventHandlers()
 
@@ -258,7 +258,7 @@ export default class CustomSortPlugin extends Plugin {
 		const plugin: CustomSortPlugin = this
 		this.registerEvent(
 			// Keep in mind: this event is triggered once after app starts and then after each modification of _any_ metadata
-			this.app.metadataCache.on("resolved", () => {
+			app.metadataCache.on("resolved", () => {
 				if (!this.settings.suspended) {
 					if (!this.initialAutoOrManualSortingTriggered) {
 						this.readAndParseSortingSpec()
@@ -304,7 +304,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	initialize() {
-		this.app.workspace.onLayoutReady(() => {
+		app.workspace.onLayoutReady(() => {
 			this.fileExplorerFolderPatched = this.patchFileExplorerFolder();
 		})
 	}
@@ -365,7 +365,7 @@ export default class CustomSortPlugin extends Plugin {
 
 	// Credits go to https://github.com/nothingislost/obsidian-bartender
 	getFileExplorer(): FileExplorerView | undefined {
-		let fileExplorer: FileExplorerView | undefined = this.app.workspace.getLeavesOfType("file-explorer")?.first()
+		let fileExplorer: FileExplorerView | undefined = app.workspace.getLeavesOfType("file-explorer")?.first()
 			?.view as unknown as FileExplorerView;
 		return fileExplorer;
 	}
