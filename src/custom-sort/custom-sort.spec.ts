@@ -2274,3 +2274,38 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
 	})
 })
+
+describe('sorterByMetadataField', () => {
+	it.each([
+		[true,'abc','def',-1, 'a', 'a'],
+		[true,'xyz','klm',1, 'b', 'b'],
+		[true,'mmm','mmm',0, 'c', 'c'],
+		[true,'mmm','mmm',-1, 'd', 'e'],
+		[true,'mmm','mmm',1, 'e', 'd'],
+		[true,'abc',undefined,-1, 'a','a'],
+		[true,undefined,'klm',1, 'b','b'],
+		[true,undefined,undefined,0, 'a','a'],
+		[true,undefined,undefined,-1, 'a','b'],
+		[true,undefined,undefined,1, 'd','c'],
+		[false,'abc','def',1, 'a', 'a'],
+		[false,'xyz','klm',-1, 'b', 'b'],
+		[false,'mmm','mmm',0, 'c', 'c'],
+		[false,'mmm','mmm',1, 'd', 'e'],
+		[false,'mmm','mmm',-1, 'e', 'd'],
+		[false,'abc',undefined,1, 'a','a'],
+		[false,undefined,'klm',-1, 'b','b'],
+		[false,undefined,undefined,0, 'a','a'],
+		[false,undefined,undefined,1, 'a','b'],
+		[false,undefined,undefined,-1, 'd','c'],
+
+	])('straight order %s, comparing %s and %s should return %s for sortStrings %s and %s',
+		(straight: boolean, metadataA: string|undefined, metadataB: string|undefined, order: number, sortStringA: string, sortStringB) => {
+		const sorterFn = sorterByMetadataField(!straight, false)
+		const itemA: Partial<FolderItemForSorting> = {metadataFieldValue: metadataA, sortString: sortStringA}
+		const itemB: Partial<FolderItemForSorting> = {metadataFieldValue: metadataB, sortString: sortStringB}
+		const result = sorterFn(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+
+		// then
+		expect(result).toBe(order)
+	})
+})

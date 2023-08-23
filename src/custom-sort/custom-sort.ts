@@ -71,7 +71,7 @@ const TrueAlphabetical: boolean = true
 const ReverseOrder: boolean = true
 const StraightOrder: boolean = false
 
-const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
+export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
 	const collatorCompareFn: CollatorCompareFn = trueAlphabetical ? CollatorTrueAlphabeticalCompare : CollatorCompare
 	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
 		if (reverseOrder) {
@@ -87,8 +87,8 @@ const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean)
 			}
 		}
 		// Item with metadata goes before the w/o metadata
-		if (a.metadataFieldValue) return reverseOrder ? 1 : -1
-		if (b.metadataFieldValue) return reverseOrder ? -1 : 1
+		if (a.metadataFieldValue) return -1
+		if (b.metadataFieldValue) return 1
 		// Fallback -> requested sort by metadata, yet none of two items contain it, use alphabetical by name
 		return collatorCompareFn(a.sortString, b.sortString)
 	}
