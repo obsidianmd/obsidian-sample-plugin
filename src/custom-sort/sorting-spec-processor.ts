@@ -69,7 +69,7 @@ export enum ProblemCode {
 	ItemToHideExactNameWithExtRequired,
 	ItemToHideNoSupportForThreeDots,
 	DuplicateWildcardSortSpecForSameFolder,
-	StandardObsidianSortAllowedOnlyAtFolderLevel,
+	ProblemNoLongerApplicable_StandardObsidianSortAllowedOnlyAtFolderLevel, // Placeholder kept to avoid refactoring of many unit tests (hardcoded error codes)
 	PriorityNotAllowedOnOutsidersGroup,
 	TooManyPriorityPrefixes,
 	CombiningNotAllowedOnOutsidersGroup,
@@ -969,10 +969,6 @@ export class SortingSpecProcessor {
 				if (this.ctx.currentSpecGroup.order) {
 					const folderPathsForProblemMsg: string = this.ctx.currentSpec.targetFoldersPaths.join(' :: ');
 					this.problem(ProblemCode.DuplicateOrderAttr, `Duplicate order specification for a sorting rule of folder ${folderPathsForProblemMsg}`)
-					return false;
-				}
-				if ((attr.value as RecognizedOrderValue).order === CustomSortOrder.standardObsidian) {
-					this.problem(ProblemCode.StandardObsidianSortAllowedOnlyAtFolderLevel, `The standard Obsidian sort order is only allowed at a folder level (not nested syntax)`)
 					return false;
 				}
 				this.ctx.currentSpecGroup.order = (attr.value as RecognizedOrderValue).order

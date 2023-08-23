@@ -16,7 +16,9 @@ import {
 	Vault
 } from 'obsidian';
 import {around} from 'monkey-around';
-import {folderSort} from './custom-sort/custom-sort';
+import {
+	folderSort
+} from './custom-sort/custom-sort';
 import {SortingSpecProcessor, SortSpecsCollection} from './custom-sort/sorting-spec-processor';
 import {CustomSortOrder, CustomSortSpec} from './custom-sort/custom-sort-types';
 
@@ -29,6 +31,8 @@ import {
 	ICON_SORT_SUSPENDED_GENERAL_ERROR,
 	ICON_SORT_SUSPENDED_SYNTAX_ERROR
 } from "./custom-sort/icons";
+
+import {lastPathComponent} from "./utils/utils";
 
 interface CustomSortPluginSettings {
 	additionalSortspecFile: string
@@ -309,6 +313,18 @@ export default class CustomSortPlugin extends Plugin {
 		})
 	}
 
+	determineSortSpecForFolder(folderPath: string, folderName?: string): CustomSortSpec|null|undefined {
+		folderName = folderName ?? lastPathComponent(folderPath)
+		let sortSpec: CustomSortSpec | null | undefined = this.sortSpecCache?.sortSpecByPath?.[folderPath]
+		sortSpec = sortSpec ?? this.sortSpecCache?.sortSpecByName?.[folderName]
+
+		if (!sortSpec && this.sortSpecCache?.sortSpecByWildcard) {
+			// when no sorting spec found directly by folder path, check for wildcard-based match
+			sortSpec = this.sortSpecCache?.sortSpecByWildcard.folderMatch(folderPath, folderName)
+		}
+		return sortSpec
+	}
+
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
 	patchFileExplorerFolder(patchableFileExplorer?: FileExplorerView): boolean {
 		let plugin = this;
@@ -332,23 +348,10 @@ export default class CustomSortPlugin extends Plugin {
 							setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
 						}
 
-						// if custom sort is not specified, use the UI-selected
 						const folder: TFolder = this.file
-						let sortSpec: CustomSortSpec | null | undefined = plugin.sortSpecCache?.sortSpecByPath?.[folder.path]
-						sortSpec = sortSpec ?? plugin.sortSpecCache?.sortSpecByName?.[folder.name]
+						let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
+
 						if (sortSpec) {
-							if (sortSpec.defaultOrder === CustomSortOrder.standardObsidian) {
-								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
-							}
-						} else if (plugin.sortSpecCache?.sortSpecByWildcard) {
-							// when no sorting spec found directly by folder path, check for wildcard-based match
-							sortSpec = plugin.sortSpecCache?.sortSpecByWildcard.folderMatch(folder.path, folder.name)
-							if (sortSpec?.defaultOrder === CustomSortOrder.standardObsidian) {
-								sortSpec = null // A folder is explicitly excluded from custom sorting plugin
-							}
-						}
-						if (sortSpec) {
-							sortSpec.plugin = plugin
 							return folderSort.call(this, sortSpec, ...args);
 						} else {
 							return old.call(this, ...args);
@@ -371,7 +374,6 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	onunload() {
-
 	}
 
 	updateStatusBar() {

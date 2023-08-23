@@ -53,5 +53,7 @@ declare module 'obsidian' {
 		createFolderDom(folder: TFolder): FileExplorerFolder;
 
 		requestSort(): void;
+
+		sortOrder: string
 	}
 }

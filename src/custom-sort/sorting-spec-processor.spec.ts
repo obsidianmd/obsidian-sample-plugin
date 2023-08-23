@@ -489,16 +489,23 @@ describe('SortingSpecProcessor', () => {
 const txtInputStandardObsidianSortAttr: string = `
 target-folder: AAA
 sorting: standard
+/ Some folder
+ sorting: standard
 `
 
 const expectedSortSpecForObsidianStandardSorting: { [key: string]: CustomSortSpec } = {
 	"AAA": {
 		defaultOrder: CustomSortOrder.standardObsidian,
 		groups: [{
+			exactText: 'Some folder',
+			foldersOnly: true,
+			order: CustomSortOrder.standardObsidian,
+			type: CustomSortGroupType.ExactName
+		}, {
 			order: CustomSortOrder.standardObsidian,
 			type: CustomSortGroupType.Outsiders
 		}],
-		outsidersGroupIdx: 0,
+		outsidersGroupIdx: 1,
 		targetFoldersPaths: ['AAA']
 	}
 }
@@ -1649,11 +1656,13 @@ const txtInputErrorTooManyNumericSortSymbols: string = `
 % Chapter\\R+ ... page\\d+ 
 `
 
+/* No longer applicable
 const txtInputErrorNestedStandardObsidianSortAttr: string = `
 target-folder: AAA
 / Some folder
  sorting: standard
 `
+*/
 
 const txtInputErrorPriorityEmptyFilePattern: string = `
 /!! /:
@@ -1754,6 +1763,7 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 			`${ERR_PREFIX} 9:TooManySortingSymbols Maximum one sorting symbol allowed per line ${ERR_SUFFIX_IN_LINE(2)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('% Chapter\\R+ ... page\\d+ '))
 	})
+	/* Problem no longer applicable
 	it('should recognize error: nested standard obsidian sorting attribute', () => {
 		const inputTxtArr: Array<string> = txtInputErrorNestedStandardObsidianSortAttr.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
@@ -1763,6 +1773,7 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 			`${ERR_PREFIX} 14:StandardObsidianSortAllowedOnlyAtFolderLevel The standard Obsidian sort order is only allowed at a folder level (not nested syntax) ${ERR_SUFFIX_IN_LINE(4)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT(' sorting: standard'))
 	})
+	 */
 	it('should recognize error: priority indicator alone', () => {
 		const inputTxtArr: Array<string> = `
 		/!

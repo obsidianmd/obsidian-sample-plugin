@@ -8,6 +8,7 @@ import {
 	matchGroupRegex,
 	sorterByMetadataField,
 	SorterFn,
+	getSorterFnFor,
 	Sorters
 } from './custom-sort';
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, RegExpSpec} from './custom-sort-types';
