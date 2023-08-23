@@ -1,4 +1,5 @@
 import {
+	apiVersion,
 	App,
 	FileExplorerView, Menu, MenuItem,
 	MetadataCache,
@@ -6,7 +7,7 @@ import {
 	Notice,
 	Platform,
 	Plugin,
-	PluginSettingTab,
+	PluginSettingTab, requireApiVersion,
 	sanitizeHTMLToDom,
 	setIcon,
 	Setting,
@@ -48,6 +49,7 @@ interface CustomSortPluginSettings {
 	notificationsEnabled: boolean
 	mobileNotificationsEnabled: boolean
 	automaticBookmarksIntegration: boolean
+	bookmarksContextMenus: boolean
 	bookmarksGroupToConsumeAsOrderingReference: string
 }
 
@@ -58,7 +60,13 @@ const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	notificationsEnabled: true,
 	mobileNotificationsEnabled: false,
 	automaticBookmarksIntegration: false,
+	bookmarksContextMenus: false,
 	bookmarksGroupToConsumeAsOrderingReference: 'sortspec'
+}
+
+const DEFAULT_SETTING_FOR_FRESH_INSTALL_1_2_0: Partial<CustomSortPluginSettings> = {
+	automaticBookmarksIntegration: true,
+	bookmarksContextMenus: true
 }
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
@@ -320,8 +328,12 @@ export default class CustomSortPlugin extends Plugin {
 
 		this.registerEvent(
 			app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile, source: string, leaf?: WorkspaceLeaf) => {
+				if (!this.settings.bookmarksContextMenus) return;  // Don't show the context menus at all
+
+				const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+				if (!bookmarksPlugin) return; // Don't show context menu if bookmarks plugin not available and not enabled
+
 				const bookmarkThisMenuItem = (item: MenuItem) => {
-					// TODO: if already bookmarked in the 'custom sort' group (or its descendants) don't show
 					item.setTitle('Custom sort: bookmark for sorting.');
 					item.setIcon('hashtag');
 					item.onClick(() => {
@@ -347,7 +359,10 @@ export default class CustomSortPlugin extends Plugin {
 					});
 				};
 
-				menu.addItem(bookmarkThisMenuItem)
+				const itemAlreadyBookmarkedForSorting: boolean = bookmarksPlugin.isBookmarkedForSorting(file)
+				if (!itemAlreadyBookmarkedForSorting) {
+					menu.addItem(bookmarkThisMenuItem)
+				}
 				menu.addItem(bookmarkAllMenuItem)
 			})
 		)
@@ -485,7 +500,14 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data: any = await this.loadData() || {}
+		const isFreshInstall: boolean = Object.keys(data).length === 0
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+		if (isFreshInstall) {
+			if (requireApiVersion('1.2.0')) {
+				this.settings = Object.assign(this.settings, DEFAULT_SETTING_FOR_FRESH_INSTALL_1_2_0)
+			}
+		}
 	}
 
 	async saveSettings() {
@@ -585,9 +607,12 @@ class CustomSortSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		containerEl.createEl('h2', {text: 'Bookmarks integration'});
 		const bookmarksIntegrationDescription: DocumentFragment = sanitizeHTMLToDom(
 			'If enabled, order of files and folders in File Explorer will reflect the order '
-			+ 'of bookmarked items in the bookmarks (core plugin) view.'
+			+ 'of bookmarked items in the bookmarks (core plugin) view. Automatically, without any '
+			+ 'need for sorting configuration. At the same time, it integrates seamlessly with'
+			+ '<pre style="display: inline;">sorting-spec:</pre> configurations and they can nicely cooperate.'
 			+ '<br>'
 			+ '<p>To separate regular bookmarks from the bookmarks created for sorting, you can put '
 			+ 'the latter in a separate dedicated bookmarks group. The default name of the group is '
@@ -622,6 +647,28 @@ class CustomSortSettingTab extends PluginSettingTab {
 					this.plugin.settings.bookmarksGroupToConsumeAsOrderingReference = value.trim() ? pathToFlatString(normalizePath(value)) : '';
 					await this.plugin.saveSettings();
 				}));
+
+		const bookmarksIntegrationContextMenusDescription: DocumentFragment = sanitizeHTMLToDom(
+			'Enable <i>Custom-sort: bookmark for sorting</i> and <i>Custom-sort: bookmark+siblings for sorting.</i> entries '
+			+ 'in context menu in File Explorer'
+		)
+		new Setting(containerEl)
+			.setName('Context menus for Bookmarks integration')
+			.setDesc(bookmarksIntegrationContextMenusDescription)
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.bookmarksContextMenus)
+				.onChange(async (value) => {
+					this.plugin.settings.bookmarksContextMenus = value;
+					await this.plugin.saveSettings();
+				}))
+			.addButton(cb => cb
+				.setButtonText('Bt1')
+			)
+			.addExtraButton(cb => cb
+				.setIcon('clock')
+			)
+
+
 	}
 }
 

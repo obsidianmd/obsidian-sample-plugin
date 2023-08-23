@@ -67,6 +67,7 @@ export interface BookmarksPluginInterface {
     bookmarkSiblings(siblings: Array<TAbstractFile>, inTheTop?: boolean): void
     updateSortingBookmarksAfterItemRenamed(renamedItem: TAbstractFile, oldPath: string): void
     updateSortingBookmarksAfterItemDeleted(deletedItem: TAbstractFile): void
+    isBookmarkedForSorting(item: TAbstractFile): boolean
 }
 
 class BookmarksPluginWrapper implements BookmarksPluginInterface {
@@ -141,6 +142,22 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
     updateSortingBookmarksAfterItemDeleted = (deletedItem: TAbstractFile): void => {
         updateSortingBookmarksAfterItemDeleted(this.plugin!, deletedItem, this.groupNameForSorting)
     }
+
+    isBookmarkedForSorting = (item: TAbstractFile): boolean => {
+        const itemsCollection: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(item.path, DontCreateIfMissing, this.plugin!, this.groupNameForSorting)
+        if (itemsCollection) {
+            if (item instanceof TFile) {
+                return itemsCollection.items?.some((bkmrk) => bkmrk.type === 'file' && bkmrk.path === item.path)
+            } else {
+                const folderName: string = lastPathComponent(item.path)
+                return itemsCollection.items?.some((bkmrk) =>
+                    (bkmrk.type === 'group' && bkmrk.title === folderName) ||
+                    (bkmrk.type === 'folder' && bkmrk.path === item.path)
+                )
+            }
+        }
+        return false
+    }
 }
 
 export const BookmarksCorePluginId: string = 'bookmarks'
@@ -198,7 +215,7 @@ const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callback: Tra
     recursiveTraversal(items, '');
 }
 
-const ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR = '#^.'
+const ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR = '#^-'
 
 const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupName?: string): OrderedBookmarks | undefined => {
     console.log(`Populating bookmarks cache with group scope ${bookmarksGroupName}`)
