@@ -431,8 +431,8 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
 	let fileExplorer = this.fileExplorer
 	sortingSpec._mCache = sortingSpec.plugin?.app.metadataCache
-	const starredPluginInstance: Starred_PluginInstance | undefined = getStarredPlugin(sortingSpec?.plugin?.app)
-	const iconFolderPluginInstance: ObsidianIconFolder_PluginInstance | undefined = getIconFolderPlugin(sortingSpec?.plugin?.app)
+	const starredPluginInstance: Starred_PluginInstance | undefined = getStarredPlugin()
+	const iconFolderPluginInstance: ObsidianIconFolder_PluginInstance | undefined = getIconFolderPlugin()
 
 	// shallow copy of groups
 	sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
