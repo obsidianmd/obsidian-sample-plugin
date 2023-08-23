@@ -6,6 +6,7 @@ import {
 	determineSortingGroup,
 	FolderItemForSorting,
 	matchGroupRegex,
+	sorterByMetadataField,
 	SorterFn,
 	Sorters
 } from './custom-sort';
