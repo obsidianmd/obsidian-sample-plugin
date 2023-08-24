@@ -42,6 +42,15 @@ export interface ProcessingContext {
 	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
 
+export interface ProcessingContext {
+	// For internal transient use
+	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
+	_mCache?: MetadataCache
+	starredPluginInstance?: Starred_PluginInstance
+
+	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
+}
+
 let CollatorCompare = new Intl.Collator(undefined, {
 	usage: "sort",
 	sensitivity: "base",

@@ -2261,25 +2261,6 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		expect(result2).toBe(SORT_FIRST_GOES_LATER)
 		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
 	})
-	it('should put the item with metadata below the second one w/o metadata (this is reverse order)', () => {
-		// given
-		const itemA: Partial<FolderItemForSorting> = {
-			metadataFieldValue: '15',
-			sortString: 'n123'
-		}
-		const itemB: Partial<FolderItemForSorting> = {
-			sortString: 'n123'
-		}
-		const sorter: SorterFn = getSorterFnFor(CustomSortOrder.byMetadataFieldAlphabetical)
-
-		// when
-		const result1: number = sorter(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
-		const result2: number = sorter(itemB as FolderItemForSorting, itemA as FolderItemForSorting)
-
-		// then
-		expect(result1).toBe(SORT_FIRST_GOES_LATER)
-		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
-	})
 	it('should put the item with metadata later if the second one has no metadata (reverse order)', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
