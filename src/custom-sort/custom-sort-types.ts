@@ -79,10 +79,7 @@ export interface CustomSortSpec {
 	outsidersFoldersGroupIdx?: number
 	itemsToHide?: Set<string>
 	priorityOrder?: Array<number>       // Indexes of groups in evaluation order
-
-		// For internal transient use
-	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
-	_mCache?: MetadataCache
+	implicit?: boolean // spec applied automatically (e.g. auto integration with a plugin)
 }
 
 export const DEFAULT_METADATA_FIELD_FOR_SORTING: string = 'sort-index-value'

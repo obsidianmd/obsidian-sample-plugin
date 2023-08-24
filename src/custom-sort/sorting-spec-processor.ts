@@ -37,6 +37,7 @@ interface ProcessingContext {
 	specs: Array<CustomSortSpec>
 	currentSpec?: CustomSortSpec
 	currentSpecGroup?: CustomSortGroup
+	implicitSpec?: boolean
 
 	// Support for specific conditions (intentionally not generic approach)
 	previousValidEntryWasTargetFolderAttr?: boolean  // Entry in previous non-empty valid line
@@ -577,7 +578,7 @@ const ensureCollectionHasSortSpecByName = (collection?: SortSpecsCollection | nu
 const ensureCollectionHasSortSpecByWildcard = (collection?: SortSpecsCollection | null) => {
 	collection = collection ?? {}
 	if (!collection.sortSpecByWildcard) {
-		collection.sortSpecByWildcard = new FolderWildcardMatching<CustomSortSpec>()
+		collection.sortSpecByWildcard = new FolderWildcardMatching<CustomSortSpec>((spec: CustomSortSpec) => !!spec.implicit)
 	}
 	return collection
 }
@@ -602,35 +603,38 @@ const endsWithWildcardPatternSuffix = (path: string): boolean => {
 
 enum WildcardPriority {
 	NO_WILDCARD = 1,
+	NO_WILDCARD_IMPLICIT,
 	MATCH_CHILDREN,
-	MATCH_ALL
+	MATCH_CHILDREN_IMPLICIT,
+	MATCH_ALL,
+	MATCH_ALL_IMPLICIT
 }
 
-const stripWildcardPatternSuffix = (path: string): {path: string, detectedWildcardPriority: number} => {
+const stripWildcardPatternSuffix = (path: string, ofImplicitSpec: boolean): {path: string, detectedWildcardPriority: number} => {
 	if (path.endsWith(MATCH_ALL_SUFFIX)) {
 		path = path.slice(0, -MATCH_ALL_SUFFIX.length)
 		return {
 			path: path.length > 0 ? path : '/',
-			detectedWildcardPriority: WildcardPriority.MATCH_ALL
+			detectedWildcardPriority: ofImplicitSpec ? WildcardPriority.MATCH_ALL_IMPLICIT : WildcardPriority.MATCH_ALL
 		}
 	}
 	if (path.endsWith(MATCH_CHILDREN_1_SUFFIX)) {
 		path = path.slice(0, -MATCH_CHILDREN_1_SUFFIX.length)
 		return {
 			path: path.length > 0 ? path : '/',
-			detectedWildcardPriority: WildcardPriority.MATCH_CHILDREN,
+			detectedWildcardPriority: ofImplicitSpec ? WildcardPriority.MATCH_CHILDREN_IMPLICIT : WildcardPriority.MATCH_CHILDREN
 		}
 	}
 	if (path.endsWith(MATCH_CHILDREN_2_SUFFIX)) {
 		path = path.slice(0, -MATCH_CHILDREN_2_SUFFIX.length)
 		return {
 			path: path.length > 0 ? path : '/',
-			detectedWildcardPriority: WildcardPriority.MATCH_CHILDREN
+			detectedWildcardPriority: ofImplicitSpec ? WildcardPriority.MATCH_CHILDREN_IMPLICIT : WildcardPriority.MATCH_CHILDREN
 		}
 	}
 	return {
 		path: path,
-		detectedWildcardPriority: WildcardPriority.NO_WILDCARD
+		detectedWildcardPriority: ofImplicitSpec ? WildcardPriority.NO_WILDCARD_IMPLICIT : WildcardPriority.NO_WILDCARD
 	}
 }
 
@@ -727,12 +731,14 @@ export class SortingSpecProcessor {
 	parseSortSpecFromText(text: Array<string>,
 						  folderPath: string,
 						  sortingSpecFileName: string,
-						  collection?: SortSpecsCollection | null
+						  collection?: SortSpecsCollection | null,
+						  implicitSpec?: boolean
 	): SortSpecsCollection | null | undefined {
 		// reset / init processing state after potential previous invocation
 		this.ctx = {
 			folderPath: folderPath,   // location of the sorting spec file
-			specs: []
+			specs: [],
+			implicitSpec: implicitSpec
 		};
 		this.currentEntryLine = null
 		this.currentEntryLineIdx = null
@@ -839,7 +845,7 @@ export class SortingSpecProcessor {
 					for (let idx = 0; idx < spec.targetFoldersPaths.length; idx++) {
 						const originalPath = spec.targetFoldersPaths[idx]
 						if (!originalPath.startsWith(MatchFolderNameLexeme) && !originalPath.startsWith(MatchFolderByRegexpLexeme)) {
-							const {path, detectedWildcardPriority} = stripWildcardPatternSuffix(originalPath)
+							const {path, detectedWildcardPriority} = stripWildcardPatternSuffix(originalPath, !!spec.implicit)
 							let storeTheSpec: boolean = true
 							const preexistingSortSpecPriority: WildcardPriority = this.pathMatchPriorityForPath[path]
 							if (preexistingSortSpecPriority) {
@@ -1446,7 +1452,8 @@ export class SortingSpecProcessor {
 	private putNewSpecForNewTargetFolder(folderPath?: string): CustomSortSpec {
 		const newSpec: CustomSortSpec = {
 			targetFoldersPaths: [folderPath ?? this.ctx.folderPath],
-			groups: []
+			groups: [],
+			implicit: this.ctx.implicitSpec
 		}
 
 		this.ctx.specs.push(newSpec);

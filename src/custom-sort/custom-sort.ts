@@ -3,6 +3,7 @@ import {
 	CommunityPlugin,
 	FrontMatterCache,
 	InstalledPlugin,
+	MetadataCache,
 	requireApiVersion,
 	TAbstractFile,
 	TFile,
@@ -38,6 +39,15 @@ import {
 	expandMacros
 } from "./macros";
 import {Obj} from "tern";
+
+export interface ProcessingContext {
+	// For internal transient use
+	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
+	_mCache?: MetadataCache
+	starredPluginInstance?: Starred_PluginInstance
+
+	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
+}
 
 let CollatorCompare = new Intl.Collator(undefined, {
 	usage: "sort",
@@ -96,7 +106,7 @@ export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: b
 	}
 }
 
-export let Sorters: { [key in CustomSortOrder]: SorterFn } = {
+let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
 	[CustomSortOrder.trueAlphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortString, a.sortString),
@@ -236,12 +246,7 @@ export const matchGroupRegex = (theRegex: RegExpSpec, nameForMatching: string): 
 	return [false, undefined, undefined]
 }
 
-export interface Context {
-	starredPluginInstance?: Starred_PluginInstance
-	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
-}
-
-export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: Context): FolderItemForSorting {
+export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: ProcessingContext): FolderItemForSorting {
 	let groupIdx: number
 	let determined: boolean = false
 	let matchedGroup: string | null | undefined
@@ -324,10 +329,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				break
 			case CustomSortGroupType.HasMetadataField:
 				if (group.withMetadataFieldName) {
-					if (spec._mCache) {
+					if (ctx?._mCache) {
 						// For folders - scan metadata of 'folder note'
 						const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
-						const frontMatterCache: FrontMatterCache | undefined = spec._mCache.getCache(notePathToScan)?.frontmatter
+						const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
 						const hasMetadata: boolean | undefined = frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
 
 						if (hasMetadata) {
@@ -417,10 +422,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				metadataFieldName = DEFAULT_METADATA_FIELD_FOR_SORTING
 			}
 			if (metadataFieldName) {
-				if (spec._mCache) {
+				if (ctx?._mCache) {
 					// For folders - scan metadata of 'folder note'
 					const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
-					const frontMatterCache: FrontMatterCache | undefined = spec._mCache.getCache(notePathToScan)?.frontmatter
+					const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
 					metadataValueToSortBy = frontMatterCache?.[metadataFieldName]
 				}
 			}
@@ -496,11 +501,8 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 	})
 }
 
-export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]) {
+export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
 	let fileExplorer = this.fileExplorer
-	sortingSpec._mCache = sortingSpec.plugin?.app.metadataCache
-	const starredPluginInstance: Starred_PluginInstance | undefined = getStarredPlugin()
-	const iconFolderPluginInstance: ObsidianIconFolder_PluginInstance | undefined = getIconFolderPlugin()
 
 	// shallow copy of groups
 	sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
@@ -516,10 +518,7 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 		:
 		this.file.children)
 		.map((entry: TFile | TFolder) => {
-			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, {
-				starredPluginInstance: starredPluginInstance,
-				iconFolderPluginInstance: iconFolderPluginInstance
-			})
+			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, ctx)
 			return itemForSorting
 		})
 
@@ -538,8 +537,4 @@ export const folderSort = function (sortingSpec: CustomSortSpec, order: string[]
 	} else {
 		this.children = items;
 	}
-
-	// release risky references
-	sortingSpec._mCache = undefined
-	sortingSpec.plugin = undefined
 };
