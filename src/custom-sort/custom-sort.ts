@@ -38,15 +38,6 @@ export interface ProcessingContext {
 	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
 	_mCache?: MetadataCache
 	starredPluginInstance?: Starred_PluginInstance
-	bookmarksPluginInstance?: BookmarksPluginInterface,
-	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
-}
-
-export interface ProcessingContext {
-	// For internal transient use
-	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
-	_mCache?: MetadataCache
-	starredPluginInstance?: Starred_PluginInstance
 
 	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
