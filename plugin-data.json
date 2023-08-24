@@ -1,0 +1,10 @@
+{
+	"plugin_id": "sample-plugin",
+	"plugin_files": [
+		"main.js",
+		"styles.css",
+		"manifest.json"
+	],
+	"dev_root": "D:\\Olivier\\plugintest\\.obsidian\\plugins\\",
+	"prod_root": "D:\\Olivier\\ThisLife\\.obsidian.desktop\\plugins\\"
+}

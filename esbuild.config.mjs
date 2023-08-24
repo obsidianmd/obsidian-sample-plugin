@@ -1,6 +1,9 @@
-import esbuild from "esbuild";
-import process from "process";
 import builtins from "builtin-modules";
+import { copyFile } from "fs/promises";
+import esbuild from "esbuild";
+import path from "path";
+import process from "process";
+import { readFileSync } from "fs";
 
 const banner =
 `/*
@@ -10,6 +13,26 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+
+// Use variables to copy build to good directory
+const data = JSON.parse(readFileSync("plugin-data.json", "utf8"));
+
+const { plugin_id, plugin_files, dev_root, prod_root } = data;
+
+async function copyPluginFiles() {
+	for (const file of plugin_files) {
+		await copyFile(file, path.join(dest, file));
+	}
+}
+
+const copyFilesToDestination = {
+	name: "copy",
+	setup(build) {
+		build.onEnd((result) => {
+			copyPluginFiles()
+		});
+	},
+};
 
 const context = await esbuild.context({
 	banner: {
@@ -37,10 +60,16 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
+	plugins: [
+		copyFilesToDestination
+	],
 	outfile: "main.js",
 });
 
+let dest = path.join(dev_root, plugin_id);
+
 if (prod) {
+	dest = path.join(prod_root, plugin_id);
 	await context.rebuild();
 	process.exit(0);
 } else {
