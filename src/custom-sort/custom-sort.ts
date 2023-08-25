@@ -191,6 +191,16 @@ export const getSorterFnFor = (sorting: CustomSortOrder, currentUIselectedSortin
 	}
 }
 
+// logic of primary and secondary sorting:
+// 0th - compare groupIdx
+// 1st - apply primary, if 0 then
+// 2nd - apply secondary if present, if 0 or not present then
+// 3rd - apply folder-level order (which also will probably return 0)
+// 4th - apply the UI-selected
+// 5th - if not known, use CustomSortOrder.default
+
+
+
 function getComparator(sortSpec: CustomSortSpec, currentUIselectedSorting?: string): SorterFn {
 	const compareTwoItems = (itA: FolderItemForSorting, itB: FolderItemForSorting) => {
 		if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
@@ -208,7 +218,9 @@ function getComparator(sortSpec: CustomSortSpec, currentUIselectedSorting?: stri
 		} else {
 			// should never happen - groupIdx is not known for at least one of items to compare.
 			// The logic of determining the index always sets some idx
-			// Yet for sanity and to satisfy TS code analyzer a fallback to default behavior below
+			// Yet for sanity and to satisfy TS code analyzer some valid behavior below
+			if (itA.groupIdx !== undefined) return -1
+			if (itB.groupIdx !== undefined) return 1
 			return getSorterFnFor(CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
 		}
 	}
@@ -313,7 +325,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						// check for overlapping of prefix and suffix match (not allowed)
 						if ((fullMatchLeft!.length + fullMatchRight!.length) <= nameForMatching.length) {
 							determined = true
-							matchedGroup = matchedGroupLeft ?? matchedGroupRight
+
+							if (matchedGroupLeft || matchedGroupRight) {
+								matchedGroup = (matchedGroupLeft && matchedGroupRight) ? (matchedGroupLeft + matchedGroupRight) : (matchedGroupLeft ?? matchedGroupRight)
+							}
 						}
 					}
 			}

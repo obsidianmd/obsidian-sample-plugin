@@ -347,6 +347,38 @@ describe('determineSortingGroup', () => {
 				path: 'Some parent folder/Part:123-icle.md'
 			});
 		});
+		it('should match head and tail, when advanced regexp in both, head and tail', () => {
+			// given
+			const file: TFile = mockTFile('Part 555-6 123-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part *(\d+(?:-\d+)*)/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					regexSuffix: {
+						regex: / *(\d+(?:-\d+)*)-icle$/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					}
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "00000555|00000006//00000123////Part 555-6 123-icle.md",
+				matchGroup: '00000555|00000006//00000123//',
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part 555-6 123-icle.md'
+			});
+		});
 	})
 	describe('CustomSortGroupType.ExactPrefix', () => {
 		it('should correctly recognize exact prefix', () => {
