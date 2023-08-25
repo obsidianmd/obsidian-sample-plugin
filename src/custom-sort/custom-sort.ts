@@ -66,7 +66,6 @@ export interface FolderItemForSorting {
 	groupIdx?: number  // the index itself represents order for groups
 	sortString: string // fragment (or full name) to be used for sorting
 	metadataFieldValue?: string // relevant to metadata-based sorting only
-	matchGroup?: string // advanced - used for secondary sorting rule, to recognize 'same regex match'
 	ctime: number   // for a file ctime is obvious, for a folder = ctime of the oldest child file
 	mtime: number   // for a file mtime is obvious, for a folder = date of most recently modified child file
 	isFolder: boolean
@@ -206,8 +205,8 @@ function getComparator(sortSpec: CustomSortSpec, currentUIselectedSorting?: stri
 		if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
 			if (itA.groupIdx === itB.groupIdx) {
 				const group: CustomSortGroup | undefined = sortSpec.groups[itA.groupIdx]
-				const matchingGroupPresentOnBothSidesAndEqual: boolean = itA.matchGroup !== undefined && itA.matchGroup === itB.matchGroup
-				if (matchingGroupPresentOnBothSidesAndEqual && group.secondaryOrder) {
+
+				if (group.secondaryOrder) {
 					return getSorterFnFor(group.secondaryOrder ?? CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
 				} else {
 					return getSorterFnFor(group?.order ?? CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
@@ -261,7 +260,7 @@ export const matchGroupRegex = (theRegex: RegExpSpec, nameForMatching: string): 
 export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: ProcessingContext): FolderItemForSorting {
 	let groupIdx: number
 	let determined: boolean = false
-	let matchedGroup: string | null | undefined
+	let derivedText: string | null | undefined
 	let metadataValueToSortBy: string | undefined
 	const aFolder: boolean = isFolder(entry)
 	const aFile: boolean = !aFolder
@@ -272,8 +271,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	//    than the actual full set of defined groups, because the outsiders group are not
 	//    in the ordered list (aka priorityOrder array)
 	const numOfGroupsToCheck: number = spec.priorityOrder ? spec.priorityOrder.length : spec.groups.length
-	for (let idx = 0; idx < numOfGroupsToCheck; idx++) {
-		matchedGroup = null
+	for (let idx = 0; idx < numOfGroupsToCheck && !determined; idx++) {
+		derivedText = null
 		groupIdx = spec.priorityOrder ? spec.priorityOrder[idx] : idx
 		const group: CustomSortGroup = spec.groupsShadow ? spec.groupsShadow[groupIdx] : spec.groups[groupIdx];
 		if (group.foldersOnly && aFile) continue;
@@ -286,7 +285,9 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						determined = true;
 					}
 				} else { // regexp is involved
-					[determined, matchedGroup] = matchGroupRegex(group.regexPrefix!, nameForMatching)
+					const [matched, matchedGroup] = matchGroupRegex(group.regexPrefix!, nameForMatching)
+					determined = matched
+					derivedText = matchedGroup ?? derivedText
 				}
 				break;
 			case CustomSortGroupType.ExactSuffix:
@@ -295,7 +296,9 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						determined = true;
 					}
 				} else { // regexp is involved
-					[determined, matchedGroup] = matchGroupRegex(group.regexSuffix!, nameForMatching)
+					const [matched, matchedGroup] = matchGroupRegex(group.regexSuffix!, nameForMatching)
+					determined = matched
+					derivedText = matchedGroup ?? derivedText
 				}
 				break;
 			case CustomSortGroupType.ExactHeadAndTail:
@@ -308,13 +311,12 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				} else if (group.exactPrefix || group.exactSuffix) { // regexp is involved as the prefix or as the suffix (not both)
 					if ((group.exactPrefix && nameForMatching.startsWith(group.exactPrefix)) ||
 						(group.exactSuffix && nameForMatching.endsWith(group.exactSuffix))) {
-						let fullMatch: string | undefined
-						[determined, matchedGroup, fullMatch] = matchGroupRegex(group.exactPrefix ? group.regexSuffix! : group.regexPrefix!, nameForMatching)
-						if (determined) {
+						const [matched, matchedGroup, fullMatch] = matchGroupRegex(group.exactPrefix ? group.regexSuffix! : group.regexPrefix!, nameForMatching)
+						if (matched) {
 							// check for overlapping of prefix and suffix match (not allowed)
-							if ((fullMatch!.length + (group.exactPrefix?.length ?? 0) + (group.exactSuffix?.length ?? 0)) > nameForMatching.length) {
-								determined = false
-								matchedGroup = null // if it falls into Outsiders group, let it use title to sort
+							if ((fullMatch!.length + (group.exactPrefix?.length ?? 0) + (group.exactSuffix?.length ?? 0)) <= nameForMatching.length) {
+								determined = true
+								derivedText = matchedGroup ?? derivedText
 							}
 						}
 					}
@@ -325,9 +327,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						// check for overlapping of prefix and suffix match (not allowed)
 						if ((fullMatchLeft!.length + fullMatchRight!.length) <= nameForMatching.length) {
 							determined = true
-
 							if (matchedGroupLeft || matchedGroupRight) {
-								matchedGroup = (matchedGroupLeft && matchedGroupRight) ? (matchedGroupLeft + matchedGroupRight) : (matchedGroupLeft ?? matchedGroupRight)
+								derivedText = ((matchedGroupLeft || '') + (matchedGroupRight || '')) || derivedText
 							}
 						}
 					}
@@ -339,7 +340,11 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						determined = true;
 					}
 				} else { // regexp is involved
-					[determined, matchedGroup] = matchGroupRegex(group.regexPrefix!, nameForMatching)
+					const [matched, matchedGroup] = matchGroupRegex(group.regexPrefix!, nameForMatching)
+					if (matched) {
+						determined = true
+						derivedText = matchedGroup ?? derivedText
+					}
 				}
 				break
 			case CustomSortGroupType.HasMetadataField:
@@ -380,8 +385,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				determined = true;
 				break
 		}
-		if (determined) {
-			break; // No need to check other sorting groups
+		if (determined && derivedText) {
+			if (!group.overrideTitle) {
+				derivedText = derivedText + '//' + entry.name
+			}
 		}
 	}
 
@@ -450,9 +457,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	return {
 		// idx of the matched group or idx of Outsiders group or the largest index (= groups count+1)
 		groupIdx: determinedGroupIdx,
-		sortString: matchedGroup ? (matchedGroup + '//' + entry.name) : entry.name,
+		sortString: derivedText ?? entry.name,
 		metadataFieldValue: metadataValueToSortBy,
-		matchGroup: matchedGroup ?? undefined,
 		isFolder: aFolder,
 		folder: aFolder ? (entry as TFolder) : undefined,
 		path: entry.path,

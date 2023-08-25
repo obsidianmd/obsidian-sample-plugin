@@ -224,7 +224,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "00000123////Part123:-icle.md",
-				matchGroup: '00000123//',
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
@@ -287,6 +286,36 @@ describe('determineSortingGroup', () => {
 				path: 'Some parent folder/Part:123-icle.md'
 			});
 		});
+		it('should match head and tail, when simple regexp in head and tail, overrideTitle', () => {
+			// given
+			const file: TFile = mockTFile('Part:123-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part:\d/i
+					},
+					regexSuffix: {
+						regex: /\d-icle$/i
+					},
+					overrideTitle: true  // Should be ignored when no advanced regexp
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "Part:123-icle.md",
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part:123-icle.md'
+			});
+		});
 		it('should match head and tail, when simple regexp in head and and mixed in tail', () => {
 			// given
 			const file: TFile = mockTFile('Part:1 1-23.456-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
@@ -312,7 +341,37 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "00000001|00000023////Part:1 1-23.456-icle.md",
-				matchGroup: '00000001|00000023//',
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part:1 1-23.456-icle.md'
+			});
+		});
+		it('should match head and tail, when simple regexp in head and and mixed in tail, with overrideTitle', () => {
+			// given
+			const file: TFile = mockTFile('Part:1 1-23.456-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part:\d/i
+					},
+					regexSuffix: {
+						regex: / *(\d+(?:-\d+)*).\d\d\d-icle$/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					overrideTitle: true
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "00000001|00000023//",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:1 1-23.456-icle.md'
@@ -341,7 +400,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "00000123////Part:123-icle.md",
-				matchGroup: '00000123//',
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
@@ -373,7 +431,38 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "00000555|00000006//00000123////Part 555-6 123-icle.md",
-				matchGroup: '00000555|00000006//00000123//',
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part 555-6 123-icle.md'
+			});
+		});
+		it('should match head and tail, when advanced regexp in both, head and tail, with overrideTitle', () => {
+			// given
+			const file: TFile = mockTFile('Part 555-6 123-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part *(\d+(?:-\d+)*)/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					regexSuffix: {
+						regex: / *(\d+(?:-\d+)*)-icle$/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					overrideTitle: true
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "00000555|00000006//00000123//",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part 555-6 123-icle.md'
@@ -453,7 +542,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
-				matchGroup: "00000001|00000030|00000006|00001900//",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -556,7 +644,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
-				matchGroup: "00000001|00000030|00000006|00001900//",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -684,7 +771,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
-				matchGroup: "00000001|00000030|00000006|00001900//",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
