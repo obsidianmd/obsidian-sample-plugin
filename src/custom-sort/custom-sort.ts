@@ -102,7 +102,6 @@ export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: b
 }
 
 export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
-	const collatorCompareFn: CollatorCompareFn = trueAlphabetical ? CollatorTrueAlphabeticalCompare : CollatorCompare
 	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
 		if (reverseOrder) {
 			[a, b] = [b, a]
