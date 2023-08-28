@@ -1,8 +1,5 @@
 import {
-	App,
-	CommunityPlugin,
 	FrontMatterCache,
-	InstalledPlugin,
 	MetadataCache,
 	Plugin,
 	requireApiVersion,
@@ -12,17 +9,11 @@ import {
 } from 'obsidian';
 import {
 	determineStarredStatusOf,
-	getStarredPlugin,
 	Starred_PluginInstance,
-	StarredPlugin_findStarredFile_methodName
 } from '../utils/StarredPluginSignature';
 import {
 	determineIconOf,
-	getIconFolderPlugin,
-	FolderIconObject,
 	ObsidianIconFolder_PluginInstance,
-	ObsidianIconFolderPlugin_Data,
-	ObsidianIconFolderPlugin_getData_methodName
 } from '../utils/ObsidianIconFolderPluginSignature'
 import {
 	CustomSortGroup,
