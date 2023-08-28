@@ -2275,7 +2275,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
 		expect(result2).toBe(SORT_FIRST_GOES_LATER)
 	})
-	it('should correctly fallback to alphabetical by name when metadata on both items is present and equal', () => {
+	it('should correctly compare when metadata on both items is present and equal', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
 			metadataFieldValue: 'Aaa',
@@ -2293,9 +2293,9 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		const result3: number = sorter(itemB as FolderItemForSorting, itemB as FolderItemForSorting)
 
 		// then
-		expect(result1).toBe(SORT_FIRST_GOES_LATER)
-		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
-		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
+		expect(result1).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result2).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result3).toBe(EQUAL_OR_UNCOMPARABLE)
 	})
 	it('should put the item with metadata earlier if the second one has no metadata ', () => {
 		// given
@@ -2357,7 +2357,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		expect(result1).toBe(SORT_FIRST_GOES_LATER)
 		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
 	})
-	it('should correctly fallback to alphabetical reverse by name when metadata on both items is present and equal', () => {
+	it('should correctly compare when metadata on both items is present and equal', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
 			metadataFieldValue: 'Aaa',
@@ -2375,9 +2375,9 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const result3: number = sorter(itemB as FolderItemForSorting, itemB as FolderItemForSorting)
 
 		// then
-		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
-		expect(result2).toBe(SORT_FIRST_GOES_LATER)
-		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
+		expect(result1).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result2).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result3).toBe(EQUAL_OR_UNCOMPARABLE)
 	})
 	it('should put the item with metadata later if the second one has no metadata (reverse order)', () => {
 		// given
@@ -2424,9 +2424,9 @@ describe('sorterByMetadataField', () => {
 	it.each([
 		[true,'abc','def',-1, 'a', 'a'],
 		[true,'xyz','klm',1, 'b', 'b'],
-		[true,'mmm','mmm',0, 'c', 'c'],
-		[true,'mmm','mmm',-1, 'd', 'e'],
-		[true,'mmm','mmm',1, 'e', 'd'],
+		[true,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'c', 'c'],
+		[true,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'd', 'e'],
+		[true,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'e', 'd'],
 		[true,'abc',undefined,-1, 'a','a'],
 		[true,undefined,'klm',1, 'b','b'],
 		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','a'],
@@ -2434,9 +2434,9 @@ describe('sorterByMetadataField', () => {
 		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'd','c'],
 		[false,'abc','def',1, 'a', 'a'],
 		[false,'xyz','klm',-1, 'b', 'b'],
-		[false,'mmm','mmm',0, 'c', 'c'],
-		[false,'mmm','mmm',1, 'd', 'e'],
-		[false,'mmm','mmm',-1, 'e', 'd'],
+		[false,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'c', 'c'],
+		[false,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'd', 'e'],
+		[false,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'e', 'd'],
 		[false,'abc',undefined,1, 'a','a'],
 		[false,undefined,'klm',-1, 'b','b'],
 		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','a'],

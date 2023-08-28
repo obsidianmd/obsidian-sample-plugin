@@ -83,12 +83,7 @@ export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: b
 		}
 		if (a.metadataFieldValue && b.metadataFieldValue) {
 			const sortResult: number = collatorCompareFn(a.metadataFieldValue, b.metadataFieldValue)
-			if (sortResult === 0) {
-				// Fallback -> requested sort by metadata and both items have the same metadata value
-				return collatorCompareFn(a.sortString, b.sortString)    // switch to alphabetical sort by note/folder titles
-			} else {
-				return sortResult
-			}
+			return sortResult
 		}
 		// Item with metadata goes before the w/o metadata
 		if (a.metadataFieldValue) return -1
