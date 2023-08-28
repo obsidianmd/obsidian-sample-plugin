@@ -4,6 +4,7 @@ import {
 	DEFAULT_FOLDER_MTIME,
 	determineFolderDatesIfNeeded,
 	determineSortingGroup,
+	EQUAL_OR_UNCOMPARABLE,
 	FolderItemForSorting,
 	matchGroupRegex,
 	sorterByBookmarkOrder,
@@ -225,7 +226,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "00000123////Part123:-icle.md",
-				matchGroup: '00000123//',
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
@@ -288,6 +288,36 @@ describe('determineSortingGroup', () => {
 				path: 'Some parent folder/Part:123-icle.md'
 			});
 		});
+		it('should match head and tail, when simple regexp in head and tail, overrideTitle', () => {
+			// given
+			const file: TFile = mockTFile('Part:123-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part:\d/i
+					},
+					regexSuffix: {
+						regex: /\d-icle$/i
+					},
+					overrideTitle: true  // Should be ignored when no advanced regexp
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "Part:123-icle.md",
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part:123-icle.md'
+			});
+		});
 		it('should match head and tail, when simple regexp in head and and mixed in tail', () => {
 			// given
 			const file: TFile = mockTFile('Part:1 1-23.456-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
@@ -313,7 +343,37 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "00000001|00000023////Part:1 1-23.456-icle.md",
-				matchGroup: '00000001|00000023//',
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part:1 1-23.456-icle.md'
+			});
+		});
+		it('should match head and tail, when simple regexp in head and and mixed in tail, with overrideTitle', () => {
+			// given
+			const file: TFile = mockTFile('Part:1 1-23.456-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part:\d/i
+					},
+					regexSuffix: {
+						regex: / *(\d+(?:-\d+)*).\d\d\d-icle$/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					overrideTitle: true
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "00000001|00000023//",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:1 1-23.456-icle.md'
@@ -342,10 +402,72 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0, // Matched!
 				isFolder: false,
 				sortString: "00000123////Part:123-icle.md",
-				matchGroup: '00000123//',
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
+			});
+		});
+		it('should match head and tail, when advanced regexp in both, head and tail', () => {
+			// given
+			const file: TFile = mockTFile('Part 555-6 123-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part *(\d+(?:-\d+)*)/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					regexSuffix: {
+						regex: / *(\d+(?:-\d+)*)-icle$/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					}
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "00000555|00000006//00000123////Part 555-6 123-icle.md",
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part 555-6 123-icle.md'
+			});
+		});
+		it('should match head and tail, when advanced regexp in both, head and tail, with overrideTitle', () => {
+			// given
+			const file: TFile = mockTFile('Part 555-6 123-icle', 'md', 444, MOCK_TIMESTAMP + 555, MOCK_TIMESTAMP + 666);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['Some parent folder'],
+				groups: [{
+					type: CustomSortGroupType.ExactHeadAndTail,
+					regexPrefix: {
+						regex: /^Part *(\d+(?:-\d+)*)/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					regexSuffix: {
+						regex: / *(\d+(?:-\d+)*)-icle$/i,
+						normalizerFn: CompoundDashNumberNormalizerFn
+					},
+					overrideTitle: true
+				}]
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0, // Matched!
+				isFolder: false,
+				sortString: "00000555|00000006//00000123//",
+				ctime: MOCK_TIMESTAMP + 555,
+				mtime: MOCK_TIMESTAMP + 666,
+				path: 'Some parent folder/Part 555-6 123-icle.md'
 			});
 		});
 	})
@@ -422,7 +544,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
-				matchGroup: "00000001|00000030|00000006|00001900//",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -525,7 +646,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
-				matchGroup: "00000001|00000030|00000006|00001900//",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -653,7 +773,6 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: false,
 				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
-				matchGroup: "00000001|00000030|00000006|00001900//",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -2198,7 +2317,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
 		expect(result2).toBe(SORT_FIRST_GOES_LATER)
 	})
-	it('should correctly fallback to alphabetical if no metadata on both items', () => {
+	it('should refuse comparison if no metadata on both items', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
 			sortString: 'ccc'
@@ -2214,9 +2333,9 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		const result3: number = sorter(itemB as FolderItemForSorting, itemB as FolderItemForSorting)
 
 		// then
-		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
-		expect(result2).toBe(SORT_FIRST_GOES_LATER)
-		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
+		expect(result1).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result2).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result3).toBe(EQUAL_OR_UNCOMPARABLE)
 	})
 })
 
@@ -2280,7 +2399,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		expect(result1).toBe(SORT_FIRST_GOES_LATER)
 		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
 	})
-	it('should correctly fallback to alphabetical reverse if no metadata on both items', () => {
+	it('should refrain from comparing if no metadata on both items', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
 			sortString: 'ccc'
@@ -2296,9 +2415,9 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const result3: number = sorter(itemB as FolderItemForSorting, itemB as FolderItemForSorting)
 
 		// then
-		expect(result1).toBe(SORT_FIRST_GOES_LATER)
-		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
-		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
+		expect(result1).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result2).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result3).toBe(EQUAL_OR_UNCOMPARABLE)
 	})
 })
 
@@ -2311,9 +2430,9 @@ describe('sorterByMetadataField', () => {
 		[true,'mmm','mmm',1, 'e', 'd'],
 		[true,'abc',undefined,-1, 'a','a'],
 		[true,undefined,'klm',1, 'b','b'],
-		[true,undefined,undefined,0, 'a','a'],
-		[true,undefined,undefined,-1, 'a','b'],
-		[true,undefined,undefined,1, 'd','c'],
+		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','a'],
+		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','b'],
+		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'd','c'],
 		[false,'abc','def',1, 'a', 'a'],
 		[false,'xyz','klm',-1, 'b', 'b'],
 		[false,'mmm','mmm',0, 'c', 'c'],
@@ -2321,9 +2440,9 @@ describe('sorterByMetadataField', () => {
 		[false,'mmm','mmm',-1, 'e', 'd'],
 		[false,'abc',undefined,1, 'a','a'],
 		[false,undefined,'klm',-1, 'b','b'],
-		[false,undefined,undefined,0, 'a','a'],
-		[false,undefined,undefined,1, 'a','b'],
-		[false,undefined,undefined,-1, 'd','c'],
+		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','a'],
+		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','b'],
+		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'd','c'],
 
 	])('straight order %s, comparing %s and %s should return %s for sortStrings %s and %s',
 		(straight: boolean, metadataA: string|undefined, metadataB: string|undefined, order: number, sortStringA: string, sortStringB) => {

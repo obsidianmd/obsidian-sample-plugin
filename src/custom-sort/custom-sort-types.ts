@@ -55,6 +55,7 @@ export interface CustomSortGroup {
 	regexPrefix?: RegExpSpec
 	exactSuffix?: string
 	regexSuffix?: RegExpSpec
+	overrideTitle?: boolean   // instead of title, use a derived text for sorting (e.g. regexp matching group).
 	order?: CustomSortOrder
 	byMetadataField?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
 	secondaryOrder?: CustomSortOrder
