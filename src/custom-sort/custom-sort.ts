@@ -114,8 +114,8 @@ export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: b
 		// Item with bookmark order goes before the w/o bookmark info
 		if (a.bookmarkedIdx) return -1
 		if (b.bookmarkedIdx) return 1
-		// Fallback -> requested sort by bookmark order, yet none of two items contain it, use alphabetical by name
-		return collatorCompareFn(a.sortString, b.sortString)
+
+		return EQUAL_OR_UNCOMPARABLE
 	}
 }
 
