@@ -4,6 +4,7 @@ import {
 	DEFAULT_FOLDER_MTIME,
 	determineFolderDatesIfNeeded,
 	determineSortingGroup,
+	EQUAL_OR_UNCOMPARABLE,
 	FolderItemForSorting,
 	matchGroupRegex,
 	sorterByMetadataField,
@@ -2315,7 +2316,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
 		expect(result2).toBe(SORT_FIRST_GOES_LATER)
 	})
-	it('should correctly fallback to alphabetical if no metadata on both items', () => {
+	it('should refuse comparison if no metadata on both items', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
 			sortString: 'ccc'
@@ -2331,9 +2332,9 @@ describe('CustomSortOrder.byMetadataFieldAlphabetical', () => {
 		const result3: number = sorter(itemB as FolderItemForSorting, itemB as FolderItemForSorting)
 
 		// then
-		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
-		expect(result2).toBe(SORT_FIRST_GOES_LATER)
-		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
+		expect(result1).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result2).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result3).toBe(EQUAL_OR_UNCOMPARABLE)
 	})
 })
 
@@ -2397,7 +2398,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		expect(result1).toBe(SORT_FIRST_GOES_LATER)
 		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
 	})
-	it('should correctly fallback to alphabetical reverse if no metadata on both items', () => {
+	it('should refrain from comparing if no metadata on both items', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
 			sortString: 'ccc'
@@ -2413,9 +2414,9 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const result3: number = sorter(itemB as FolderItemForSorting, itemB as FolderItemForSorting)
 
 		// then
-		expect(result1).toBe(SORT_FIRST_GOES_LATER)
-		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
-		expect(result3).toBe(SORT_ITEMS_ARE_EQUAL)
+		expect(result1).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result2).toBe(EQUAL_OR_UNCOMPARABLE)
+		expect(result3).toBe(EQUAL_OR_UNCOMPARABLE)
 	})
 })
 
@@ -2428,9 +2429,9 @@ describe('sorterByMetadataField', () => {
 		[true,'mmm','mmm',1, 'e', 'd'],
 		[true,'abc',undefined,-1, 'a','a'],
 		[true,undefined,'klm',1, 'b','b'],
-		[true,undefined,undefined,0, 'a','a'],
-		[true,undefined,undefined,-1, 'a','b'],
-		[true,undefined,undefined,1, 'd','c'],
+		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','a'],
+		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','b'],
+		[true,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'd','c'],
 		[false,'abc','def',1, 'a', 'a'],
 		[false,'xyz','klm',-1, 'b', 'b'],
 		[false,'mmm','mmm',0, 'c', 'c'],
@@ -2438,9 +2439,9 @@ describe('sorterByMetadataField', () => {
 		[false,'mmm','mmm',-1, 'e', 'd'],
 		[false,'abc',undefined,1, 'a','a'],
 		[false,undefined,'klm',-1, 'b','b'],
-		[false,undefined,undefined,0, 'a','a'],
-		[false,undefined,undefined,1, 'a','b'],
-		[false,undefined,undefined,-1, 'd','c'],
+		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','a'],
+		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','b'],
+		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'd','c'],
 
 	])('straight order %s, comparing %s and %s should return %s for sortStrings %s and %s',
 		(straight: boolean, metadataA: string|undefined, metadataB: string|undefined, order: number, sortStringA: string, sortStringB) => {

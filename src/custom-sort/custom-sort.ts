@@ -4,6 +4,7 @@ import {
 	FrontMatterCache,
 	InstalledPlugin,
 	MetadataCache,
+	Plugin,
 	requireApiVersion,
 	TAbstractFile,
 	TFile,
@@ -38,7 +39,6 @@ import {
 import {
 	expandMacros
 } from "./macros";
-import {Obj} from "tern";
 
 export interface ProcessingContext {
 	// For internal transient use
@@ -82,6 +82,8 @@ const TrueAlphabetical: boolean = true
 const ReverseOrder: boolean = true
 const StraightOrder: boolean = false
 
+export const EQUAL_OR_UNCOMPARABLE: number = 0
+
 export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
 	const collatorCompareFn: CollatorCompareFn = trueAlphabetical ? CollatorTrueAlphabeticalCompare : CollatorCompare
 	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
@@ -100,8 +102,8 @@ export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: b
 		// Item with metadata goes before the w/o metadata
 		if (a.metadataFieldValue) return -1
 		if (b.metadataFieldValue) return 1
-		// Fallback -> requested sort by metadata, yet none of two items contain it, use alphabetical by name
-		return collatorCompareFn(a.sortString, b.sortString)
+
+		return EQUAL_OR_UNCOMPARABLE
 	}
 }
 
@@ -190,27 +192,21 @@ export const getSorterFnFor = (sorting: CustomSortOrder, currentUIselectedSortin
 	}
 }
 
-// logic of primary and secondary sorting:
-// 0th - compare groupIdx
-// 1st - apply primary, if 0 then
-// 2nd - apply secondary if present, if 0 or not present then
-// 3rd - apply folder-level order (which also will probably return 0)
-// 4th - apply the UI-selected
-// 5th - if not known, use CustomSortOrder.default
-
-
-
 function getComparator(sortSpec: CustomSortSpec, currentUIselectedSorting?: string): SorterFn {
 	const compareTwoItems = (itA: FolderItemForSorting, itB: FolderItemForSorting) => {
 		if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
 			if (itA.groupIdx === itB.groupIdx) {
 				const group: CustomSortGroup | undefined = sortSpec.groups[itA.groupIdx]
-
-				if (group.secondaryOrder) {
-					return getSorterFnFor(group.secondaryOrder ?? CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
-				} else {
-					return getSorterFnFor(group?.order ?? CustomSortOrder.default, currentUIselectedSorting)(itA, itB)
-				}
+				const primary: number = group?.order ? getSorterFnFor(group.order, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				if (primary !== EQUAL_OR_UNCOMPARABLE) return primary
+				const secondary: number = group?.secondaryOrder ? getSorterFnFor(group.secondaryOrder, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				if (secondary !== EQUAL_OR_UNCOMPARABLE) return secondary
+				const folderLevel: number = sortSpec.defaultOrder ? getSorterFnFor(sortSpec.defaultOrder, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				if (folderLevel !== EQUAL_OR_UNCOMPARABLE) return folderLevel
+				const uiSelected: number = currentUIselectedSorting ? getSorterFnFor(CustomSortOrder.standardObsidian, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				if (uiSelected !== EQUAL_OR_UNCOMPARABLE) return uiSelected
+				const lastResort: number = getSorterFnFor(CustomSortOrder.default)(itA, itB)
+				return lastResort
 			} else {
 				return itA.groupIdx - itB.groupIdx;
 			}
