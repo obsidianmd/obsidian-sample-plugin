@@ -68,3 +68,13 @@ jobs:
             main.js
             manifest.json
             styles.css
+
+      - name: Upload artifacts for debugging
+        uses: actions/upload-artifact@v3
+        with:
+          name: obsidian-sample-plugin
+          path: |
+            ${{ env.PLUGIN_NAME }}.zip
+            main.js
+            manifest.json
+            styles.css
