@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "tistory-publisher",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "easily publisher a note in obsidian to tistory",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
