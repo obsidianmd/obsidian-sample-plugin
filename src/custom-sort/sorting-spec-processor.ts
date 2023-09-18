@@ -601,12 +601,18 @@ const endsWithWildcardPatternSuffix = (path: string): boolean => {
 		path.endsWith(MATCH_ALL_SUFFIX)
 }
 
+
+/*
+ Important note:
+   even if the actual enum labels seem to be unused thus unneeded, their numerical values (implied by the order below) matter.
+   They define the priorities of the rules for wilcard target-folder specs. The rule with higher priority overrides the one with lower
+ */
 enum WildcardPriority {
 	NO_WILDCARD = 1,
 	NO_WILDCARD_IMPLICIT,
 	MATCH_CHILDREN,
-	MATCH_CHILDREN_IMPLICIT,
 	MATCH_ALL,
+	MATCH_CHILDREN_IMPLICIT,
 	MATCH_ALL_IMPLICIT
 }
 
