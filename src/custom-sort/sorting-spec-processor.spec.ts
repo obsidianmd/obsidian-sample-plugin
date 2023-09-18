@@ -1453,6 +1453,13 @@ const txtInputTargetFolderMultiSpecD: string = `
 target-folder: ./*
 `
 
+const txtInputTargetFolderMultiSpecD_implicitCase: string = `
+  // typically implicit specs come context-free, no notion of current folder, that's why using explicit target-folder path
+target-folder: mock-folder/*
+  // Reverse order to distinguish between implicit and explicit spec
+> a-z
+`
+
 const expectedSortSpecForMultiSpecD: { [key: string]: CustomSortSpec } = {
 	'mock-folder': {
 		groups: [{
@@ -1461,6 +1468,19 @@ const expectedSortSpecForMultiSpecD: { [key: string]: CustomSortSpec } = {
 		}],
 		outsidersGroupIdx: 0,
 		targetFoldersPaths: ['mock-folder/*']
+	}
+}
+
+const expectedSortSpecForMultiSpecD_implicitCase: { [key: string]: CustomSortSpec } = {
+	'mock-folder': {
+		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		groups: [{
+			order: CustomSortOrder.alphabeticalReverse,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['mock-folder/*'],
+		implicit: true
 	}
 }
 
@@ -1481,8 +1501,34 @@ const expectedWildcardMatchingTreeForMultiSpecD: FolderMatchingTreeNode<CustomSo
 	}
 }
 
+const expectedWildcardMatchingTreeForMultiSpecD_implicitCase: FolderMatchingTreeNode<CustomSortSpec> = {
+	subtree: {
+		"mock-folder": {
+			matchAll: {
+				defaultOrder: CustomSortOrder.alphabeticalReverse,
+				"groups": [{
+					"order": CustomSortOrder.alphabeticalReverse,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/*"],
+				implicit: true
+			},
+			name: "mock-folder",
+			subtree: {}
+		}
+	}
+}
+
 const txtInputTargetFolderMultiSpecE: string = `
 target-folder: mock-folder/...
+`
+
+const txtInputTargetFolderMultiSpecE_implicitCase: string = `
+  // typically implicit specs come context-free, no notion of current folder, that's why using explicit target-folder path
+target-folder: mock-folder/...
+  // Reverse order to distinguish between implicit and explicit spec
+> a-z
 `
 
 const expectedSortSpecForMultiSpecE: { [key: string]: CustomSortSpec } = {
@@ -1493,6 +1539,19 @@ const expectedSortSpecForMultiSpecE: { [key: string]: CustomSortSpec } = {
 		}],
 		outsidersGroupIdx: 0,
 		targetFoldersPaths: ['mock-folder/...']
+	}
+}
+
+const expectedSortSpecForMultiSpecE_implicitCase: { [key: string]: CustomSortSpec } = {
+	'mock-folder': {
+		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		groups: [{
+			order: CustomSortOrder.alphabeticalReverse,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['mock-folder/...'],
+		implicit: true
 	}
 }
 
@@ -1510,6 +1569,72 @@ const expectedWildcardMatchingTreeForMultiSpecE: FolderMatchingTreeNode<CustomSo
 			name: "mock-folder",
 			subtree: {}
 		}
+	}
+}
+
+const expectedWildcardMatchingTreeForMultiSpecE_implicitCase: FolderMatchingTreeNode<CustomSortSpec> = {
+	subtree: {
+		"mock-folder": {
+			matchChildren: {
+				defaultOrder: CustomSortOrder.alphabeticalReverse,
+				"groups": [{
+					"order": CustomSortOrder.alphabeticalReverse,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/..."],
+				implicit: true
+			},
+			name: "mock-folder",
+			subtree: {}
+		}
+	}
+}
+
+const expectedWildcardMatchingTreeForMultiSpecDplusE_implicitCase: FolderMatchingTreeNode<CustomSortSpec> = {
+	subtree: {
+		"mock-folder": {
+			matchAll: {
+				"groups": [{
+					"order": CustomSortOrder.alphabetical,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/*"]
+			},
+			matchChildren: {
+				defaultOrder: CustomSortOrder.alphabeticalReverse,
+				"groups": [{
+					"order": CustomSortOrder.alphabeticalReverse,
+					"type": CustomSortGroupType.Outsiders
+				}],
+				"outsidersGroupIdx": 0,
+				"targetFoldersPaths": ["mock-folder/..."],
+				implicit: true
+			},
+			name: "mock-folder",
+			subtree: {}
+		}
+	}
+}
+
+const txtInputTargetFolderMultiSpecF_implicitCase: string = `
+  // typically implicit specs come context-free, no notion of current folder, that's why using explicit target-folder path
+target-folder: mock-folder
+  // Reverse order to distinguish between implicit and explicit spec
+> a-z
+`
+
+const expectedSortSpecForMultiSpecF_implicitCase: { [key: string]: CustomSortSpec } = {
+	'mock-folder': {
+		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		groups: [{
+			order: CustomSortOrder.alphabeticalReverse,
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['mock-folder'],
+		implicit: true
 	}
 }
 
@@ -1542,10 +1667,50 @@ describe('SortingSpecProcessor path wildcard priorities', () => {
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecD)
 		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecD)
 	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, case D - with implicit spec', () => {
+		const inputTxtArrImplicit: Array<string> = txtInputTargetFolderMultiSpecD_implicitCase.split('\n')
+		const resultImplicit = processor.parseSortSpecFromText(inputTxtArrImplicit, 'implicit ignored param', 'implicit ignored param', null, true)
+		expect(resultImplicit?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecD_implicitCase)
+		expect(resultImplicit?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecD_implicitCase)
+		const inputTxtArrExplicit: Array<string> = txtInputTargetFolderMultiSpecD.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArrExplicit, 'mock-folder', 'custom-name-note.md', resultImplicit)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecD)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecD)
+	})
 	it('should not raise error for multiple spec for the same path and choose correct spec, case E', () => {
 		const inputTxtArr: Array<string> = txtInputTargetFolderMultiSpecE.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecE)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE)
+	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, case E - with implicit spec', () => {
+		const inputTxtArrImplicit: Array<string> = txtInputTargetFolderMultiSpecE_implicitCase.split('\n')
+		const resultImplicit = processor.parseSortSpecFromText(inputTxtArrImplicit, 'implicit ignored param', 'implicit ignored param', null, true)
+		expect(resultImplicit?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecE_implicitCase)
+		expect(resultImplicit?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE_implicitCase)
+		const inputTxtArrExplicit: Array<string> = txtInputTargetFolderMultiSpecE.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArrExplicit, 'mock-folder', 'custom-name-note.md', resultImplicit)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecE)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE)
+	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, mixed case D+E - with implicit spec, which looses all', () => {
+		const inputTxtArrImplicit: Array<string> = txtInputTargetFolderMultiSpecE_implicitCase.split('\n')
+		const resultImplicit = processor.parseSortSpecFromText(inputTxtArrImplicit, 'implicit ignored param', 'implicit ignored param', null, true)
+		expect(resultImplicit?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecE_implicitCase)
+		expect(resultImplicit?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE_implicitCase)
+		const inputTxtArrExplicit: Array<string> = txtInputTargetFolderMultiSpecD.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArrExplicit, 'mock-folder', 'custom-name-note.md', resultImplicit)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecD)
+		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecDplusE_implicitCase)
+	})
+	it('should not raise error for multiple spec for the same path and choose correct spec, mixed case E+F => implicit by name', () => {
+		const inputTxtArrImplicit: Array<string> = txtInputTargetFolderMultiSpecF_implicitCase.split('\n')
+		const resultImplicit = processor.parseSortSpecFromText(inputTxtArrImplicit, 'implicit ignored param', 'implicit ignored param', null, true)
+		expect(resultImplicit?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecF_implicitCase)
+		expect(resultImplicit?.sortSpecByWildcard?.tree).toBeUndefined()
+		const inputTxtArrExplicit: Array<string> = txtInputTargetFolderMultiSpecE.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArrExplicit, 'mock-folder', 'custom-name-note.md', resultImplicit)
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForMultiSpecF_implicitCase)
 		expect(result?.sortSpecByWildcard?.tree).toEqual(expectedWildcardMatchingTreeForMultiSpecE)
 	})
 })

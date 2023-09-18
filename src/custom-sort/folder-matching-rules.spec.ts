@@ -3,6 +3,7 @@ import {FolderWildcardMatching} from './folder-matching-rules'
 type SortingSpec = string
 
 const checkIfImplicitSpec = (s: SortingSpec) => false
+const checkIfImplicitSpecByPrefix = (s: SortingSpec) => s.startsWith('implicit:')
 
 const createMockMatcherRichVersion = (): FolderWildcardMatching<SortingSpec> => {
 	const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching(checkIfImplicitSpec)
@@ -116,12 +117,26 @@ describe('folderMatch', () => {
 
 		expect(result).toEqual({errorMsg: "Duplicate wildcard '...' specification for /Archive/2020/.../"})
 	})
+	it('should accept duplicate match children definitions for same path, if the former comes from implicit spec', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching(checkIfImplicitSpecByPrefix)
+		matcher.addWildcardDefinition('Archive/2020/...', 'implicit: First occurrence')
+		const result = matcher.addWildcardDefinition('/Archive/2020/.../', 'Duplicate')
+
+		expect(result).toBeUndefined()
+	})
 	it('should detect duplicate match all definitions for same path', () => {
 		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching(checkIfImplicitSpec)
 		matcher.addWildcardDefinition('/Archive/2019/*', 'First occurrence')
 		const result = matcher.addWildcardDefinition('Archive/2019/*', 'Duplicate')
 
 		expect(result).toEqual({errorMsg: "Duplicate wildcard '*' specification for Archive/2019/*"})
+	})
+	it('should accept duplicate match all definitions for same path, if the former comes from implicit spec', () => {
+		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching(checkIfImplicitSpecByPrefix)
+		matcher.addWildcardDefinition('/Archive/2019/*', 'implicit: First occurrence')
+		const result = matcher.addWildcardDefinition('Archive/2019/*', 'Duplicate')
+
+		expect(result).toBeUndefined()
 	})
 	it('regexp-match by name works (order of regexp doesn\'t matter) case A', () => {
 		const matcher: FolderWildcardMatching<SortingSpec> = new FolderWildcardMatching(checkIfImplicitSpec)
