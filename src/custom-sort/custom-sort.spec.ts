@@ -2866,8 +2866,8 @@ describe('sorterByBookmarkOrder', () => {
 		[true,3,undefined,-1, 'a','a'],
 		[true,undefined,4,1, 'b','b'],
 		[true,undefined,undefined,0, 'a','a'],
-		[true,undefined,undefined,-1, 'a','b'],
-		[true,undefined,undefined,1, 'd','c'],
+		[true,undefined,undefined,0, 'a','b'],
+		[true,undefined,undefined,0, 'd','c'],
 		[false,10,20,1, 'a', 'a'],
 		[false,20,10,-1, 'b', 'b'],
 		[false,30,30,0, 'c', 'c'],    // not possible in reality - each bookmark order is unique by definition - covered for clarity
@@ -2876,8 +2876,8 @@ describe('sorterByBookmarkOrder', () => {
 		[false,3,undefined,1, 'a','a'],
 		[false,undefined,4,-1, 'b','b'],
 		[false,undefined,undefined,0, 'a','a'],
-		[false,undefined,undefined,1, 'a','b'],
-		[false,undefined,undefined,-1, 'd','c'],
+		[false,undefined,undefined,0, 'a','b'],
+		[false,undefined,undefined,0, 'd','c'],
 
 	])('straight order %s, comparing %s and %s should return %s for sortStrings %s and %s',
 		(straight: boolean, bookmarkA: number|undefined, bookmarkB: number|undefined, order: number, sortStringA: string, sortStringB) => {
