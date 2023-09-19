@@ -26,7 +26,7 @@ Take full control of the order of your notes and folders:
 - support for imposing inheritance of order specifications with flexible exclusion and overriding logic
 
 ---
-## Basic scenario: set the custom sorting order for a specific folder
+## Basic scenario 1: set the custom sorting order for a specific folder
 
 Create a new note named `sortspec` in the folder for which you want to configure the sorting
 
@@ -65,6 +65,34 @@ An illustrative image which shows the reverse alphabetical order applied to the 
 >   It only changes the order in which the files and folders are displayed in File Explorer
 > - indentation matters in YAML -> the two leading spaces in `  order-desc: a-z` are intentional and required
 > - this common example only touches the surface of the rich capabilities of this custom sorting plugin. For more details go to [advanced version of README.md](./advanced-README.md)
+
+---
+## Basic scenario 2: explicitly list folders and files in the order which you want
+
+This comes from the suggestion by [TheOneLight](https://github.com/TheOneLight) in [this discussion](https://github.com/SebastianMC/obsidian-custom-sort/discussions/95#discussioncomment-7048584)
+
+Take the instructions from the **[Basic scenario 1](https://github.com/SebastianMC/obsidian-custom-sort#basic-scenario-set-the-custom-sorting-order-for-a-specific-folder)** above and replace the YAML content with:
+
+```yaml
+---
+sorting-spec: |
+  My first folder name
+  My second folder name
+  My first file name
+  My second file name
+  // ... and continue so in the desired order
+---
+```
+
+This will enforce the order as you list inside the YAML
+
+---
+## Editing multi-line properties in the new YAML properties editor (Obsidian 1.4 and newer)
+
+The newly introduced YAML properties editor (Obsidian 1.4 and newer) can make editing the multi-line text properties tricky and confusing.
+There are short videos here [How to create or edit a multi‐valued property in Obsidian?](https://github.com/SebastianMC/obsidian-custom-sort/wiki/How-to-create-or-edit-a-multi%E2%80%90valued-property-in-Obsidian%3F) which could be helpful:
+- how to edit the multi-line text properties in Obsidian properties editor (`shift+enter` does the magic here)
+- how to edit the multi-line text properties in Obsidian `source view mode` (the classic way, as you did prior to Obsidian 1.4)
 
 ---
 ## Basic automatic sorting methods
