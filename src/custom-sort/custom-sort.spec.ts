@@ -6,12 +6,12 @@ import {
 	determineSortingGroup,
 	EQUAL_OR_UNCOMPARABLE,
 	FolderItemForSorting,
+	getSorterFnFor,
 	matchGroupRegex,
+    ProcessingContext,
 	sorterByBookmarkOrder,
 	sorterByMetadataField,
-	SorterFn,
-	getSorterFnFor,
-	ProcessingContext
+	SorterFn
 } from './custom-sort';
 import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, RegExpSpec} from './custom-sort-types';
 import {CompoundDashNumberNormalizerFn, CompoundDotRomanNumberNormalizerFn} from "./sorting-spec-processor";
@@ -1882,7 +1882,7 @@ describe('determineSortingGroup', () => {
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
-				metadataFieldValue: 'direct metadata on file, not obvious'
+				metadataFieldValueForDerived: 'direct metadata on file, not obvious'
 			} as FolderItemForSorting);
 		})
 		it('should correctly read direct metadata from File item (order by metadata set on group, no metadata name specified on group)', () => {
@@ -1963,6 +1963,406 @@ describe('determineSortingGroup', () => {
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
 				metadataFieldValue: 'direct metadata on file, under default name'
+			} as FolderItemForSorting);
+		})
+	})
+
+	describe('when sort by metadata is involved (specified in secondary sort, for group of for target folder)', () => {
+		it('should correctly read direct metadata from File item (order by metadata set on group) alph', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					byMetadataFieldSecondary: 'metadata-field-for-sorting',
+					exactPrefix: 'Ref',
+					order: CustomSortOrder.alphabetical,
+					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									"metadata-field-for-sorting": "direct metadata on file",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValueSecondary: 'direct metadata on file'
+			} as FolderItemForSorting);
+		})
+		it('should correctly read direct metadata from File item (order by metadata set on group) alph rev', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					byMetadataFieldSecondary: 'metadata-field-for-sorting',
+					exactPrefix: 'Ref',
+					order: CustomSortOrder.alphabeticalReverse,
+					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									"metadata-field-for-sorting": "direct metadata on file",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValueSecondary: 'direct metadata on file'
+			} as FolderItemForSorting);
+		})
+		it('should correctly read direct metadata from File item (order by metadata set on group) true alph', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					byMetadataField: 'non-existing-mdata',
+					byMetadataFieldSecondary: 'metadata-field-for-sorting',
+					exactPrefix: 'Ref',
+					order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+					secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									"metadata-field-for-sorting": "direct metadata on file",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValueSecondary: 'direct metadata on file'
+			} as FolderItemForSorting);
+		})
+		it('should correctly read direct metadata from File item (order by metadata set on group) true alph rev (dbl mdata)', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					byMetadataField: 'metadata-field-for-sorting',
+					byMetadataFieldSecondary: 'metadata-field-for-sorting secondary',
+					exactPrefix: 'Ref',
+					order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+					secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									"metadata-field-for-sorting": "direct metadata on file",
+									"metadata-field-for-sorting secondary": "direct another metadata on file",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValue: 'direct metadata on file',
+				metadataFieldValueSecondary: 'direct another metadata on file'
+			} as FolderItemForSorting);
+		})
+		it('should correctly read direct metadata from folder note item (order by metadata set on group)', () => {
+			// given
+			const folder: TFolder = mockTFolder('References');
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					exactPrefix: 'Ref',
+					byMetadataFieldSecondary: 'metadata-field-for-sorting',
+					order: CustomSortOrder.standardObsidian,
+					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'References/References.md': {
+								frontmatter: {
+									'metadata-field-for-sorting': "metadata on folder note",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(folder, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: true,
+				sortString: "References",
+				ctime: DEFAULT_FOLDER_CTIME,
+				mtime: DEFAULT_FOLDER_MTIME,
+				path: 'References',
+				metadataFieldValueSecondary: 'metadata on folder note',
+				folder: folder
+			} as FolderItemForSorting);
+		})
+		it('should correctly read direct metadata from File item (order by metadata set on target folder)', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					exactPrefix: 'Ref',
+					order: CustomSortOrder.trueAlphabetical,
+					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical
+				}],
+				defaultOrder: CustomSortOrder.byCreatedTime,
+				defaultSecondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+				byMetadataFieldSecondary: 'metadata-field-for-sorting-specified-on-target-folder'
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									"metadata-field-for-sorting-specified-on-target-folder": "direct metadata on file, not obvious",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValueForDerivedSecondary: 'direct metadata on file, not obvious'
+			} as FolderItemForSorting);
+		})
+		it('should correctly read direct metadata from File item (order by metadata set on group, no metadata name specified on group)', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.HasMetadataField,
+					order: CustomSortOrder.standardObsidian,
+					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical,
+					withMetadataFieldName: 'field-used-with-with-metadata-syntax'
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									'field-used-with-with-metadata-syntax': "direct metadata on file, tricky",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValueSecondary: 'direct metadata on file, tricky',
+			} as FolderItemForSorting);
+		})
+		it('should correctly read direct metadata from File item (order by metadata set on group, no metadata name specified anywhere)', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					exactPrefix: 'Ref',
+					order: CustomSortOrder.byCreatedTimeReverse,
+					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical
+				}]
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									'sort-index-value': "direct metadata on file, under default name",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValueSecondary: 'direct metadata on file, under default name',
+			} as FolderItemForSorting);
+		})
+	})
+
+	describe('when sort by metadata is involved, at every level', () => {
+		it('should correctly read direct metadata from File item (order by metadata set at each level)', () => {
+			// given
+			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
+			const sortSpec: CustomSortSpec = {
+				targetFoldersPaths: ['/'],
+				groups: [{
+					type: CustomSortGroupType.ExactPrefix,
+					exactPrefix: 'Ref',
+					order: CustomSortOrder.byMetadataFieldAlphabetical,
+					byMetadataField: 'mdata-for-primary',
+					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+					byMetadataFieldSecondary: 'mdata-for-secondary'
+				}],
+				defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+				byMetadataField: 'mdata-for-default-primary',
+				defaultSecondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+				byMetadataFieldSecondary: 'mdata-for-default-secondary'
+			}
+			const ctx: Partial<ProcessingContext> = {
+				_mCache: {
+					getCache: function (path: string): CachedMetadata | undefined {
+						return {
+							'Some parent folder/References.md': {
+								frontmatter: {
+									'mdata-for-primary': "filemdata 1",
+									'mdata-for-secondary': "filemdata 2",
+									'mdata-for-default-primary': "filemdata 3",
+									'mdata-for-default-secondary': "filemdata 4",
+									position: MockedLoc
+								}
+							}
+						}[path]
+					}
+				} as MetadataCache
+			}
+
+			// when
+			const result = determineSortingGroup(file, sortSpec, ctx as ProcessingContext)
+
+			// then
+			expect(result).toEqual({
+				groupIdx: 0,
+				isFolder: false,
+				sortString: "References.md",
+				ctime: MOCK_TIMESTAMP + 222,
+				mtime: MOCK_TIMESTAMP + 333,
+				path: 'Some parent folder/References.md',
+				metadataFieldValue: 'filemdata 1',
+				metadataFieldValueSecondary: 'filemdata 2',
+				metadataFieldValueForDerived: 'filemdata 3',
+				metadataFieldValueForDerivedSecondary: 'filemdata 4',
 			} as FolderItemForSorting);
 		})
 	})

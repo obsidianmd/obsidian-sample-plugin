@@ -58,6 +58,7 @@ export interface CustomSortGroup {
 	overrideTitle?: boolean   // instead of title, use a derived text for sorting (e.g. regexp matching group).
 	order?: CustomSortOrder
 	byMetadataField?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
+	byMetadataFieldSecondary?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
 	secondaryOrder?: CustomSortOrder
 	filesOnly?: boolean
 	matchFilenameWithExt?: boolean
@@ -72,7 +73,9 @@ export interface CustomSortSpec {
 		// plays only informative role about the original parsed 'target-folder:' values
 	targetFoldersPaths: Array<string>   // For root use '/'
 	defaultOrder?: CustomSortOrder
-	byMetadataField?: string            // for 'by-metadata:' if the defaultOrder is by metadata alphabetical or reverse
+	defaultSecondaryOrder?: CustomSortOrder
+	byMetadataField?: string            // for 'by-metadata:' if the defaultOrder is by metadata
+	byMetadataFieldSecondary?: string
 	groups: Array<CustomSortGroup>
 	groupsShadow?: Array<CustomSortGroup>   // A shallow copy of groups, used at applying sorting for items in a folder.
 	                                        // Stores folder-specific values (e.g. macros expanded with folder-specific values)
