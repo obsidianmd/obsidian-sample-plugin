@@ -40,13 +40,13 @@ export interface ProcessingContext {
 	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
 
-let CollatorCompare = new Intl.Collator(undefined, {
+export const CollatorCompare = new Intl.Collator(undefined, {
 	usage: "sort",
 	sensitivity: "base",
 	numeric: true,
 }).compare;
 
-let CollatorTrueAlphabeticalCompare = new Intl.Collator(undefined, {
+export const CollatorTrueAlphabeticalCompare = new Intl.Collator(undefined, {
 	usage: "sort",
 	sensitivity: "base",
 	numeric: false,
@@ -56,11 +56,23 @@ export interface FolderItemForSorting {
 	path: string
 	groupIdx?: number  // the index itself represents order for groups
 	sortString: string // fragment (or full name) to be used for sorting
-	metadataFieldValue?: string // relevant to metadata-based sorting only
+	metadataFieldValue?: string // relevant to metadata-based group sorting only
+	metadataFieldValueSecondary?: string // relevant to secondary metadata-based sorting only
+	metadataFieldValueForDerived?: string // relevant to metadata-based sorting-spec level sorting only
+	metadataFieldValueForDerivedSecondary?: string // relevant to metadata-based sorting-spec level secondary sorting only
 	ctime: number   // for a file ctime is obvious, for a folder = ctime of the oldest child file
 	mtime: number   // for a file mtime is obvious, for a folder = date of most recently modified child file
 	isFolder: boolean
 	folder?: TFolder
+}
+
+export enum SortingLevelId {
+	forPrimary,
+	forSecondary,
+	forDerivedPrimary,
+	forDerivedSecondary,
+	forUISelected,
+	forLastResort
 }
 
 export type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
@@ -75,19 +87,30 @@ const StraightOrder: boolean = false
 
 export const EQUAL_OR_UNCOMPARABLE: number = 0
 
-export const sorterByMetadataField:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
+export const getMdata = (it: FolderItemForSorting, mdataId?: SortingLevelId) => {
+	switch (mdataId) {
+		case SortingLevelId.forSecondary: return it.metadataFieldValueSecondary
+		case SortingLevelId.forDerivedPrimary: return it.metadataFieldValueForDerived
+		case SortingLevelId.forDerivedSecondary: return it.metadataFieldValueForDerivedSecondary
+		case SortingLevelId.forPrimary:
+		default: return it.metadataFieldValue
+	}
+}
+
+export const sorterByMetadataField = (reverseOrder?: boolean, trueAlphabetical?: boolean, sortLevelId?: SortingLevelId): SorterFn => {
 	const collatorCompareFn: CollatorCompareFn = trueAlphabetical ? CollatorTrueAlphabeticalCompare : CollatorCompare
 	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
+		let [amdata, bmdata] = [getMdata(a, sortLevelId), getMdata(b, sortLevelId)]
 		if (reverseOrder) {
-			[a, b] = [b, a]
+			[amdata, bmdata] = [bmdata, amdata]
 		}
-		if (a.metadataFieldValue && b.metadataFieldValue) {
-			const sortResult: number = collatorCompareFn(a.metadataFieldValue, b.metadataFieldValue)
+		if (amdata && bmdata) {
+			const sortResult: number = collatorCompareFn(amdata, bmdata)
 			return sortResult
 		}
 		// Item with metadata goes before the w/o metadata
-		if (a.metadataFieldValue) return -1
-		if (b.metadataFieldValue) return 1
+		if (amdata) return -1
+		if (bmdata) return 1
 
 		return EQUAL_OR_UNCOMPARABLE
 	}
@@ -106,21 +129,43 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byCreatedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctime - b.ctime,
 	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.ctime - a.ctime),
 	[CustomSortOrder.byCreatedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime,
-	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder),
-	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical),
-	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder),
-	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical),
+	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forPrimary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forPrimary),
+	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forPrimary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forPrimary),
 
 	// This is a fallback entry which should not be used - the getSorterFor() function below should protect against it
 	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
 };
 
+// Some sorters are different when used in primary vs. secondary sorting order
+let SortersForSecondary: { [key in CustomSortOrder]?: SorterFn } = {
+	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forSecondary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forSecondary),
+	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forSecondary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forSecondary)
+};
+
+let SortersForDerivedPrimary: { [key in CustomSortOrder]?: SorterFn } = {
+	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forDerivedPrimary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forDerivedPrimary),
+	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forDerivedPrimary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forDerivedPrimary)
+};
+
+let SortersForDerivedSecondary: { [key in CustomSortOrder]?: SorterFn } = {
+	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forDerivedSecondary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forDerivedSecondary),
+	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forDerivedSecondary),
+	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forDerivedSecondary)
+};
+
 // OS - Obsidian Sort
 const OS_alphabetical = 'alphabetical'
 const OS_alphabeticalReverse = 'alphabeticalReverse'
-const OS_byModifiedTime = 'byModifiedTime'
-const OS_byModifiedTimeReverse = 'byModifiedTimeReverse'
-const OS_byCreatedTime = 'byCreatedTime'
+export const OS_byModifiedTime = 'byModifiedTime'
+export const OS_byModifiedTimeReverse = 'byModifiedTimeReverse'
+export const OS_byCreatedTime = 'byCreatedTime'
 const OS_byCreatedTimeReverse = 'byCreatedTimeReverse'
 
 export const ObsidianStandardDefaultSortingName = OS_alphabetical
@@ -169,29 +214,38 @@ export const StandardPlainObsidianComparator = (order: string): PlainSorterFn =>
 	}
 }
 
-export const getSorterFnFor = (sorting: CustomSortOrder, currentUIselectedSorting?: string): SorterFn => {
+export const getSorterFnFor = (sorting: CustomSortOrder, currentUIselectedSorting?: string, sortLevelId?: SortingLevelId): SorterFn => {
 	if (sorting === CustomSortOrder.standardObsidian) {
 		sorting = StandardObsidianToCustomSort[currentUIselectedSorting ?? 'alphabetical'] ?? CustomSortOrder.alphabetical
 		return StandardObsidianComparator(sorting)
 	} else {
-		return Sorters[sorting]
+		// Some sorters have to know at which sorting level they are used
+		switch(sortLevelId) {
+			case SortingLevelId.forSecondary: return SortersForSecondary[sorting] ?? Sorters[sorting]
+			case SortingLevelId.forDerivedPrimary: return SortersForDerivedPrimary[sorting] ?? Sorters[sorting]
+			case SortingLevelId.forDerivedSecondary: return SortersForDerivedSecondary[sorting] ?? Sorters[sorting]
+			case SortingLevelId.forPrimary:
+			default: return Sorters[sorting]
+		}
 	}
 }
 
-function getComparator(sortSpec: CustomSortSpec, currentUIselectedSorting?: string): SorterFn {
+export const getComparator = (sortSpec: CustomSortSpec, currentUIselectedSorting?: string): SorterFn => {
 	const compareTwoItems = (itA: FolderItemForSorting, itB: FolderItemForSorting) => {
 		if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
 			if (itA.groupIdx === itB.groupIdx) {
 				const group: CustomSortGroup | undefined = sortSpec.groups[itA.groupIdx]
-				const primary: number = group?.order ? getSorterFnFor(group.order, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const primary: number = group?.order ? getSorterFnFor(group.order, currentUIselectedSorting, SortingLevelId.forPrimary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (primary !== EQUAL_OR_UNCOMPARABLE) return primary
-				const secondary: number = group?.secondaryOrder ? getSorterFnFor(group.secondaryOrder, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const secondary: number = group?.secondaryOrder ? getSorterFnFor(group.secondaryOrder, currentUIselectedSorting, SortingLevelId.forSecondary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (secondary !== EQUAL_OR_UNCOMPARABLE) return secondary
-				const folderLevel: number = sortSpec.defaultOrder ? getSorterFnFor(sortSpec.defaultOrder, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const folderLevel: number = sortSpec.defaultOrder ? getSorterFnFor(sortSpec.defaultOrder, currentUIselectedSorting, SortingLevelId.forDerivedPrimary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (folderLevel !== EQUAL_OR_UNCOMPARABLE) return folderLevel
-				const uiSelected: number = currentUIselectedSorting ? getSorterFnFor(CustomSortOrder.standardObsidian, currentUIselectedSorting)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const folderLevelSecondary: number = sortSpec.defaultSecondaryOrder ? getSorterFnFor(sortSpec.defaultSecondaryOrder, currentUIselectedSorting, SortingLevelId.forDerivedSecondary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				if (folderLevelSecondary !== EQUAL_OR_UNCOMPARABLE) return folderLevelSecondary
+				const uiSelected: number = currentUIselectedSorting ? getSorterFnFor(CustomSortOrder.standardObsidian, currentUIselectedSorting, SortingLevelId.forUISelected)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (uiSelected !== EQUAL_OR_UNCOMPARABLE) return uiSelected
-				const lastResort: number = getSorterFnFor(CustomSortOrder.default)(itA, itB)
+				const lastResort: number = getSorterFnFor(CustomSortOrder.default, undefined, SortingLevelId.forLastResort)(itA, itB)
 				return lastResort
 			} else {
 				return itA.groupIdx - itB.groupIdx;
@@ -243,7 +297,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	let groupIdx: number
 	let determined: boolean = false
 	let derivedText: string | null | undefined
-	let metadataValueToSortBy: string | undefined
+
 	const aFolder: boolean = isFolder(entry)
 	const aFile: boolean = !aFolder
 	const entryAsTFile: TFile = entry as TFile
@@ -399,39 +453,26 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		}
 	}
 
-	// The not obvious logic of determining the value of metadata field to use its value for sorting
-	// - the sorting spec processor automatically populates the order field of CustomSortingGroup for each group
-	//    - yet defensive code should assume some default
-	// - if the order in group is by metadata (and only in that case):
-	//    - if byMetadata field name is defined for the group -> use it. Done even if value empty or not present.
-	//    - else, if byMetadata field name is defined for the Sorting spec (folder level, for all groups) -> use it. Done even if value empty or not present.
-	//    - else, if withMetadata field name is defined for the group -> use it. Done even if value empty or not present.
-	//    - otherwise, fallback to the default metadata field name (hardcoded in the plugin as 'sort-index-value')
-
-	// TODO: in manual of plugin, in details, explain these nuances. Let readme.md contain only the basic simple example and reference to manual.md section
+	let metadataValueToSortBy: string | undefined
+	let metadataValueSecondaryToSortBy: string | undefined
+	let metadataValueDerivedPrimaryToSortBy: string | undefined
+	let metadataValueDerivedSecondaryToSortBy: string | undefined
 
 	if (determined && determinedGroupIdx !== undefined) {  // <-- defensive code, maybe too defensive
 		const group: CustomSortGroup = spec.groups[determinedGroupIdx];
-		if (isByMetadata(group?.order)) {
-			let metadataFieldName: string | undefined = group.byMetadataField
-			if (!metadataFieldName) {
-				if (isByMetadata(spec.defaultOrder)) {
-					metadataFieldName = spec.byMetadataField
-				}
-			}
-			if (!metadataFieldName) {
-				metadataFieldName = group.withMetadataFieldName
-			}
-			if (!metadataFieldName) {
-				metadataFieldName = DEFAULT_METADATA_FIELD_FOR_SORTING
-			}
-			if (metadataFieldName) {
-				if (ctx?._mCache) {
-					// For folders - scan metadata of 'folder note'
-					const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
-					const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
-					metadataValueToSortBy = frontMatterCache?.[metadataFieldName]
-				}
+		const isPrimaryOrderByMetadata: boolean = isByMetadata(group?.order)
+		const isSecondaryOrderByMetadata: boolean = isByMetadata(group?.secondaryOrder)
+		const isDerivedPrimaryByMetadata: boolean = isByMetadata(spec.defaultOrder)
+		const isDerivedSecondaryByMetadata: boolean = isByMetadata(spec.defaultSecondaryOrder)
+		if (isPrimaryOrderByMetadata || isSecondaryOrderByMetadata || isDerivedPrimaryByMetadata || isDerivedSecondaryByMetadata) {
+			if (ctx?._mCache) {
+				// For folders - scan metadata of 'folder note'
+				const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
+				const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
+				if (isPrimaryOrderByMetadata) metadataValueToSortBy = frontMatterCache?.[group?.byMetadataField || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING]
+				if (isSecondaryOrderByMetadata) metadataValueSecondaryToSortBy = frontMatterCache?.[group?.byMetadataFieldSecondary || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING]
+				if (isDerivedPrimaryByMetadata) metadataValueDerivedPrimaryToSortBy = frontMatterCache?.[spec.byMetadataField || DEFAULT_METADATA_FIELD_FOR_SORTING]
+				if (isDerivedSecondaryByMetadata) metadataValueDerivedSecondaryToSortBy = frontMatterCache?.[spec.byMetadataFieldSecondary || DEFAULT_METADATA_FIELD_FOR_SORTING]
 			}
 		}
 	}
@@ -441,6 +482,9 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		groupIdx: determinedGroupIdx,
 		sortString: derivedText ?? entry.name,
 		metadataFieldValue: metadataValueToSortBy,
+		metadataFieldValueSecondary: metadataValueSecondaryToSortBy,
+		metadataFieldValueForDerived: metadataValueDerivedPrimaryToSortBy,
+		metadataFieldValueForDerivedSecondary: metadataValueDerivedSecondaryToSortBy,
 		isFolder: aFolder,
 		folder: aFolder ? (entry as TFolder) : undefined,
 		path: entry.path,
