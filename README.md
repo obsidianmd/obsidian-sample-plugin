@@ -90,7 +90,7 @@ This will enforce the order as you listed inside the YAML
 ## Editing multi-line properties in the new YAML properties editor (Obsidian 1.4 and newer)
 
 The newly introduced YAML properties editor (Obsidian 1.4 and newer) can make editing the multi-line text properties tricky and confusing.
-There are short videos here [How to create or edit a multi‐valued property in Obsidian?](https://github.com/SebastianMC/obsidian-custom-sort/wiki/How-to-create-or-edit-a-multi%E2%80%90line-property-in-Obsidian%3F) which could be helpful:
+There are short videos here [How to create or edit a multi‐line property in Obsidian?](https://github.com/SebastianMC/obsidian-custom-sort/wiki/How-to-create-or-edit-a-multi%E2%80%90line-property-in-Obsidian%3F) which could be helpful:
 - how to edit the multi-line text properties in Obsidian properties editor (`shift+enter` does the magic here)
 - how to edit the multi-line text properties in Obsidian `source view mode` (the classic way, as you did prior to Obsidian 1.4)
 
