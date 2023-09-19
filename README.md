@@ -84,7 +84,7 @@ sorting-spec: |
 ---
 ```
 
-This will enforce the order as you list inside the YAML
+This will enforce the order as you listed inside the YAML
 
 ---
 ## Editing multi-line properties in the new YAML properties editor (Obsidian 1.4 and newer)
