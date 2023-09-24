@@ -1,8 +1,9 @@
 import { Plugin, Editor, MarkdownView, MarkdownRenderer } from "obsidian";
 import { DEFFAULT_SETTINGS, TistoryPublisherSettings } from "./components/settings";
-import PublishModal from "./components/modal";
+import {PublishModal, ModifyModal} from "./components/modal";
 import createPostApi from "./api/createPostApi";
 import TistoryPublisherSettingTab from "./components/settingTab";
+import modifyPostApi from "./api/updatePostApi";
 
 export default class TistoryPublisherPlugin extends Plugin {
 	settings: TistoryPublisherSettings
@@ -12,10 +13,10 @@ export default class TistoryPublisherPlugin extends Plugin {
 		await this.loadSettings()
 		this.addSettingTab(new TistoryPublisherSettingTab(this.app, this))
 
-		// create publish-to-tistory custom command
+		// create publish-to command
 		this.addCommand({
-			id: "publish-to-tistory",
-			name: "publish current note to tistory",
+			id: "publish-post",
+			name: "publish current note.",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				new PublishModal(this.app, async (tag: string) => {
 					const el = document.createElement("div")
@@ -37,6 +38,33 @@ export default class TistoryPublisherPlugin extends Plugin {
 				}).open()
 			}
 		});
+
+		// create modify-post command
+		this.addCommand({
+			id: "modify-post",
+			name: "modify current note.",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				new ModifyModal(this.app, async (tag: string, postId: string) => {
+					const el = document.createElement("div")
+					await MarkdownRenderer.render(
+						this.app,
+						editor.getValue(),
+						el,
+						this.app.workspace.getActiveFile()?.path ?? "/",
+						view
+					)
+					await modifyPostApi({
+						"accessToken": this.settings.accessToken,
+						"blogName": this.settings.blogName,
+						"title": view.getDisplayText(),
+						"tag": tag,
+						"visibility": this.settings.visibility,
+						"content": el.innerHTML,
+						"postId": postId
+					})
+				}).open()
+			}
+		})
 	}
 
 	async loadSettings() {

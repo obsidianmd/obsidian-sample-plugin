@@ -1,3 +1,7 @@
 import PublishModal from "./PublishModal";
+import ModifyModal from "./ModifyModal";
 
-export default PublishModal
+export {
+    PublishModal,
+    ModifyModal
+};
