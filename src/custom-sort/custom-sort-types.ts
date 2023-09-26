@@ -35,8 +35,9 @@ export enum CustomSortOrder {
 
 export interface RecognizedOrderValue {
 	order: CustomSortOrder
-	secondaryOrder?: CustomSortOrder
 	applyToMetadataField?: string
+	secondaryOrder?: CustomSortOrder
+	secondaryApplyToMetadataField?: string
 }
 
 export type NormalizerFn = (s: string) => string | null
@@ -57,8 +58,8 @@ export interface CustomSortGroup {
 	overrideTitle?: boolean   // instead of title, use a derived text for sorting (e.g. regexp matching group).
 	order?: CustomSortOrder
 	byMetadataField?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
-	byMetadataFieldSecondary?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
 	secondaryOrder?: CustomSortOrder
+	byMetadataFieldSecondary?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
 	filesOnly?: boolean
 	matchFilenameWithExt?: boolean
 	foldersOnly?: boolean

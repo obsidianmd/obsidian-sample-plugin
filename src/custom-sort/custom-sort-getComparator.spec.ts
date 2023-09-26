@@ -144,19 +144,7 @@ describe('getComparator', () => {
 			expect(sp).toHaveBeenNthCalledWith(1, CustomSortOrder.byMetadataFieldAlphabeticalReverse, OS_byModifiedTime, SortingLevelId.forPrimary)
 			expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byCreatedTime, OS_byModifiedTime, SortingLevelId.forDerivedPrimary)
 		})
-		it( 'in simple case - group-level comparison fails, folder-level fails, ui-selected in effect', () => {
-			const a = getBaseItemForSorting()
-			const b= getBaseItemForSorting({
-				mtime: a.mtime + 100  // Make be fresher than a
-			})
-			const result = Math.sign(comparator(a,b))
-			expect(result).toBe(B_GOES_FIRST)
-			expect(sp).toBeCalledTimes(3)
-			expect(sp).toHaveBeenNthCalledWith(1, CustomSortOrder.byMetadataFieldAlphabeticalReverse, OS_byModifiedTime, SortingLevelId.forPrimary)
-			expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byCreatedTime, OS_byModifiedTime, SortingLevelId.forDerivedPrimary)
-			expect(sp).toHaveBeenNthCalledWith(3, CustomSortOrder.standardObsidian, OS_byModifiedTime, SortingLevelId.forUISelected)
-		})
-		it( 'in simple case - group-level comparison fails, folder-level fails, ui-selected fails, the last resort default comes into play - case A', () => {
+		it( 'in simple case - group-level comparison fails, folder-level fails, the last resort default comes into play - case A', () => {
 			const a = getBaseItemForSorting({
 				sortString: 'Second'
 			})
@@ -165,11 +153,10 @@ describe('getComparator', () => {
 			})
 			const result = comparator(a,b)
 			expect(result).toBe(B_GOES_FIRST)
-			expect(sp).toBeCalledTimes(4)
+			expect(sp).toBeCalledTimes(3)
 			expect(sp).toHaveBeenNthCalledWith(1, CustomSortOrder.byMetadataFieldAlphabeticalReverse, OS_byModifiedTime, SortingLevelId.forPrimary)
 			expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byCreatedTime, OS_byModifiedTime, SortingLevelId.forDerivedPrimary)
-			expect(sp).toHaveBeenNthCalledWith(3, CustomSortOrder.standardObsidian, OS_byModifiedTime, SortingLevelId.forUISelected)
-			expect(sp).toHaveBeenNthCalledWith(4, CustomSortOrder.default, undefined, SortingLevelId.forLastResort)
+			expect(sp).toHaveBeenNthCalledWith(3, CustomSortOrder.default, undefined, SortingLevelId.forDefaultWhenUnspecified)
 		})
 	})
 	describe('should correctly handle secondary sorting spec', () => {
@@ -191,7 +178,7 @@ describe('getComparator', () => {
 				expect(sp).toHaveBeenNthCalledWith(1, CustomSortOrder.byMetadataFieldAlphabeticalReverse, OS_byModifiedTimeReverse, SortingLevelId.forPrimary)
 				expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byMetadataFieldTrueAlphabetical, OS_byModifiedTimeReverse, SortingLevelId.forSecondary)
 			})
-			it( 'in complex case - secondary sort comparison fails, last resort comes into play', () => {
+			it( 'in complex case - secondary sort comparison fails, last resort default comes into play', () => {
 				const a = getBaseItemForSorting({
 					sortString: 'Second'
 				})
@@ -200,12 +187,11 @@ describe('getComparator', () => {
 				})
 				const result = comparator(a,b)
 				expect(result).toBe(B_GOES_FIRST)
-				expect(sp).toBeCalledTimes(5)
+				expect(sp).toBeCalledTimes(4)
 				expect(sp).toHaveBeenNthCalledWith(1, CustomSortOrder.byMetadataFieldAlphabeticalReverse, OS_byModifiedTimeReverse, SortingLevelId.forPrimary)
 				expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byMetadataFieldTrueAlphabetical, OS_byModifiedTimeReverse, SortingLevelId.forSecondary)
 				expect(sp).toHaveBeenNthCalledWith(3, CustomSortOrder.byCreatedTime, OS_byModifiedTimeReverse, SortingLevelId.forDerivedPrimary )
-				expect(sp).toHaveBeenNthCalledWith(4, CustomSortOrder.standardObsidian, OS_byModifiedTimeReverse, SortingLevelId.forUISelected)
-				expect(sp).toHaveBeenNthCalledWith(5, CustomSortOrder.default, undefined, SortingLevelId.forLastResort)
+				expect(sp).toHaveBeenNthCalledWith(4, CustomSortOrder.default, undefined, SortingLevelId.forDefaultWhenUnspecified)
 			})
 		})
 		describe('at target folder level (aka derived)', () => {
@@ -224,7 +210,7 @@ describe('getComparator', () => {
 				expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byCreatedTime, OS_byModifiedTimeReverse, SortingLevelId.forDerivedPrimary)
 				expect(sp).toHaveBeenNthCalledWith(3, CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse, OS_byModifiedTimeReverse, SortingLevelId.forDerivedSecondary)
 			})
-			it( 'in complex case - secondary sort comparison fails, last resort comes into play', () => {
+			it( 'in complex case - secondary sort comparison fails, last resort default comes into play', () => {
 				const a = getBaseItemForSorting({
 					sortString: 'Second'
 				})
@@ -233,12 +219,11 @@ describe('getComparator', () => {
 				})
 				const result = comparator(a,b)
 				expect(result).toBe(B_GOES_FIRST)
-				expect(sp).toBeCalledTimes(5)
+				expect(sp).toBeCalledTimes(4)
 				expect(sp).toHaveBeenNthCalledWith(1, CustomSortOrder.byMetadataFieldAlphabeticalReverse, OS_byModifiedTimeReverse, SortingLevelId.forPrimary)
 				expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byCreatedTime, OS_byModifiedTimeReverse, SortingLevelId.forDerivedPrimary)
 				expect(sp).toHaveBeenNthCalledWith(3, CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse, OS_byModifiedTimeReverse, SortingLevelId.forDerivedSecondary)
-				expect(sp).toHaveBeenNthCalledWith(4, CustomSortOrder.standardObsidian, OS_byModifiedTimeReverse, SortingLevelId.forUISelected)
-				expect(sp).toHaveBeenNthCalledWith(5, CustomSortOrder.default, undefined, SortingLevelId.forLastResort)
+				expect(sp).toHaveBeenNthCalledWith(4, CustomSortOrder.default, undefined, SortingLevelId.forDefaultWhenUnspecified)
 			})
 		})
 		describe('at group and at target folder level (aka derived)', () => {
@@ -247,7 +232,7 @@ describe('getComparator', () => {
 			beforeEach(() => {
 				mdataGetter.mockClear()
 			})
-			it('most complex case - last resort comest into play, all sort levels present, all involve metadata', () => {
+			it('most complex case - last resort default comes into play, all sort levels present, all involve metadata', () => {
 				const a = getBaseItemForSorting({
 					path: 'test 1',   // Not used in comparisons, used only to identify source of compared metadata
 					metadataFieldValue: 'm',
@@ -264,13 +249,12 @@ describe('getComparator', () => {
 				})
 				const result = Math.sign(comparator(a,b))
 				expect(result).toBe(AB_EQUAL)
-				expect(sp).toBeCalledTimes(6)
+				expect(sp).toBeCalledTimes(5)
 				expect(sp).toHaveBeenNthCalledWith(1, CustomSortOrder.byMetadataFieldAlphabetical, OS_byCreatedTime, SortingLevelId.forPrimary)
 				expect(sp).toHaveBeenNthCalledWith(2, CustomSortOrder.byMetadataFieldAlphabeticalReverse, OS_byCreatedTime, SortingLevelId.forSecondary)
 				expect(sp).toHaveBeenNthCalledWith(3, CustomSortOrder.byMetadataFieldTrueAlphabetical, OS_byCreatedTime, SortingLevelId.forDerivedPrimary)
 				expect(sp).toHaveBeenNthCalledWith(4, CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse, OS_byCreatedTime, SortingLevelId.forDerivedSecondary)
-				expect(sp).toHaveBeenNthCalledWith(5, CustomSortOrder.standardObsidian, OS_byCreatedTime, SortingLevelId.forUISelected)
-				expect(sp).toHaveBeenNthCalledWith(6, CustomSortOrder.default, undefined, SortingLevelId.forLastResort)
+				expect(sp).toHaveBeenNthCalledWith(5, CustomSortOrder.default, undefined, SortingLevelId.forDefaultWhenUnspecified)
 				expect(mdataGetter).toHaveBeenCalledTimes(8)
 				expect(mdataGetter).toHaveBeenNthCalledWith(1, expect.objectContaining({path: 'test 1'}), SortingLevelId.forPrimary)
 				expect(mdataGetter).toHaveNthReturnedWith(1, 'm')
