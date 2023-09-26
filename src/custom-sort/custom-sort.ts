@@ -75,8 +75,7 @@ export enum SortingLevelId {
 	forSecondary,
 	forDerivedPrimary,
 	forDerivedSecondary,
-	forUISelected,
-	forLastResort
+	forDefaultWhenUnspecified
 }
 
 export type SorterFn = (a: FolderItemForSorting, b: FolderItemForSorting) => number
@@ -137,7 +136,7 @@ export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: b
 	}
 }
 
-let Sorters: { [key in CustomSortOrder]: SorterFn } = {
+const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
 	[CustomSortOrder.trueAlphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortString, a.sortString),
@@ -162,21 +161,21 @@ let Sorters: { [key in CustomSortOrder]: SorterFn } = {
 };
 
 // Some sorters are different when used in primary vs. secondary sorting order
-let SortersForSecondary: { [key in CustomSortOrder]?: SorterFn } = {
+const SortersForSecondary: { [key in CustomSortOrder]?: SorterFn } = {
 	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forSecondary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forSecondary),
 	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forSecondary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forSecondary)
 };
 
-let SortersForDerivedPrimary: { [key in CustomSortOrder]?: SorterFn } = {
+const SortersForDerivedPrimary: { [key in CustomSortOrder]?: SorterFn } = {
 	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forDerivedPrimary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forDerivedPrimary),
 	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forDerivedPrimary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forDerivedPrimary)
 };
 
-let SortersForDerivedSecondary: { [key in CustomSortOrder]?: SorterFn } = {
+const SortersForDerivedSecondary: { [key in CustomSortOrder]?: SorterFn } = {
 	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forDerivedSecondary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forDerivedSecondary),
 	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forDerivedSecondary),
@@ -266,10 +265,8 @@ export const getComparator = (sortSpec: CustomSortSpec, currentUIselectedSorting
 				if (folderLevel !== EQUAL_OR_UNCOMPARABLE) return folderLevel
 				const folderLevelSecondary: number = sortSpec.defaultSecondaryOrder ? getSorterFnFor(sortSpec.defaultSecondaryOrder, currentUIselectedSorting, SortingLevelId.forDerivedSecondary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (folderLevelSecondary !== EQUAL_OR_UNCOMPARABLE) return folderLevelSecondary
-				const uiSelected: number = currentUIselectedSorting ? getSorterFnFor(CustomSortOrder.standardObsidian, currentUIselectedSorting, SortingLevelId.forUISelected)(itA, itB) : EQUAL_OR_UNCOMPARABLE
-				if (uiSelected !== EQUAL_OR_UNCOMPARABLE) return uiSelected
-				const lastResort: number = getSorterFnFor(CustomSortOrder.default, undefined, SortingLevelId.forLastResort)(itA, itB)
-				return lastResort
+				const defaultForUnspecified: number = getSorterFnFor(CustomSortOrder.default, undefined, SortingLevelId.forDefaultWhenUnspecified)(itA, itB)
+				return defaultForUnspecified
 			} else {
 				return itA.groupIdx - itB.groupIdx;
 			}
@@ -582,7 +579,7 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 				const groupIdx: number | undefined = item.groupIdx
 				if (groupIdx !== undefined) {
 					const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
-					groupSortRequiresFolderDate = sortOrderNeedsFolderDates(groupOrder)
+					groupSortRequiresFolderDate = !!groupOrder && sortOrderNeedsFolderDates(groupOrder)
 				}
 			}
 			if (folderDefaultSortRequiresFolderDate || groupSortRequiresFolderDate) {

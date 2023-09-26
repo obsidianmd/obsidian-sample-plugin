@@ -98,14 +98,17 @@ const ContextFreeProblems = new Set<ProblemCode>([
 const ThreeDots = '...';
 const ThreeDotsLength = ThreeDots.length;
 
-const DEFAULT_SORT_ORDER = CustomSortOrder.alphabetical
-
 interface CustomSortOrderAscDescPair {
-	asc: CustomSortOrder,
-	desc: CustomSortOrder,
-	secondary?: CustomSortOrder
-	applyToMetadataField?: string
+	asc: CustomSortOrder
+	desc: CustomSortOrder
 }
+
+interface CustomSortOrderSpec {
+	order: CustomSortOrder
+	byMetadataField?: string
+}
+
+const MAX_SORT_LEVEL: number = 1
 
 // remember about .toLowerCase() before comparison!
 const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
@@ -115,74 +118,104 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'modified': {asc: CustomSortOrder.byModifiedTime, desc: CustomSortOrder.byModifiedTimeReverse},
 	'advanced modified': {asc: CustomSortOrder.byModifiedTimeAdvanced, desc: CustomSortOrder.byModifiedTimeReverseAdvanced},
 	'advanced created': {asc: CustomSortOrder.byCreatedTimeAdvanced, desc: CustomSortOrder.byCreatedTimeReverseAdvanced},
-	'by-bookmarks-order': {asc: CustomSortOrder.byBookmarkOrder, desc: CustomSortOrder.byBookmarkOrderReverse},
-
-	// Advanced, for edge cases of secondary sorting, when if regexp match is the same, override the alphabetical sorting by full name
-	'a-z, created': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byCreatedTime
-	},
-	'a-z, created desc': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byCreatedTimeReverse
-	},
-	'a-z, modified': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byModifiedTime
-	},
-	'a-z, modified desc': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byModifiedTimeReverse
-	},
-	'a-z, advanced created': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byCreatedTimeAdvanced
-	},
-	'a-z, advanced created desc': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byCreatedTimeReverseAdvanced
-	},
-	'a-z, advanced modified': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byModifiedTimeAdvanced
-	},
-	'a-z, advanced modified desc': {
-		asc: CustomSortOrder.alphabetical,
-		desc: CustomSortOrder.alphabeticalReverse,
-		secondary: CustomSortOrder.byModifiedTimeReverseAdvanced
-	}
+	'standard': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
+	'ui selected': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
+    'by-bookmarks-order': {asc: CustomSortOrder.byBookmarkOrder, desc: CustomSortOrder.byBookmarkOrderReverse},
 }
 
 const OrderByMetadataLexeme: string = 'by-metadata:'
+
+const OrderLevelsSeparator: string = ','
 
 enum Attribute {
 	TargetFolder = 1, // Starting from 1 to allow: if (attribute) { ...
 	OrderAsc,
 	OrderDesc,
-	OrderStandardObsidian
+	OrderUnspecified
+}
+
+type OrderAttribute = Exclude<Attribute, Attribute.TargetFolder>
+
+const SortingOrderSpecInvalid: string = 'Invalid sorting order'
+
+const ErrorMsgForAttribute: { [key in Attribute]: string } = {
+	[Attribute.TargetFolder]: 'Invalid target folder specification',
+	[Attribute.OrderAsc]: SortingOrderSpecInvalid,
+	[Attribute.OrderDesc]: SortingOrderSpecInvalid,
+	[Attribute.OrderUnspecified]: SortingOrderSpecInvalid
 }
 
 const TargetFolderLexeme: string = 'target-folder:'
 
-const AttrLexems: { [key: string]: Attribute } = {
-	// Verbose attr names
-	[TargetFolderLexeme]: Attribute.TargetFolder,
-	'order-asc:': Attribute.OrderAsc,
-	'order-desc:': Attribute.OrderDesc,
-	'sorting:': Attribute.OrderStandardObsidian,
-	// Concise abbreviated equivalents
-	'::::': Attribute.TargetFolder,
+const OrderDirectionAttrLexemes: { [key: string]: OrderAttribute } = {
 	'<': Attribute.OrderAsc,
 	'\\<': Attribute.OrderAsc, // to allow single-liners in YAML
 	'>': Attribute.OrderDesc,
 	'\\>': Attribute.OrderDesc // to allow single-liners in YAML
+}
+
+const OrderDirectionPrefixAttrLexemes: { [key: string]: OrderAttribute } = {
+	...OrderDirectionAttrLexemes,
+	'order-asc:': Attribute.OrderAsc,
+	'order-desc:': Attribute.OrderDesc,
+	'sorting:': Attribute.OrderUnspecified,
+}
+
+const OrderDirectionPostfixAttrLexemes: { [key: string]: OrderAttribute } = {
+	...OrderDirectionAttrLexemes,
+	'order-asc': Attribute.OrderAsc,
+	'order-desc': Attribute.OrderDesc,
+	'asc': Attribute.OrderAsc,
+	'desc': Attribute.OrderDesc,
+}
+
+const TargetFolderLexemes: { [key: string]: Attribute } = {
+	[TargetFolderLexeme]: Attribute.TargetFolder,
+	'::::': Attribute.TargetFolder
+}
+
+const AttrLexemes: { [key: string]: Attribute } = {
+	...OrderDirectionPrefixAttrLexemes,
+	...OrderDirectionPostfixAttrLexemes,
+	...TargetFolderLexemes
+}
+
+interface HasOrderAttrLexeme {
+	lexeme: string
+	attr: OrderAttribute
+}
+
+const startsWithOrderAttrLexeme = (s: string, postfixLexemes?: boolean): HasOrderAttrLexeme|undefined => {
+	const hasLexeme= Object.keys(postfixLexemes ? OrderDirectionPostfixAttrLexemes : OrderDirectionPrefixAttrLexemes)
+		.find((lexeme) => {
+			return s?.toLowerCase().startsWith(lexeme)
+		})
+	return hasLexeme ?
+		{lexeme: hasLexeme, attr: postfixLexemes ? OrderDirectionPostfixAttrLexemes[hasLexeme] : OrderDirectionPrefixAttrLexemes[hasLexeme]}
+		:
+		undefined
+}
+
+interface HasOrderNameLiteral {
+	literal: string
+	order: CustomSortOrderAscDescPair
+}
+
+const startsWithOrderNameLiteral = (s: string): HasOrderNameLiteral|undefined => {
+	const hasLiteral= Object.keys(OrderLiterals).find((literal) => {
+		return s?.toLowerCase().startsWith(literal)
+	})
+	return hasLiteral ?
+		{literal: hasLiteral, order: OrderLiterals[hasLiteral]}
+		:
+		undefined
+}
+
+const OrdersSupportedByMetadata: { [key in CustomSortOrder]?: CustomSortOrder} = {
+	[CustomSortOrder.alphabetical]: CustomSortOrder.byMetadataFieldAlphabetical,
+	[CustomSortOrder.alphabeticalReverse]: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+	[CustomSortOrder.trueAlphabetical]: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+	[CustomSortOrder.trueAlphabeticalReverse]: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
 }
 
 const CURRENT_FOLDER_SYMBOL: string = '.'
@@ -193,7 +226,7 @@ interface ParsedSortingAttribute {
 	value?: any
 }
 
-type AttrValueValidatorFn = (v: string) => any | null;
+type AttrValueValidatorFn = (v: string, attr: Attribute, attrLexeme: string) => any|AttrError|null;
 
 const FilesGroupVerboseLexeme: string = '/:files'
 const FilesGroupShortLexeme: string = '/:'
@@ -710,6 +743,11 @@ export const consumeFolderByRegexpExpression = (expression: string): ConsumedFol
 	}
 }
 
+class AttrError {
+	constructor(public errorMsg: string) {
+	}
+}
+
 // Simplistic
 const extractIdentifier = (text: string, defaultResult?: string): string | undefined => {
 	const identifier: string = text.trim().split(' ')?.[0]?.trim()
@@ -914,22 +952,24 @@ export class SortingSpecProcessor {
 		}
 		const firstLexeme: string = lineTrimmedStart.substring(0, indexOfSpace)
 		const firstLexemeLowerCase: string = firstLexeme.toLowerCase()
-		const recognizedAttr: Attribute = AttrLexems[firstLexemeLowerCase]
+		const recognizedAttr: Attribute = AttrLexemes[firstLexemeLowerCase]
 
 		if (recognizedAttr) {
 			const attrValue: string = lineTrimmedStart.substring(indexOfSpace).trim()
 			if (attrValue) {
 				const validator: AttrValueValidatorFn = this.attrValueValidators[recognizedAttr]
 				if (validator) {
-					const validValue = validator(attrValue);
-					if (validValue) {
+					const validValue = validator(attrValue, recognizedAttr, firstLexeme);
+					if (validValue instanceof AttrError) {
+						this.problem(ProblemCode.InvalidAttributeValue, validValue.errorMsg || ErrorMsgForAttribute[recognizedAttr])
+					} else if (validValue) {
 						return {
 							nesting: nestingLevel,
 							attribute: recognizedAttr,
 							value: validValue
 						}
 					} else {
-						this.problem(ProblemCode.InvalidAttributeValue, `Invalid value of the attribute "${firstLexeme}"`)
+						this.problem(ProblemCode.InvalidAttributeValue, ErrorMsgForAttribute[recognizedAttr])
 					}
 				} else {
 					return {
@@ -939,7 +979,7 @@ export class SortingSpecProcessor {
 					}
 				}
 			} else {
-				this.problem(ProblemCode.MissingAttributeValue, `Attribute "${firstLexeme}" requires a value to follow`)
+				this.problem(ProblemCode.MissingAttributeValue, `${ErrorMsgForAttribute[recognizedAttr]}: "${firstLexeme}" requires a value to follow`)
 			}
 		}
 		return null; // Seemingly not an attribute or not a valid attribute expression (respective syntax error could have been logged)
@@ -963,7 +1003,7 @@ export class SortingSpecProcessor {
 				this.problem(ProblemCode.TargetFolderNestedSpec, `Nested (indented) specification of target folder is not allowed`)
 				return false
 			}
-		} else if (attr.attribute === Attribute.OrderAsc || attr.attribute === Attribute.OrderDesc || attr.attribute === Attribute.OrderStandardObsidian) {
+		} else if (attr.attribute === Attribute.OrderAsc || attr.attribute === Attribute.OrderDesc || attr.attribute === Attribute.OrderUnspecified) {
 			if (attr.nesting === 0) {
 				if (!this.ctx.currentSpec) {
 					this.ctx.currentSpec = this.putNewSpecForNewTargetFolder()
@@ -975,6 +1015,8 @@ export class SortingSpecProcessor {
 				}
 				this.ctx.currentSpec.defaultOrder = (attr.value as RecognizedOrderValue).order
 				this.ctx.currentSpec.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
+				this.ctx.currentSpec.defaultSecondaryOrder = (attr.value as RecognizedOrderValue).secondaryOrder
+				this.ctx.currentSpec.byMetadataFieldSecondary = (attr.value as RecognizedOrderValue).secondaryApplyToMetadataField
 				return true;
 			} else if (attr.nesting > 0) { // For now only distinguishing nested (indented) and not-nested (not-indented), the depth doesn't matter
 				if (!this.ctx.currentSpec || !this.ctx.currentSpecGroup) {
@@ -989,6 +1031,7 @@ export class SortingSpecProcessor {
 				this.ctx.currentSpecGroup.order = (attr.value as RecognizedOrderValue).order
 				this.ctx.currentSpecGroup.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
 				this.ctx.currentSpecGroup.secondaryOrder = (attr.value as RecognizedOrderValue).secondaryOrder
+				this.ctx.currentSpecGroup.byMetadataFieldSecondary = (attr.value as RecognizedOrderValue).secondaryApplyToMetadataField
 				return true;
 			}
 		}
@@ -999,7 +1042,7 @@ export class SortingSpecProcessor {
 		const lineTrimmedStart: string = line.trimStart()
 		const lineTrimmedStartLowerCase: string = lineTrimmedStart.toLowerCase()
 		// no space present, check for potential syntax errors
-		for (let attrLexeme of Object.keys(AttrLexems)) {
+		for (let attrLexeme of Object.keys(AttrLexemes)) {
 			if (lineTrimmedStartLowerCase.startsWith(attrLexeme)) {
 				const originalAttrLexeme: string = lineTrimmedStart.substring(0, attrLexeme.length)
 				if (lineTrimmedStartLowerCase.length === attrLexeme.length) {
@@ -1294,6 +1337,8 @@ export class SortingSpecProcessor {
 		if (anyCombinedGroupPresent) {
 			let orderForCombinedGroup: CustomSortOrder | undefined
 			let byMetadataFieldForCombinedGroup: string | undefined
+			let secondaryOrderForCombinedGroup: CustomSortOrder | undefined
+			let secondaryByMetadataFieldForCombinedGroup: string | undefined
 			let idxOfCurrentCombinedGroup: number | undefined = undefined
 			for (let i = spec.groups.length - 1; i >= 0; i--) {
 				const group: CustomSortGroup = spec.groups[i]
@@ -1302,25 +1347,23 @@ export class SortingSpecProcessor {
 					if (group.combineWithIdx === idxOfCurrentCombinedGroup) { // a subsequent (2nd, 3rd, ...) group of combined (counting from the end)
 						group.order = orderForCombinedGroup
 						group.byMetadataField = byMetadataFieldForCombinedGroup
+						group.secondaryOrder = secondaryOrderForCombinedGroup
+						group.byMetadataFieldSecondary = secondaryByMetadataFieldForCombinedGroup
 					} else { // the first group of combined (counting from the end)
 						idxOfCurrentCombinedGroup = group.combineWithIdx
 						orderForCombinedGroup = group.order // could be undefined
 						byMetadataFieldForCombinedGroup = group.byMetadataField // could be undefined
+						secondaryOrderForCombinedGroup = group.secondaryOrder // could be undefined
+						secondaryByMetadataFieldForCombinedGroup = group.byMetadataFieldSecondary // could be undefined
 					}
 				} else {
 					// for sanity
 					idxOfCurrentCombinedGroup = undefined
 					orderForCombinedGroup = undefined
 					byMetadataFieldForCombinedGroup = undefined
+					secondaryOrderForCombinedGroup = undefined
+					secondaryByMetadataFieldForCombinedGroup = undefined
 				}
-			}
-		}
-
-		// Populate sorting order down the hierarchy for more clean sorting logic later on
-		for (let group of spec.groups) {
-			if (!group.order) {
-				group.order = spec.defaultOrder ?? DEFAULT_SORT_ORDER
-				group.byMetadataField = spec.byMetadataField
 			}
 		}
 
@@ -1352,85 +1395,119 @@ export class SortingSpecProcessor {
 
 	// level 2 parser functions defined in order of occurrence and dependency
 
-	private validateTargetFolderAttrValue = (v: string): string | null => {
+	private validateTargetFolderAttrValue: AttrValueValidatorFn = (v: string, attr: Attribute, attrLexeme: string): string | null => {
 		if (v) {
 			const trimmed: string = v.trim();
-			return trimmed ? trimmed : null; // Can't use ?? - it treats '' as a valid value
+			return trimmed || null;
 		} else {
 			return null;
 		}
 	}
 
-	private internalValidateOrderAttrValue = (v: string): CustomSortOrderAscDescPair | null => {
-		v = v.trim();
-		let orderLiteral: string = v
-		let metadataSpec: Partial<CustomSortOrderAscDescPair> = {}
-		let applyToMetadata: boolean = false
-
-		if (v.indexOf(OrderByMetadataLexeme) > 0) { // Intentionally > 0 -> not allow the metadata lexeme alone
-			const pieces: Array<string> = v.split(OrderByMetadataLexeme)
-			// there are at least two pieces by definition, prefix and suffix of the metadata lexeme
-			orderLiteral = pieces[0]?.trim()
-			let metadataFieldName: string = pieces[1]?.trim()
-			if (metadataFieldName) {
-				metadataSpec.applyToMetadataField = metadataFieldName
-			}
-			applyToMetadata = true
+	private internalValidateOrderAttrValue = (sortOrderSpecText: string, prefixLexeme: string): Array<CustomSortOrderSpec>|AttrError|null => {
+		if (sortOrderSpecText.indexOf(CommentPrefix) >= 0) {
+			sortOrderSpecText = sortOrderSpecText.substring(0, sortOrderSpecText.indexOf(CommentPrefix))
 		}
 
-		let attr: CustomSortOrderAscDescPair | null = orderLiteral ? OrderLiterals[orderLiteral.toLowerCase()] : null
-		if (attr) {
-			if (applyToMetadata &&
-				(attr.asc === CustomSortOrder.alphabetical || attr.desc === CustomSortOrder.alphabeticalReverse ||
-				 attr.asc === CustomSortOrder.trueAlphabetical || attr.desc === CustomSortOrder.trueAlphabeticalReverse )) {
+		const sortLevels: Array<string> = `${prefixLexeme||''} ${sortOrderSpecText}`.trim().split(OrderLevelsSeparator)
+		let sortOrderSpec: Array<CustomSortOrderSpec> = []
 
-				const trueAlphabetical: boolean = attr.asc === CustomSortOrder.trueAlphabetical || attr.desc === CustomSortOrder.trueAlphabeticalReverse
+		// Max two levels are supported, excess levels specs are ignored
+		for (let level: number = 0; level <= MAX_SORT_LEVEL && level < sortLevels.length; level++) {
+			let orderNameForErrorMsg = level === 0 ? 'Primary' : 'Secondary'
+			let orderSpec: string = sortLevels[level].trim()
+			let applyToMetadata: boolean = false
 
-				// Create adjusted copy
-				attr = {
-					...attr,
-					asc: trueAlphabetical ? CustomSortOrder.byMetadataFieldTrueAlphabetical : CustomSortOrder.byMetadataFieldAlphabetical,
-					desc: trueAlphabetical ? CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse : CustomSortOrder.byMetadataFieldAlphabeticalReverse
+			// The direction (asc or desc lexeme) can come before the order literal
+			//     and for level 0 it always comes first (otherwise this validator would not be invoked)
+			const hasDirectionPrefix: HasOrderAttrLexeme|undefined = startsWithOrderAttrLexeme(orderSpec)
+			orderSpec = hasDirectionPrefix ? orderSpec.substring(hasDirectionPrefix.lexeme.length).trim() : orderSpec
+
+			let orderName: HasOrderNameLiteral|undefined = startsWithOrderNameLiteral(orderSpec)
+			orderSpec = orderName ? orderSpec.substring(orderName.literal.length).trim() : orderSpec
+
+			// Order direction, for level > 0 can also occur after order name or can be omitted
+			const hasDirectionPostfix: HasOrderAttrLexeme|undefined = (orderName) ? startsWithOrderAttrLexeme(orderSpec, true) : undefined
+			orderSpec = hasDirectionPostfix ? orderSpec.substring(hasDirectionPostfix.lexeme.length).trim() : orderSpec
+
+			let metadataName: string|undefined
+			if (orderSpec.startsWith(OrderByMetadataLexeme)) {
+				applyToMetadata = true
+				metadataName = orderSpec.substring(OrderByMetadataLexeme.length).trim() || undefined
+				orderSpec = '' // metadataName is unparsed, consumes the remainder string, even if malformed, e.g. with infix spaces
+			}
+
+			// check for any superfluous text
+			const superfluousText = orderSpec.trim()||undefined
+			if (superfluousText) {
+				return new AttrError(`${orderNameForErrorMsg} sorting order contains unrecognized text: >>> ${superfluousText} <<<`)
+			}
+
+			// check consistency of prefix and postfix orders, if both are present
+			if (hasDirectionPrefix && hasDirectionPostfix) {
+				if (hasDirectionPrefix.attr !== Attribute.OrderUnspecified && hasDirectionPostfix.attr !== Attribute.OrderUnspecified)
+					if (hasDirectionPrefix.attr !== hasDirectionPostfix.attr)
+					{
+						return new AttrError(`${orderNameForErrorMsg} sorting direction ${hasDirectionPrefix.lexeme} and ${hasDirectionPostfix.lexeme} are contradicting`)
+					}
+			}
+
+			let order: CustomSortOrder|undefined
+			if (orderName) {
+				const direction: OrderAttribute = hasDirectionPrefix ? hasDirectionPrefix.attr : (
+					hasDirectionPostfix ? hasDirectionPostfix.attr : Attribute.OrderAsc
+				)
+				switch (direction) {
+					case Attribute.OrderAsc: order = orderName.order.asc
+						break
+					case Attribute.OrderDesc: order = orderName.order.desc
+						break
+					case Attribute.OrderUnspecified:
+						if (hasDirectionPostfix) {
+							order = hasDirectionPostfix.attr === Attribute.OrderAsc ? orderName.order.asc : orderName.order.desc
+						} else {
+							order = orderName.order.asc
+						}
+						break
+					default:
+						order = undefined
 				}
-			} else {    // For orders different from alphabetical (and reverse) a reference to metadata is not supported
-				metadataSpec.applyToMetadataField = undefined
+
+				if (applyToMetadata) {
+					if (order) {
+						order = OrdersSupportedByMetadata[order]
+					}
+					if (!order) {
+						return new AttrError(`Sorting by metadata requires one of alphabetical orders`)
+					}
+				}
+			} else {
+				// order name not specified, this is a general syntax error
+				return null
+			}
+			sortOrderSpec[level] = {
+				order: order!,
+				byMetadataField: metadataName
 			}
 		}
-
-		return attr ? {...attr, ...metadataSpec} : null
+		return sortOrderSpec
 	}
 
-	private validateOrderAscAttrValue = (v: string): RecognizedOrderValue | null => {
-		const recognized: CustomSortOrderAscDescPair | null = this.internalValidateOrderAttrValue(v)
-		return recognized ? {
-			order: recognized.asc,
-			secondaryOrder: recognized.secondary,
-			applyToMetadataField: recognized.applyToMetadataField
-		} : null;
-	}
-
-	private validateOrderDescAttrValue = (v: string): RecognizedOrderValue | null => {
-		const recognized: CustomSortOrderAscDescPair | null = this.internalValidateOrderAttrValue(v)
-		return recognized ? {
-			order: recognized.desc,
-			secondaryOrder: recognized.secondary,
-			applyToMetadataField: recognized.applyToMetadataField
-		} : null;
-	}
-
-	private validateSortingAttrValue = (v: string): RecognizedOrderValue | null => {
-		// for now only a single fixed lexem
-		const recognized: boolean = v.trim().toLowerCase() === 'standard'
-		return recognized ? {
-			order: CustomSortOrder.standardObsidian
-		} : null;
+	private validateOrderAttrValue: AttrValueValidatorFn = (v: string, attr: Attribute, attrLexeme: string): RecognizedOrderValue|AttrError|null => {
+		const recognized: Array<CustomSortOrderSpec>|AttrError|null = this.internalValidateOrderAttrValue(v, attrLexeme)
+		return recognized ? (recognized instanceof AttrError ? recognized : {
+			order: recognized[0].order,
+			applyToMetadataField: recognized[0].byMetadataField,
+			secondaryOrder: recognized[1]?.order,
+			secondaryApplyToMetadataField: recognized[1]?.byMetadataField
+		}) : null;
 	}
 
 	attrValueValidators: { [key in Attribute]: AttrValueValidatorFn } = {
 		[Attribute.TargetFolder]: this.validateTargetFolderAttrValue.bind(this),
-		[Attribute.OrderAsc]: this.validateOrderAscAttrValue.bind(this),
-		[Attribute.OrderDesc]: this.validateOrderDescAttrValue.bind(this),
-		[Attribute.OrderStandardObsidian]: this.validateSortingAttrValue.bind(this)
+		[Attribute.OrderAsc]: this.validateOrderAttrValue.bind(this),
+		[Attribute.OrderDesc]: this.validateOrderAttrValue.bind(this),
+		[Attribute.OrderUnspecified]: this.validateOrderAttrValue.bind(this)
 	}
 
 	 convertPlainStringSortingGroupSpecToArraySpec = (spec: string): Array<string> => {
