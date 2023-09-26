@@ -223,7 +223,6 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 				type: CustomSortGroupType.ExactName
 			},
 			{
-				order: CustomSortOrder.byBookmarkOrder,
 				type: CustomSortGroupType.Outsiders
 			}
 		],

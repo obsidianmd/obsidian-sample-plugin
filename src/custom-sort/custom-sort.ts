@@ -595,13 +595,14 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 	if (!plugin) return
 
 	folderItems.forEach((item) => {
-		const folderDefaultSortRequiresBookmarksOrder: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsBookmarksOrder(sortingSpec.defaultOrder))
+		const folderDefaultSortRequiresBookmarksOrder: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsBookmarksOrder(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder))
 		let groupSortRequiresBookmarksOrder: boolean = false
 		if (!folderDefaultSortRequiresBookmarksOrder) {
 			const groupIdx: number | undefined = item.groupIdx
 			if (groupIdx !== undefined) {
 				const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
-				groupSortRequiresBookmarksOrder = sortOrderNeedsBookmarksOrder(groupOrder)
+				const groupSecondaryOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].secondaryOrder
+				groupSortRequiresBookmarksOrder = sortOrderNeedsBookmarksOrder(groupOrder, groupSecondaryOrder)
 			}
 		}
 		if (folderDefaultSortRequiresBookmarksOrder || groupSortRequiresBookmarksOrder) {
