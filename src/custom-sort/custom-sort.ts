@@ -573,13 +573,14 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 	const Now: number = Date.now()
 	folderItems.forEach((item) => {
 		if (item.folder) {
-			const folderDefaultSortRequiresFolderDate: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsFolderDates(sortingSpec.defaultOrder))
+			const folderDefaultSortRequiresFolderDate: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsFolderDates(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder))
 			let groupSortRequiresFolderDate: boolean = false
 			if (!folderDefaultSortRequiresFolderDate) {
 				const groupIdx: number | undefined = item.groupIdx
 				if (groupIdx !== undefined) {
 					const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
-					groupSortRequiresFolderDate = !!groupOrder && sortOrderNeedsFolderDates(groupOrder)
+					const groupSecondaryOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].secondaryOrder
+					groupSortRequiresFolderDate = !!groupOrder && sortOrderNeedsFolderDates(groupOrder, groupSecondaryOrder)
 				}
 			}
 			if (folderDefaultSortRequiresFolderDate || groupSortRequiresFolderDate) {
