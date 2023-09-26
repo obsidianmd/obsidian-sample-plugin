@@ -404,7 +404,7 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for Custom File Explorer Sorting Plugin'});
+		// containerEl.createEl('h2', {text: 'Settings for Custom File Explorer Sorting Plugin'});
 
 		const additionalSortspecFileDescr: DocumentFragment = sanitizeHTMLToDom(
 			'A note name or note path to scan (YAML frontmatter) for sorting specification in addition to the `sortspec` notes and Folder Notes<sup><b>*</b></sup>.'
