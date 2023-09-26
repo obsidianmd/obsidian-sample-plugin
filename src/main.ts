@@ -516,7 +516,7 @@ export default class CustomSortPlugin extends Plugin {
 }
 
 const pathToFlatString = (path: string): string => {
-	return path.replace('/','_').replace('\\', '_')
+	return path.replace(/\//g,'_').replace(/\\/g, '_')
 }
 
 class CustomSortSettingTab extends PluginSettingTab {
