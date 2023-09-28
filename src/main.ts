@@ -118,8 +118,6 @@ export default class CustomSortPlugin extends Plugin {
 				this.sortSpecCache,
 				true // Implicit sorting spec generation
 			)
-			console.log('Auto injected sort spec')
-			console.log(this.sortSpecCache)
 		}
 
 		Vault.recurseChildren(app.vault.getRoot(), (file: TAbstractFile) => {
@@ -233,6 +231,12 @@ export default class CustomSortPlugin extends Plugin {
 			}
 		}
 
+		// Syntax sugar
+		const ForceFlushCache = true
+		if (!this.settings.suspended) {
+			getBookmarksPlugin(this.settings.bookmarksGroupToConsumeAsOrderingReference, ForceFlushCache)
+		}
+
 		if (fileExplorerView) {
 			if (this.fileExplorerFolderPatched) {
 				fileExplorerView.requestSort();
@@ -338,7 +342,6 @@ export default class CustomSortPlugin extends Plugin {
 					item.setIcon('hashtag');
 					item.onClick(() => {
 						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
-						console.log(`custom-sort: bookmark this clicked ${source} and the leaf is`)
 						if (bookmarksPlugin) {
 							bookmarksPlugin.bookmarkFolderItem(file)
 							bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
@@ -349,7 +352,6 @@ export default class CustomSortPlugin extends Plugin {
 					item.setTitle('Custom sort: bookmark+siblings for sorting.');
 					item.setIcon('hashtag');
 					item.onClick(() => {
-						console.log(`custom-sort: bookmark all siblings clicked ${source}`)
 						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 						if (bookmarksPlugin) {
 							const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent)
@@ -612,11 +614,11 @@ class CustomSortSettingTab extends PluginSettingTab {
 			'If enabled, order of files and folders in File Explorer will reflect the order '
 			+ 'of bookmarked items in the bookmarks (core plugin) view. Automatically, without any '
 			+ 'need for sorting configuration. At the same time, it integrates seamlessly with'
-			+ '<pre style="display: inline;">sorting-spec:</pre> configurations and they can nicely cooperate.'
+			+ ' <pre style="display: inline;">sorting-spec:</pre> configurations and they can nicely cooperate.'
 			+ '<br>'
 			+ '<p>To separate regular bookmarks from the bookmarks created for sorting, you can put '
 			+ 'the latter in a separate dedicated bookmarks group. The default name of the group is '
-			+ "'" + DEFAULT_SETTINGS.bookmarksGroupToConsumeAsOrderingReference + "' "
+			+ "'<i>" + DEFAULT_SETTINGS.bookmarksGroupToConsumeAsOrderingReference + "</i>' "
 			+ 'and you can change the group name in the configuration field below.'
 			+ '<br>'
 			+ 'If left empty, all the bookmarked items will be used to impose the order in File Explorer.</p>'
@@ -628,7 +630,6 @@ class CustomSortSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Automatic integration with core Bookmarks plugin (for indirect drag & drop ordering)')
-			// TODO: add a nice description here
 			.setDesc(bookmarksIntegrationDescription)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.automaticBookmarksIntegration)
@@ -661,30 +662,5 @@ class CustomSortSettingTab extends PluginSettingTab {
 					this.plugin.settings.bookmarksContextMenus = value;
 					await this.plugin.saveSettings();
 				}))
-			.addButton(cb => cb
-				.setButtonText('Bt1')
-			)
-			.addExtraButton(cb => cb
-				.setIcon('clock')
-			)
-
-
 	}
 }
-
-// TODO: clear bookmarks cache upon each tap on ribbon or on the command of 'sorting-on'
-
-// TODO: clear bookmarks cache upon each context menu - before and after (maybe after is not needed, implicitly empty after first clearing)
-
-// TODO: in discussion sections add (and pin) announcement "DRAG & DROP ORDERING AVAILABLE VIA THE BOOKMARKS CORE PLUGIN INTEGRATION"
-
-// TODO: in community, add update message with announcement of drag & drop support via Bookmarks plugin
-
-// TODO: context menu only if bookmarks plugin enabled and new setting (yet to be exposed) doesn't disable it
-
-// TODO: defensive programming with ?. and equivalents to protect against crash if Obsidian API changes
-//    Better the plugin to fail an operation than crash with errors
-
-// TODO: remove console.log (many places added)
-
-// TODO: ctx menu 'show in bookmarks' instead of 'bookmrk this'

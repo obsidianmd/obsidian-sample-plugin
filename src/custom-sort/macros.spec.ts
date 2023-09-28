@@ -1,6 +1,12 @@
-import {expandMacros, expandMacrosInString} from "./macros";
+import {
+    expandMacros,
+    expandMacrosInString
+} from "./macros";
 import * as MacrosModule from './macros'
-import {CustomSortGroup, CustomSortSpec} from "./custom-sort-types";
+import {
+    CustomSortGroup,
+    CustomSortSpec
+} from "./custom-sort-types";
 
 describe('expandMacrosInString', () => {
     it.each([

@@ -1,5 +1,14 @@
-import {InstalledPlugin, PluginInstance, TAbstractFile, TFile, TFolder} from "obsidian";
-import {extractParentFolderPath, lastPathComponent} from "./utils";
+import {
+    InstalledPlugin,
+    PluginInstance,
+    TAbstractFile,
+    TFile,
+    TFolder
+} from "obsidian";
+import {
+    extractParentFolderPath,
+    lastPathComponent
+} from "./utils";
 
 const BookmarksPlugin_getBookmarks_methodName = 'getBookmarks'
 
@@ -46,7 +55,7 @@ export interface OrderedBookmarkedItem {
     group: boolean
     path: BookmarkedItemPath
     order: number
-    pathOfBookmarkGroupsMatches: boolean
+    bookmarkPathOverlap: number|true   // how much the location in bookmarks hierarchy matches the actual file/folder path
 }
 
 interface OrderedBookmarks {
@@ -108,7 +117,6 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
     }
 
     bookmarkSiblings = (siblings: Array<TAbstractFile>, inTheTop?: boolean) => {
-        console.log('In this.bookmarksSiblings()')
         if (siblings.length === 0) return // for sanity
 
         const bookmarksContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(
@@ -162,12 +170,9 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
 
 export const BookmarksCorePluginId: string = 'bookmarks'
 
-export const getBookmarksPlugin = (bookmarksGroupName?: string): BookmarksPluginInterface | undefined => {
-    invalidateExpiredBookmarksCache()
+export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?: boolean): BookmarksPluginInterface | undefined => {
+    invalidateExpiredBookmarksCache(forceFlushCache)
     const installedBookmarksPlugin: InstalledPlugin | undefined = app?.internalPlugins?.getPluginById(BookmarksCorePluginId)
-    console.log(installedBookmarksPlugin)
-    const bookmarks = (installedBookmarksPlugin?.instance as any) ?.['getBookmarks']()
-    console.log(bookmarks)
     if (installedBookmarksPlugin && installedBookmarksPlugin.enabled && installedBookmarksPlugin.instance) {
         const bookmarksPluginInstance: Bookmarks_PluginInstance = installedBookmarksPlugin.instance as Bookmarks_PluginInstance
         // defensive programming, in case Obsidian changes its internal APIs
@@ -204,11 +209,11 @@ const invalidateExpiredBookmarksCache = (force?: boolean): void => {
 
 type TraverseCallback = (item: BookmarkedItem, parentsGroupsPath: string) => boolean | void
 
-const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callback: TraverseCallback) => {
+const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callbackConsumeItem: TraverseCallback) => {
     const recursiveTraversal = (collection: Array<BookmarkedItem>, groupsPath: string) => {
         for (let idx = 0, collectionRef = collection; idx < collectionRef.length; idx++) {
             const item = collectionRef[idx];
-            if (callback(item, groupsPath)) return;
+            if (callbackConsumeItem(item, groupsPath)) return;
             if ('group' === item.type) recursiveTraversal(item.items, `${groupsPath}${groupsPath?'/':''}${item.title}`);
         }
     };
@@ -217,16 +222,21 @@ const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callback: Tra
 
 const ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR = '#^-'
 
+const bookmarkLocationAndPathOverlap = (bookmarkParentGroupPath: string, fileOrFolderPath: string): number => {
+    return fileOrFolderPath?.startsWith(bookmarkParentGroupPath) ? bookmarkParentGroupPath.length : 0
+}
+
 const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupName?: string): OrderedBookmarks | undefined => {
-    console.log(`Populating bookmarks cache with group scope ${bookmarksGroupName}`)
-    let bookmarks: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_getBookmarks_methodName]()
-    if (bookmarks) {
+    let bookmarksItems: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_items_collectionName]
+    if (bookmarksItems) {
         if (bookmarksGroupName) {
-            const bookmarksGroup: BookmarkedGroup|undefined = bookmarks.find(
-                (item) => item.type === 'group' && item.title === bookmarksGroupName) as BookmarkedGroup
-            bookmarks = bookmarksGroup ? bookmarksGroup.items : undefined
+            // scanning only top level items because by desing the bookmarks group for sorting is a top level item
+            const bookmarksGroup: BookmarkedGroup|undefined = bookmarksItems.find(
+                (item) => item.type === 'group' && item.title === bookmarksGroupName
+            ) as BookmarkedGroup
+            bookmarksItems = bookmarksGroup ? bookmarksGroup.items : undefined
         }
-        if (bookmarks) {
+        if (bookmarksItems) {
             const orderedBookmarks: OrderedBookmarks = {}
             let order: number = 0
             const consumeItem = (item: BookmarkedItem, parentGroupsPath: string) => {
@@ -237,24 +247,36 @@ const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupNam
                 if ((isFile && hasSortspecAnchor) || isFolder || isGroup) {
                     const pathOfGroup: string = `${parentGroupsPath}${parentGroupsPath?'/':''}${item.title}`
                     const path = isGroup ? pathOfGroup : (item as BookmarkWithPath).path
-                    // Consume only the first occurrence of a path in bookmarks, even if many duplicates can exist
-                    // TODO: consume the occurrence at correct folders (groups) location resembling the original structure with highest prio
-                    //     and only if not found, consider any (first) occurrence
                     const alreadyConsumed = orderedBookmarks[path]
-                    const pathOfBookmarkGroupsMatches: boolean = true // TODO: !!! with fresh head determine the condition to check here
-                    if (!alreadyConsumed || (pathOfBookmarkGroupsMatches && !alreadyConsumed.pathOfBookmarkGroupsMatches)) {
-                        orderedBookmarks[path] = {
-                            path: path,
-                            order: order++,
-                            file: isFile,
-                            folder: isFile,
-                            group: isGroup,
-                            pathOfBookmarkGroupsMatches: pathOfBookmarkGroupsMatches
+
+                    // for groups (they represent folders from sorting perspective) bookmark them unconditionally
+                    //     the idea of better match is not applicable
+                    if (alreadyConsumed && isGroup && alreadyConsumed.group) {
+                        return
+                    }
+
+                    // for files and folders (folder can be only manually bookmarked, the plugin uses groups to represent folders)
+                    //     the most closely matching location in bookmarks hierarchy is preferred
+                    let pathOverlapLength: number|undefined
+                    if (alreadyConsumed && (isFile || isFolder)) {
+                        pathOverlapLength = bookmarkLocationAndPathOverlap(parentGroupsPath, path)
+                        if (pathOverlapLength <= alreadyConsumed.bookmarkPathOverlap) {
+                            return
                         }
+                    }
+
+                    orderedBookmarks[path] = {
+                        path: path,
+                        order: order++,
+                        file: isFile,
+                        folder: isFile,
+                        group: isGroup,
+                        bookmarkPathOverlap: isGroup || (pathOverlapLength ?? bookmarkLocationAndPathOverlap(parentGroupsPath, path))
                     }
                 }
             }
-            traverseBookmarksCollection(bookmarks, consumeItem)
+
+            traverseBookmarksCollection(bookmarksItems, consumeItem)
             return orderedBookmarks
         }
     }
@@ -318,13 +340,10 @@ const findGroupForItemPathInBookmarks = (itemPath: string, createIfMissing: bool
 const CreateIfMissing = true
 const DontCreateIfMissing = false
 
-
-
 const updateSortingBookmarksAfterItemRenamed = (plugin: Bookmarks_PluginInstance, renamedItem: TAbstractFile, oldPath: string, bookmarksGroup?: string) => {
 
     if (renamedItem.path === oldPath) return; // sanity
 
-    let items = plugin[BookmarksPlugin_items_collectionName]
     const aFolder: boolean = renamedItem instanceof TFolder
     const aFolderWithChildren: boolean = aFolder && (renamedItem as TFolder).children.length > 0
     const aFile: boolean = !aFolder
@@ -365,8 +384,6 @@ const updateSortingBookmarksAfterItemRenamed = (plugin: Bookmarks_PluginInstance
         //    because folders are represented (for sorting purposes) by groups with exact name
         (item as BookmarkedGroup).title = newName
     }
-
-    console.log(`Folder renamel from ${oldPath} to ${renamedItem.path}`)
 }
 
 const updateSortingBookmarksAfterItemDeleted = (plugin: Bookmarks_PluginInstance, deletedItem: TAbstractFile, bookmarksGroup?: string) => {
@@ -390,6 +407,4 @@ const updateSortingBookmarksAfterItemDeleted = (plugin: Bookmarks_PluginInstance
     if (!item) return;
 
     originalContainer.items.remove(item)
-
-    console.log(`Folder deletel ${deletedItem.path}`)
 }

@@ -12,7 +12,6 @@ import {
 	WordInASCIIRegexStr,
 	WordInAnyLanguageRegexStr
 } from "./matchers";
-import {SortingSpecProcessor} from "./sorting-spec-processor";
 
 describe('Plain numbers regexp', () => {
 	let regexp: RegExp;

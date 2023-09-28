@@ -13,9 +13,20 @@ import {
 	sorterByMetadataField,
 	SorterFn
 } from './custom-sort';
-import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, RegExpSpec} from './custom-sort-types';
-import {CompoundDashNumberNormalizerFn, CompoundDotRomanNumberNormalizerFn} from "./sorting-spec-processor";
-import {findStarredFile_pathParam, Starred_PluginInstance} from "../utils/StarredPluginSignature";
+import {
+	CustomSortGroupType,
+	CustomSortOrder,
+	CustomSortSpec,
+	RegExpSpec
+} from './custom-sort-types';
+import {
+	CompoundDashNumberNormalizerFn,
+	CompoundDotRomanNumberNormalizerFn
+} from "./sorting-spec-processor";
+import {
+	findStarredFile_pathParam,
+	Starred_PluginInstance
+} from "../utils/StarredPluginSignature";
 import {
 	ObsidianIconFolder_PluginInstance,
 	ObsidianIconFolderPlugin_Data
