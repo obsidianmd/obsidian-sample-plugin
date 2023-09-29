@@ -17,7 +17,8 @@ import {
 } from 'obsidian';
 import {around} from 'monkey-around';
 import {
-	folderSort
+	folderSort,
+	ProcessingContext,
 } from './custom-sort/custom-sort';
 import {SortingSpecProcessor, SortSpecsCollection} from './custom-sort/sorting-spec-processor';
 import {CustomSortOrder, CustomSortSpec} from './custom-sort/custom-sort-types';
@@ -31,7 +32,9 @@ import {
 	ICON_SORT_SUSPENDED_GENERAL_ERROR,
 	ICON_SORT_SUSPENDED_SYNTAX_ERROR
 } from "./custom-sort/icons";
+import {getStarredPlugin} from "./utils/StarredPluginSignature";
 
+import {getIconFolderPlugin} from "./utils/ObsidianIconFolderPluginSignature";
 import {lastPathComponent} from "./utils/utils";
 
 interface CustomSortPluginSettings {
@@ -325,6 +328,17 @@ export default class CustomSortPlugin extends Plugin {
 		return sortSpec
 	}
 
+	createProcessingContextForSorting(): ProcessingContext {
+		const ctx: ProcessingContext = {
+			_mCache: app.metadataCache,
+			starredPluginInstance: getStarredPlugin(),
+
+			iconFolderPluginInstance: getIconFolderPlugin(),
+			plugin: this
+		}
+		return ctx
+	}
+
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
 	patchFileExplorerFolder(patchableFileExplorer?: FileExplorerView): boolean {
 		let plugin = this;
@@ -352,7 +366,7 @@ export default class CustomSortPlugin extends Plugin {
 						let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
 
 						if (sortSpec) {
-							return folderSort.call(this, sortSpec, ...args);
+							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting());
 						} else {
 							return old.call(this, ...args);
 						}
