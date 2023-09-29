@@ -1,13 +1,16 @@
 import {
 	apiVersion,
 	App,
-	FileExplorerView, Menu, MenuItem,
+	FileExplorerView,
+    Menu,
+    MenuItem,
 	MetadataCache,
 	normalizePath,
 	Notice,
 	Platform,
 	Plugin,
-	PluginSettingTab, requireApiVersion,
+	PluginSettingTab,
+    requireApiVersion,
 	sanitizeHTMLToDom,
 	setIcon,
 	Setting,
@@ -23,7 +26,10 @@ import {
 	ProcessingContext,
 	sortFolderItemsForBookmarking
 } from './custom-sort/custom-sort';
-import {SortingSpecProcessor, SortSpecsCollection} from './custom-sort/sorting-spec-processor';
+import {
+    SortingSpecProcessor,
+    SortSpecsCollection
+} from './custom-sort/sorting-spec-processor';
 import {CustomSortSpec} from './custom-sort/custom-sort-types';
 
 import {
