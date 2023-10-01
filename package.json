@@ -1,7 +1,7 @@
 {
-	"name": "tistory-publisher",
+	"name": "blog-publisher",
 	"version": "1.0.0",
-	"description": "easily publisher a note in obsidian to tistory",
+	"description": "easily publisher a note in obsidian to blog",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

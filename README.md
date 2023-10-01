@@ -1,6 +1,6 @@
-# Tistory Publisher
+# Blog Publisher
 
-The Tistory Publisher plugin helps to publish obsidian notes to tistory. You only need to go through 3 steps to publish your note. please check the demo tab below for detailed instructions.
+The Blog Publisher plugin helps to publish obsidian notes to blog platform. You only need to go through 3 steps to publish your note. please check the demo tab below for detailed instructions.
 
 ### Demo
 
@@ -8,13 +8,13 @@ The Tistory Publisher plugin helps to publish obsidian notes to tistory. You onl
 
 ### How to use
 
-1. settings default `access token`, `visibility`, ``blog name``
+1. settings default `access token`, `visibility`, ``blog name``, `platform`
    [settings.png](./src/images/settings.png)
 2. select the note that want to publish
-3. open command tab and enter `publish-to-tistory`
+3. open command tab and enter `publish-post`
 
 ### Features
 
-- use github actions automatically generate tags
-- update the post using postId
-- delete the post using postId
+- use github actions automatically generate tags.
+- add blog platform.
+- delete the post using postId.

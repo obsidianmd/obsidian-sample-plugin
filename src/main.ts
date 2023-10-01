@@ -1,17 +1,17 @@
 import { Plugin, Editor, MarkdownView, MarkdownRenderer } from "obsidian";
-import { DEFFAULT_SETTINGS, TistoryPublisherSettings } from "./components/settings";
+import { DEFFAULT_SETTINGS, BlogPublisherSettings as BlogPublisherSettings } from "./components/settings";
 import {PublishModal, ModifyModal} from "./components/modal";
 import createPostApi from "./api/createPostApi";
-import TistoryPublisherSettingTab from "./components/settingTab";
+import BlogPublisherSettingTab from "./components/settingTab";
 import modifyPostApi from "./api/updatePostApi";
 
-export default class TistoryPublisherPlugin extends Plugin {
-	settings: TistoryPublisherSettings
+export default class BlogPublisherPlugin extends Plugin {
+	settings: BlogPublisherSettings
 
 	async onload() {
 		// load default settings
 		await this.loadSettings()
-		this.addSettingTab(new TistoryPublisherSettingTab(this.app, this))
+		this.addSettingTab(new BlogPublisherSettingTab(this.app, this))
 
 		// create publish-to command
 		this.addCommand({

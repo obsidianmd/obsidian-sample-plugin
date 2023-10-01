@@ -1,18 +1,19 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import TistoryPublisherPlugin from "src/main";
+import BlogPublisherPlugin from "src/main";
 
-class TistoryPublisherSettingTab extends PluginSettingTab {
-    plugin: TistoryPublisherPlugin
+class BlogPublisherSettingTab extends PluginSettingTab {
+    plugin: BlogPublisherPlugin
 
-    constructor(app: App, plugin: TistoryPublisherPlugin) {
+    constructor(app: App, plugin: BlogPublisherPlugin) {
         super(app, plugin)
         this.plugin = plugin
     }
 
     display() {
         const {containerEl: settingContainerEl} = this
+        const defaultPlatformOptions = {"tistory": "tistory"}
         settingContainerEl.empty()
-        settingContainerEl.createEl("h2", {text: "Tistory Publisher"})
+        settingContainerEl.createEl("h2", {text: "Blog Publisher"})
 
         new Setting(settingContainerEl)
         .setName("Access Token")
@@ -49,7 +50,19 @@ class TistoryPublisherSettingTab extends PluginSettingTab {
                 await this.plugin.saveSettings()
             })
         })
+
+        new Setting(settingContainerEl)
+        .setName("Blog Platform")
+        .setDesc("select the platform want to publish.")
+        .addDropdown((cb) => {
+            cb.addOptions(defaultPlatformOptions)
+            .setValue(this.plugin.settings.platform)
+            .onChange(async (value) => {
+                this.plugin.settings.platform = value
+                await this.plugin.saveSettings()
+            })
+        })
     }
 }
 
-export default TistoryPublisherSettingTab
+export default BlogPublisherSettingTab
