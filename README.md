@@ -4,12 +4,12 @@ The Blog Publisher plugin helps to publish obsidian notes to blog platform. You 
 
 ### Demo
 
-[tistory publisher demo](./src/images/demo.gif)
+![tistory publisher demo](./src/images/demo.gif)
 
 ### How to use
 
 1. settings default `access token`, `visibility`, ``blog name``, `platform`
-   [settings.png](./src/images/settings.png)
+   ![settings.png](./src/images/settings.png)
 2. select the note that want to publish
 3. open command tab and enter `publish-post`
 

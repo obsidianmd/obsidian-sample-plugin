@@ -52,7 +52,7 @@ class BlogPublisherSettingTab extends PluginSettingTab {
         })
 
         new Setting(settingContainerEl)
-        .setName("Blog Platform")
+        .setName("Platform")
         .setDesc("select the platform want to publish.")
         .addDropdown((cb) => {
             cb.addOptions(defaultPlatformOptions)

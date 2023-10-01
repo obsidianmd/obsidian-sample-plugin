@@ -1,5 +1,5 @@
 import { Plugin, Editor, MarkdownView, MarkdownRenderer } from "obsidian";
-import { DEFFAULT_SETTINGS, BlogPublisherSettings as BlogPublisherSettings } from "./components/settings";
+import { DEFFAULT_SETTINGS, BlogPublisherSettings } from "./components/settings";
 import {PublishModal, ModifyModal} from "./components/modal";
 import createPostApi from "./api/createPostApi";
 import BlogPublisherSettingTab from "./components/settingTab";
