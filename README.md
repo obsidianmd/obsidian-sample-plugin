@@ -16,5 +16,4 @@ The Blog Publisher plugin helps to publish obsidian notes to blog platform. You 
 ### Features
 
 - use github actions automatically generate tags.
-- add blog platform.
-- delete the post using postId.
+- create command that publish note to medium.
