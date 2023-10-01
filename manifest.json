@@ -1,5 +1,5 @@
 {
-	"id": "Blog Publisher Plugin",
+	"id": "blog-publisher-plugin",
 	"name": "Blog Publisher Plugin",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
