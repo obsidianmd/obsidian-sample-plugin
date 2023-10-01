@@ -1,11 +1,10 @@
 {
-	"id": "blog-publisher-plugin",
+	"id": "blog-publisher",
 	"name": "Blog Publisher Plugin",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Easily publish a note in obsidian to blog",
 	"author": "bekurin",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/bekurin",
 	"isDesktopOnly": false
 }
