@@ -11,7 +11,7 @@ class BlogPublisherSettingTab extends PluginSettingTab {
 
     display() {
         const {containerEl: settingContainerEl} = this
-        const defaultPlatformOptions = {"tistory": "tistory"}
+        const defaultPlatformOptions = {"tistory": "tistory", "medium": "medium"}
         settingContainerEl.empty()
         settingContainerEl.createEl("h2", {text: "Blog Publisher"})
 
