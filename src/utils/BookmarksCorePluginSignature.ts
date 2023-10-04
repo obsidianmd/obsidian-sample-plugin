@@ -77,6 +77,9 @@ export interface BookmarksPluginInterface {
     updateSortingBookmarksAfterItemRenamed(renamedItem: TAbstractFile, oldPath: string): void
     updateSortingBookmarksAfterItemDeleted(deletedItem: TAbstractFile): void
     isBookmarkedForSorting(item: TAbstractFile): boolean
+
+    // To support performance optimization
+    bookmarksIncludeItemsInFolder(folderPath: string): boolean
 }
 
 class BookmarksPluginWrapper implements BookmarksPluginInterface {
@@ -91,15 +94,21 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
     //    undefined ==> item not found in bookmarks
     //    > 0 ==> item found in bookmarks at returned position
     // Intentionally not returning 0 to allow simple syntax of processing the result
-    determineBookmarkOrder = (path: string): number | undefined => {
+    //
+    // Parameterless invocation enforces cache population, if empty
+    determineBookmarkOrder = (path?: string): number | undefined => {
         if (!bookmarksCache) {
-            bookmarksCache = getOrderedBookmarks(this.plugin!, this.groupNameForSorting)
+            [bookmarksCache, bookmarksFoldersCoverage] = getOrderedBookmarks(this.plugin!, this.groupNameForSorting)
             bookmarksCacheTimestamp = Date.now()
         }
 
-        const bookmarkedItemPosition: number | undefined = bookmarksCache?.[path]?.order
+        if (path && path.length > 0) {
+            const bookmarkedItemPosition: number | undefined = bookmarksCache?.[path]?.order
 
-        return (bookmarkedItemPosition !== undefined && bookmarkedItemPosition >= 0) ? (bookmarkedItemPosition + 1) : undefined
+            return (bookmarkedItemPosition !== undefined && bookmarkedItemPosition >= 0) ? (bookmarkedItemPosition + 1) : undefined
+        } else {
+            return undefined
+        }
     }
 
     bookmarkFolderItem = (item: TAbstractFile) => {
@@ -166,11 +175,16 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
         }
         return false
     }
+
+    bookmarksIncludeItemsInFolder = (folderPath: string): boolean => {
+        console.error(`C: for ${folderPath} is ${bookmarksFoldersCoverage?.[folderPath]}`)
+        return !! bookmarksFoldersCoverage?.[folderPath]
+    }
 }
 
 export const BookmarksCorePluginId: string = 'bookmarks'
 
-export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?: boolean): BookmarksPluginInterface | undefined => {
+export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?: boolean, ensureCachePopulated?: boolean): BookmarksPluginInterface | undefined => {
     invalidateExpiredBookmarksCache(forceFlushCache)
     const installedBookmarksPlugin: InstalledPlugin | undefined = app?.internalPlugins?.getPluginById(BookmarksCorePluginId)
     if (installedBookmarksPlugin && installedBookmarksPlugin.enabled && installedBookmarksPlugin.instance) {
@@ -179,6 +193,9 @@ export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?
         if (typeof bookmarksPluginInstance?.[BookmarksPlugin_getBookmarks_methodName] === 'function') {
             bookmarksPlugin.plugin = bookmarksPluginInstance
             bookmarksPlugin.groupNameForSorting = bookmarksGroupName
+            if (ensureCachePopulated && !bookmarksCache) {
+                bookmarksPlugin.determineBookmarkOrder()
+            }
             return bookmarksPlugin
         }
     }
@@ -187,6 +204,9 @@ export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?
 // cache can outlive the wrapper instances
 let bookmarksCache: OrderedBookmarks | undefined = undefined
 let bookmarksCacheTimestamp: number | undefined = undefined
+type FolderPath = string
+type FoldersCoverage = { [key: FolderPath]: boolean }
+let bookmarksFoldersCoverage: FoldersCoverage | undefined = undefined
 
 const bookmarksPlugin: BookmarksPluginWrapper = new BookmarksPluginWrapper()
 
@@ -203,6 +223,7 @@ const invalidateExpiredBookmarksCache = (force?: boolean): void => {
         if (flush) {
             bookmarksCache = undefined
             bookmarksCacheTimestamp = undefined
+            bookmarksFoldersCoverage = undefined
         }
     }
 }
@@ -226,8 +247,12 @@ const bookmarkLocationAndPathOverlap = (bookmarkParentGroupPath: string, fileOrF
     return fileOrFolderPath?.startsWith(bookmarkParentGroupPath) ? bookmarkParentGroupPath.length : 0
 }
 
-const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupName?: string): OrderedBookmarks | undefined => {
+const ROOT_FOLDER_PATH = '/'
+
+const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupName?: string): [OrderedBookmarks, FoldersCoverage] | [undefined, undefined] => {
+    console.log(`getOrderedBookmarks()`)
     let bookmarksItems: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_items_collectionName]
+    let bookmarksCoveredFolders: FoldersCoverage = {}
     if (bookmarksItems) {
         if (bookmarksGroupName) {
             // scanning only top level items because by desing the bookmarks group for sorting is a top level item
@@ -249,6 +274,10 @@ const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupNam
                     const path = isGroup ? pathOfGroup : (item as BookmarkWithPath).path
                     const alreadyConsumed = orderedBookmarks[path]
 
+                    const parentFolderPathOfBookmarkedItem = isGroup ? parentGroupsPath : extractParentFolderPath(path)
+                    console.log(`Add ${path}`)
+                    bookmarksCoveredFolders[parentFolderPathOfBookmarkedItem.length > 0 ? parentFolderPathOfBookmarkedItem : ROOT_FOLDER_PATH] = true
+                    console.log(bookmarksCoveredFolders)
                     // for groups (they represent folders from sorting perspective) bookmark them unconditionally
                     //     the idea of better match is not applicable
                     if (alreadyConsumed && isGroup && alreadyConsumed.group) {
@@ -277,9 +306,10 @@ const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupNam
             }
 
             traverseBookmarksCollection(bookmarksItems, consumeItem)
-            return orderedBookmarks
+            return [orderedBookmarks, bookmarksCoveredFolders]
         }
     }
+    return [undefined, undefined]
 }
 
 const createBookmarkFileEntry = (path: string): BookmarkedFile => {

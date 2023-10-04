@@ -30,7 +30,9 @@ import {
     SortingSpecProcessor,
     SortSpecsCollection
 } from './custom-sort/sorting-spec-processor';
-import {CustomSortSpec} from './custom-sort/custom-sort-types';
+import {
+	CustomSortSpec
+} from './custom-sort/custom-sort-types';
 
 import {
 	addIcons,
@@ -43,10 +45,17 @@ import {
 } from "./custom-sort/icons";
 import {getStarredPlugin} from "./utils/StarredPluginSignature";
 import {
+	BookmarksPluginInterface,
 	getBookmarksPlugin
 } from "./utils/BookmarksCorePluginSignature";
 import {getIconFolderPlugin} from "./utils/ObsidianIconFolderPluginSignature";
 import {lastPathComponent} from "./utils/utils";
+import {
+	collectSortingAndGroupingTypes,
+	hasOnlyByBookmarkOrStandardObsidian,
+	HasSortingOrGrouping,
+	ImplicitSortspecForBookmarksIntegration
+} from "./custom-sort/custom-sort-utils";
 
 interface CustomSortPluginSettings {
 	additionalSortspecFile: string
@@ -70,7 +79,8 @@ const DEFAULT_SETTINGS: CustomSortPluginSettings = {
 	bookmarksGroupToConsumeAsOrderingReference: 'sortspec'
 }
 
-const DEFAULT_SETTING_FOR_FRESH_INSTALL_1_2_0: Partial<CustomSortPluginSettings> = {
+// On API 1.2.x+ enable the bookmarks integration by default
+const DEFAULT_SETTING_FOR_1_2_0_UP: Partial<CustomSortPluginSettings> = {
 	automaticBookmarksIntegration: true,
 	bookmarksContextMenus: true
 }
@@ -79,13 +89,6 @@ const SORTSPEC_FILE_NAME: string = 'sortspec.md'
 const SORTINGSPEC_YAML_KEY: string = 'sorting-spec'
 
 const ERROR_NOTICE_TIMEOUT: number = 10000
-
-const ImplicitSortspecForBookmarksIntegration: string = `
-target-folder: /*
-bookmarked:
-  < by-bookmarks-order
-sorting: standard
-`
 
 // the monkey-around package doesn't export the below type
 type MonkeyAroundUninstaller = () => void
@@ -360,7 +363,7 @@ export default class CustomSortPlugin extends Plugin {
 					item.onClick(() => {
 						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 						if (bookmarksPlugin) {
-							const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent)
+							const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent, bookmarksPlugin)
 							bookmarksPlugin.bookmarkSiblings(orderedChildren)
 							bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 						}
@@ -429,12 +432,12 @@ export default class CustomSortPlugin extends Plugin {
 		return sortSpec
 	}
 
-	createProcessingContextForSorting(): ProcessingContext {
+	createProcessingContextForSorting(has: HasSortingOrGrouping): ProcessingContext {
 		const ctx: ProcessingContext = {
 			_mCache: app.metadataCache,
-			starredPluginInstance: getStarredPlugin(),
-			bookmarksPluginInstance: getBookmarksPlugin(this.settings.bookmarksGroupToConsumeAsOrderingReference),
-			iconFolderPluginInstance: getIconFolderPlugin(),
+			starredPluginInstance: has.grouping.byStarred ? getStarredPlugin() : undefined,
+			bookmarksPluginInstance: has.grouping.byBookmarks || has.sorting.byBookmarks ?  getBookmarksPlugin(this.settings.bookmarksGroupToConsumeAsOrderingReference, false, true) : undefined,
+			iconFolderPluginInstance: has.grouping.byIcon ? getIconFolderPlugin() : undefined,
 			plugin: this
 		}
 		return ctx
@@ -466,8 +469,18 @@ export default class CustomSortPlugin extends Plugin {
 						const folder: TFolder = this.file
 						let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
 
+						// Performance optimization
+						//     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
+						let has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
+						if (hasOnlyByBookmarkOrStandardObsidian(has)) {
+							const bookmarksPlugin: BookmarksPluginInterface|undefined = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
+							if ( !bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
+								sortSpec = null
+							}
+						}
+
 						if (sortSpec) {
-							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting());
+							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting(has));
 						} else {
 							return old.call(this, ...args);
 						}
@@ -481,14 +494,21 @@ export default class CustomSortPlugin extends Plugin {
 		}
 	}
 
-	orderedFolderItemsForBookmarking(folder: TFolder): Array<TAbstractFile> {
+	orderedFolderItemsForBookmarking(folder: TFolder, bookmarksPlugin: BookmarksPluginInterface): Array<TAbstractFile> {
 		let sortSpec: CustomSortSpec | null | undefined = undefined
 		if (!this.settings.suspended) {
 			sortSpec = this.determineSortSpecForFolder(folder.path, folder.name)
 		}
 		let uiSortOrder: string = this.getFileExplorer()?.sortOrder || ObsidianStandardDefaultSortingName
 
-		return sortFolderItemsForBookmarking(folder.children, sortSpec, this.createProcessingContextForSorting(), uiSortOrder)
+		const has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
+
+		return sortFolderItemsForBookmarking(
+			folder.children,
+			sortSpec,
+			this.createProcessingContextForSorting(has),
+			uiSortOrder
+		)
 	}
 
 	// Credits go to https://github.com/nothingislost/obsidian-bartender
@@ -511,10 +531,8 @@ export default class CustomSortPlugin extends Plugin {
 		const data: any = await this.loadData() || {}
 		const isFreshInstall: boolean = Object.keys(data).length === 0
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
-		if (isFreshInstall) {
-			if (requireApiVersion('1.2.0')) {
-				this.settings = Object.assign(this.settings, DEFAULT_SETTING_FOR_FRESH_INSTALL_1_2_0)
-			}
+		if (requireApiVersion('1.2.0')) {
+			this.settings = Object.assign(this.settings, DEFAULT_SETTING_FOR_1_2_0_UP)
 		}
 	}
 

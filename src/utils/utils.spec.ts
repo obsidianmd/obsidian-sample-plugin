@@ -1,4 +1,7 @@
-import {lastPathComponent, extractParentFolderPath} from "./utils";
+import {
+    lastPathComponent,
+    extractParentFolderPath
+} from "./utils";
 
 describe('lastPathComponent and extractParentFolderPath', () => {
     it.each([
