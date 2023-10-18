@@ -15,7 +15,8 @@
       "DOM",
       "ES5",
       "ES6",
-      "ES7"
+      "ES7",
+      "DOM.Iterable"
     ]
   },
   "include": [
