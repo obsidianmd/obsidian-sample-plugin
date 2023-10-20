@@ -9,6 +9,8 @@ import {
     extractParentFolderPath,
     lastPathComponent
 } from "./utils";
+import {Arr} from "tern";
+import * as process from "process";
 
 const BookmarksPlugin_getBookmarks_methodName = 'getBookmarks'
 
@@ -21,45 +23,48 @@ type Path = string
 type BookmarkedItem = BookmarkedFile | BookmarkedFolder | BookmarkedGroup
 
 // Either a file, a folder or header/block inside a file
-interface BookmarkWithPath {
+interface BookmarkItemSuperset {
     path: Path
-}
-
-interface BookmarkedFile {
-    type: 'file'
-    path: Path
+    title?: string
+    ctime: number
     subpath?: string  // Anchor within the file (heading and/or block ref)
-    title?: string
-    ctime: number
 }
 
-interface BookmarkedFolder {
+interface BookmarkWithPath extends Pick<BookmarkItemSuperset, 'path'> {
+}
+
+interface BookmarkedFile extends BookmarkItemSuperset {
+    type: 'file'
+}
+
+interface BookmarkedFolder extends Omit<BookmarkItemSuperset, 'subpath'> {
     type: 'folder'
-    path: Path
-    title?: string
-    ctime: number
 }
 
-interface BookmarkedGroup {
+interface BookmarkedGroup extends Omit<BookmarkItemSuperset, 'subpath'|'path'> {
     type: 'group'
     items: Array<BookmarkedItem>
-    title?: string
-    ctime: number
 }
 
 export type BookmarkedItemPath = string
 
-export interface OrderedBookmarkedItem {
-    file: boolean
-    folder: boolean
-    group: boolean
+export interface OrderedBookmarkedItemWithMetadata {
+    isGroup?: boolean
     path: BookmarkedItemPath
+    hasSortingIndicator?: boolean
     order: number
-    bookmarkPathOverlap: number|true   // how much the location in bookmarks hierarchy matches the actual file/folder path
+    bookmarkPathMatches?: boolean
 }
 
-interface OrderedBookmarks {
-    [key: BookmarkedItemPath]: OrderedBookmarkedItem
+export type OrderedBookmarkedItem = Pick<OrderedBookmarkedItemWithMetadata, 'order'>
+export type Order = number
+
+export interface OrderedBookmarks {
+    [key: BookmarkedItemPath]: Order
+}
+
+export interface OrderedBookmarksWithMetadata {
+    [key: BookmarkedItemPath]: OrderedBookmarkedItemWithMetadata
 }
 
 interface Bookmarks_PluginInstance extends PluginInstance {
@@ -72,14 +77,35 @@ interface Bookmarks_PluginInstance extends PluginInstance {
 export interface BookmarksPluginInterface {
     determineBookmarkOrder(path: string): number|undefined
     bookmarkFolderItem(item: TAbstractFile): void
+    unbookmarkFolderItem(item: TAbstractFile): void
     saveDataAndUpdateBookmarkViews(updateBookmarkViews: boolean): void
     bookmarkSiblings(siblings: Array<TAbstractFile>, inTheTop?: boolean): void
+    unbookmarkSiblings(siblings: Array<TAbstractFile>): void
     updateSortingBookmarksAfterItemRenamed(renamedItem: TAbstractFile, oldPath: string): void
     updateSortingBookmarksAfterItemDeleted(deletedItem: TAbstractFile): void
     isBookmarkedForSorting(item: TAbstractFile): boolean
 
     // To support performance optimization
     bookmarksIncludeItemsInFolder(folderPath: string): boolean
+}
+
+const checkSubtreeForOnlyTransparentGroups = (items: Array<BookmarkedItem>): boolean => {
+    if (!items || items?.length === 0) return true
+    for (let it of items) {
+        if (it.type !== 'group' || !it.title || !isGroupTransparentForSorting(it.title)) {
+            return false
+        }
+        // it is a group transparent for sorting
+        const isEmptyOrTransparent: boolean = checkSubtreeForOnlyTransparentGroups(it.items)
+        if (!isEmptyOrTransparent) {
+            return false
+        }
+    }
+    return true
+}
+
+const bookmarkedGroupEmptyOrOnlyTransparentForSortingDescendants = (group: BookmarkedGroup): boolean => {
+    return checkSubtreeForOnlyTransparentGroups(group.items)
 }
 
 class BookmarksPluginWrapper implements BookmarksPluginInterface {
@@ -96,16 +122,16 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
     // Intentionally not returning 0 to allow simple syntax of processing the result
     //
     // Parameterless invocation enforces cache population, if empty
-    determineBookmarkOrder = (path?: string): number | undefined => {
+    determineBookmarkOrder = (path?: string): Order | undefined => {
         if (!bookmarksCache) {
             [bookmarksCache, bookmarksFoldersCoverage] = getOrderedBookmarks(this.plugin!, this.groupNameForSorting)
             bookmarksCacheTimestamp = Date.now()
         }
 
         if (path && path.length > 0) {
-            const bookmarkedItemPosition: number | undefined = bookmarksCache?.[path]?.order
+            const bookmarkedItemPosition: Order | undefined = bookmarksCache?.[path]
 
-            return (bookmarkedItemPosition !== undefined && bookmarkedItemPosition >= 0) ? (bookmarkedItemPosition + 1) : undefined
+            return (bookmarkedItemPosition && bookmarkedItemPosition > 0) ? bookmarkedItemPosition : undefined
         } else {
             return undefined
         }
@@ -113,6 +139,10 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
 
     bookmarkFolderItem = (item: TAbstractFile) => {
         this.bookmarkSiblings([item], true)
+    }
+
+    unbookmarkFolderItem = (item: TAbstractFile) => {
+        this.unbookmarkSiblings([item])
     }
 
     saveDataAndUpdateBookmarkViews = (updateBookmarkViews: boolean = true) => {
@@ -138,7 +168,13 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
         if (bookmarksContainer) {  // for sanity, the group should be always created if missing
             siblings.forEach((aSibling) => {
                 const siblingName = lastPathComponent(aSibling.path)
-                if (!bookmarksContainer.items.find((it) =>
+                const groupTransparentForSorting = bookmarksContainer.items.find((it) => (
+                    it.type === 'group' && groupNameForPath(it.title||'') === siblingName && isGroupTransparentForSorting(it.title)
+                ))
+                if (groupTransparentForSorting) {
+                    // got a group transparent for sorting
+                    groupTransparentForSorting.title = groupNameForPath(groupTransparentForSorting.title||'')
+                } else if (!bookmarksContainer.items.find((it) =>
                     ((it.type === 'folder' || it.type === 'file') && it.path === aSibling.path) ||
                     (it.type === 'group' && it.title === siblingName))) {
                     const newEntry: BookmarkedItem = (aSibling instanceof TFolder) ? createBookmarkGroupEntry(siblingName) : createBookmarkFileEntry(aSibling.path);
@@ -146,6 +182,46 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
                         bookmarksContainer.items.unshift(newEntry)
                     } else {
                         bookmarksContainer.items.push(newEntry)
+                    }
+                }
+            });
+        }
+    }
+
+    unbookmarkSiblings = (siblings: Array<TAbstractFile>) => {
+        if (siblings.length === 0) return // for sanity
+
+        const bookmarksContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(
+            siblings[0].path,
+            DontCreateIfMissing,
+            this.plugin!,
+            this.groupNameForSorting
+        )
+
+        if (bookmarksContainer) {  // for sanity
+            const bookmarkedItemsToRemove: Array<BookmarkedItem> = []
+            siblings.forEach((aSibling) => {
+                const siblingName = lastPathComponent(aSibling.path)
+                const aGroup = bookmarksContainer.items.find(
+                    (it) => (it.type === 'group' && groupNameForPath(it.title||'') === siblingName)
+                )
+                if (aGroup) {
+                    const canBeRemoved = bookmarkedGroupEmptyOrOnlyTransparentForSortingDescendants(aGroup as BookmarkedGroup)
+                    if (canBeRemoved) {
+                        bookmarksContainer.items.remove(aGroup)
+                        cleanupBookmarkTreeFromTransparentEmptyGroups(bookmarksContainer, this.plugin!, this.groupNameForSorting)
+                    } else {
+                        if (!isGroupTransparentForSorting(aGroup.title)) {
+                            aGroup.title = groupNameTransparentForSorting(aGroup.title||'')
+                        }
+                    }
+                } else {
+                    const aFileOrFolder = bookmarksContainer.items.find(
+                        (it) => ((it.type === 'folder' || it.type === 'file') && it.path === aSibling.path)
+                    )
+                    if (aFileOrFolder) {
+                        bookmarksContainer.items.remove(aFileOrFolder)
+                        cleanupBookmarkTreeFromTransparentEmptyGroups(bookmarksContainer, this.plugin!, this.groupNameForSorting)
                     }
                 }
             });
@@ -177,7 +253,6 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
     }
 
     bookmarksIncludeItemsInFolder = (folderPath: string): boolean => {
-        console.error(`C: for ${folderPath} is ${bookmarksFoldersCoverage?.[folderPath]}`)
         return !! bookmarksFoldersCoverage?.[folderPath]
     }
 }
@@ -190,7 +265,8 @@ export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?
     if (installedBookmarksPlugin && installedBookmarksPlugin.enabled && installedBookmarksPlugin.instance) {
         const bookmarksPluginInstance: Bookmarks_PluginInstance = installedBookmarksPlugin.instance as Bookmarks_PluginInstance
         // defensive programming, in case Obsidian changes its internal APIs
-        if (typeof bookmarksPluginInstance?.[BookmarksPlugin_getBookmarks_methodName] === 'function') {
+        if (typeof bookmarksPluginInstance?.[BookmarksPlugin_getBookmarks_methodName] === 'function' &&
+            Array.isArray(bookmarksPluginInstance?.[BookmarksPlugin_items_collectionName])) {
             bookmarksPlugin.plugin = bookmarksPluginInstance
             bookmarksPlugin.groupNameForSorting = bookmarksGroupName
             if (ensureCachePopulated && !bookmarksCache) {
@@ -231,11 +307,16 @@ const invalidateExpiredBookmarksCache = (force?: boolean): void => {
 type TraverseCallback = (item: BookmarkedItem, parentsGroupsPath: string) => boolean | void
 
 const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callbackConsumeItem: TraverseCallback) => {
+    if (!Array.isArray(items)) return
     const recursiveTraversal = (collection: Array<BookmarkedItem>, groupsPath: string) => {
+        if (!Array.isArray(collection)) return
         for (let idx = 0, collectionRef = collection; idx < collectionRef.length; idx++) {
             const item = collectionRef[idx];
             if (callbackConsumeItem(item, groupsPath)) return;
-            if ('group' === item.type) recursiveTraversal(item.items, `${groupsPath}${groupsPath?'/':''}${item.title}`);
+            if ('group' === item.type) {
+                const groupNameToUseInPath: string = groupNameForPath(item.title || '')
+                recursiveTraversal(item.items, `${groupsPath}${groupsPath?'/':''}${groupNameToUseInPath}`);
+            }
         }
     };
     recursiveTraversal(items, '');
@@ -243,69 +324,94 @@ const traverseBookmarksCollection = (items: Array<BookmarkedItem>, callbackConsu
 
 const ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR = '#^-'
 
-const bookmarkLocationAndPathOverlap = (bookmarkParentGroupPath: string, fileOrFolderPath: string): number => {
-    return fileOrFolderPath?.startsWith(bookmarkParentGroupPath) ? bookmarkParentGroupPath.length : 0
-}
-
 const ROOT_FOLDER_PATH = '/'
 
+const TRANSPARENT_FOR_SORTING_PREFIX = '\\\\'
+
+const isGroupTransparentForSorting = (name?: string): boolean => {
+    return !!name?.startsWith(TRANSPARENT_FOR_SORTING_PREFIX)
+}
+
+const groupNameTransparentForSorting = (name: string): string => {
+    return isGroupTransparentForSorting(name) ? name : `${TRANSPARENT_FOR_SORTING_PREFIX}${name}`
+}
+
+export const groupNameForPath = (name: string): string => {
+    return isGroupTransparentForSorting(name) ? name.substring(TRANSPARENT_FOR_SORTING_PREFIX.length) : name
+}
+
 const getOrderedBookmarks = (plugin: Bookmarks_PluginInstance, bookmarksGroupName?: string): [OrderedBookmarks, FoldersCoverage] | [undefined, undefined] => {
-    console.log(`getOrderedBookmarks()`)
     let bookmarksItems: Array<BookmarkedItem> | undefined = plugin?.[BookmarksPlugin_items_collectionName]
     let bookmarksCoveredFolders: FoldersCoverage = {}
-    if (bookmarksItems) {
+    if (bookmarksItems && Array.isArray(bookmarksItems)) {
         if (bookmarksGroupName) {
-            // scanning only top level items because by desing the bookmarks group for sorting is a top level item
+            // scanning only top level items because by design the bookmarks group for sorting is a top level item
             const bookmarksGroup: BookmarkedGroup|undefined = bookmarksItems.find(
                 (item) => item.type === 'group' && item.title === bookmarksGroupName
             ) as BookmarkedGroup
             bookmarksItems = bookmarksGroup ? bookmarksGroup.items : undefined
         }
         if (bookmarksItems) {
-            const orderedBookmarks: OrderedBookmarks = {}
-            let order: number = 0
+            const orderedBookmarksWithMetadata: OrderedBookmarksWithMetadata = {}
+            let order: number = 1   // Intentionally start > 0 to allow easy check: if (order) ...
             const consumeItem = (item: BookmarkedItem, parentGroupsPath: string) => {
-                const isFile: boolean = item.type === 'file'
-                const hasSortspecAnchor: boolean = isFile && (item as BookmarkedFile).subpath === ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR
-                const isFolder: boolean = item.type === 'folder'
-                const isGroup: boolean = item.type === 'group'
-                if ((isFile && hasSortspecAnchor) || isFolder || isGroup) {
-                    const pathOfGroup: string = `${parentGroupsPath}${parentGroupsPath?'/':''}${item.title}`
-                    const path = isGroup ? pathOfGroup : (item as BookmarkWithPath).path
-                    const alreadyConsumed = orderedBookmarks[path]
+                if ('group' === item.type) {
+                    if (!isGroupTransparentForSorting(item.title)) {
+                        const path: string = `${parentGroupsPath}${parentGroupsPath ? '/' : ''}${item.title}`
+                        const alreadyConsumed = orderedBookmarksWithMetadata[path]
+                        if (alreadyConsumed) {
+                            if (alreadyConsumed.isGroup) return   // Defensive programming
+                            if (alreadyConsumed.hasSortingIndicator) return
+                        }
 
-                    const parentFolderPathOfBookmarkedItem = isGroup ? parentGroupsPath : extractParentFolderPath(path)
-                    console.log(`Add ${path}`)
-                    bookmarksCoveredFolders[parentFolderPathOfBookmarkedItem.length > 0 ? parentFolderPathOfBookmarkedItem : ROOT_FOLDER_PATH] = true
-                    console.log(bookmarksCoveredFolders)
-                    // for groups (they represent folders from sorting perspective) bookmark them unconditionally
-                    //     the idea of better match is not applicable
-                    if (alreadyConsumed && isGroup && alreadyConsumed.group) {
-                        return
+                        orderedBookmarksWithMetadata[path] = {
+                            path: path,
+                            order: order++,
+                            isGroup: true
+                        }
                     }
+                } else if ('file' === item.type || 'folder' === item.type) {
+                    const itemWithPath = (item as BookmarkWithPath)
+                    const itemFile = 'file' === item.type ? (item as BookmarkedFile) : undefined
+                    const alreadyConsumed = orderedBookmarksWithMetadata[itemWithPath.path]
+                    const hasSortingIndicator: boolean|undefined = itemFile ? itemFile.subpath === ARTIFICIAL_ANCHOR_SORTING_BOOKMARK_INDICATOR : undefined
+                    const parentFolderPathOfBookmarkedItem = extractParentFolderPath(itemWithPath.path)
+                    const bookmarkPathMatches: boolean = parentGroupsPath === parentFolderPathOfBookmarkedItem
+                    const bookmarkPathIsRoot: boolean = !(parentGroupsPath?.length > 0)
 
-                    // for files and folders (folder can be only manually bookmarked, the plugin uses groups to represent folders)
-                    //     the most closely matching location in bookmarks hierarchy is preferred
-                    let pathOverlapLength: number|undefined
-                    if (alreadyConsumed && (isFile || isFolder)) {
-                        pathOverlapLength = bookmarkLocationAndPathOverlap(parentGroupsPath, path)
-                        if (pathOverlapLength <= alreadyConsumed.bookmarkPathOverlap) {
-                            return
+                        // Bookmarks not in root (group) or in matching path are ignored
+                    if (!bookmarkPathMatches && !bookmarkPathIsRoot) return
+
+                        // For bookmarks in root or in matching path, apply the prioritized duplicate elimination logic
+                    if (alreadyConsumed) {
+                        if (hasSortingIndicator) {
+                            if (alreadyConsumed.hasSortingIndicator && alreadyConsumed.bookmarkPathMatches) return
+                            if (alreadyConsumed.hasSortingIndicator && !bookmarkPathMatches) return
+                        } else { // no sorting indicator on new
+                            if (alreadyConsumed.hasSortingIndicator) return
+                            if (!bookmarkPathMatches || alreadyConsumed.bookmarkPathMatches || alreadyConsumed.isGroup) return
                         }
                     }
 
-                    orderedBookmarks[path] = {
-                        path: path,
+                    orderedBookmarksWithMetadata[itemWithPath.path] = {
+                        path: itemWithPath.path,
                         order: order++,
-                        file: isFile,
-                        folder: isFile,
-                        group: isGroup,
-                        bookmarkPathOverlap: isGroup || (pathOverlapLength ?? bookmarkLocationAndPathOverlap(parentGroupsPath, path))
+                        isGroup: false,
+                        bookmarkPathMatches: bookmarkPathMatches,
+                        hasSortingIndicator: hasSortingIndicator
                     }
                 }
             }
 
             traverseBookmarksCollection(bookmarksItems, consumeItem)
+
+            const orderedBookmarks: OrderedBookmarks = {}
+
+            for (let path in orderedBookmarksWithMetadata) {
+                orderedBookmarks[path] = orderedBookmarksWithMetadata[path].order
+                const parentFolderPath: Path = extractParentFolderPath(path)
+                bookmarksCoveredFolders[parentFolderPath.length > 0 ? parentFolderPath : ROOT_FOLDER_PATH] = true
+            }
             return [orderedBookmarks, bookmarksCoveredFolders]
         }
     }
@@ -322,18 +428,16 @@ const createBookmarkGroupEntry = (title: string): BookmarkedGroup => {
     return { type: "group", ctime: Date.now(), items: [], title: title }
 }
 
-interface BookmarkedParentFolder {
+export interface BookmarkedParentFolder {
+    pathOfGroup?: Path // undefined when the container is the root of bookmarks
     group?: BookmarkedGroup  // undefined when the item is at root level of bookmarks
     items: Array<BookmarkedItem> // reference to group.items or to root collection of bookmarks
 }
 
-interface ItemInBookmarks {
-    parentItemsCollection: Array<BookmarkedItem>
-    item: BookmarkedItem
-}
-
 const findGroupForItemPathInBookmarks = (itemPath: string, createIfMissing: boolean, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string): BookmarkedParentFolder|undefined => {
-    let items = plugin[BookmarksPlugin_items_collectionName]
+    let items = plugin?.[BookmarksPlugin_items_collectionName]
+
+    if (!Array.isArray(items)) return undefined
 
     if (!itemPath || !itemPath.trim()) return undefined // for sanity
 
@@ -347,11 +451,13 @@ const findGroupForItemPathInBookmarks = (itemPath: string, createIfMissing: bool
 
     let group: BookmarkedGroup|undefined = undefined
 
-    parentPathComponents.forEach((pathSegment) => {
-        let group: BookmarkedGroup|undefined = items.find((it) => it.type === 'group' && it.title === pathSegment) as BookmarkedGroup
+    parentPathComponents.forEach((pathSegment, index) => {
+        group = items.find((it) => it.type === 'group' && groupNameForPath(it.title||'') === pathSegment) as BookmarkedGroup
         if (!group) {
             if (createIfMissing) {
-                group = createBookmarkGroupEntry(pathSegment)
+                const theSortingBookmarksContainerGroup = (bookmarksGroup && index === 0)
+                const groupName: string = theSortingBookmarksContainerGroup ? pathSegment : groupNameTransparentForSorting(pathSegment)
+                group = createBookmarkGroupEntry(groupName)
                 items.push(group)
             } else {
                 return undefined
@@ -363,19 +469,50 @@ const findGroupForItemPathInBookmarks = (itemPath: string, createIfMissing: bool
 
     return {
         items: items,
-        group: group
+        group: group,
+        pathOfGroup: parentPath
     }
 }
 
 const CreateIfMissing = true
 const DontCreateIfMissing = false
 
+const renameGroup = (group: BookmarkedGroup, newName: string, makeTransparentForSorting: boolean|undefined) => {
+    if (makeTransparentForSorting === true) {
+        group.title = groupNameTransparentForSorting(newName)
+    } else if (makeTransparentForSorting === false) {
+        group.title = newName
+    } else { // no transparency status, retain the status as-is
+        group.title = isGroupTransparentForSorting(group.title) ? groupNameTransparentForSorting(newName) : newName
+    }
+}
+
+const cleanupBookmarkTreeFromTransparentEmptyGroups = (parentGroup: BookmarkedParentFolder|undefined, plugin: Bookmarks_PluginInstance, bookmarksGroup?: string) => {
+
+    if (!parentGroup) return         // invalid invocation - exit
+    if (!parentGroup.group) return   // root folder of the bookmarks - do not touch items in root folder
+
+    if (checkSubtreeForOnlyTransparentGroups(parentGroup.items)) {
+        parentGroup.group.items = []
+
+        const parentContainerOfGroup = findGroupForItemPathInBookmarks(
+            parentGroup.pathOfGroup || '',
+            DontCreateIfMissing,
+            plugin,
+            bookmarksGroup
+        )
+        if (parentContainerOfGroup) {
+            parentContainerOfGroup.group?.items?.remove(parentGroup.group)
+            cleanupBookmarkTreeFromTransparentEmptyGroups(parentContainerOfGroup, plugin, bookmarksGroup)
+        }
+    }
+}
+
 const updateSortingBookmarksAfterItemRenamed = (plugin: Bookmarks_PluginInstance, renamedItem: TAbstractFile, oldPath: string, bookmarksGroup?: string) => {
 
     if (renamedItem.path === oldPath) return; // sanity
 
     const aFolder: boolean = renamedItem instanceof TFolder
-    const aFolderWithChildren: boolean = aFolder && (renamedItem as TFolder).children.length > 0
     const aFile: boolean = !aFolder
     const oldParentPath: string = extractParentFolderPath(oldPath)
     const oldName: string = lastPathComponent(oldPath)
@@ -384,35 +521,58 @@ const updateSortingBookmarksAfterItemRenamed = (plugin: Bookmarks_PluginInstance
     const moved: boolean = oldParentPath !== newParentPath
     const renamed: boolean = oldName !== newName
 
+        // file renames are handled automatically by Obsidian in bookmarks, no need for additional actions
+    if (aFile && renamed) return
+
     const originalContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(oldPath, DontCreateIfMissing, plugin, bookmarksGroup)
 
     if (!originalContainer) return;
 
-    const item: BookmarkedItem|undefined = originalContainer.items.find((it) => {
-        if (aFolder && it.type === 'group' && it.title === oldName) return true;
-        if (aFile && it.type === 'file' && it.path === oldPath) return true;
-    })
+    const item: BookmarkedItem|undefined = aFolder ?
+        originalContainer.items.find((it) => (
+            it.type === 'group' && groupNameForPath(it.title||'') === oldName
+        ))
+        : // aFile
+        originalContainer.items.find((it) => (
+            it.type === 'file' && it.path === renamedItem.path
+        ))
 
     if (!item) return;
 
-    // The renamed/moved item was located in bookmarks, apply the necessary bookmarks updates
-
-    let itemRemovedFromBookmarks: boolean = false
-    if (moved) {
-        originalContainer.items.remove(item)
-        const createTargetLocation: boolean = aFolderWithChildren
-        const targetContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(renamedItem.path, createTargetLocation, plugin, bookmarksGroup)
-        if (targetContainer) {
-            targetContainer.items.push(item)
-        } else {
-            itemRemovedFromBookmarks = true  // open question: remove from bookmarks indeed, if target location was not under bookmarks control?
+    // The renamed/moved item was located in bookmarks, actions depend on item type
+    if (aFile) {
+        if (moved) {  // sanity
+            originalContainer.group?.items.remove(item)
+            cleanupBookmarkTreeFromTransparentEmptyGroups(originalContainer, plugin, bookmarksGroup)
         }
-    }
+    } else { // a group
+        const aGroup: BookmarkedGroup = item as BookmarkedGroup
 
-    if (aFolder && renamed && !itemRemovedFromBookmarks) {
-        // Renames of files are handled automatically by Bookmarks core plugin, only need to handle folder rename
-        //    because folders are represented (for sorting purposes) by groups with exact name
-        (item as BookmarkedGroup).title = newName
+        if (bookmarkedGroupEmptyOrOnlyTransparentForSortingDescendants(aGroup)) {
+            if (moved) {  // sanity
+                originalContainer.group?.items.remove(aGroup)
+                cleanupBookmarkTreeFromTransparentEmptyGroups(originalContainer, plugin, bookmarksGroup)
+            } else if (renamed) {
+                renameGroup(aGroup, newName, undefined)
+            }
+        } else {  // group has some descendants not transparent for sorting
+            if (moved) {
+                originalContainer.group?.items.remove(aGroup)
+                const targetContainer: BookmarkedParentFolder | undefined = findGroupForItemPathInBookmarks(renamedItem.path, CreateIfMissing, plugin, bookmarksGroup)
+                if (targetContainer) {
+                    targetContainer.group?.items.push(aGroup)
+                    // the group in new location becomes by design transparent for sorting.
+                    //     The sorting order is a property of the parent folder, not the item itself
+                    renameGroup(aGroup, groupNameForPath(aGroup.title||''), true)
+                }
+                cleanupBookmarkTreeFromTransparentEmptyGroups(originalContainer, plugin, bookmarksGroup)
+            }
+
+            if (renamed) {
+                // unrealistic scenario when a folder is moved and renamed at the same time
+                renameGroup(aGroup, newName, undefined)
+            }
+        }
     }
 }
 
@@ -422,19 +582,42 @@ const updateSortingBookmarksAfterItemDeleted = (plugin: Bookmarks_PluginInstance
     if (deletedItem instanceof TFile) return;
 
     let items = plugin[BookmarksPlugin_items_collectionName]
+
+    if (!Array.isArray(items)) return
+
     const aFolder: boolean = deletedItem instanceof TFolder
     const aFile: boolean = !aFolder
 
-    const originalContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(deletedItem.path, DontCreateIfMissing, plugin, bookmarksGroup)
+    // Delete all instances of deleted item from two handled locations:
+    //    - in bookmark groups hierarchy matching the item path in file explorer
+    //    - in the bookmark group designated as container for bookmarks (immediate children)
+    const bookmarksContainer: BookmarkedParentFolder|undefined = findGroupForItemPathInBookmarks(deletedItem.path, DontCreateIfMissing, plugin, bookmarksGroup)
+    const itemInRootFolder = !!extractParentFolderPath(deletedItem.path)
+    const bookmarksRootContainer: BookmarkedParentFolder|undefined =
+        (bookmarksGroup && !itemInRootFolder) ? findGroupForItemPathInBookmarks('intentionally-in-root-path', DontCreateIfMissing, plugin, bookmarksGroup) : undefined
 
-    if (!originalContainer) return;
+    if (!bookmarksContainer && !bookmarksRootContainer) return;
 
-    const item: BookmarkedItem|undefined = originalContainer.items.find((it) => {
-        if (aFolder && it.type === 'group' && it.title === deletedItem.name) return true;
-        if (aFile && it.type === 'file' && it.path === deletedItem.path) return true;
+    [bookmarksContainer, bookmarksRootContainer].forEach((container) => {
+        const bookmarkEntriesToRemove: Array<BookmarkedItem> = []
+        container?.items.forEach((it) => {
+            if (aFolder && it.type === 'group' && groupNameForPath(it.title||'') === deletedItem.name) {
+                bookmarkEntriesToRemove.push(it)
+            }
+            if (aFile && it.type === 'file' && it.path === deletedItem.path) {
+                bookmarkEntriesToRemove.push(it)
+            }
+        })
+        bookmarkEntriesToRemove.forEach((itemToRemove) =>{
+            container?.group?.items.remove(itemToRemove)
+        })
+        cleanupBookmarkTreeFromTransparentEmptyGroups(container, plugin, bookmarksGroup)
     })
+}
 
-    if (!item) return;
-
-    originalContainer.items.remove(item)
+export const _unitTests = {
+    getOrderedBookmarks: getOrderedBookmarks,
+    bookmarkedGroupEmptyOrOnlyTransparentForSortingDescendants: bookmarkedGroupEmptyOrOnlyTransparentForSortingDescendants,
+    cleanupBookmarkTreeFromTransparentEmptyGroups: cleanupBookmarkTreeFromTransparentEmptyGroups,
+    findGroupForItemPathInBookmarks: findGroupForItemPathInBookmarks
 }

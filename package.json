@@ -27,6 +27,7 @@
 		"jest": "^28.1.1",
 		"monkey-around": "^2.3.0",
 		"obsidian": "^0.15.4",
+		"obsidian-1.4.11": "npm:obsidian@1.4.11",
 		"ts-jest": "^28.0.5",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"

@@ -615,10 +615,8 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
 	let fileExplorer = this.fileExplorer
 
-	// shallow copy of groups
+	// shallow copy of groups and expand folder-specific macros on them
 	sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
-
-	// expand folder-specific macros
 	const parentFolderName: string|undefined = this.file.name
 	expandMacros(sortingSpec, parentFolderName)
 
@@ -655,9 +653,14 @@ export const folderSort = function (sortingSpec: CustomSortSpec, ctx: Processing
 };
 
 // Returns a sorted copy of the input array, intentionally to keep it intact
-export const sortFolderItemsForBookmarking = function (items: Array<TAbstractFile>, sortingSpec: CustomSortSpec|null|undefined, ctx: ProcessingContext, uiSortOrder: string): Array<TAbstractFile> {
+export const sortFolderItemsForBookmarking = function (folder: TFolder, items: Array<TAbstractFile>, sortingSpec: CustomSortSpec|null|undefined, ctx: ProcessingContext, uiSortOrder: string): Array<TAbstractFile> {
 	if (sortingSpec) {
 		const folderItemsByPath: { [key: string]: TAbstractFile } = {}
+
+		// shallow copy of groups and expand folder-specific macros on them
+		sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
+		const parentFolderName: string|undefined = folder.name
+		expandMacros(sortingSpec, parentFolderName)
 
 		const folderItems: Array<FolderItemForSorting> = items.map((entry: TFile | TFolder) => {
 			folderItemsByPath[entry.path] = entry

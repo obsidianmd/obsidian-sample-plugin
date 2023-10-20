@@ -46,7 +46,8 @@ import {
 import {getStarredPlugin} from "./utils/StarredPluginSignature";
 import {
 	BookmarksPluginInterface,
-	getBookmarksPlugin
+	getBookmarksPlugin,
+	groupNameForPath
 } from "./utils/BookmarksCorePluginSignature";
 import {getIconFolderPlugin} from "./utils/ObsidianIconFolderPluginSignature";
 import {lastPathComponent} from "./utils/utils";
@@ -357,6 +358,17 @@ export default class CustomSortPlugin extends Plugin {
 						}
 					});
 				};
+				const unbookmarkThisMenuItem = (item: MenuItem) => {
+					item.setTitle('Custom sort: UNbookmark from sorting.');
+					item.setIcon('hashtag');
+					item.onClick(() => {
+						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+						if (bookmarksPlugin) {
+							bookmarksPlugin.unbookmarkFolderItem(file)
+							bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
+						}
+					});
+				};
 				const bookmarkAllMenuItem = (item: MenuItem) => {
 					item.setTitle('Custom sort: bookmark+siblings for sorting.');
 					item.setIcon('hashtag');
@@ -369,14 +381,72 @@ export default class CustomSortPlugin extends Plugin {
 						}
 					});
 				};
+				const unbookmarkAllMenuItem = (item: MenuItem) => {
+					item.setTitle('Custom sort: UNbookmark+all siblings from sorting.');
+					item.setIcon('hashtag');
+					item.onClick(() => {
+						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+						if (bookmarksPlugin) {
+							const orderedChildren: Array<TAbstractFile> = file.parent.children.map((entry: TFile | TFolder) => entry)
+							bookmarksPlugin.unbookmarkSiblings(orderedChildren)
+							bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
+						}
+					});
+				};
 
 				const itemAlreadyBookmarkedForSorting: boolean = bookmarksPlugin.isBookmarkedForSorting(file)
 				if (!itemAlreadyBookmarkedForSorting) {
 					menu.addItem(bookmarkThisMenuItem)
+				} else {
+					menu.addItem(unbookmarkThisMenuItem)
 				}
 				menu.addItem(bookmarkAllMenuItem)
+				menu.addItem(unbookmarkAllMenuItem)
 			})
 		)
+
+		if (requireApiVersion('1.4.11')) {
+			this.registerEvent(
+				// "files-menu" event was exposed in 1.4.11
+				// @ts-ignore
+				app.workspace.on("files-menu", (menu: Menu, files: TAbstractFile[], source: string, leaf?: WorkspaceLeaf) => {
+					if (!this.settings.bookmarksContextMenus) return;  // Don't show the context menus at all
+
+					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					if (!bookmarksPlugin) return; // Don't show context menu if bookmarks plugin not available and not enabled
+
+					const bookmarkSelectedMenuItem = (item: MenuItem) => {
+						item.setTitle('Custom sort: bookmark selected for sorting.');
+						item.setIcon('hashtag');
+						item.onClick(() => {
+							const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+							if (bookmarksPlugin) {
+								files.forEach((file) => {
+									bookmarksPlugin.bookmarkFolderItem(file)
+								})
+								bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
+							}
+						});
+					};
+					const unbookmarkSelectedMenuItem = (item: MenuItem) => {
+						item.setTitle('Custom sort: UNbookmark selected from sorting.');
+						item.setIcon('hashtag');
+						item.onClick(() => {
+							const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+							if (bookmarksPlugin) {
+								files.forEach((file) => {
+									bookmarksPlugin.unbookmarkFolderItem(file)
+								})
+								bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
+							}
+						});
+					};
+
+					menu.addItem(bookmarkSelectedMenuItem)
+					menu.addItem(unbookmarkSelectedMenuItem)
+				})
+			)
+		}
 
 		this.registerEvent(
 			app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
@@ -504,6 +574,7 @@ export default class CustomSortPlugin extends Plugin {
 		const has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
 
 		return sortFolderItemsForBookmarking(
+			folder,
 			folder.children,
 			sortSpec,
 			this.createProcessingContextForSorting(has),
@@ -669,7 +740,8 @@ class CustomSortSettingTab extends PluginSettingTab {
 				.setPlaceholder('e.g. Group for sorting')
 				.setValue(this.plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 				.onChange(async (value) => {
-					this.plugin.settings.bookmarksGroupToConsumeAsOrderingReference = value.trim() ? pathToFlatString(normalizePath(value)) : '';
+					value = groupNameForPath(value.trim()).trim()
+					this.plugin.settings.bookmarksGroupToConsumeAsOrderingReference = value ? pathToFlatString(normalizePath(value)) : '';
 					await this.plugin.saveSettings();
 				}));
 
