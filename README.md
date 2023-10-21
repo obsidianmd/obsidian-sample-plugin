@@ -1,6 +1,6 @@
 > This is a simple version of README which highlights the **basic scenario and most commonly used feature**
 >
-> The [long and much more detailed advanced-README.md is here](./advanced-README.md)
+> The [long and much more detailed advanced-README.md is here](./docs/advanced-README.md)
 
 ---
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
@@ -60,11 +60,11 @@ An illustrative image which shows the reverse alphabetical order applied to the 
 > - changing the sorting order via the standard Obsidian UI button won't affect your folder, unless...
 >   - ...unless you deactivate the custom sorting via clicking the ribbon button to make it (![Inactive](./docs/icons/icon-inactive.png))
 > - for clarity: the underlying file of the note `sortspec` is obviously `sortspec.md`
-> - in case of troubles refer to the [TL;DR section of advanced README.md](./advanced-README.md#tldr-usage)
+> - in case of troubles refer to the [TL;DR section of advanced README.md](./docs/advanced-README.md#tldr-usage)
 > - feel free to experiment! The plugin works in a non-destructive fashion, and it doesn't modify the content of your vault.
 >   It only changes the order in which the files and folders are displayed in File Explorer
 > - indentation matters in YAML -> the two leading spaces in `  order-desc: a-z` are intentional and required
-> - this common example only touches the surface of the rich capabilities of this custom sorting plugin. For more details go to [advanced version of README.md](./advanced-README.md)
+> - this common example only touches the surface of the rich capabilities of this custom sorting plugin. For more details go to [advanced version of README.md](./docs/advanced-README.md)
 
 ---
 ## Basic scenario 2: explicitly list folders and files in the order which you want
@@ -137,7 +137,7 @@ The list of basic automatic sorting orders includes:
 ## Manual sorting
 
 The **manual ordering of notes and folders** is also done via the sorting configuration.
-Refer to the [TL;DR section of advanced README.md](./advanced-README.md#tldr-usage) for examples and instructions
+Refer to the [TL;DR section of advanced README.md](./docs/advanced-README.md#tldr-usage) for examples and instructions
 
 ## Ribbon icon
 
@@ -157,7 +157,7 @@ On small-screen mobile devices (phones) the icon is static:
 
 - ![Static icon](./docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
 
-For more details on the icon states refer to [Ribbon icon section of the advanced-README.md](./advanced-README.md#ribbon-icon)
+For more details on the icon states refer to [Ribbon icon section of the advanced-README.md](./docs/advanced-README.md#ribbon-icon)
 
 ## Small screen mobile devices remarks
 
@@ -175,7 +175,7 @@ The plugin could and should be installed from the official Obsidian Community Pl
 or directly in the Obsidian app itself.
 Search the plugin by its name 'CUSTOM FILE EXPLORER SORTING'
 
-> For other installation methods refer to [Installing the plugin section of advanced-README.md](./advanced-README.md#installing-the-plugin)
+> For other installation methods refer to [Installing the plugin section of advanced-README.md](./docs/advanced-README.md#installing-the-plugin)
 
 ## Credits
 
