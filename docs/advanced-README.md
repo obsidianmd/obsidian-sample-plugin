@@ -1,6 +1,6 @@
 # Advanced version of README.md for advanced users
 
-The [simplified README.md is here](./README.md)
+The [simplified README.md is here](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/README.md)
 
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
 
@@ -65,19 +65,19 @@ can be the root folder. Ensure the exact file name is `sortspec.md`. That file c
 > > - indentation is correct (consult images below). In YAML the indentation matters.
 > > 
 > > In other words, ensure, that the final `sortspec.md` file in your vault (which is the `sortspec` Obsidian note) looks exactly like below:
-> > ![sortspec.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/img/sortspec-md-bright.jpg)
+> > ![sortspec.md](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs//img/sortspec-md-bright.jpg)
 > > 
 > > or if you are a fan of dark mode (line numbers shown for clarity only, they aren't part of the file content):
 > >
-> > ![sortspec.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/img/sortspec-md-dark.jpg)
+> > ![sortspec.md](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs//img/sortspec-md-dark.jpg)
 > 2. Enable the plugin in obsidian.
 >
-> 3. Click the ribbon button (![Inactive](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-inactive.png) or ![Mobile](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting
+> 3. Click the ribbon button (![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png) or ![Mobile](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting
 specification from `sortspec` note (the `sortspec.md` file which you downloaded a second ago). 
 >   - The observable effect should be reordering of items in root vault folder to reverse alphabetical with folders and files treated equally.
 And on computers and tablets be the change of appearance of the ribbon button to
-![Active](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-active.png) (on desktop and tablet only) and   
->   - The notification balloon should confirm success: ![Success](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/parsing-succeeded.png)
+![Active](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-active.png) (on desktop and tablet only) and   
+>   - The notification balloon should confirm success: ![Success](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/parsing-succeeded.png)
 > 4. Click the ribbon button again to suspend the plugin. The ribbon button should toggle its appearance again
 and the order of files and folders in the root folder of your vault should get back to the order selected in
 Obsidian UI
@@ -87,8 +87,8 @@ change. This will suspend and re-enable the custom sorting, plus parse and apply
 > - If you don't have any
 subfolder in the root folder, create one to observe the plugin at work.
 >
-> NOTE: the appearances of ribbon button also includes ![Not applied](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-not-applied.png)
-and ![Error](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-error.png). For the meaning of them please refer to [ribbon icon](#ribbon_icon) section below
+> NOTE: the appearances of ribbon button also includes ![Not applied](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-not-applied.png)
+and ![Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-error.png). For the meaning of them please refer to [ribbon icon](#ribbon_icon) section below
 
 Below go examples of (some of) the key features, ready to copy & paste to your vault.
 
@@ -572,31 +572,31 @@ Click the ribbon icon to toggle the plugin between enabled and suspended states.
 
 States of the ribbon icon on large-screen devices (desktops, laptops and tablets like iPad):
 
-- ![Inactive](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
+- ![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
 	- Click to enable and apply custom sorting.
 	- Note: parsing of the custom sorting specification happens after clicking the icon. If the specification contains
 	  errors, they will show up in the notice baloon and also in developer console.
-- ![Active](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-active.png) Plugin active, custom sorting applied.
+- ![Active](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-active.png) Plugin active, custom sorting applied.
 	- Click to suspend and return to the standard Obsidian sorting in File Explorer.
-- ![Error](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-error.png) Syntax error in custom sorting configuration.
+- ![Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-error.png) Syntax error in custom sorting configuration.
 	- Fix the problem in specification and click the ribbon icon to re-enable custom sorting.
 	- If syntax error is not fixed, the notice baloon with show error details. Syntax error details are also visible in
 	  the developer console
-- ![General Error](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-general-error.png) Plugin suspended. General error.
+- ![General Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-general-error.png) Plugin suspended. General error.
     - File Explorer not available or other type of general error
     - File Explorer is a core Obsidian plugin (named __Files__) and thus can be disabled in Obsidian settings
     - Some community plugins (like __MAKE.md__) also disable the File Explorer by default
     - See obsidinan developer console for detailed error message
     - To fix the problem, enable the File Explorer (in Obsidian or in the community plugin responsible for hididing it)
-- ![Sorting not applied](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-not-applied.png) Plugin enabled but the custom sorting was not applied.
+- ![Sorting not applied](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-not-applied.png) Plugin enabled but the custom sorting was not applied.
 	- This can happen when reinstalling the plugin and in similar cases
 	- Click the ribbon icon twice to re-enable the custom sorting.
-- ![Static icon](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-mobile-initial.png) Only on large-screen mobile devices like iPad.
+- ![Static icon](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png) Only on large-screen mobile devices like iPad.
     - Plugin enabled. but the custom sorting was not applied.
 
 On small-screen mobile devices (phones) the icon is static:
 
-- ![Static icon](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
+- ![Static icon](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
     - Click to enable and apply custom sorting or to disable custom sorting
     - To get notified about custom sort plugin state, enable the mobile-specific notifications in plugin settings
 
