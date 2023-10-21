@@ -1,6 +1,6 @@
 > Document is partial, creation in progress
-> Please refer to [README.md](../README.md) for usage examples
-> Check [manual.md](./manual.md), maybe that file has already some content?
+> Please refer to [README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/README.md) for usage examples
+> Check [manual.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/doc/manual.md), maybe that file has already some content?
 
 # Table of contents
 
