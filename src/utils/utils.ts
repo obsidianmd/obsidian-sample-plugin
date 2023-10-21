@@ -9,10 +9,10 @@ export function last<T>(o: Array<T>): T | undefined {
 
 export function lastPathComponent(path: string): string {
 	const lastPathSeparatorIdx = (path ?? '').lastIndexOf('/')
-	return lastPathSeparatorIdx >= 0 ? path.substring(lastPathSeparatorIdx + 1).trim() : path.trim()
+	return lastPathSeparatorIdx >= 0 ? path.substring(lastPathSeparatorIdx + 1) : path
 }
 
 export function extractParentFolderPath(path: string): string {
 	const lastPathSeparatorIdx = (path ?? '').lastIndexOf('/')
-	return lastPathSeparatorIdx > 0 ? path.substring(0, lastPathSeparatorIdx).trim() : ''
+	return lastPathSeparatorIdx > 0 ? path.substring(0, lastPathSeparatorIdx) : ''
 }

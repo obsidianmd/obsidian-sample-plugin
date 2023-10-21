@@ -1,5 +1,3 @@
-import {MetadataCache, Plugin} from "obsidian";
-
 export enum CustomSortGroupType {
 	Outsiders, // Not belonging to any of other groups
 	MatchAll, // like a wildard *, used in connection with foldersOnly or filesOnly. The difference between the MatchAll and Outsiders is
@@ -9,6 +7,7 @@ export enum CustomSortGroupType {
 	ExactHeadAndTail, // Like W...n or Un...ed, which is shorter variant of typing the entire title
 	HasMetadataField,  // Notes (or folder's notes) containing a specific metadata field
 	StarredOnly,
+	BookmarkedOnly,
 	HasIcon
 }
 
@@ -29,7 +28,9 @@ export enum CustomSortOrder {
 	byMetadataFieldTrueAlphabetical,
 	byMetadataFieldAlphabeticalReverse,
 	byMetadataFieldTrueAlphabeticalReverse,
-	standardObsidian,  // Let the folder sorting be in hands of Obsidian, whatever user selected in the UI
+	standardObsidian,  // whatever user selected in the UI
+	byBookmarkOrder,
+	byBookmarkOrderReverse,
 	default = alphabetical
 }
 

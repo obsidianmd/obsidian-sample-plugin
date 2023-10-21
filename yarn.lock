@@ -763,6 +763,13 @@
   dependencies:
     "@types/tern" "*"
 
+"@types/codemirror@5.60.8":
+  version "5.60.8"
+  resolved "https://registry.yarnpkg.com/@types/codemirror/-/codemirror-5.60.8.tgz#b647d04b470e8e1836dd84b2879988fc55c9de68"
+  integrity sha512-VjFgDF/eB+Aklcy15TtOTLQeMjTo07k7KAjql8OK5Dirr7a6sJY4T1uVBDuTVG9VEmn1uUsohOpYnVfgC6/jyw==
+  dependencies:
+    "@types/tern" "*"
+
 "@types/estree@*":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.0.tgz#5fb2e536c1ae9bf35366eed879e827fa59ca41c2"
@@ -2395,6 +2402,14 @@ npm-run-path@^4.0.1:
   integrity sha512-S48WzZW777zhNIrn7gxOlISNAqi9ZC/uQFnRdbeIHhZhCA6UqpkOT8T1G7BvfdgP4Er8gF4sUbaS0i7QvIfCWw==
   dependencies:
     path-key "^3.0.0"
+
+"obsidian-1.4.11@npm:obsidian@1.4.11":
+  version "1.4.11"
+  resolved "https://registry.yarnpkg.com/obsidian/-/obsidian-1.4.11.tgz#5cba594c83a74ebad58b630c610265018abdadaa"
+  integrity sha512-BCVYTvaXxElJMl6MMbDdY/CGK+aq18SdtDY/7vH8v6BxCBQ6KF4kKxL0vG9UZ0o5qh139KpUoJHNm+6O5dllKA==
+  dependencies:
+    "@types/codemirror" "5.60.8"
+    moment "2.29.4"
 
 obsidian@^0.15.4:
   version "0.15.9"

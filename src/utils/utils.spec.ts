@@ -1,4 +1,7 @@
-import {lastPathComponent, extractParentFolderPath} from "./utils";
+import {
+    lastPathComponent,
+    extractParentFolderPath
+} from "./utils";
 
 describe('lastPathComponent and extractParentFolderPath', () => {
     it.each([
@@ -6,14 +9,14 @@ describe('lastPathComponent and extractParentFolderPath', () => {
         ['a/subfolder', 'a', 'subfolder'],
         ['parent/child', 'parent', 'child'],
         ['','',''],
-        ['   ','',''],
+        ['   ','','   '],
         ['/strange', '', 'strange'],
         ['a/b/c/', 'a/b/c', ''],
         ['d d d/e e e/f f f/ggg ggg', 'd d d/e e e/f f f', 'ggg ggg'],
         ['/','',''],
-        ['   /   ','',''],
-        ['   /','',''],
-        ['/   ','','']
+        ['   /   ','   ','   '],
+        ['   /','   ',''],
+        ['/   ','','   ']
         ])('should from %s extract %s and %s', (path: string, parentPath: string, lastComponent: string) => {
             const extractedParentPath: string = extractParentFolderPath(path)
             const extractedLastComponent: string = lastPathComponent(path)

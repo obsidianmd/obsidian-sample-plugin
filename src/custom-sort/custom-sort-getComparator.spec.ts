@@ -1,8 +1,6 @@
 import {
 	FolderItemForSorting,
 	getComparator,
-	getSorterFnFor,
-	getMdata,
 	OS_byCreatedTime,
 	OS_byModifiedTime,
 	OS_byModifiedTimeReverse, SortingLevelId

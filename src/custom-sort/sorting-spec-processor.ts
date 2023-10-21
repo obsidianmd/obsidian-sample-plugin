@@ -120,6 +120,7 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'advanced created': {asc: CustomSortOrder.byCreatedTimeAdvanced, desc: CustomSortOrder.byCreatedTimeReverseAdvanced},
 	'standard': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
 	'ui selected': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
+    'by-bookmarks-order': {asc: CustomSortOrder.byBookmarkOrder, desc: CustomSortOrder.byBookmarkOrderReverse},
 }
 
 const OrderByMetadataLexeme: string = 'by-metadata:'
@@ -240,6 +241,8 @@ const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
 
 const MetadataFieldIndicatorLexeme: string = 'with-metadata:'
+
+const BookmarkedItemIndicatorLexeme: string = 'bookmarked:'
 
 const StarredItemsIndicatorLexeme: string = 'starred:'
 
@@ -1596,6 +1599,13 @@ export class SortingSpecProcessor {
 					return {
 						type: CustomSortGroupType.HasMetadataField,
 						withMetadataFieldName: metadataFieldName,
+						filesOnly: spec.filesOnly,
+						foldersOnly: spec.foldersOnly,
+						matchFilenameWithExt: spec.matchFilenameWithExt
+					}
+				} else if (theOnly.startsWith(BookmarkedItemIndicatorLexeme)) {
+					return {
+						type: CustomSortGroupType.BookmarkedOnly,
 						filesOnly: spec.filesOnly,
 						foldersOnly: spec.foldersOnly,
 						matchFilenameWithExt: spec.matchFilenameWithExt
