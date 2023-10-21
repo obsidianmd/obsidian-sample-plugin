@@ -1,6 +1,6 @@
 > Document is partial, creation in progress
-> Please refer to [README.md](../README.md) and [advanced-README.md](../advanced-README.md) for more usage examples
-> Check also [syntax-reference.md](./syntax-reference.md)
+> Please refer to [README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/README.md) and [advanced-README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md) for more usage examples
+> Check also [syntax-reference.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/syntax-reference.md)
 
 ---
 Some sections added ad-hoc, to be integrated later
@@ -11,7 +11,7 @@ Some sections added ad-hoc, to be integrated later
 
 Do you want to have a nice-looking horizontal separators in File Explorer like this?
 
-![separators](./img/separators-by-replete.png)
+![separators](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/img/separators-by-replete.png)
 
 If so, head on to [Instruction and more context](https://github.com/SebastianMC/obsidian-custom-sort/discussions/57#discussioncomment-4983763)
 by [@replete](https://github.com/replete)

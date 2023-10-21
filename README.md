@@ -1,6 +1,6 @@
 > This is a simple version of README which highlights the **basic scenario and most commonly used feature**
 >
-> The [long and much more detailed advanced-README.md is here](./advanced-README.md)
+> The [long and much more detailed advanced-README.md is here](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md)
 
 ---
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
@@ -39,8 +39,8 @@ sorting-spec: |
 ---
 ```
 
-Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png) or ![Static icon](./docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting specification and apply it.
-The sorting should be applied to the folder. On desktops and tablets the ribbon icon should turn (![Active](./docs/icons/icon-active.png))
+Click the ribbon button (![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png) or ![Static icon](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting specification and apply it.
+The sorting should be applied to the folder. On desktops and tablets the ribbon icon should turn (![Active](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-active.png))
 
 !!! **Done!** !!!
 
@@ -48,30 +48,30 @@ You should see the files and sub-folders in your folder sorted in reverse alphab
 
 An illustrative image which shows the reverse alphabetical order applied to the root folder of some vault:
 
-![Basic example](./docs/svg/simplest-example-3.svg)
+![Basic example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/simplest-example-3.svg)
 
 ---
 ### Remarks
 
 > Remarks:
-> - your new `sortspec` note should [look like this](./docs/examples/basic/sortspec.md?plain=1) except for the syntax highlighting, which could differ
+> - your new `sortspec` note should [look like this](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/examples/basic/sortspec.md?plain=1) except for the syntax highlighting, which could differ
 > - you will notice that the folders and files are treated equally and thus intermixed
 >   - the behavior depends on what files and subfolders you have in your folder
 > - changing the sorting order via the standard Obsidian UI button won't affect your folder, unless...
->   - ...unless you deactivate the custom sorting via clicking the ribbon button to make it (![Inactive](./docs/icons/icon-inactive.png))
+>   - ...unless you deactivate the custom sorting via clicking the ribbon button to make it ![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png)
 > - for clarity: the underlying file of the note `sortspec` is obviously `sortspec.md`
-> - in case of troubles refer to the [TL;DR section of advanced README.md](./advanced-README.md#tldr-usage)
+> - in case of troubles refer to the [TL;DR section of advanced README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md#tldr-usage)
 > - feel free to experiment! The plugin works in a non-destructive fashion, and it doesn't modify the content of your vault.
 >   It only changes the order in which the files and folders are displayed in File Explorer
 > - indentation matters in YAML -> the two leading spaces in `  order-desc: a-z` are intentional and required
-> - this common example only touches the surface of the rich capabilities of this custom sorting plugin. For more details go to [advanced version of README.md](./advanced-README.md)
+> - this common example only touches the surface of the rich capabilities of this custom sorting plugin. For more details go to [advanced version of README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md)
 
 ---
 ## Basic scenario 2: explicitly list folders and files in the order which you want
 
 This comes from the suggestion by [TheOneLight](https://github.com/TheOneLight) in [this discussion](https://github.com/SebastianMC/obsidian-custom-sort/discussions/95#discussioncomment-7048584)
 
-Take the instructions from the **[Basic scenario 1](https://github.com/SebastianMC/obsidian-custom-sort#basic-scenario-set-the-custom-sorting-order-for-a-specific-folder)** above and replace the YAML content with:
+Take the instructions from the **[Basic scenario 1](#basic-scenario-set-the-custom-sorting-order-for-a-specific-folder)** above and replace the YAML content with:
 
 ```yaml
 ---
@@ -137,7 +137,7 @@ The list of basic automatic sorting orders includes:
 ## Manual sorting
 
 The **manual ordering of notes and folders** is also done via the sorting configuration.
-Refer to the [TL;DR section of advanced README.md](./advanced-README.md#tldr-usage) for examples and instructions
+Refer to the [TL;DR section of advanced README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md#tldr-usage) for examples and instructions
 
 ## Ribbon icon
 
@@ -145,26 +145,26 @@ Click the ribbon icon to toggle the plugin between enabled and suspended states.
 
 States of the ribbon icon on large-screen devices (desktops, laptops and tablets like iPad):
 
-- ![Inactive](./docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
-- ![Active](./docs/icons/icon-active.png) Plugin active, custom sorting applied.
-- ![Error](./docs/icons/icon-error.png) Syntax error in custom sorting configuration.
-- ![General Error](./docs/icons/icon-general-error.png) Plugin suspended. General error.
-- ![Sorting not applied](./docs/icons/icon-not-applied.png) Plugin enabled, but the custom sorting was not applied.
-- ![Static icon](./docs/icons/icon-mobile-initial.png) (Only on large-screen mobile devices like iPad). 
+- ![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
+- ![Active](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-active.png) Plugin active, custom sorting applied.
+- ![Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-error.png) Syntax error in custom sorting configuration.
+- ![General Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-general-error.png) Plugin suspended. General error.
+- ![Sorting not applied](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-not-applied.png) Plugin enabled, but the custom sorting was not applied.
+- ![Static icon](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png) (Only on large-screen mobile devices like iPad). 
   Plugin enabled. but the custom sorting was not applied.
 
 On small-screen mobile devices (phones) the icon is static:
 
-- ![Static icon](./docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
+- ![Static icon](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
 
-For more details on the icon states refer to [Ribbon icon section of the advanced-README.md](./advanced-README.md#ribbon-icon)
+For more details on the icon states refer to [Ribbon icon section of the advanced-README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md#ribbon-icon)
 
 ## Small screen mobile devices remarks
 
 - you might need to activate the custom sorting on your mobile separately, even if on a shared vault the custom sorting was activated on desktop
 - the Obsidian command palette being easily available (swipe down gesture on small-screen mobiles) allows for quick steering of the plugin via commands: sort-on and sort-off.
 This could be easier than navigating to and expanding the ribbon 
-- the ribbon icon is static (![Static icon](./docs/icons/icon-mobile-initial.png)) and doesn't reflect the state of custom sorting.
+- the ribbon icon is static (![Static icon](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png)) and doesn't reflect the state of custom sorting.
 You can enable the _plugin state changes_ notifications in settings, for the mobile devices only
 
 ## Installing the plugin
@@ -175,7 +175,7 @@ The plugin could and should be installed from the official Obsidian Community Pl
 or directly in the Obsidian app itself.
 Search the plugin by its name 'CUSTOM FILE EXPLORER SORTING'
 
-> For other installation methods refer to [Installing the plugin section of advanced-README.md](./advanced-README.md#installing-the-plugin)
+> For other installation methods refer to [Installing the plugin section of advanced-README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md#installing-the-plugin)
 
 ## Credits
 
@@ -186,7 +186,7 @@ in [obsidian-bartender](https://github.com/nothingislost/obsidian-bartender)
 
 Do you want to have a nice-looking horizontal separators in File Explorer like this?
 
-![separators](./docs/img/separators-by-replete.png)
+![separators](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/img/separators-by-replete.png)
 
 If so, head on to [Instruction and more context](https://github.com/SebastianMC/obsidian-custom-sort/discussions/57#discussioncomment-4983763)
 by [@replete](https://github.com/replete)\
