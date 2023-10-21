@@ -52,11 +52,11 @@ Take full control of the order of your notes and folders:
 
 ## TL;DR Usage
 
-For full version of the manual go to [manual](./docs/manual.md) and [syntax-reference](./docs/syntax-reference.md)
+For full version of the manual go to [manual](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/manual.md) and [syntax-reference](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/syntax-reference.md)
 
 > **Quickstart**
 > 
-> 1. Download the **RAW CONTENT** of [sortspec.md](./docs/examples/quickstart/sortspec.md?plain=1) file and put it in any folder of your vault,
+> 1. Download the **RAW CONTENT** of [sortspec.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/examples/quickstart/sortspec.md?plain=1) file and put it in any folder of your vault,
 can be the root folder. Ensure the exact file name is `sortspec.md`. That file contains a basic custom sorting specification under the `sorting-spec:` name in the YAML frontmatter.
 > > IMPORTANT: follow the above link to 'sortspec.md' and download (or copy & paste) the __RAW__ content of that file, not the HTML displayed by github.
 > > Afterwards double check that the content of `sortspec.md` file is not an HTML and:
@@ -65,19 +65,19 @@ can be the root folder. Ensure the exact file name is `sortspec.md`. That file c
 > > - indentation is correct (consult images below). In YAML the indentation matters.
 > > 
 > > In other words, ensure, that the final `sortspec.md` file in your vault (which is the `sortspec` Obsidian note) looks exactly like below:
-> > ![sortspec.md](./docs/img/sortspec-md-bright.jpg)
+> > ![sortspec.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/img/sortspec-md-bright.jpg)
 > > 
 > > or if you are a fan of dark mode (line numbers shown for clarity only, they aren't part of the file content):
 > >
-> > ![sortspec.md](./docs/img/sortspec-md-dark.jpg)
+> > ![sortspec.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/img/sortspec-md-dark.jpg)
 > 2. Enable the plugin in obsidian.
 >
-> 3. Click the ribbon button (![Inactive](./docs/icons/icon-inactive.png) or ![Mobile](./docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting
+> 3. Click the ribbon button (![Inactive](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-inactive.png) or ![Mobile](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-mobile-initial.png) on phone) to tell the plugin to read the sorting
 specification from `sortspec` note (the `sortspec.md` file which you downloaded a second ago). 
 >   - The observable effect should be reordering of items in root vault folder to reverse alphabetical with folders and files treated equally.
 And on computers and tablets be the change of appearance of the ribbon button to
-![Active](./docs/icons/icon-active.png) (on desktop and tablet only) and   
->   - The notification balloon should confirm success: ![Success](./docs/icons/parsing-succeeded.png)
+![Active](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-active.png) (on desktop and tablet only) and   
+>   - The notification balloon should confirm success: ![Success](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/parsing-succeeded.png)
 > 4. Click the ribbon button again to suspend the plugin. The ribbon button should toggle its appearance again
 and the order of files and folders in the root folder of your vault should get back to the order selected in
 Obsidian UI
@@ -87,8 +87,8 @@ change. This will suspend and re-enable the custom sorting, plus parse and apply
 > - If you don't have any
 subfolder in the root folder, create one to observe the plugin at work.
 >
-> NOTE: the appearances of ribbon button also includes ![Not applied](./docs/icons/icon-not-applied.png)
-and ![Error](./docs/icons/icon-error.png). For the meaning of them please refer to [ribbon icon](#ribbon_icon) section below
+> NOTE: the appearances of ribbon button also includes ![Not applied](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-not-applied.png)
+and ![Error](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-error.png). For the meaning of them please refer to [ribbon icon](#ribbon_icon) section below
 
 Below go examples of (some of) the key features, ready to copy & paste to your vault.
 
@@ -123,11 +123,11 @@ sorting-spec: |
     < a-z
 ---
 ```
-(View or download the raw content of [sortspec.md](./docs/examples/1/sortspec.md?plain=1) file of this example)
+(View or download the raw content of [sortspec.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/examples/1/sortspec.md?plain=1) file of this example)
 
 which can result in:
 
-![Simplest example](./docs/svg/simplest-example.svg)
+![Simplest example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/simplest-example.svg)
 
 ### Simple case 2: impose manual order of some items in root folder
 
@@ -149,7 +149,7 @@ sorting-spec: |
 
 produces:
 
-![Simplest example](./docs/svg/simplest-example-2.svg)
+![Simplest example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/simplest-example-2.svg)
 
 ### Example 3: In root folder, let files go first and folders get pushed to the bottom
 
@@ -177,7 +177,7 @@ sorting-spec: |
 
 will order items as:
 
-![Files go first example](./docs/svg/files-go-first.svg)
+![Files go first example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/files-go-first.svg)
 
 ### Example 4: In root folder, pin a focus note, then Inbox folder, and push archive to the bottom
 
@@ -205,7 +205,7 @@ sorting-spec: |
 
 and the result will be:
 
-![Result of the example](./docs/svg/pin-focus-note.svg)
+![Result of the example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/pin-focus-note.svg)
 
 > Remarks for the `target-folder:`
 >
@@ -233,11 +233,11 @@ sorting-spec: |
 ---
 ```
 
-(View or download the raw content of [sortspec.md](./docs/examples/5/sortspec.md?plain=1) file of this example)
+(View or download the raw content of [sortspec.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/examples/5/sortspec.md?plain=1) file of this example)
 
 which will have the effect of:
 
-![Result of the example](./docs/svg/p_a_r_a.svg)
+![Result of the example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/p_a_r_a.svg)
 
 ### Example 6: P.A.R.A. example with smart syntax
 
@@ -257,7 +257,7 @@ sorting-spec: |
 
 It will give exactly the same order as in previous example:
 
-![Result of the example](./docs/svg/p_a_r_a.svg)
+![Result of the example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/p_a_r_a.svg)
 
 ```
 REMARK: the wildcard expression '...' can be used only once per line
@@ -303,7 +303,7 @@ sorting-spec: |
 
 will have the effect of:
 
-![Result of the example](./docs/svg/multi-folder.svg)
+![Result of the example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/multi-folder.svg)
 
 ### Example 9: Sort by numerical suffix
 
@@ -330,7 +330,7 @@ alphabetical ascending.
 
 The effect is:
 
-![Order by numerical suffix](./docs/svg/by-suffix.svg)
+![Order by numerical suffix](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/by-suffix.svg)
 
 ### Example 10: Sample book structure with Roman numbered chapters
 
@@ -352,7 +352,7 @@ sorting-spec: |
 
 it gives:
 
-![Book - Roman chapters](./docs/svg/roman-chapters.svg)
+![Book - Roman chapters](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/roman-chapters.svg)
 
 ### Example 11: Sample book structure with compound Roman number suffixes
 
@@ -372,7 +372,7 @@ sorting-spec: |
 
 the result is:
 
-![Book - Roman compound suffixes](./docs/svg/roman-suffix.svg)
+![Book - Roman compound suffixes](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/roman-suffix.svg)
 
 ### Example 12: Apply same sorting to all folders in the vault
 
@@ -572,31 +572,31 @@ Click the ribbon icon to toggle the plugin between enabled and suspended states.
 
 States of the ribbon icon on large-screen devices (desktops, laptops and tablets like iPad):
 
-- ![Inactive](./docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
+- ![Inactive](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
 	- Click to enable and apply custom sorting.
 	- Note: parsing of the custom sorting specification happens after clicking the icon. If the specification contains
 	  errors, they will show up in the notice baloon and also in developer console.
-- ![Active](./docs/icons/icon-active.png) Plugin active, custom sorting applied.
+- ![Active](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-active.png) Plugin active, custom sorting applied.
 	- Click to suspend and return to the standard Obsidian sorting in File Explorer.
-- ![Error](./docs/icons/icon-error.png) Syntax error in custom sorting configuration.
+- ![Error](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-error.png) Syntax error in custom sorting configuration.
 	- Fix the problem in specification and click the ribbon icon to re-enable custom sorting.
 	- If syntax error is not fixed, the notice baloon with show error details. Syntax error details are also visible in
 	  the developer console
-- ![General Error](./docs/icons/icon-general-error.png) Plugin suspended. General error.
+- ![General Error](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-general-error.png) Plugin suspended. General error.
     - File Explorer not available or other type of general error
     - File Explorer is a core Obsidian plugin (named __Files__) and thus can be disabled in Obsidian settings
     - Some community plugins (like __MAKE.md__) also disable the File Explorer by default
     - See obsidinan developer console for detailed error message
     - To fix the problem, enable the File Explorer (in Obsidian or in the community plugin responsible for hididing it)
-- ![Sorting not applied](./docs/icons/icon-not-applied.png) Plugin enabled but the custom sorting was not applied.
+- ![Sorting not applied](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-not-applied.png) Plugin enabled but the custom sorting was not applied.
 	- This can happen when reinstalling the plugin and in similar cases
 	- Click the ribbon icon twice to re-enable the custom sorting.
-- ![Static icon](./docs/icons/icon-mobile-initial.png) Only on large-screen mobile devices like iPad.
+- ![Static icon](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-mobile-initial.png) Only on large-screen mobile devices like iPad.
     - Plugin enabled. but the custom sorting was not applied.
 
 On small-screen mobile devices (phones) the icon is static:
 
-- ![Static icon](./docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
+- ![Static icon](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/icons/icon-mobile-initial.png) The icon acts as a button to toggle between enabled and disabled. Its appearance doesn't change
     - Click to enable and apply custom sorting or to disable custom sorting
     - To get notified about custom sort plugin state, enable the mobile-specific notifications in plugin settings
 
