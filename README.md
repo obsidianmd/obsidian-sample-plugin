@@ -1,6 +1,6 @@
 > This is a simple version of README which highlights the **basic scenario and most commonly used feature**
 >
-> The [long and much more detailed advanced-README.md is here](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.m)
+> The [long and much more detailed advanced-README.md is here](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md)
 
 ---
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
