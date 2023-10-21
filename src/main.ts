@@ -746,7 +746,7 @@ class CustomSortSettingTab extends PluginSettingTab {
 				}));
 
 		const bookmarksIntegrationContextMenusDescription: DocumentFragment = sanitizeHTMLToDom(
-			'Enable <i>Custom-sort: bookmark for sorting</i> and <i>Custom-sort: bookmark+siblings for sorting.</i> entries '
+			'Enable <i>Custom-sort: bookmark for sorting</i> and <i>Custom-sort: bookmark+siblings for sorting</i> (and related) entries '
 			+ 'in context menu in File Explorer'
 		)
 		new Setting(containerEl)
