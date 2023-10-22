@@ -56,4 +56,8 @@ declare module 'obsidian' {
 
 		sortOrder: string
 	}
+
+	interface MenuItem {
+		setSubmenu: () => Menu;
+	}
 }
