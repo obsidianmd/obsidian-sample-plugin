@@ -450,27 +450,35 @@ const findGroupForItemPathInBookmarks = (itemPath: string, createIfMissing: bool
     }
 
     let group: BookmarkedGroup|undefined = undefined
+    let failed: boolean = false
+    let firstItem: boolean = true
 
-    parentPathComponents.forEach((pathSegment, index) => {
+    for (let pathSegment of parentPathComponents) {
         group = items.find((it) => it.type === 'group' && groupNameForPath(it.title||'') === pathSegment) as BookmarkedGroup
         if (!group) {
             if (createIfMissing) {
-                const theSortingBookmarksContainerGroup = (bookmarksGroup && index === 0)
+                const theSortingBookmarksContainerGroup = !!bookmarksGroup && firstItem
                 const groupName: string = theSortingBookmarksContainerGroup ? pathSegment : groupNameTransparentForSorting(pathSegment)
                 group = createBookmarkGroupEntry(groupName)
                 items.push(group)
             } else {
-                return undefined
+                failed = true
+                break
             }
+            firstItem = false
         }
 
         items = group.items
-    })
+    }
 
-    return {
-        items: items,
-        group: group,
-        pathOfGroup: parentPath
+    if (failed) {
+        return undefined
+    } else {
+        return {
+            items: items,
+            group: group,
+            pathOfGroup: parentPath
+        }
     }
 }
 

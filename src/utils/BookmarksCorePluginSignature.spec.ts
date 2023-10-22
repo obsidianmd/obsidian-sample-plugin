@@ -1063,3 +1063,106 @@ describe('cleanupBookmarkTreeFromTransparentEmptyGroups', () => {
         }))))
     })
 })
+
+describe('findGroupForItemPathInBookmarks', () =>{
+    it('should return undefined if the matching container does not exist - case: no sortspec container', () => {
+        const items = consumeBkMock({})
+        const plugin = getBookmarksMock(items)
+        const parentFolder: BookmarkedParentFolder|undefined = _unitTests.findGroupForItemPathInBookmarks(
+            'inbox',
+            false,
+            plugin,
+            'sortspec'
+        )
+        expect(parentFolder).toBeUndefined()
+    })
+    it('should return undefined if the matching container does not exist - case: no 2nd level container', () => {
+        const items = consumeBkMock({
+            "sortspec": {
+                "\\\\group l1.1": {
+                    "\\\\group l2.1": {
+                        "\\\\group l3.1": {
+                            "\\\\deepest 1": {}
+                        }
+                    },
+                    "\\\\group l2.2": {
+                        "\\\\deepest 2": {}
+                    }
+                },
+                "\\\\group l1.2": {
+                    "\\\\group l2.1": {
+                        "\\\\deepest 3": {}
+                    }
+                }
+            }
+        })
+        const plugin = getBookmarksMock(items)
+        const parentFolder: BookmarkedParentFolder|undefined = _unitTests.findGroupForItemPathInBookmarks(
+            'group l1.1/group l2.2/group l3.1/deepest 1',
+            false,
+            plugin,
+            'sortspec'
+        )
+        expect(parentFolder).toBeUndefined()
+    })
+    it('should return the sortspec container for root level items', () => {
+        const items = consumeBkMock({
+            "sortspec": {}
+        })
+        const plugin = getBookmarksMock(items)
+        const parentFolder: BookmarkedParentFolder|undefined = _unitTests.findGroupForItemPathInBookmarks(
+            'inbox',
+            false,
+            plugin,
+            'sortspec'
+        )
+        const expectedGroup = consumeBkMock({
+            "sortspec": {}
+        })
+        const expected = {
+            group: expectedGroup[0],
+            items: expectedGroup[0].items,
+            pathOfGroup: ''
+        }
+        expect(JSON.parse(JSON.stringify(parentFolder))).toEqual(JSON.parse(JSON.stringify(expected)))
+    })
+    it('should return the correct 2nd level container', () => {
+        const items = consumeBkMock({
+            "sortspec": {
+                "\\\\group l1.1": {
+                    "\\\\group l2.1": {
+                        "\\\\group l3.1": {
+                            "\\\\deepest 1": {}
+                        }
+                    },
+                    "\\\\group l2.2": {
+                        "\\\\deepest 2": {}
+                    }
+                },
+                "\\\\group l1.2": {
+                    "\\\\group l2.1": {
+                        "\\\\deepest 3": {}
+                    }
+                }
+            }
+        })
+        const plugin = getBookmarksMock(items)
+        const parentFolder: BookmarkedParentFolder|undefined = _unitTests.findGroupForItemPathInBookmarks(
+            'group l1.2/group l2.1/deepest 3',
+            false,
+            plugin,
+            'sortspec'
+        )
+        const expectedGroup = consumeBkMock({
+            "\\\\group l2.1": {
+                "\\\\deepest 3": {}
+            }
+        })
+        const expected = {
+            group: expectedGroup[0],
+            items: expectedGroup[0].items,
+            pathOfGroup: 'group l1.2/group l2.1'
+        }
+        expect(JSON.parse(JSON.stringify(parentFolder))).toEqual(JSON.parse(JSON.stringify(expected)))
+    })
+})
