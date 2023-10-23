@@ -1062,6 +1062,55 @@ describe('cleanupBookmarkTreeFromTransparentEmptyGroups', () => {
             "sortspec": {}
         }))))
     })
+    it('should NOT delete not-transparent group, even after multiple invocations', () => {
+        const items = consumeBkMock({
+            "sortspec": {
+                "Folder to go first": {
+                    //"March": {}  <-- in test scenario in UI, this group was removed from File Explorer
+                },
+                "Folder to go second": {}
+            }
+        })
+        const plugin = getBookmarksMock(items)
+        const parentFolder1: BookmarkedParentFolder|undefined = _unitTests.findGroupForItemPathInBookmarks(
+            'Folder to go first/March',  // <-- the 'March' subgroup was removed
+            false,
+            plugin,
+            'sortspec'
+        )
+        _unitTests.cleanupBookmarkTreeFromTransparentEmptyGroups(
+            parentFolder1,
+            plugin,
+            'sortspec'
+        )
+        expect(JSON.parse(JSON.stringify(items))).toEqual(JSON.parse(JSON.stringify(consumeBkMock({
+            "sortspec": {
+                "Folder to go first": {
+                    //"March": {}
+                },
+                "Folder to go second": {}
+            }
+        }))))
+        const parentFolder2: BookmarkedParentFolder|undefined = _unitTests.findGroupForItemPathInBookmarks(
+            '',
+            false,
+            plugin,
+            'sortspec'
+        )
+        _unitTests.cleanupBookmarkTreeFromTransparentEmptyGroups(
+            parentFolder2,
+            plugin,
+            'sortspec'
+        )
+        expect(JSON.parse(JSON.stringify(items))).toEqual(JSON.parse(JSON.stringify(consumeBkMock({
+            "sortspec": {
+                "Folder to go first": {
+                    //"March": {}
+                },
+                "Folder to go second": {}
+            }
+        }))))
+    })
 })
 
 describe('findGroupForItemPathInBookmarks', () =>{

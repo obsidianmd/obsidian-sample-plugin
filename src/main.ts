@@ -316,6 +316,8 @@ export default class CustomSortPlugin extends Plugin {
 
 	registerEventHandlers() {
 		const plugin: CustomSortPlugin = this
+		const m: boolean = Platform.isMobile
+
 		this.registerEvent(
 			// Keep in mind: this event is triggered once after app starts and then after each modification of _any_ metadata
 			app.metadataCache.on("resolved", () => {
@@ -345,14 +347,14 @@ export default class CustomSortPlugin extends Plugin {
 		);
 
 		const applyCustomSortMenuItem = (item: MenuItem) => {
-			item.setTitle('Apply custom sorting');
+			item.setTitle(m ? 'Custom sort: apply custom sorting' : 'Apply custom sorting');
 			item.onClick(() => {
 				plugin.switchPluginStateTo(true, true)
 			})
 		};
 
 		const suspendCustomSortMenuItem = (item: MenuItem) => {
-			item.setTitle('Suspend custom sorting');
+			item.setTitle(m ? 'Custom sort: suspend custom sorting' : 'Suspend custom sorting');
 			item.onClick(() => {
 				plugin.switchPluginStateTo(false, true)
 			})
@@ -360,7 +362,7 @@ export default class CustomSortPlugin extends Plugin {
 
 		const getBookmarkThisMenuItemForFile = (file: TAbstractFile): ContextMenuProvider =>
 			(item: MenuItem) => {
-				item.setTitle('Bookmark it for sorting.');
+				item.setTitle(m ? 'Bookmark it for custom sorting' : 'Bookmark it for sorting');
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
@@ -372,7 +374,7 @@ export default class CustomSortPlugin extends Plugin {
 
 		const getUnbookmarkThisMenuItemForFile = (file: TAbstractFile): ContextMenuProvider =>
 			(item: MenuItem) => {
-				item.setTitle('UNbookmark it from sorting.');
+				item.setTitle(m ? 'UNbookmark it from custom sorting' : 'UNbookmark it from sorting');
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
@@ -384,7 +386,7 @@ export default class CustomSortPlugin extends Plugin {
 
 		const getBookmarkAllMenuItemForFile = (file: TAbstractFile): ContextMenuProvider =>
 			(item: MenuItem) => {
-				item.setTitle('Bookmark it+siblings for sorting.');
+				item.setTitle(m ? 'Bookmark it+siblings for custom sorting' : 'Bookmark it+siblings for sorting');
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
@@ -397,7 +399,7 @@ export default class CustomSortPlugin extends Plugin {
 
 		const getUnbookmarkAllMenuItemForFile = (file: TAbstractFile): ContextMenuProvider =>
 			(item: MenuItem) => {
-				item.setTitle('UNbookmark it+siblings from sorting.');
+				item.setTitle(m ? 'UNbookmark it+siblings from custom sorting' : 'UNbookmark it+siblings from sorting');
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
@@ -410,7 +412,7 @@ export default class CustomSortPlugin extends Plugin {
 
 		const getBookmarkSelectedMenuItemForFiles = (files: TAbstractFile[]): ContextMenuProvider =>
 			(item: MenuItem) => {
-				item.setTitle('Custom sort: bookmark selected for sorting.');
+				item.setTitle(m ? 'Bookmark selected for custom sorting' : 'Custom sort: bookmark selected for sorting');
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
@@ -424,7 +426,7 @@ export default class CustomSortPlugin extends Plugin {
 
 		const getUnbookmarkSelectedMenuItemForFiles = (files: TAbstractFile[]): ContextMenuProvider =>
 			(item: MenuItem) => {
-				item.setTitle('Custom sort: UNbookmark selected from sorting.');
+				item.setTitle(m ? 'UNbookmark selected from custom sorting' : 'Custom sort: UNbookmark selected from sorting');
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
@@ -440,32 +442,41 @@ export default class CustomSortPlugin extends Plugin {
 			app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile, source: string, leaf?: WorkspaceLeaf) => {
 				if (!this.settings.customSortContextSubmenu) return;  // Don't show the context menus at all
 
-				const customSortMenuItem = (item: MenuItem) => {
-					item.setTitle('Custom sort:');
-					item.setIcon('hashtag');
-					const submenu = item.setSubmenu()
-
-					submenu.addItem(applyCustomSortMenuItem)
-					submenu.addSeparator()
+				const customSortMenuItem = (item?: MenuItem) => {
+					// if parameter is empty it means mobile invocation, where submenus are not supported.
+					// In that case flatten the menu.
+					let submenu: Menu|undefined
+					if (item) {
+						item.setTitle('Custom sort:');
+						item.setIcon('hashtag');
+						submenu = item.setSubmenu()
+					}
+					if (!submenu) menu.addSeparator();
+					(submenu ?? menu).addItem(applyCustomSortMenuItem)
+					if (submenu) submenu.addSeparator();
 
 					if (this.settings.bookmarksContextMenus) {
 						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 						if (bookmarksPlugin) {
 							const itemAlreadyBookmarkedForSorting: boolean = bookmarksPlugin.isBookmarkedForSorting(file)
 							if (!itemAlreadyBookmarkedForSorting) {
-								submenu.addItem(getBookmarkThisMenuItemForFile(file))
+								(submenu ?? menu).addItem(getBookmarkThisMenuItemForFile(file))
 							} else {
-								submenu.addItem(getUnbookmarkThisMenuItemForFile(file))
+								(submenu ?? menu).addItem(getUnbookmarkThisMenuItemForFile(file))
 							}
-							submenu.addItem(getBookmarkAllMenuItemForFile(file))
-							submenu.addItem(getUnbookmarkAllMenuItemForFile(file))
+							(submenu ?? menu).addItem(getBookmarkAllMenuItemForFile(file));
+							(submenu ?? menu).addItem(getUnbookmarkAllMenuItemForFile(file));
 						}
 					}
 
-					submenu.addItem(suspendCustomSortMenuItem)
-				};
+					(submenu ?? menu).addItem(suspendCustomSortMenuItem)
+				}
 
-				menu.addItem(customSortMenuItem)
+				if (m) {
+					customSortMenuItem(undefined)
+				} else {
+					menu.addItem(customSortMenuItem)
+				}
 			})
 		)
 
@@ -476,26 +487,34 @@ export default class CustomSortPlugin extends Plugin {
 				app.workspace.on("files-menu", (menu: Menu, files: TAbstractFile[], source: string, leaf?: WorkspaceLeaf) => {
 					if (!this.settings.customSortContextSubmenu) return;  // Don't show the context menus at all
 
-					const customSortMenuItem = (item: MenuItem) => {
-						item.setTitle('Custom sort:');
-						item.setIcon('hashtag');
-						const submenu = item.setSubmenu()
-
-						submenu.addItem(applyCustomSortMenuItem)
-						submenu.addSeparator()
-
+					const customSortMenuItem = (item?: MenuItem) => {
+						// if parameter is empty it means mobile invocation, where submenus are not supported.
+						// In that case flatten the menu.
+						let submenu: Menu|undefined
+						if (item) {
+							item.setTitle('Custom sort:');
+							item.setIcon('hashtag');
+							submenu = item.setSubmenu()
+						}
+						if (!submenu) menu.addSeparator();
+						(submenu ?? menu).addItem(applyCustomSortMenuItem)
+						if (submenu) submenu.addSeparator();
 
 						if (this.settings.bookmarksContextMenus) {
 							const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 							if (bookmarksPlugin) {
-								submenu.addItem(getBookmarkSelectedMenuItemForFiles(files))
-								submenu.addItem(getUnbookmarkSelectedMenuItemForFiles(files))
+								(submenu ?? menu).addItem(getBookmarkSelectedMenuItemForFiles(files));
+								(submenu ?? menu).addItem(getUnbookmarkSelectedMenuItemForFiles(files));
 							}
 						}
-						submenu.addItem(suspendCustomSortMenuItem)
+						(submenu ?? menu).addItem(suspendCustomSortMenuItem);
 					};
 
-					menu.addItem(customSortMenuItem)
+					if (m) {
+						customSortMenuItem(undefined)
+					} else {
+						menu.addItem(customSortMenuItem)
+					}
 				})
 			)
 		}

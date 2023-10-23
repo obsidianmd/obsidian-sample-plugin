@@ -510,7 +510,9 @@ const cleanupBookmarkTreeFromTransparentEmptyGroups = (parentGroup: BookmarkedPa
             bookmarksGroup
         )
         if (parentContainerOfGroup) {
-            parentContainerOfGroup.group?.items?.remove(parentGroup.group)
+            if (isGroupTransparentForSorting(parentGroup.group.title)) {
+                parentContainerOfGroup.group?.items?.remove(parentGroup.group)
+            }
             cleanupBookmarkTreeFromTransparentEmptyGroups(parentContainerOfGroup, plugin, bookmarksGroup)
         }
     }
@@ -616,7 +618,7 @@ const updateSortingBookmarksAfterItemDeleted = (plugin: Bookmarks_PluginInstance
                 bookmarkEntriesToRemove.push(it)
             }
         })
-        bookmarkEntriesToRemove.forEach((itemToRemove) =>{
+        bookmarkEntriesToRemove.forEach((itemToRemove: BookmarkedItem) =>{
             container?.group?.items.remove(itemToRemove)
         })
         cleanupBookmarkTreeFromTransparentEmptyGroups(container, plugin, bookmarksGroup)
