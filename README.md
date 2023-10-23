@@ -1,12 +1,17 @@
-> This is a simple version of README which highlights the **basic scenario and most commonly used feature**
+> > This is a simple version of README which highlights the **basic scenario and most commonly used feature**
 >
 > The [long and much more detailed advanced-README.md is here](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md)
 
 ---
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
 
-Take full control of the order of your notes and folders:
+Take full control of the order of your notes and folders
 
+The simplest usage scenario is to sort items via drag and drop:
+![Sorting items via drag and drop](https://github.com/SebastianMC/obsidian-custom-sort/assets/23032356/faac0725-d459-4d5b-8819-4340c9910c58)
+For detailed instructions and videos go to [wiki documentation](https://github.com/SebastianMC/obsidian-custom-sort/wiki/How-to-order-items-in-File-Explorer-with-drag-and-drop%3F)
+
+More advanced capabilities:
 - treat folders and files equally or distinctively, you decide
 - fine-grained folder-level or even notes-group-level specification
 - support for fully manual order
