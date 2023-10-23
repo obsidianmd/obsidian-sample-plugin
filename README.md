@@ -8,7 +8,9 @@
 Take full control of the order of your notes and folders
 
 The simplest usage scenario is to sort items via drag and drop:
+
 ![Sorting items via drag and drop](https://github.com/SebastianMC/obsidian-custom-sort/assets/23032356/faac0725-d459-4d5b-8819-4340c9910c58)
+
 For detailed instructions and videos go to [wiki documentation](https://github.com/SebastianMC/obsidian-custom-sort/wiki/How-to-order-items-in-File-Explorer-with-drag-and-drop%3F)
 
 More advanced capabilities:
