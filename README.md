@@ -13,7 +13,7 @@ The simplest usage scenario is to sort items via drag and drop:
 
 For detailed instructions and videos go to [wiki documentation](https://github.com/SebastianMC/obsidian-custom-sort/wiki/How-to-order-items-in-File-Explorer-with-drag-and-drop%3F)
 
-More advanced capabilities:
+More advanced capabilities available through config-driven sorting:
 - treat folders and files equally or distinctively, you decide
 - fine-grained folder-level or even notes-group-level specification
 - support for fully manual order
