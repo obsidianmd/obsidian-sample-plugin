@@ -1,4 +1,5 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { AppView, VIEW_TYPE } from './src/ui/window';
 
 // Remember to rename these classes and interfaces!
 
@@ -12,14 +13,17 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
+	view: AppView;
 
 	async onload() {
 		await this.loadSettings();
+        this.registerView(
+            VIEW_TYPE,
+            (leaf) => (new AppView(leaf, this))
+        );
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+		const ribbonIconEl = this.addRibbonIcon('dice', 'Open Agent View', (evt: MouseEvent) => {
+			this.activateView();
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -27,6 +31,15 @@ export default class MyPlugin extends Plugin {
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
 		statusBarItemEl.setText('Status Bar Text');
+
+		this.addCommand({
+            id: "habitica-view-open",
+            name: "Open Writing Assistant",
+            hotkeys: [{ modifiers: ["Mod", "Shift"], key: "h"}],
+            callback: () => {
+                this.activateView();
+            }
+        });
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
@@ -89,6 +102,19 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
+	async activateView() {
+        this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+    
+        await this.app.workspace.getRightLeaf(false).setViewState({
+          type: VIEW_TYPE,
+          active: true,
+        });
+    
+        this.app.workspace.revealLeaf(
+          this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
+        );
+    }
 }
 
 class SampleModal extends Modal {
