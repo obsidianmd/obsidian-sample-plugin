@@ -112,14 +112,14 @@ export const sorterByMetadataField = (reverseOrder?: boolean, trueAlphabetical?:
 			return sortResult
 		}
 		// Item with metadata goes before the w/o metadata
-		if (amdata) return -1
-		if (bmdata) return 1
+		if (amdata) return reverseOrder ? 1 : -1
+		if (bmdata) return reverseOrder ? -1 : 1
 
 		return EQUAL_OR_UNCOMPARABLE
 	}
 }
 
-export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean, trueAlphabetical?: boolean) => {
+export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: boolean) => SorterFn = (reverseOrder: boolean) => {
 	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
 		if (reverseOrder) {
 			[a, b] = [b, a]
@@ -129,8 +129,40 @@ export const sorterByBookmarkOrder:(reverseOrder?: boolean, trueAlphabetical?: b
 			return a.bookmarkedIdx - b.bookmarkedIdx
 		}
 		// Item with bookmark order goes before the w/o bookmark info
-		if (a.bookmarkedIdx) return -1
-		if (b.bookmarkedIdx) return 1
+		if (a.bookmarkedIdx) return reverseOrder ? 1 : -1
+		if (b.bookmarkedIdx) return reverseOrder ? -1 : 1
+
+		return EQUAL_OR_UNCOMPARABLE
+	}
+}
+
+export const sorterByFolderCDate:(reverseOrder?: boolean) => SorterFn = (reverseOrder?: boolean) => {
+	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
+		if (reverseOrder) {
+			[a, b] = [b, a]
+		}
+		if (a.ctime && b.ctime) {
+			return a.ctime - b.ctime
+		}
+		// Folder with determined ctime always goes before empty folder (=> undetermined ctime)
+		if (a.ctime) return reverseOrder ? 1 : -1
+		if (b.ctime) return reverseOrder ? -1 : 1
+
+		return EQUAL_OR_UNCOMPARABLE
+	}
+}
+
+export const sorterByFolderMDate:(reverseOrder?: boolean) => SorterFn = (reverseOrder?: boolean) => {
+	return (a: FolderItemForSorting, b: FolderItemForSorting) => {
+		if (reverseOrder) {
+			[a, b] = [b, a]
+		}
+		if (a.mtime && b.mtime) {
+			return a.mtime - b.mtime
+		}
+		// Folder with determined mtime always goes before empty folder (=> undetermined ctime)
+		if (a.mtime) return reverseOrder ? 1 : -1
+		if (b.mtime) return reverseOrder ? -1 : 1
 
 		return EQUAL_OR_UNCOMPARABLE
 	}
@@ -142,13 +174,13 @@ const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortString, a.sortString),
 	[CustomSortOrder.trueAlphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(b.sortString, a.sortString),
 	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.mtime - b.mtime),
-	[CustomSortOrder.byModifiedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.mtime - b.mtime,
+	[CustomSortOrder.byModifiedTimeAdvanced]: sorterByFolderMDate(),
 	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.mtime - a.mtime),
-	[CustomSortOrder.byModifiedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.mtime - a.mtime,
+	[CustomSortOrder.byModifiedTimeReverseAdvanced]: sorterByFolderMDate(true),
 	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.ctime - b.ctime),
-	[CustomSortOrder.byCreatedTimeAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => a.ctime - b.ctime,
+	[CustomSortOrder.byCreatedTimeAdvanced]: sorterByFolderCDate(),
 	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.ctime - a.ctime),
-	[CustomSortOrder.byCreatedTimeReverseAdvanced]: (a: FolderItemForSorting, b: FolderItemForSorting) => b.ctime - a.ctime,
+	[CustomSortOrder.byCreatedTimeReverseAdvanced]: sorterByFolderCDate(true),
 	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forPrimary),
@@ -292,6 +324,8 @@ const isByMetadata = (order: CustomSortOrder | undefined) => {
 	       order === CustomSortOrder.byMetadataFieldTrueAlphabetical || order === CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
 }
 
+// IMPORTANT: do not change the value of below constants
+//    It is used in sorter to discern empty folders (thus undetermined dates) from other folders
 export const DEFAULT_FOLDER_MTIME: number = 0
 export const DEFAULT_FOLDER_CTIME: number = 0
 

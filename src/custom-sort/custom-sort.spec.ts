@@ -1,4 +1,11 @@
-import {CachedMetadata, MetadataCache, Pos, TFile, TFolder, Vault} from 'obsidian';
+import {
+	CachedMetadata,
+	MetadataCache,
+	Pos,
+	TFile,
+	TFolder,
+	Vault
+} from 'obsidian';
 import {
 	DEFAULT_FOLDER_CTIME,
 	DEFAULT_FOLDER_MTIME,
@@ -8,8 +15,10 @@ import {
 	FolderItemForSorting,
 	getSorterFnFor,
 	matchGroupRegex,
-    ProcessingContext,
+	ProcessingContext,
 	sorterByBookmarkOrder,
+	sorterByFolderCDate,
+	sorterByFolderMDate,
 	sorterByMetadataField,
 	SorterFn
 } from './custom-sort';
@@ -2791,7 +2800,7 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		expect(result2).toBe(EQUAL_OR_UNCOMPARABLE)
 		expect(result3).toBe(EQUAL_OR_UNCOMPARABLE)
 	})
-	it('should put the item with metadata later if the second one has no metadata (reverse order)', () => {
+	it('should put the item with metadata earlier if the second one has no metadata (reverse order)', () => {
 		// given
 		const itemA: Partial<FolderItemForSorting> = {
 			metadataFieldValue: '15',
@@ -2807,8 +2816,8 @@ describe('CustomSortOrder.byMetadataFieldAlphabeticalReverse', () => {
 		const result2: number = sorter(itemB as FolderItemForSorting, itemA as FolderItemForSorting)
 
 		// then
-		expect(result1).toBe(SORT_FIRST_GOES_LATER)
-		expect(result2).toBe(SORT_FIRST_GOES_EARLIER)
+		expect(result1).toBe(SORT_FIRST_GOES_EARLIER)
+		expect(result2).toBe(SORT_FIRST_GOES_LATER)
 	})
 	it('should refrain from comparing if no metadata on both items', () => {
 		// given
@@ -2849,8 +2858,8 @@ describe('sorterByMetadataField', () => {
 		[false,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'c', 'c'],
 		[false,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'd', 'e'],
 		[false,'mmm','mmm',EQUAL_OR_UNCOMPARABLE, 'e', 'd'],
-		[false,'abc',undefined,1, 'a','a'],
-		[false,undefined,'klm',-1, 'b','b'],
+		[false,'abc',undefined,-1, 'a','a'],
+		[false,undefined,'klm',1, 'b','b'],
 		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','a'],
 		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'a','b'],
 		[false,undefined,undefined,EQUAL_OR_UNCOMPARABLE, 'd','c'],
@@ -2884,8 +2893,8 @@ describe('sorterByBookmarkOrder', () => {
 		[false,30,30,0, 'c', 'c'],    // not possible in reality - each bookmark order is unique by definition - covered for clarity
 		[false,1,1,0, 'd', 'e'],      //    ------//-----
 		[false,2,2,0, 'e', 'd'],     //    ------//-----
-		[false,3,undefined,1, 'a','a'],
-		[false,undefined,4,-1, 'b','b'],
+		[false,3,undefined,-1, 'a','a'],
+		[false,undefined,4,1, 'b','b'],
 		[false,undefined,undefined,0, 'a','a'],
 		[false,undefined,undefined,0, 'a','b'],
 		[false,undefined,undefined,0, 'd','c'],
@@ -2900,5 +2909,71 @@ describe('sorterByBookmarkOrder', () => {
 
 			// then
 			expect(normalizedResult).toBe(order)
+		})
+})
+
+const OLDER_TIME: number = 1000000
+const NEWER_TIME: number = OLDER_TIME + 1000
+const EOU: number =  EQUAL_OR_UNCOMPARABLE
+
+describe('sorterByFolderMDate', () => {
+	it.each([
+		[DEFAULT_FOLDER_MTIME, DEFAULT_FOLDER_MTIME, EOU, EOU, EOU, EOU],
+		[OLDER_TIME, OLDER_TIME, EOU, EOU, EOU, EOU],
+		[OLDER_TIME, NEWER_TIME, -1, 1, 1, -1],
+		[DEFAULT_FOLDER_MTIME, NEWER_TIME, 1, -1, 1, -1],
+		[NEWER_TIME, DEFAULT_FOLDER_MTIME, -1, 1, -1, 1]
+	])('comparing %s and %s should return %s (reversed params %s) and %s for reverse order (and %s for reversed order reversed params)',
+		(dateA: number, dateB: number, orderStraight: number, orderStraightRevParams: number, orderReverse: number, orderReverseRevParams: number) => {
+			const sorterFnStraight = sorterByFolderMDate()
+			const sorterFnReverse = sorterByFolderMDate(true)
+			const itemA: Partial<FolderItemForSorting> = {mtime: dateA}
+			const itemB: Partial<FolderItemForSorting> = {mtime: dateB}
+			const resultS1 = sorterFnStraight(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+			const resultS2 = sorterFnStraight(itemB as FolderItemForSorting, itemA as FolderItemForSorting)
+			const resultR1 = sorterFnReverse(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+			const resultR2 = sorterFnReverse(itemB as FolderItemForSorting, itemA as FolderItemForSorting)
+
+			const normalizedResultS1 = resultS1 < 0 ? -1 : ((resultS1 > 0) ? 1 : resultS1)
+			const normalizedResultS2 = resultS2 < 0 ? -1 : ((resultS2 > 0) ? 1 : resultS2)
+			const normalizedResultR1 = resultR1 < 0 ? -1 : ((resultR1 > 0) ? 1 : resultR1)
+			const normalizedResultR2 = resultR2 < 0 ? -1 : ((resultR2 > 0) ? 1 : resultR2)
+
+			// then
+			expect(normalizedResultS1).toBe(orderStraight)
+			expect(normalizedResultS2).toBe(orderStraightRevParams)
+			expect(normalizedResultR1).toBe(orderReverse)
+			expect(normalizedResultR2).toBe(orderReverseRevParams)
+		})
+})
+
+describe('sorterByFolderCDate', () => {
+	it.each([
+		[DEFAULT_FOLDER_CTIME, DEFAULT_FOLDER_CTIME, EOU, EOU, EOU, EOU],
+		[OLDER_TIME, OLDER_TIME, EOU, EOU, EOU, EOU],
+		[OLDER_TIME, NEWER_TIME, -1, 1, 1, -1],
+		[DEFAULT_FOLDER_CTIME, NEWER_TIME, 1, -1, 1, -1],
+		[NEWER_TIME, DEFAULT_FOLDER_CTIME, -1, 1, -1, 1]
+	])('comparing %s and %s should return %s (reversed params %s) and %s for reverse order (and %s for reversed order reversed params)',
+		(dateA: number, dateB: number, orderStraight: number, orderStraightRevParams: number, orderReverse: number, orderReverseRevParams: number) => {
+			const sorterFnStraight = sorterByFolderCDate()
+			const sorterFnReverse = sorterByFolderCDate(true)
+			const itemA: Partial<FolderItemForSorting> = {ctime: dateA}
+			const itemB: Partial<FolderItemForSorting> = {ctime: dateB}
+			const resultS1 = sorterFnStraight(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+			const resultS2 = sorterFnStraight(itemB as FolderItemForSorting, itemA as FolderItemForSorting)
+			const resultR1 = sorterFnReverse(itemA as FolderItemForSorting, itemB as FolderItemForSorting)
+			const resultR2 = sorterFnReverse(itemB as FolderItemForSorting, itemA as FolderItemForSorting)
+
+			const normalizedResultS1 = resultS1 < 0 ? -1 : ((resultS1 > 0) ? 1 : resultS1)
+			const normalizedResultS2 = resultS2 < 0 ? -1 : ((resultS2 > 0) ? 1 : resultS2)
+			const normalizedResultR1 = resultR1 < 0 ? -1 : ((resultR1 > 0) ? 1 : resultR1)
+			const normalizedResultR2 = resultR2 < 0 ? -1 : ((resultR2 > 0) ? 1 : resultR2)
+
+			// then
+			expect(normalizedResultS1).toBe(orderStraight)
+			expect(normalizedResultS2).toBe(orderStraightRevParams)
+			expect(normalizedResultR1).toBe(orderReverse)
+			expect(normalizedResultR2).toBe(orderReverseRevParams)
 		})
 })
