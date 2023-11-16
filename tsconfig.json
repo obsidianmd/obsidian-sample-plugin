@@ -12,7 +12,14 @@
 		"isolatedModules": true,
 		"strictNullChecks": true,
 		"esModuleInterop": true,
-		"lib": ["DOM", "ES5", "ES6", "ES7"]
-	},
-	"include": ["**/*.ts"]
+		"lib": [
+		  "DOM",
+		  "ES5",
+		  "ES6",
+		  "ES7"
+		]
+	  },
+	  "include": [
+		"**/*.ts"
+	  ]
 }
