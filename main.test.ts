@@ -1,16 +1,13 @@
-import { MockAppBuilder } from "./testHelpers/AppBuilder";
 import MyPlugin from "./main";
-import { PluginManifest } from "obsidian";
+import { App, PluginManifest } from "obsidian";
 
 jest.mock("obsidian");
 (window.setInterval as unknown) = jest.fn();
 
-const app = MockAppBuilder.make();
-
 describe("MyPlugin", () => {
 	let plugin: MyPlugin;
 	beforeEach(async () => {
-		plugin = new MyPlugin(app.done(), {} as PluginManifest);
+		plugin = new MyPlugin(new App(), {} as PluginManifest);
 	});
 
 	it("Should register two open modal commands", async () => {
@@ -35,7 +32,6 @@ describe("MyPlugin", () => {
 	});
 
 	it("Should load data and save as settings", async () => {
-		const plugin = new MyPlugin(app.done(), {} as PluginManifest);
 		const loadDataSpy = jest.spyOn(plugin, "loadData");
 		await plugin.onload();
 		expect(loadDataSpy).toHaveBeenCalled();

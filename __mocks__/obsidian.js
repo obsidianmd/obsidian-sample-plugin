@@ -13,6 +13,7 @@ module.exports = {
     Modal: class { },
     PluginSettingTab: class { },
     TFolder: class { },
+    App: class { }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
