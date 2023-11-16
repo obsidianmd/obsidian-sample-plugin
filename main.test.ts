@@ -1,4 +1,4 @@
-import { MockAppBuilder } from "./test_helpers/AppBuilder";
+import { MockAppBuilder } from "./testHelpers/AppBuilder";
 import MyPlugin from "./main";
 import { PluginManifest } from "obsidian";
 
