@@ -3,9 +3,9 @@ module.exports = {
     Workspace: {},
     Plugin: class {
         addCommand() { }
-        addRibbonIcon() { }
+        addRibbonIcon() { return { addClass: () => { } } }
         addSettingTab() { }
-        addStatusBarItem() { return { setText: () => { } }; }
+        addStatusBarItem() { return { setText: () => { } } }
         loadData() { }
         registerDomEvent() { }
         registerInterval() { }
