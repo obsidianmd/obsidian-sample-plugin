@@ -43,7 +43,7 @@ Quick starting guide for new plugin devs:
 
 ### Automatically
 
-In [.github/release.yml](.github/release.yml) replace "my-plugin" with the name of your plugin on the following line,
+In [.github/release.yml](.github/workflows/release.yml) replace "my-plugin" with the name of your plugin on the following line,
 
 ```yml
   PLUGIN_NAME: my-plugin
@@ -56,7 +56,7 @@ git tag 1.2.3
 git push origin 1.2.3
 ```
 
-Then [release.yml](.github/release.yml) will automatically:
+Then [release.yml](.github/workflows/release.yml) will automatically:
 1. Update `manifest.json`, `package.json`, and `package-lock.json` with the version from your tag.
 2. Commit the updates to your repo (that you will need to pull down locally before making further changes)
 3. Create a new release for your tag in your [repo's Releases](https://github.com/obsidianmd/obsidian-sample-plugin/releases).
