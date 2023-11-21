@@ -10,7 +10,7 @@ permissions:
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+      - '\d+\.\d+\.\d+'
 
 env:
   # IMPORTANT: Update this with the name of your plugin
