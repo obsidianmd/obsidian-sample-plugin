@@ -372,6 +372,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		switch (group.type) {
 			case CustomSortGroupType.ExactPrefix:
 				if (group.exactPrefix) {
+					console.log(`Exact prefix check`)
 					if (nameForMatching.startsWith(group.exactPrefix)) {
 						determined = true;
 					}
@@ -379,6 +380,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 					const [matched, matchedGroup] = matchGroupRegex(group.regexPrefix!, nameForMatching)
 					determined = matched
 					derivedText = matchedGroup ?? derivedText
+					console.log(`Exact regexp prefix check ${group.regexPrefix?.regex?.toString()} vs. ${nameForMatching} = ${matched}`)
 				}
 				break;
 			case CustomSortGroupType.ExactSuffix:

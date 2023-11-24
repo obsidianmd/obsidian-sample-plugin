@@ -325,6 +325,9 @@ const InlineRegexSymbol_Digit1: string = '\\d'
 const InlineRegexSymbol_Digit2: string = '\\[0-9]'
 const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
 
+const InlineRegexSymbol_CapitalLetter: string = '\\C'
+const InlineRegexSymbol_LowercaseLetter: string = '\\l'
+
 const UnsafeRegexCharsRegex: RegExp = /[\^$.\-+\[\]{}()|*?=!\\]/g
 
 export const escapeRegexUnsafeCharacters = (s: string): string => {
@@ -347,14 +350,24 @@ const sortingSymbolsRegex = new RegExp(sortingSymbolsArr.join('|'), 'gi')
 const inlineRegexSymbolsArrEscapedForRegex: Array<string> = [
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit1),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit2),
-	escapeRegexUnsafeCharacters(InlineRegexSymbol_0_to_3)
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_0_to_3),
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_CapitalLetter),
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_LowercaseLetter)
 ]
 
+interface RegexExpr {
+	regexExpr: string
+	isUnicode?: boolean
+	isCaseSensitive?: boolean
+}
+
 // Don't be confused if the source lexeme is equal to the resulting regex piece, logically these two distinct spaces
-const inlineRegexSymbolsToRegexExpressionsArr: { [key: string]: string} = {
-	[InlineRegexSymbol_Digit1]: '\\d',
-	[InlineRegexSymbol_Digit2]: '[0-9]',
-	[InlineRegexSymbol_0_to_3]: '[0-3]',
+const inlineRegexSymbolsToRegexExpressionsArr: { [key: string]: RegexExpr} = {
+	[InlineRegexSymbol_Digit1]: {regexExpr: '\\d'},
+	[InlineRegexSymbol_Digit2]: {regexExpr: '[0-9]'},
+	[InlineRegexSymbol_0_to_3]: {regexExpr: '[0-3]'},
+	[InlineRegexSymbol_CapitalLetter]: {regexExpr: '[\\p{Lu}\\p{Lt}]', isUnicode: true, isCaseSensitive: true},
+	[InlineRegexSymbol_LowercaseLetter]: {regexExpr: '\\p{Ll}', isUnicode: true, isCaseSensitive: true}
 }
 
 const inlineRegexSymbolsDetectionRegex = new RegExp(inlineRegexSymbolsArrEscapedForRegex.join('|'), 'gi')
@@ -500,12 +513,14 @@ export const convertPlainStringToRegex = (s: string, actAs: RegexpUsedAs): Regex
 		const [extractedPrefix, extractedSuffix] = s!.split(detectedSymbol)
 		const regexPrefix: string = regexMatchesStart ? '^' : ''
 		const regexSuffix: string = regexMatchesEnding ? '$' : ''
-		const escapedProcessedPrefix: string = convertInlineRegexSymbolsAndEscapeTheRest(extractedPrefix)
-		const escapedProcessedSuffix: string = convertInlineRegexSymbolsAndEscapeTheRest(extractedSuffix)
-		const regexFlags: string = replacement.unicodeRegex ? 'ui' : 'i'
+		const escapedProcessedPrefix: RegexAsString = convertInlineRegexSymbolsAndEscapeTheRest(extractedPrefix)
+		const escapedProcessedSuffix: RegexAsString = convertInlineRegexSymbolsAndEscapeTheRest(extractedSuffix)
+		const regexUnicode: boolean = !!replacement.unicodeRegex || !!escapedProcessedPrefix.isUnicodeRegex || !!escapedProcessedSuffix.isUnicodeRegex
+		const regexCaseSensitive: boolean = !!escapedProcessedPrefix.isCaseSensitiveRegex || !!escapedProcessedSuffix.isCaseSensitiveRegex
+		const regexFlags: string = `${regexUnicode?'u':''}${regexCaseSensitive?'':'i'}`
 		return {
 			regexpSpec: {
-				regex: new RegExp(`${regexPrefix}${escapedProcessedPrefix}${replacement.regexpStr}${escapedProcessedSuffix}${regexSuffix}`, regexFlags),
+				regex: new RegExp(`${regexPrefix}${escapedProcessedPrefix.s}${replacement.regexpStr}${escapedProcessedSuffix.s}${regexSuffix}`, regexFlags),
 				normalizerFn: replacement.normalizerFn
 			},
 			prefix: extractedPrefix,
@@ -516,9 +531,10 @@ export const convertPlainStringToRegex = (s: string, actAs: RegexpUsedAs): Regex
 		const replacement: RegexAsString = convertInlineRegexSymbolsAndEscapeTheRest(s)!
 		const regexPrefix: string = regexMatchesStart ? '^' : ''
 		const regexSuffix: string = regexMatchesEnding ? '$' : ''
+		const regexFlags: string = `${replacement.isUnicodeRegex?'u':''}${replacement.isCaseSensitiveRegex?'':'i'}`
 		return {
 			regexpSpec: {
-				regex: new RegExp(`${regexPrefix}${replacement}${regexSuffix}`, 'i')
+				regex: new RegExp(`${regexPrefix}${replacement.s}${regexSuffix}`, regexFlags)
 			},
 			prefix: '', // shouldn't be used anyway because of the below containsAdvancedRegex: false
 			suffix: '', // ---- // ----
@@ -529,14 +545,22 @@ export const convertPlainStringToRegex = (s: string, actAs: RegexpUsedAs): Regex
 	}
 }
 
-type RegexAsString = string
+export interface RegexAsString {
+	s: string
+	isUnicodeRegex?: boolean
+	isCaseSensitiveRegex?: boolean
+}
 
 export const convertInlineRegexSymbolsAndEscapeTheRest = (s: string): RegexAsString => {
 	if (s === '') {
-		return s
+		return {
+			s: s
+		}
 	}
 
 	let regexAsString: Array<string> = []
+	let isUnicode: boolean = false
+    let isCaseSensitive: boolean = false
 
 	while (s!.length > 0) {
 		// detect the first inline regex
@@ -562,7 +586,10 @@ export const convertInlineRegexSymbolsAndEscapeTheRest = (s: string): RegexAsStr
 				regexAsString.push(escapeRegexUnsafeCharacters(charsBeforeRegexSymbol))
 				s = s!.substring(earliestRegexSymbolIdx)
 			}
-			regexAsString.push(inlineRegexSymbolsToRegexExpressionsArr[earliestRegexSymbol!])
+			const expr = inlineRegexSymbolsToRegexExpressionsArr[earliestRegexSymbol!]
+			regexAsString.push(expr.regexExpr)
+			isUnicode ||= !!expr.isUnicode
+			isCaseSensitive ||= !!expr.isCaseSensitive
 			s = s!.substring(earliestRegexSymbol!.length)
 		} else {
 			regexAsString.push(escapeRegexUnsafeCharacters(s))
@@ -570,7 +597,11 @@ export const convertInlineRegexSymbolsAndEscapeTheRest = (s: string): RegexAsStr
 		}
 	}
 
-	return regexAsString.join('')
+	return {
+		s: regexAsString.join(''),
+		isUnicodeRegex: isUnicode,
+		isCaseSensitiveRegex: isCaseSensitive
+	}
 }
 
 export const MatchFolderNameLexeme: string = 'name:'

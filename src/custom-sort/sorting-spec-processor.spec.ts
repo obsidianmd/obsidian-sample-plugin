@@ -2957,17 +2957,23 @@ describe('convertPlainStringWithNumericSortingSymbolToRegex', () => {
 	it('should correctly include regex token for string end', () => {
 		const input1 = 'Part\\-D+:'
 		const input2 = ' \\[0-9]\\-D+'
+		const input3 = ' \\l\\[0-9]\\-D+'
 		const result1 = convertPlainStringToRegex(input1, RegexpUsedAs.Suffix)
 		const result2 = convertPlainStringToRegex(input2, RegexpUsedAs.Suffix)
+		const result3 = convertPlainStringToRegex(input3, RegexpUsedAs.Suffix)
 		expect(result1?.regexpSpec.regex).toEqual(/Part *(\d+(?:-\d+)*):$/i)
 		expect(result2?.regexpSpec.regex).toEqual(/ [0-9] *(\d+(?:-\d+)*)$/i)
+		expect(result3?.regexpSpec.regex).toEqual(/ \p{Ll}[0-9] *(\d+(?:-\d+)*)$/u)
 	})
 	it('should correctly include regex token for string begin and end', () => {
 		const input1 = 'Part\\.D+:'
 		const input2 = ' \\d \\[0-9] '
+		const input3 = ' \\d \\[0-9] \\C'
 		const result1 = convertPlainStringToRegex(input1, RegexpUsedAs.FullMatch)
 		const result2 = convertPlainStringToRegex(input2, RegexpUsedAs.FullMatch)
+		const result3 = convertPlainStringToRegex(input3, RegexpUsedAs.FullMatch)
 		expect(result1?.regexpSpec.regex).toEqual(/^Part *(\d+(?:\.\d+)*):$/i)
 		expect(result2?.regexpSpec.regex).toEqual(/^ \d [0-9] $/i)
+		expect(result3?.regexpSpec.regex).toEqual(/^ \d [0-9] [\p{Lu}\p{Lt}]$/u)
 	})
 })
