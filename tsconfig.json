@@ -12,15 +12,19 @@
     "importHelpers": true,
     "isolatedModules": true,
     "jsx": "react",
-	"strictNullChecks": true,
+    "strictNullChecks": true,
     "lib": [
       "DOM",
       "ES5",
       "ES6",
       "ES7"
-    ]
+    ],
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": [
-    "**/*.ts"
-, "src/ui/window.tsx"  ]
+    "**/*.ts",
+    "src/ui/AppView.tsx"
+  ]
 }
