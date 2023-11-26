@@ -35,7 +35,6 @@
     justify-content: center;
     height: 100%;
     width: 100%;
-
 }
 
 .scroll-to-bottom-button {
@@ -88,7 +87,6 @@
     padding-bottom: 8px;
 }
 
-
 .copy-icon-container {
     padding-top: 8px;
 }
@@ -125,7 +123,6 @@
     width: 15%;
 }
 
-
 .collapsible-container {
     width: 100%;
     max-height: 25%;
@@ -160,7 +157,6 @@
     flex-grow: 1;
 }
 
-
 .files-list {
     display: flex;
     flex-direction: column;
@@ -180,7 +176,6 @@
     align-items: center;
     gap: 4px;
 }
-
 
 /* AssistantManager.tsx */
 

@@ -1,7 +1,10 @@
-import { log_error } from "./log";
+import { log_error } from './log';
 
 export class TemplaterError extends Error {
-    constructor(msg: string, public console_msg?: string) {
+    constructor(
+        msg: string,
+        public console_msg?: string,
+    ) {
         super(msg);
         this.name = this.constructor.name;
         Error.captureStackTrace(this, this.constructor);
@@ -10,7 +13,7 @@ export class TemplaterError extends Error {
 
 export async function errorWrapper<T>(
     fn: () => Promise<T>,
-    msg: string
+    msg: string,
 ): Promise<T> {
     try {
         return await fn();

@@ -2,18 +2,18 @@ import { App, ButtonComponent, Modal, Notice, Setting } from 'obsidian';
 import * as yup from 'yup';
 
 interface ThreadEditModalProps {
-    app: App,
-    title: string,
-    submitButtonText?: string,
-    previousValues?: IThreadEditModalValues,
-    onSubmit: (values: IThreadEditModalValues) => void,
+    app: App;
+    title: string;
+    submitButtonText?: string;
+    previousValues?: IThreadEditModalValues;
+    onSubmit: (values: IThreadEditModalValues) => void;
 }
 
 export interface IThreadEditModalValues {
     metadata: {
         name: string;
         [key: string]: unknown;
-    },
+    };
     [key: string]: unknown;
 }
 
@@ -46,14 +46,13 @@ export class ThreadEditModal extends Modal {
         new Setting(contentEl)
             .setName('Name')
             .setDesc('The name of the thread')
-            .addText(text => {
+            .addText((text) => {
                 text.setPlaceholder('Enter thread name...')
                     .onChange((value) => {
                         this.values.metadata.name = value;
                     })
                     .setValue(this.values.metadata.name);
             });
-
 
         const validationSchema = yup.object().shape({
             metadata: yup.object().shape({
@@ -63,7 +62,9 @@ export class ThreadEditModal extends Modal {
 
         const checkRequiredFields = async (): Promise<string[]> => {
             try {
-                await validationSchema.validate(this.values, { abortEarly: false });
+                await validationSchema.validate(this.values, {
+                    abortEarly: false,
+                });
                 return [];
             } catch (error) {
                 if (error instanceof yup.ValidationError) {
@@ -75,7 +76,7 @@ export class ThreadEditModal extends Modal {
 
         const handleSubmit = async () => {
             const missingFields = await checkRequiredFields();
-            
+
             if (missingFields.length > 0) {
                 new Notice(`Submit Error: \n${missingFields.join('\n')}`);
                 return;
@@ -93,6 +94,5 @@ export class ThreadEditModal extends Modal {
             });
     }
 
-    onClose() {
-    }
+    onClose() {}
 }

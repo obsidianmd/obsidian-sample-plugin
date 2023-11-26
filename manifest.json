@@ -1,11 +1,11 @@
 {
-	"id": "obsidian-intelligence",
-	"name": "Obsidian Intelligence",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "AI-powered assistants inside Obsidian",
-	"author": "John Mavrick",
-	"authorUrl": "https://beacons.ai/johnmavrick",
-	"fundingUrl": "https://patreon.com/johnmavrick",
-	"isDesktopOnly": false
+    "id": "obsidian-intelligence",
+    "name": "Obsidian Intelligence",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "AI-powered assistants inside Obsidian",
+    "author": "John Mavrick",
+    "authorUrl": "https://beacons.ai/johnmavrick",
+    "fundingUrl": "https://patreon.com/johnmavrick",
+    "isDesktopOnly": false
 }

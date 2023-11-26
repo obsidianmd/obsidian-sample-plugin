@@ -1,4 +1,4 @@
-import { TemplaterError } from "./error";
+import { TemplaterError } from './error';
 import {
     App,
     normalizePath,
@@ -6,14 +6,14 @@ import {
     TFile,
     TFolder,
     Vault,
-} from "obsidian";
+} from 'obsidian';
 
 export function delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function escape_RegExp(str: string): string {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 export function generate_command_regex(): RegExp {
@@ -52,13 +52,19 @@ export function resolve_tfile(file_str: string): TFile {
     return file;
 }
 
-export function get_tfiles_from_folder(folder_str: string, extension?: string): Array<TFile> {
+export function get_tfiles_from_folder(
+    folder_str: string,
+    extension?: string,
+): Array<TFile> {
     const folder = resolve_tfolder(folder_str);
 
     const files: Array<TFile> = [];
     Vault.recurseChildren(folder, (file: TAbstractFile) => {
-        
-        if (file instanceof TFile && (extension && file.extension === extension)) {
+        if (
+            file instanceof TFile &&
+            extension &&
+            file.extension === extension
+        ) {
             files.push(file);
         }
     });
@@ -73,7 +79,7 @@ export function get_tfiles_from_folder(folder_str: string, extension?: string): 
 export function arraymove<T>(
     arr: T[],
     fromIndex: number,
-    toIndex: number
+    toIndex: number,
 ): void {
     if (toIndex < 0 || toIndex === arr.length) {
         return;
