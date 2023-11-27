@@ -190,6 +190,53 @@ const PluginView = () => {
         fetchMessages();
     }, [activeThread]);
 
+    const addAnnotatedFilesToThread = async (
+        messages: OpenAI.Beta.Threads.ThreadMessage[],
+    ) => {
+        const files: ThreadAnnotationFile[] = [];
+        //for each message in messages, if it has content.type = text, then access content.annotations.file_citation.file_id and get the file name from the active files list
+        messages.forEach((message) => {
+            if (message.content) {
+                message.content.forEach((content) => {
+                    if (content.type === 'text') {
+                        content.text.annotations.forEach((annotation) => {
+                            // @ts-ignore
+                            if (annotation.file_citation) {
+                                const fileId: string =
+                                    // @ts-ignore
+                                    annotation.file_citation.file_id;
+                                const file = activeAssistantFiles?.find(
+                                    (file) => file.id === fileId,
+                                );
+                                if (file) {
+                                    files.push({
+                                        fileId: fileId,
+                                        fileName: file.filename,
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        if (files.length > 0 && activeThread) {
+            const newThread: IThread = {
+                ...activeThread,
+                metadata: {
+                    ...activeThread.metadata,
+                    annotationFiles: files,
+                },
+            };
+            const newThreads = threads.map((t) =>
+                t.id === activeThread.id ? newThread : t,
+            );
+            updateThreads(newThreads);
+            updateActiveThread(newThread);
+        }
+    };
+
     const onMessageSend = useCallback(
         async (message: string) => {
             if (openaiInstance && activeThread && activeAssistant) {
@@ -218,12 +265,19 @@ const PluginView = () => {
 
                 // Initialize a counter and max attempts for the polling logic, and how long to wait each try
                 let attempts = 0;
-                const maxAttempts = 20;
+                const maxAttempts = 30;
                 const timoutWaitTimeMs = 2000;
                 setIsResponding(true);
+                const terminatedRunStatuses: string[] = [
+                    'cancelling',
+                    'cancelled',
+                    'failed',
+                    'completed',
+                    'expired',
+                ];
 
                 while (
-                    runStatus.status !== 'completed' &&
+                    !terminatedRunStatuses.includes(runStatus.status) &&
                     attempts < maxAttempts
                 ) {
                     await new Promise((resolve) =>
@@ -241,55 +295,7 @@ const PluginView = () => {
                     .list(activeThread.id, listQueryOptions)
                     .then((res) => {
                         setMessages(res.data);
-                        const files: ThreadAnnotationFile[] = [];
-                        //for each message in messages, if it has content.type = text, then access content.annotations.file_citation.file_id and get the file name from the active files list
-                        res.data.forEach((message) => {
-                            if (message.content) {
-                                message.content.forEach((content) => {
-                                    if (content.type === 'text') {
-                                        content.text.annotations.forEach(
-                                            (annotation) => {
-                                                // @ts-ignore
-                                                if (annotation.file_citation) {
-                                                    const fileId: string =
-                                                        // @ts-ignore
-                                                        annotation.file_citation
-                                                            .file_id;
-                                                    const file =
-                                                        activeAssistantFiles?.find(
-                                                            (file) =>
-                                                                file.id ===
-                                                                fileId,
-                                                        );
-                                                    if (file) {
-                                                        files.push({
-                                                            fileId: fileId,
-                                                            fileName:
-                                                                file.filename,
-                                                        });
-                                                    }
-                                                }
-                                            },
-                                        );
-                                    }
-                                });
-                            }
-                        });
-                        if (files.length > 0) {
-                            const newThread: IThread = {
-                                ...activeThread,
-                                metadata: {
-                                    ...activeThread.metadata,
-                                    annotationFiles: files,
-                                },
-                            };
-                            const newThreads = threads.map((t) =>
-                                t.id === activeThread.id ? newThread : t,
-                            );
-                            updateThreads(newThreads);
-                            updateActiveThread(newThread);
-                        }
-
+                        addAnnotatedFilesToThread(res.data);
                         setIsResponding(false);
                     });
             }
