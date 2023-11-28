@@ -1,5 +1,5 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { AppView, VIEW_TYPE } from './src/ui/AppView';
+import { AppView, OBSIDIAN_INTELLIGENCE_VIEW_TYPE } from './src/ui/AppView';
 import OpenAI from 'openai';
 import { IThread } from './src/ui/types';
 
@@ -25,7 +25,7 @@ export default class ObsidianIntelligence extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        this.registerView(VIEW_TYPE, (leaf) => new AppView(leaf, this));
+        this.registerView(OBSIDIAN_INTELLIGENCE_VIEW_TYPE, (leaf) => new AppView(leaf, this));
 
         const ribbonIconEl = this.addRibbonIcon(
             'bot',
@@ -68,15 +68,18 @@ export default class ObsidianIntelligence extends Plugin {
     }
 
     async activateView() {
-        this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+        this.app.workspace.detachLeavesOfType(OBSIDIAN_INTELLIGENCE_VIEW_TYPE);
 
         await this.app.workspace.getRightLeaf(false).setViewState({
-            type: VIEW_TYPE,
+            type: OBSIDIAN_INTELLIGENCE_VIEW_TYPE,
             active: true,
         });
 
+        this.revealView();
+    }
+    async revealView() {
         this.app.workspace.revealLeaf(
-            this.app.workspace.getLeavesOfType(VIEW_TYPE)[0],
+            this.app.workspace.getLeavesOfType(OBSIDIAN_INTELLIGENCE_VIEW_TYPE)[0],
         );
     }
 }

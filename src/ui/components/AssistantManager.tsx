@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import OpenAI from 'openai';
-import { useApp, useOpenAI, usePlugin } from '../AppView';
+import { OBSIDIAN_INTELLIGENCE_VIEW_TYPE, useApp, useOpenAI, usePlugin } from '../AppView';
 import { IThread } from '../types';
 import DropdownSelect from './DropdownSelect';
 import { MarkdownView } from 'obsidian';
@@ -96,9 +96,27 @@ const AssistantManager = ({
                 }
             },
         });
+
+        plugin.addCommand({
+            id: 'create-assistant-from-active-note',
+            name: 'Create Thread',
+            callback: async () => {
+                const isViewOpen = app.workspace.getLeavesOfType(OBSIDIAN_INTELLIGENCE_VIEW_TYPE).some((leaf) => {
+                    return leaf.view;
+                });
+                if (!isViewOpen) {
+                    plugin.activateView();
+                }
+                
+                plugin.revealView();
+                createThread();
+            }
+        });
     }, [plugin]);
 
-    useEffect(() => {}, [plugin]);
+    useEffect(() => {
+        console.log('threads update', threads);
+    }, [threads]);
 
     const createThread = async () => {
         if (!openaiInstance || !plugin) {
@@ -120,9 +138,8 @@ const AssistantManager = ({
                         name: newThreadName,
                     },
                 };
-                updateThreads([...threads, newThread]);
+                updateThreads([...plugin.settings.threads, newThread]);
                 updateActiveThread(newThread);
-                plugin.saveSettings();
             });
     };
 

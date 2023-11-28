@@ -6,7 +6,9 @@ import { App } from 'obsidian';
 import ObsidianIntelligence from '../../main';
 import OpenAI from 'openai';
 
-export const VIEW_TYPE = 'example-view';
+export const OBSIDIAN_INTELLIGENCE_VIEW_TYPE = 'obsidian-intelligence-view';
+
+
 
 export const AppContext = React.createContext<App | undefined>(undefined);
 
@@ -53,7 +55,7 @@ export class AppView extends ItemView {
     }
 
     getViewType() {
-        return VIEW_TYPE;
+        return OBSIDIAN_INTELLIGENCE_VIEW_TYPE;
     }
 
     getDisplayText() {
