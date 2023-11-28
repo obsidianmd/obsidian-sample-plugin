@@ -44,7 +44,6 @@ export default class ObsidianIntelligence extends Plugin {
         this.addCommand({
             id: 'obsidian-intelligence-view-open',
             name: 'Open Obsidian Intelligence',
-            hotkeys: [{ modifiers: ['Mod', 'Shift'], key: 'I' }],
             callback: () => {
                 this.activateView();
             },
