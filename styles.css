@@ -1,8 +1,273 @@
-/*
+.agent-view-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+}
+.chatbox-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    user-select: text;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.messages-container {
+    border: 1px solid var(--color-base-70);
+    border-radius: 10px;
+    margin: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+}
 
-If your plugin does not need CSS, delete this file.
+.loader-container {
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 8px;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
 
-*/
+.scroll-to-bottom-button {
+    position: absolute;
+    bottom: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    background-color: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.chat-message {
+    width: 90%;
+    padding: 0px 8px;
+    margin: 10px;
+    border-radius: 5px;
+}
+
+.chat-message.user {
+    background-color: var(--color-blue);
+    align-self: flex-end;
+}
+
+.chat-message.assistant {
+    background-color: var(--color-base-50);
+    align-self: flex-start;
+}
+
+.chatbox .messages-container:hover .scroll-to-bottom-button {
+    display: block;
+}
+
+.annotation-tooltip-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding-bottom: 8px;
+}
+
+.copy-icon-container {
+    padding-top: 8px;
+}
+.copy-icon {
+    cursor: pointer;
+}
+
+.chat-message .message-text {
+    color: white;
+    & > :is(li)::marker {
+        color: white;
+    }
+}
+
+.message-input.container {
+    display: flex;
+    width: 100%;
+    max-height: 25%;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.message-input textarea.input {
+    max-height: 100%;
+    min-height: 32px;
+    flex-grow: 1;
+    resize: vertical;
+}
+
+.message-input button.send {
+    width: 15%;
+}
+
+.collapsible-container {
+    width: 100%;
+    max-height: 25%;
+    margin-top: 8px;
+}
+
+.collapsible-header {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.arrow {
+    margin-right: 4px;
+}
+
+.collapsible-content {
+    max-height: 100%;
+    overflow-y: scroll;
+    padding: 8px;
+}
+
+.file-input-container {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.file-input-container input {
+    flex-grow: 1;
+}
+
+.files-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 5px;
+    padding: 4x;
+    margin-bottom: 4px;
+}
+
+.file-row div.button-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* AssistantManager.tsx */
+
+.chat-top-section-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+.dropdowns-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+.dropdown-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-basis: 0;
+    flex-grow: 1;
+    width: 100%;
+    gap: 8px;
+}
+
+.thread-bar-container {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+}
+
+.thread-bar-container input {
+    flex-basis: 0;
+    flex-grow: 1;
+}
+
+.dropdown-buttons-container {
+    display: flex;
+    align-self: flex-end;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    gap: 8px;
+
+    & > :is(button) {
+        padding: 0px 8px;
+    }
+}
+
+/* DropdownSelect.tsx */
+
+.dropdown-select {
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+    max-width: 50%;
+    flex-basis: 0;
+    flex-grow: 1;
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="292.4" height="292.4"%3E%3Cpath fill="%23FFF" opacity="0.4" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-5 0-9.3 1.8-12.9 5.4A17.6 17.6 0 0 0 0 82.2c0 5 1.8 9.3 5.4 12.9l128 127.9c3.6 3.6 7.8 5.4 12.8 5.4s9.2-1.8 12.8-5.4L287 95c3.5-3.5 5.4-7.8 5.4-12.8 0-5-1.9-9.2-5.5-12.8z"/%3E%3C/svg%3E');
+}
+
+/* AssistantEditModal.ts */
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 5px;
+    padding: 4x;
+    margin-bottom: 4px;
+}
+
+.file-item span {
+    margin-right: 8px;
+}
+
+.form-setting-textarea textarea {
+    resize: vertical;
+}
+
+.modal-footer {
+    display: flex;
+    margin-top: 8px;
+    justify-content: flex-end;
+}
+
+/* .form-submit-button {
+
+} */
