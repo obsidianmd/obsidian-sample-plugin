@@ -86,7 +86,7 @@ export class AssistantEditModal extends Modal {
     addInstructionsSetting(contentEl: HTMLElement) {
         new Setting(contentEl)
             .setName('Instructions (required)')
-            .setDesc('The instructions you want the assistant to follow')
+            .setDesc('The instructions you want the assistant to follow (free by courtesy of OpenAI until 01/12/2024')
             .setClass('form-setting-textarea')
             .addTextArea((text) => {
                 text.setPlaceholder('Enter instructions...')
