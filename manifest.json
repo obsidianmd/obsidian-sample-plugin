@@ -1,6 +1,6 @@
 {
-    "id": "obsidian-intelligence",
-    "name": "Obsidian Intelligence",
+    "id": "intelligence",
+    "name": "Intelligence",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
     "description": "OpenAI GPT Assistants functionality inside Obsidian",

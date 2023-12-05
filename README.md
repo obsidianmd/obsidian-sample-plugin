@@ -1,4 +1,4 @@
-# Obsidian Intelligence
+# Intelligence
 
 ## DISCLAIMER
 Educate yourself on the related prices when using large language models like GPT-4 at https://openai.com/pricing. This model uses the Assistants API, which includes the following costs:

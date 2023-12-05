@@ -3,7 +3,7 @@ import { AppView, OBSIDIAN_INTELLIGENCE_VIEW_TYPE } from './src/ui/AppView';
 import OpenAI from 'openai';
 import { IThread } from './src/ui/types';
 
-interface ObsidianIntelligenceSettings {
+interface IntelligenceSettings {
     openaiKey: string;
     threads: IThread[];
     activeThread: IThread | undefined;
@@ -11,7 +11,7 @@ interface ObsidianIntelligenceSettings {
     activeAssistantFiles: OpenAI.Files.FileObject[] | undefined;
 }
 
-const DEFAULT_SETTINGS: ObsidianIntelligenceSettings = {
+const DEFAULT_SETTINGS: IntelligenceSettings = {
     openaiKey: '',
     threads: [],
     activeThread: undefined,
@@ -19,8 +19,8 @@ const DEFAULT_SETTINGS: ObsidianIntelligenceSettings = {
     activeAssistantFiles: undefined,
 };
 
-export default class ObsidianIntelligence extends Plugin {
-    settings: ObsidianIntelligenceSettings;
+export default class Intelligence extends Plugin {
+    settings: IntelligenceSettings;
     view: AppView;
 
     async onload() {
@@ -85,9 +85,9 @@ export default class ObsidianIntelligence extends Plugin {
 }
 
 class OISettingTab extends PluginSettingTab {
-    plugin: ObsidianIntelligence;
+    plugin: Intelligence;
 
-    constructor(app: App, plugin: ObsidianIntelligence) {
+    constructor(app: App, plugin: Intelligence) {
         super(app, plugin);
         this.plugin = plugin;
     }

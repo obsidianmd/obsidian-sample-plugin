@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import PluginView from './PluginView';
 import { App } from 'obsidian';
-import ObsidianIntelligence from '../../main';
+import Intelligence from '../../main';
 import OpenAI from 'openai';
 
 export const OBSIDIAN_INTELLIGENCE_VIEW_TYPE = 'obsidian-intelligence-view';
@@ -13,7 +13,7 @@ export const OBSIDIAN_INTELLIGENCE_VIEW_TYPE = 'obsidian-intelligence-view';
 export const AppContext = React.createContext<App | undefined>(undefined);
 
 export const PluginContext = React.createContext<
-    ObsidianIntelligence | undefined
+    Intelligence | undefined
 >(undefined);
 
 export const OpenAIContext = React.createContext<OpenAI | undefined>(undefined);
@@ -24,7 +24,7 @@ export const useApp = (): App | undefined => {
     return React.useContext(AppContext);
 };
 
-export const usePlugin = (): ObsidianIntelligence | undefined => {
+export const usePlugin = (): Intelligence | undefined => {
     return React.useContext(PluginContext);
 };
 
@@ -38,11 +38,11 @@ export const useOpenAI = (): OpenAI | undefined => {
 
 export class AppView extends ItemView {
     root: Root | null = null;
-    plugin: ObsidianIntelligence;
+    plugin: Intelligence;
     openAI: OpenAI;
     // commands: ICommandPayload | undefined;
 
-    constructor(leaf: WorkspaceLeaf, plugin: ObsidianIntelligence) {
+    constructor(leaf: WorkspaceLeaf, plugin: Intelligence) {
         super(leaf);
         this.plugin = plugin;
         const openaiKey = plugin.settings.openaiKey;
