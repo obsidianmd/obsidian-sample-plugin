@@ -70,10 +70,6 @@ const AssistantManager = ({
                             app.metadataCache.getBacklinksForFile(openFile)
                                 .data,
                         ).map((file) => file);
-                        console.log(
-                            'file metadata cache',
-                            app.metadataCache.getCache(openFile.path)?.links,
-                        );
                         const currentFile = openFile.path;
                         const filesToUpload = new Set([
                             currentFile,

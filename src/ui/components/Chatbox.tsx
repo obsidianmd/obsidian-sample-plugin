@@ -110,11 +110,6 @@ const Chatbox = ({ annotationFiles, isResponding, messages }: ChatboxProps) => {
 
                             const handleAnnotationClick = () => {
                                 // open new tab and then navigate to fil
-                                console.log(
-                                    'handleAnnotationClick',
-                                    app,
-                                    fileName,
-                                );
                                 if (app && fileName) {
                                     const file =
                                         app.vault.getAbstractFileByPath(
