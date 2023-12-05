@@ -1,10 +1,10 @@
 # Obsidian Intelligence
 
-> **Note**
-> Educate yourself with the related prices when using large language models like GPT-4 at https://openai.com/pricing. This model uses the Assistants API, which includes the following costs:
-> Code interpreter - $0.03 / session (free until 12/13/2023)
-> Retrieval - $0.20 / GB / assistant / day (free until 01/12/2024)
-> gpt-4-1106-preview - $0.01 / 1K tokens (input), $0.03 / 1K tokens (output)
+## DISCLAIMER
+Educate yourself on the related prices when using large language models like GPT-4 at https://openai.com/pricing. This model uses the Assistants API, which includes the following costs:
+- Code interpreter - $0.03/session (free until 12/13/2023)
+- Retrieval - $0.20/GB/assistant/day (free until 01/12/2024)
+- gpt-4-1106-preview - $0.01/1K tokens (input), $0.03/1K tokens (output)
 
 For feedback and questions, feel free to join my [discord](https://discord.com/invite/aQgbyj522e) and check my notes on the plugin.
 
