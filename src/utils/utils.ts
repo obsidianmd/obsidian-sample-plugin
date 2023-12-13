@@ -8,10 +8,6 @@ import {
     Vault,
 } from 'obsidian';
 
-export function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export function escape_RegExp(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
