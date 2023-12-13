@@ -54,15 +54,18 @@ export default class Intelligence extends Plugin {
     }
 
     async activateView() {
-        this.app.workspace.detachLeavesOfType(INTELLIGENCE_VIEW_TYPE);
-
+        
+        if (this.app.workspace.getLeavesOfType(INTELLIGENCE_VIEW_TYPE).length > 0) {
+            this.revealView();
+            return;
+        }
         await this.app.workspace.getRightLeaf(false).setViewState({
             type: INTELLIGENCE_VIEW_TYPE,
             active: true,
         });
-
         this.revealView();
     }
+
     async revealView() {
         this.app.workspace.revealLeaf(
             this.app.workspace.getLeavesOfType(INTELLIGENCE_VIEW_TYPE)[0],
