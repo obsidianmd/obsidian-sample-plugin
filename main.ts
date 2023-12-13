@@ -1,5 +1,5 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { AppView, OBSIDIAN_INTELLIGENCE_VIEW_TYPE } from './src/ui/AppView';
+import { AppView, INTELLIGENCE_VIEW_TYPE } from './src/ui/AppView';
 import OpenAI from 'openai';
 import { IThread } from './src/ui/types';
 
@@ -25,25 +25,11 @@ export default class Intelligence extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        this.registerView(OBSIDIAN_INTELLIGENCE_VIEW_TYPE, (leaf) => new AppView(leaf, this));
-
-        const ribbonIconEl = this.addRibbonIcon(
-            'bot',
-            'Open Obsidian Intelligence',
-            (evt: MouseEvent) => {
-                this.activateView();
-            },
-        );
-        // Perform additional things with the ribbon
-        ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-        // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-        const statusBarItemEl = this.addStatusBarItem();
-        statusBarItemEl.setText('Status Bar Text');
+        this.registerView(INTELLIGENCE_VIEW_TYPE, (leaf) => new AppView(leaf, this));
 
         this.addCommand({
-            id: 'obsidian-intelligence-view-open',
-            name: 'Open Obsidian Intelligence',
+            id: 'intelligence-view-open',
+            name: 'Open Intelligence',
             callback: () => {
                 this.activateView();
             },
@@ -68,10 +54,10 @@ export default class Intelligence extends Plugin {
     }
 
     async activateView() {
-        this.app.workspace.detachLeavesOfType(OBSIDIAN_INTELLIGENCE_VIEW_TYPE);
+        this.app.workspace.detachLeavesOfType(INTELLIGENCE_VIEW_TYPE);
 
         await this.app.workspace.getRightLeaf(false).setViewState({
-            type: OBSIDIAN_INTELLIGENCE_VIEW_TYPE,
+            type: INTELLIGENCE_VIEW_TYPE,
             active: true,
         });
 
@@ -79,7 +65,7 @@ export default class Intelligence extends Plugin {
     }
     async revealView() {
         this.app.workspace.revealLeaf(
-            this.app.workspace.getLeavesOfType(OBSIDIAN_INTELLIGENCE_VIEW_TYPE)[0],
+            this.app.workspace.getLeavesOfType(INTELLIGENCE_VIEW_TYPE)[0],
         );
     }
 }

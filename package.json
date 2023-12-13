@@ -1,7 +1,7 @@
 {
     "name": "obsidian-intelligence",
     "version": "1.0.0",
-    "description": "AI-powered assistants inside Obsidian",
+    "description": "Integrate OpenAI GPT Assistants functionality",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",

@@ -3,7 +3,7 @@
     "name": "Intelligence",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
-    "description": "OpenAI GPT Assistants functionality inside Obsidian",
+    "description": "Integrate OpenAI GPT Assistants functionality",
     "author": "John Mavrick",
     "authorUrl": "https://beacons.ai/johnmavrick",
     "fundingUrl": "https://patreon.com/johnmavrick",

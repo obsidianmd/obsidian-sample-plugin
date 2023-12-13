@@ -6,7 +6,7 @@ import { App } from 'obsidian';
 import Intelligence from '../../main';
 import OpenAI from 'openai';
 
-export const OBSIDIAN_INTELLIGENCE_VIEW_TYPE = 'obsidian-intelligence-view';
+export const INTELLIGENCE_VIEW_TYPE = 'obsidian-intelligence-view';
 
 
 
@@ -55,11 +55,11 @@ export class AppView extends ItemView {
     }
 
     getViewType() {
-        return OBSIDIAN_INTELLIGENCE_VIEW_TYPE;
+        return INTELLIGENCE_VIEW_TYPE;
     }
 
     getDisplayText() {
-        return 'Obsidian Intelligence';
+        return 'Intelligence';
     }
     getIcon(): string {
         return 'bot';
