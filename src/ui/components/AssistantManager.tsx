@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import OpenAI from 'openai';
-import { OBSIDIAN_INTELLIGENCE_VIEW_TYPE, useApp, useOpenAI, usePlugin } from '../AppView';
+import { INTELLIGENCE_VIEW_TYPE, useApp, useOpenAI, usePlugin } from '../AppView';
 import { IThread } from '../types';
 import DropdownSelect from './DropdownSelect';
 import { MarkdownView } from 'obsidian';
@@ -97,7 +97,7 @@ const AssistantManager = ({
             id: 'create-assistant-from-active-note',
             name: 'Create Thread',
             callback: async () => {
-                const isViewOpen = app.workspace.getLeavesOfType(OBSIDIAN_INTELLIGENCE_VIEW_TYPE).some((leaf) => {
+                const isViewOpen = app.workspace.getLeavesOfType(INTELLIGENCE_VIEW_TYPE).some((leaf) => {
                     return leaf.view;
                 });
                 if (!isViewOpen) {
@@ -109,10 +109,6 @@ const AssistantManager = ({
             }
         });
     }, [plugin]);
-
-    useEffect(() => {
-        console.log('threads update', threads);
-    }, [threads]);
 
     const createThread = async () => {
         if (!openaiInstance || !plugin) {
@@ -184,7 +180,7 @@ const AssistantManager = ({
 
         new ThreadEditModal({
             app,
-            title: 'Edit Thread',
+            title: 'Edit thread',
             submitButtonText: 'Edit',
             previousValues,
             onSubmit: editThread,
@@ -265,7 +261,7 @@ const AssistantManager = ({
         // setActiveAssistant(assistant);
         new AssistantEditModal({
             app,
-            title: 'Create New Assistant',
+            title: 'Create new assistant',
             submitButtonText: 'Create',
             previousValues: assistant,
             onSubmit: createAssistant,
