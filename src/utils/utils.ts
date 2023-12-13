@@ -1,4 +1,3 @@
-import { TemplaterError } from './error';
 import {
     App,
     normalizePath,
@@ -7,6 +6,7 @@ import {
     TFolder,
     Vault,
 } from 'obsidian';
+import { createNotice } from './Logs';
 
 export function escape_RegExp(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
@@ -25,10 +25,14 @@ export function resolve_tfolder(folder_str: string): TFolder {
 
     const folder = app.vault.getAbstractFileByPath(folder_str);
     if (!folder) {
-        throw new TemplaterError(`Folder "${folder_str}" doesn't exist`);
+        const message = `Folder "${folder_str}" doesn't exist`;
+        createNotice(message);
+        throw new Error(message);
     }
     if (!(folder instanceof TFolder)) {
-        throw new TemplaterError(`${folder_str} is a file, not a folder`);
+        const message = `${folder_str} is a file, not a folder`;
+        createNotice(message);
+        throw new Error(message);
     }
 
     return folder;
@@ -39,10 +43,14 @@ export function resolve_tfile(file_str: string): TFile {
 
     const file = app.vault.getAbstractFileByPath(file_str);
     if (!file) {
-        throw new TemplaterError(`File "${file_str}" doesn't exist`);
+        const message = `File "${file_str}" doesn't exist`;
+        createNotice(message);
+        throw new Error(message);
     }
     if (!(file instanceof TFile)) {
-        throw new TemplaterError(`${file_str} is a folder, not a file`);
+        const message = `${file_str} is a folder, not a file`;
+        createNotice(message);
+        throw new Error(message);
     }
 
     return file;
@@ -88,3 +96,4 @@ export function arraymove<T>(
 export function get_active_file(app: App) {
     return app.workspace.activeEditor?.file ?? app.workspace.getActiveFile();
 }
+
