@@ -6,7 +6,7 @@ import { App } from 'obsidian';
 import Intelligence from '../../main';
 import OpenAI from 'openai';
 
-export const INTELLIGENCE_VIEW_TYPE = 'obsidian-intelligence-view';
+export const INTELLIGENCE_VIEW_TYPE = 'intelligence-view';
 
 
 
