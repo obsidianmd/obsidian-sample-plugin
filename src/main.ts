@@ -154,7 +154,8 @@ export default class CustomSortPlugin extends Plugin {
 					aFile.path === `${this.settings.additionalSortspecFile}.md`  // when user configured Inbox/sort
 				) {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
-					if (sortingSpecTxt) {
+					// Warning: newer Obsidian versions can return objects as well, hence the explicit check for string value
+					if (typeof sortingSpecTxt === 'string') {
 						anySortingSpecFound = true
 						this.sortSpecCache = processor.parseSortSpecFromText(
 							sortingSpecTxt.split('\n'),
