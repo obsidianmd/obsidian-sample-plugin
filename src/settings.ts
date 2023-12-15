@@ -3,12 +3,10 @@ import MyPlugin from './main';
 
 
 export interface MyPluginSettings {
-	mySetting: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+};
 
 // Inspired by https://stackoverflow.com/a/50851710/13613783
 export type KeysOfType<Obj, Type> = NonNullable<{ [k in keyof Obj]: Obj[k] extends Type ? k : never }[keyof Obj]>;
