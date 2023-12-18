@@ -11,10 +11,6 @@ export default class MyPlugin extends Plugin {
 		this.addSettingTab(new SampleSettingTab(this));
 	}
 
-	onunload() {
-
-	}
-
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
