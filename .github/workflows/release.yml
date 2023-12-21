@@ -7,7 +7,7 @@ on:
       - "*" # Push events to matching any tag format, i.e. 1.0, 20.15.10
 
 env:
-  PLUGIN_NAME: intelligence # Change this to the name of your plugin-id folder
+  PLUGIN_NAME: obsidian-intelligence # Change this to the name of your plugin-id folder
 
 jobs:
   build:
