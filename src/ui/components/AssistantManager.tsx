@@ -87,14 +87,13 @@ const AssistantManager = ({
                                 })),
                         });
                     }
-                    // This command will only show up in Command Palette when the check function returns true
                     return true;
                 }
             },
         });
 
         plugin.addCommand({
-            id: 'create-assistant-from-active-note',
+            id: 'create-thread',
             name: 'Create Thread',
             callback: async () => {
                 const isViewOpen = app.workspace.getLeavesOfType(INTELLIGENCE_VIEW_TYPE).some((leaf) => {
