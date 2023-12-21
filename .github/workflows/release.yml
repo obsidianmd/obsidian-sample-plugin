@@ -7,18 +7,17 @@ on:
       - "*" # Push events to matching any tag format, i.e. 1.0, 20.15.10
 
 env:
-  PLUGIN_NAME: obsidian-intelligence # Change this to the name of your plugin-id folder
+  PLUGIN_NAME: intelligence # Change this to the name of your plugin-id folder
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: "21.1.0" # You might need to adjust this value to your own version
+          node-version: "18.16" # You might need to adjust this value to your own version
       - name: Build
         id: build
         run: |
