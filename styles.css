@@ -75,6 +75,12 @@
 }
 
 .annotation-tooltip-container {
+    max-height: 200px;
+    max-width: 300px;;
+    overflow-y: scroll;
+}
+
+.annotation-tooltip-content {
     display: flex;
     flex-direction: column;
 }
