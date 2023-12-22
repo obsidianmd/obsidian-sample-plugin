@@ -3,7 +3,7 @@
     "name": "Intelligence",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
-    "description": "Integrate OpenAI GPT Assistants functionality",
+    "description": "Turn your notes into personalized AI-powered assistants to retrieve ideas, think, and write. Powered by the OpenAI GPT Assistant API.",
     "author": "John Mavrick",
     "authorUrl": "https://beacons.ai/johnmavrick",
     "fundingUrl": "https://patreon.com/johnmavrick",
