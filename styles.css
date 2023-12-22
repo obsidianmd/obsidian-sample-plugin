@@ -260,6 +260,7 @@
 
 .form-setting-textarea textarea {
     resize: vertical;
+    width: 100%;
 }
 
 .modal-footer {
