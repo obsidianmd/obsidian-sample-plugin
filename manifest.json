@@ -1,7 +1,7 @@
 {
     "id": "intelligence",
     "name": "Intelligence",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "minAppVersion": "0.15.0",
     "description": "Turn your notes into personalized AI-powered assistants to retrieve ideas, think, and write. Powered by the OpenAI GPT Assistant API.",
     "author": "John Mavrick",
