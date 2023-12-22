@@ -39,7 +39,7 @@ export default class Intelligence extends Plugin {
         this.addSettingTab(new OISettingTab(this.app, this));
     }
 
-    onunload() {}
+    onunload() { }
 
     async loadSettings() {
         this.settings = Object.assign(
@@ -54,7 +54,7 @@ export default class Intelligence extends Plugin {
     }
 
     async activateView() {
-        
+
         if (this.app.workspace.getLeavesOfType(INTELLIGENCE_VIEW_TYPE).length > 0) {
             this.revealView();
             return;
@@ -86,9 +86,44 @@ class OISettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
+        const settingPageHeader = containerEl.createEl('div', { cls: 'setting-item setting-item-heading' });
+        const extraSectionInfo = settingPageHeader.createEl('div', { cls: 'setting-item-info' });
+
+        extraSectionInfo.createEl('div', { text: 'Intelligence', cls: 'setting-item-name' });
+
+        const colorDesc = extraSectionInfo.createEl('div', { cls: 'setting-item-description' });
+
+        colorDesc.appendChild(
+            createEl('span', {
+                text: 'You can also view and modify assistants/threads online from the '
+            })
+        );
+
+        colorDesc.appendChild(
+            createEl('a', {
+                text: "OpenAI Developer Playground",
+                href: "https://platform.openai.com/assistants",
+            })
+        );
+
+        const keyDescription = document.createDocumentFragment();
+
+        keyDescription.appendChild(
+            createEl('span', {
+                text: 'You can find your OpenAI key at ',
+            }),
+        );
+
+        keyDescription.appendChild(
+            createEl('a', {
+                text: 'https://platform.openai.com/api-keys',
+                href: 'https://platform.openai.com/api-keys',
+            }),
+        );
+
         new Setting(containerEl)
             .setName('OpenAI Key')
-            .setDesc('Can find it https://platform.openai.com/api-keys')
+            .setDesc(keyDescription)
             .addText((text) =>
                 text
                     .setPlaceholder('Enter your API Key')
