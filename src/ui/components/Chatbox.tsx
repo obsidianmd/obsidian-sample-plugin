@@ -109,7 +109,7 @@ const Chatbox = ({ annotationFiles, isResponding, messages }: ChatboxProps) => {
                             }
 
                             const handleAnnotationClick = () => {
-                                // open new tab and then navigate to fil
+                                // open new tab and then navigate to file
                                 if (app && fileName) {
                                     const file =
                                         app.vault.getAbstractFileByPath(
@@ -131,7 +131,7 @@ const Chatbox = ({ annotationFiles, isResponding, messages }: ChatboxProps) => {
                                     >
                                         [^{index}]
                                     </a>
-                                    <Tooltip id={`tooltip-${index}`}>
+                                    <Tooltip id={`tooltip-${index}`} clickable>
                                         <div className="annotation-tooltip-container">
                                             <strong>{fileName}</strong>
                                             <Markdown>{quote}</Markdown>
