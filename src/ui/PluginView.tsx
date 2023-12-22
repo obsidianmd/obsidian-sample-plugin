@@ -52,6 +52,12 @@ const PluginView = () => {
         }
     }, [threads]);
 
+    useEffect(() => {
+        if (activeAssistant) {
+            updateActiveAssistantFiles();
+        }
+    }, [activeAssistant]);
+
     const fetchAssistants = async () => {
         if (!openaiInstance) {
             return;
@@ -91,18 +97,17 @@ const PluginView = () => {
     const updateActiveAssistant = async (assistant: OpenAI.Beta.Assistant) => {
         if (plugin) {
             plugin.settings.activeAssistant = assistant;
-            const assistantFiles = await fetchAssistantFiles();
-            updateActiveAssistantFiles(assistantFiles);
             plugin.saveSettings();
             setActiveAssistant(assistant);
         }
     };
 
-    const updateActiveAssistantFiles = (files: OpenAI.Files.FileObject[]) => {
+    const updateActiveAssistantFiles = async () => {
         if (plugin) {
-            plugin.settings.activeAssistantFiles = files;
+            const activeFiles = await fetchAssistantFiles();
+            plugin.settings.activeAssistantFiles = activeFiles;
             plugin.saveSettings();
-            setActiveAssistantFiles(files);
+            setActiveAssistantFiles(activeFiles);
         }
     };
 

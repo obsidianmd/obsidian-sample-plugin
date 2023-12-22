@@ -6,7 +6,7 @@ import { Tooltip } from 'react-tooltip';
 import Markdown from 'react-markdown';
 import { useApp } from '../AppView';
 import { createNotice } from '@/utils/Logs';
-import { TFile } from 'obsidian';
+import { TAbstractFile, TFile } from 'obsidian';
 import { ThreadAnnotationFile } from '../types';
 
 const override: CSSProperties = {
@@ -111,10 +111,12 @@ const Chatbox = ({ annotationFiles, isResponding, messages }: ChatboxProps) => {
                             const handleAnnotationClick = () => {
                                 // open new tab and then navigate to file
                                 if (app && fileName) {
+                                console.log('filename found')
                                     const file =
                                         app.vault.getAbstractFileByPath(
                                             fileName,
                                         );
+                                        console.log('file found', file, file instanceof TAbstractFile, file instanceof TFile)
                                     if (file && file instanceof TFile) {
                                         app.workspace.getLeaf().openFile(file);
                                     }
@@ -131,8 +133,8 @@ const Chatbox = ({ annotationFiles, isResponding, messages }: ChatboxProps) => {
                                     >
                                         [^{index}]
                                     </a>
-                                    <Tooltip id={`tooltip-${index}`} clickable>
-                                        <div className="annotation-tooltip-container">
+                                    <Tooltip id={`tooltip-${index}`} className="annotation-tooltip-container" clickable>
+                                        <div className="annotation-tooltip-content">
                                             <strong>{fileName}</strong>
                                             <Markdown>{quote}</Markdown>
                                         </div>
