@@ -485,9 +485,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				break
 		}
 		if (determined && derivedText) {
-			if (!group.overrideTitle) {
-				derivedText = derivedText + '//' + entry.name
-			}
+			derivedText = derivedText + '//' + entry.name
 		}
 	}
 
