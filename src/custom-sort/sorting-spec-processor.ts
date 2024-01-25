@@ -334,6 +334,9 @@ const CompoundNumberDashRegexSymbol: string = '\\-d+'  // Compound number with d
 const WordInASCIIRegexSymbol: string = '\\a+'
 const WordInAnyLanguageRegexSymbol: string = '\\A+'
 
+// _1_ prefix indicates a lexeme which includes another lexeme and thus has to become first-to-scan
+const _1_InlineRegexSymbol_Dot: string = '\\DOT'
+
 const InlineRegexSymbol_Digit1: string = '\\d'
 const InlineRegexSymbol_Digit2: string = '\\[0-9]'
 const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
@@ -361,11 +364,12 @@ const sortingSymbolsArr: Array<string> = [
 const sortingSymbolsRegex = new RegExp(sortingSymbolsArr.join('|'), 'gi')
 
 const inlineRegexSymbolsArrEscapedForRegex: Array<string> = [
+	escapeRegexUnsafeCharacters(_1_InlineRegexSymbol_Dot),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit1),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit2),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_0_to_3),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_CapitalLetter),
-	escapeRegexUnsafeCharacters(InlineRegexSymbol_LowercaseLetter)
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_LowercaseLetter),
 ]
 
 interface RegexExpr {
@@ -376,11 +380,12 @@ interface RegexExpr {
 
 // Don't be confused if the source lexeme is equal to the resulting regex piece, logically these two distinct spaces
 const inlineRegexSymbolsToRegexExpressionsArr: { [key: string]: RegexExpr} = {
+	[_1_InlineRegexSymbol_Dot]: {regexExpr: '\\.'},
 	[InlineRegexSymbol_Digit1]: {regexExpr: '\\d'},
 	[InlineRegexSymbol_Digit2]: {regexExpr: '[0-9]'},
 	[InlineRegexSymbol_0_to_3]: {regexExpr: '[0-3]'},
 	[InlineRegexSymbol_CapitalLetter]: {regexExpr: '[\\p{Lu}\\p{Lt}]', isUnicode: true, isCaseSensitive: true},
-	[InlineRegexSymbol_LowercaseLetter]: {regexExpr: '\\p{Ll}', isUnicode: true, isCaseSensitive: true}
+	[InlineRegexSymbol_LowercaseLetter]: {regexExpr: '\\p{Ll}', isUnicode: true, isCaseSensitive: true},
 }
 
 const inlineRegexSymbolsDetectionRegex = new RegExp(inlineRegexSymbolsArrEscapedForRegex.join('|'), 'gi')
