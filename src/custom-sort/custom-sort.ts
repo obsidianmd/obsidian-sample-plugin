@@ -58,7 +58,8 @@ export const CollatorTrueAlphabeticalCompare = new Intl.Collator(undefined, {
 export interface FolderItemForSorting {
 	path: string
 	groupIdx?: number  // the index itself represents order for groups
-	sortString: string // fragment (or full name) to be used for sorting
+	sortString: string // file basename / folder name to be used for sorting (optionally prefixed with regexp-matched group)
+	sortStringWithExt: string // same as above, yet full filename (with ext)
 	metadataFieldValue?: string // relevant to metadata-based group sorting only
 	metadataFieldValueSecondary?: string // relevant to secondary metadata-based sorting only
 	metadataFieldValueForDerived?: string // relevant to metadata-based sorting-spec level sorting only
@@ -170,9 +171,13 @@ export const sorterByFolderMDate:(reverseOrder?: boolean) => SorterFn = (reverse
 
 const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
+	[CustomSortOrder.alphabeticalWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortStringWithExt, b.sortStringWithExt),
 	[CustomSortOrder.trueAlphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
+	[CustomSortOrder.trueAlphabeticalWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortStringWithExt, b.sortStringWithExt),
 	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortString, a.sortString),
+	[CustomSortOrder.alphabeticalReverseWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortStringWithExt, a.sortStringWithExt),
 	[CustomSortOrder.trueAlphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(b.sortString, a.sortString),
+	[CustomSortOrder.trueAlphabeticalReverseWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(b.sortStringWithExt, a.sortStringWithExt),
 	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.mtime - b.mtime),
 	[CustomSortOrder.byModifiedTimeAdvanced]: sorterByFolderMDate(),
 	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.mtime - a.mtime),
@@ -351,6 +356,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	let groupIdx: number
 	let determined: boolean = false
 	let derivedText: string | null | undefined
+	let derivedTextWithExt: string | undefined
 	let bookmarkedIdx: number | undefined
 
 	const aFolder: boolean = isFolder(entry)
@@ -485,7 +491,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				break
 		}
 		if (determined && derivedText) {
-			derivedText = derivedText + '//' + entry.name
+			derivedTextWithExt = derivedText + '//' + entry.name
+			derivedText = derivedText + '//' + basename
 		}
 	}
 
@@ -541,7 +548,8 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	return {
 		// idx of the matched group or idx of Outsiders group or the largest index (= groups count+1)
 		groupIdx: determinedGroupIdx,
-		sortString: derivedText ?? entry.name,
+		sortString: derivedText ?? basename,
+		sortStringWithExt: derivedText ? derivedTextWithExt! : entry.name,
 		metadataFieldValue: metadataValueToSortBy,
 		metadataFieldValueSecondary: metadataValueSecondaryToSortBy,
 		metadataFieldValueForDerived: metadataValueDerivedPrimaryToSortBy,

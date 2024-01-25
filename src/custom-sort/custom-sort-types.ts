@@ -13,9 +13,13 @@ export enum CustomSortGroupType {
 
 export enum CustomSortOrder {
 	alphabetical = 1,  // = 1 to allow: if (customSortOrder) { ...
+	alphabeticalWithFileExt,
 	trueAlphabetical,
+	trueAlphabeticalWithFileExt,
 	alphabeticalReverse,
+	alphabeticalReverseWithFileExt,
 	trueAlphabeticalReverse,
+	trueAlphabeticalReverseWithFileExt,
 	byModifiedTime,   // New to old
 	byModifiedTimeAdvanced,
 	byModifiedTimeReverse,  // Old to new

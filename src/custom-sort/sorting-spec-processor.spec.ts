@@ -78,7 +78,7 @@ target-folder: Sandbox
 target-folder: Abcd efgh ijk
 > a-z
 Plain text spec bla bla bla (matches files and folders)...
-/: files only matching
+/:. files only matching
   > a-z
 / folders only matching
   < a-z
@@ -143,7 +143,7 @@ target-folder: Sandbox
 target-folder: Abcd efgh ijk
 \> a-z
 Plain text spec bla bla bla (matches files and folders)...
-/:files files only matching
+/:files. files only matching
   > a-z
 /folders folders only matching
   \< a-z
@@ -317,6 +317,7 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			exactText: "files only matching",
 			filesOnly: true,
 			order: CustomSortOrder.alphabeticalReverse,
+			matchFilenameWithExt: true,
 			type: CustomSortGroupType.ExactName
 		}, {
 			exactText: "folders only matching",
@@ -531,6 +532,10 @@ target-folder: True Alpha
 < true a-z
 target-folder: True Alpha Rev
 > true a-z
+target-folder: True Alpha withExt
+< true a-z.
+target-folder: True Alpha Rev withExt
+> true a-z.
 target-folder: by-meta True Alpha
 < true a-z by-metadata:
 target-folder: by-meta True Alpha Rev
@@ -553,6 +558,22 @@ const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpe
 		}],
 		outsidersGroupIdx: 0,
 		targetFoldersPaths: ['True Alpha Rev']
+	},
+	"True Alpha withExt": {
+		defaultOrder: CustomSortOrder.trueAlphabeticalWithFileExt,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['True Alpha withExt']
+	},
+	"True Alpha Rev withExt": {
+		defaultOrder: CustomSortOrder.trueAlphabeticalReverseWithFileExt,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['True Alpha Rev withExt']
 	},
 	"by-meta True Alpha": {
 		defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
@@ -1453,7 +1474,7 @@ describe('multi-level sorting', () => {
 		a pre
 		  order-asc: true a-z, order-asc: modified
 		a pre 2
-		  order-asc: true a-z, < modified
+		  order-asc: true a-z., < modified
 		a post 1
 		  order-asc: true a-z, modified order-asc
 		a post 2
@@ -1477,7 +1498,7 @@ describe('multi-level sorting', () => {
 		d post
 		  order-desc: true a-z, modified >
 		d none
-		  order-desc: true a-z, modified
+		  order-desc: true a-z., modified
 		d unspecified
 		  order-desc: true a-z, sorting: modified
 		d dbl specified
@@ -1493,7 +1514,7 @@ describe('multi-level sorting', () => {
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a pre 2",
-					order: CustomSortOrder.trueAlphabetical,
+					order: CustomSortOrder.trueAlphabeticalWithFileExt,
 					secondaryOrder: CustomSortOrder.byModifiedTime,
 					type: CustomSortGroupType.ExactName
 				},{
@@ -1553,7 +1574,7 @@ describe('multi-level sorting', () => {
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d none",
-					order: CustomSortOrder.trueAlphabeticalReverse,
+					order: CustomSortOrder.trueAlphabeticalReverseWithFileExt,
 					secondaryOrder: CustomSortOrder.byModifiedTime,
 					type: CustomSortGroupType.ExactName
 				},{
@@ -1582,7 +1603,7 @@ describe('multi-level sorting', () => {
 		a c d
 		  < a-z, created desc
 		a ac a
-		  < a-z, advanced created asc
+		  < a-z., advanced created asc
 		a ac d
 		  < a-z, advanced created desc
 		a m a
@@ -1594,7 +1615,7 @@ describe('multi-level sorting', () => {
 		a am d
 		  < a-z, advanced modified desc
 		d c a
-		  > a-z, created asc
+		  > a-z., created asc
 		d c d
 		  > a-z, created desc
 		d ac a
@@ -1625,7 +1646,7 @@ describe('multi-level sorting', () => {
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a ac a",
-					order: CustomSortOrder.alphabetical,
+					order: CustomSortOrder.alphabeticalWithFileExt,
 					secondaryOrder: CustomSortOrder.byCreatedTimeAdvanced,
 					type: CustomSortGroupType.ExactName
 				},{
@@ -1655,7 +1676,7 @@ describe('multi-level sorting', () => {
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d c a",
-					order: CustomSortOrder.alphabeticalReverse,
+					order: CustomSortOrder.alphabeticalReverseWithFileExt,
 					secondaryOrder: CustomSortOrder.byCreatedTime,
 					type: CustomSortGroupType.ExactName
 				}, {
@@ -1777,14 +1798,14 @@ describe('the sorting: prefix', () => {
 	})
 	it('secondary should not inherit direction from primary', () => {
 		const inputTxtArr: Array<string> = `
-		/folders:files
-		  sorting: a-z desc, sorting: advanced modified
+		/folders:files.
+		  sorting: a-z. desc, sorting: advanced modified
 		`.replace(/\t/gi, '').split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			'mock-folder': {
 				groups: [{
-					order: CustomSortOrder.alphabeticalReverse,
+					order: CustomSortOrder.alphabeticalReverseWithFileExt,
 					secondaryOrder: CustomSortOrder.byModifiedTimeAdvanced,
 					type: CustomSortGroupType.Outsiders
 				}],

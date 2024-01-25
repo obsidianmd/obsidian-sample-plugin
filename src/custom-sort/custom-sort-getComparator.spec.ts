@@ -97,7 +97,8 @@ const AB_EQUAL: number = 0
 const BaseItemForSorting1: FolderItemForSorting = {
 	groupIdx: 1,
 	isFolder: false,
-	sortString: "References.md",
+	sortString: "References",
+	sortStringWithExt: "References.md",
 	ctime: MOCK_TIMESTAMP + 222,
 	mtime: MOCK_TIMESTAMP + 333,
 	path: 'parent folder/References.md',

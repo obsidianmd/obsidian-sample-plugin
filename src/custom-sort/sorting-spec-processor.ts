@@ -112,7 +112,9 @@ const MAX_SORT_LEVEL: number = 1
 
 // remember about .toLowerCase() before comparison!
 const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
+	'a-z.': {asc: CustomSortOrder.alphabeticalWithFileExt, desc: CustomSortOrder.alphabeticalReverseWithFileExt},
 	'a-z': {asc: CustomSortOrder.alphabetical, desc: CustomSortOrder.alphabeticalReverse},
+	'true a-z.': {asc: CustomSortOrder.trueAlphabeticalWithFileExt, desc: CustomSortOrder.trueAlphabeticalReverseWithFileExt},
 	'true a-z': {asc: CustomSortOrder.trueAlphabetical, desc: CustomSortOrder.trueAlphabeticalReverse},
 	'created': {asc: CustomSortOrder.byCreatedTime, desc: CustomSortOrder.byCreatedTimeReverse},
 	'modified': {asc: CustomSortOrder.byModifiedTime, desc: CustomSortOrder.byModifiedTimeReverse},
@@ -215,7 +217,11 @@ const OrdersSupportedByMetadata: { [key in CustomSortOrder]?: CustomSortOrder} =
 	[CustomSortOrder.alphabetical]: CustomSortOrder.byMetadataFieldAlphabetical,
 	[CustomSortOrder.alphabeticalReverse]: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
 	[CustomSortOrder.trueAlphabetical]: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-	[CustomSortOrder.trueAlphabeticalReverse]: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
+	[CustomSortOrder.trueAlphabeticalReverse]: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+	[CustomSortOrder.alphabeticalWithFileExt]: CustomSortOrder.byMetadataFieldAlphabetical,
+	[CustomSortOrder.alphabeticalReverseWithFileExt]: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+	[CustomSortOrder.trueAlphabeticalWithFileExt]: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+	[CustomSortOrder.trueAlphabeticalReverseWithFileExt]: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
 }
 
 const CURRENT_FOLDER_SYMBOL: string = '.'
@@ -228,15 +234,20 @@ interface ParsedSortingAttribute {
 
 type AttrValueValidatorFn = (v: string, attr: Attribute, attrLexeme: string) => any|AttrError|null;
 
+// Lexemes with name prefix _1_ have to be checked before others, because they are longer variants of shorter lexemes
+//    and thus plain parsing would detect the shorter contained variants first otherwise.
+
 const FilesGroupVerboseLexeme: string = '/:files'
 const FilesGroupShortLexeme: string = '/:'
-const FilesWithExtGroupVerboseLexeme: string = '/:files.'
-const FilesWithExtGroupShortLexeme: string = '/:.'
+const _1_FilesWithExtGroupVerboseLexeme: string = '/:files.'
+const _1_FilesWithExtGroupShortLexeme: string = '/:.'
 const FoldersGroupVerboseLexeme: string = '/folders'
 const FoldersGroupShortLexeme: string = '/'
 const AnyTypeGroupLexemeShort: string = '%'  // See % as a combination of / and :
 const AnyTypeGroupLexeme1: string = '/folders:files'
+const _1_AnyTypeWithExtGroupLexeme1: string = '/folders:files.'
 const AnyTypeGroupLexeme2: string = '/%'  // See % as a combination of / and :
+const _1_AnyTypeWithExtGroupLexeme2: string = '/%.'  // See % as a combination of / and :.
 const HideItemShortLexeme: string = '--%'  // See % as a combination of / and :
 const HideItemVerboseLexeme: string = '/--hide:'
 
@@ -289,10 +300,12 @@ interface SortingGroupType {
 }
 
 const SortingGroupPrefixes: { [key: string]: SortingGroupType } = {
+	[_1_AnyTypeWithExtGroupLexeme1]: {filenameWithExt: true},
+	[_1_AnyTypeWithExtGroupLexeme2]: {filenameWithExt: true},
+	[_1_FilesWithExtGroupShortLexeme]: {filesOnly: true, filenameWithExt: true},
+	[_1_FilesWithExtGroupVerboseLexeme]: {filesOnly: true, filenameWithExt: true},
 	[FilesGroupShortLexeme]: {filesOnly: true},
 	[FilesGroupVerboseLexeme]: {filesOnly: true},
-	[FilesWithExtGroupShortLexeme]: {filesOnly: true, filenameWithExt: true},
-	[FilesWithExtGroupVerboseLexeme]: {filesOnly: true, filenameWithExt: true},
 	[FoldersGroupShortLexeme]: {foldersOnly: true},
 	[FoldersGroupVerboseLexeme]: {foldersOnly: true},
 	[AnyTypeGroupLexemeShort]: {},

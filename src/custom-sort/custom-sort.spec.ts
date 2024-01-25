@@ -109,7 +109,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -134,7 +135,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx (no match)
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/References.md'
@@ -161,7 +163,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx (no match)
 				isFolder: false,
-				sortString: "Part123:-icle.md",
+				sortString: "Part123:-icle",
+				sortStringWithExt: "Part123:-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
@@ -189,7 +192,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
-				sortString: "Part123:-icle.md",
+				sortString: "Part123:-icle",
+				sortStringWithExt: "Part123:-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
@@ -217,7 +221,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0, // Matched!
 				isFolder: false,
-				sortString: "Part123:-icle.md",
+				sortString: "Part123:-icle",
+				sortStringWithExt: "Part123:-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
@@ -245,7 +250,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0, // Matched!
 				isFolder: false,
-				sortString: "00000123////Part123:-icle.md",
+				sortString: "00000123////Part123:-icle",
+				sortStringWithExt: "00000123////Part123:-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part123:-icle.md'
@@ -273,7 +279,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
-				sortString: "Part:123-icle.md",
+				sortString: "Part:123-icle",
+				sortStringWithExt: "Part:123-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
@@ -302,7 +309,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0, // Matched!
 				isFolder: false,
-				sortString: "Part:123-icle.md",
+				sortString: "Part:123-icle",
+				sortStringWithExt: "Part:123-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
@@ -332,7 +340,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0, // Matched!
 				isFolder: false,
-				sortString: "00000001|00000023////Part:1 1-23.456-icle.md",
+				sortString: "00000001|00000023////Part:1 1-23.456-icle",
+				sortStringWithExt: "00000001|00000023////Part:1 1-23.456-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:1 1-23.456-icle.md'
@@ -360,7 +369,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0, // Matched!
 				isFolder: false,
-				sortString: "00000123////Part:123-icle.md",
+				sortString: "00000123////Part:123-icle",
+				sortStringWithExt: "00000123////Part:123-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part:123-icle.md'
@@ -391,7 +401,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0, // Matched!
 				isFolder: false,
-				sortString: "00000555|00000006//00000123////Part 555-6 123-icle.md",
+				sortString: "00000555|00000006//00000123////Part 555-6 123-icle",
+				sortStringWithExt: "00000555|00000006//00000123////Part 555-6 123-icle.md",
 				ctime: MOCK_TIMESTAMP + 555,
 				mtime: MOCK_TIMESTAMP + 666,
 				path: 'Some parent folder/Part 555-6 123-icle.md'
@@ -417,7 +428,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -443,7 +455,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "Ref2erences.md",
+				sortString: "Ref2erences",
+				sortStringWithExt: "Ref2erences.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Ref2erences.md'
@@ -470,7 +483,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
+				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm',
+				sortStringWithExt: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -493,7 +507,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -519,7 +534,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -545,7 +561,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References 12.md",
+				sortString: "References 12",
+				sortStringWithExt: "References 12.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References 12.md'
@@ -572,7 +589,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
+				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm',
+				sortStringWithExt: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -595,7 +613,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -620,7 +639,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -646,7 +666,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -672,7 +693,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References 12.md",
+				sortString: "References 12",
+				sortStringWithExt: "References 12.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References 12.md'
@@ -699,7 +721,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
+				sortString: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm',
+				sortStringWithExt: '00000001|00000030|00000006|00001900////Reference i.xxx.vi.mcm.md',
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/Reference i.xxx.vi.mcm.md'
@@ -722,7 +745,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -747,7 +771,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1, // This indicates the last+1 idx
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -774,7 +799,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0, // This indicates match!
 				isFolder: false,
-				sortString: "gs-123.md",
+				sortString: "gs-123",
+				sortStringWithExt: "gs-123.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/gs-123.md'
@@ -815,7 +841,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -854,7 +881,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1,  // lastIdx + 1, group not determined
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -893,7 +921,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -933,6 +962,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "References",
+				sortStringWithExt: "References",
 				ctime: DEFAULT_FOLDER_CTIME,
 				mtime: DEFAULT_FOLDER_MTIME,
 				path: 'References',
@@ -965,7 +995,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -996,7 +1027,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -1028,6 +1060,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1067,6 +1101,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1106,6 +1142,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1147,7 +1185,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -1182,7 +1221,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -1216,7 +1256,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -1251,7 +1292,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
@@ -1283,6 +1325,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // The lastIdx+1, group not determined
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1325,6 +1369,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1370,6 +1416,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1413,6 +1461,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1459,6 +1509,8 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
+
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1502,6 +1554,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1, // lastIdx+1 - no match
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1548,6 +1601,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 1,  // lastIdx+1 - no match
 				isFolder: true,
 				sortString: "TestEmptyFolder",
+				sortStringWithExt: "TestEmptyFolder",
 				ctime: 0,
 				mtime: 0,
 				path: 'TestEmptyFolder',
@@ -1598,7 +1652,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1639,7 +1694,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1680,7 +1736,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1721,7 +1778,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1763,6 +1821,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "References",
+				sortStringWithExt: "References",
 				ctime: DEFAULT_FOLDER_CTIME,
 				mtime: DEFAULT_FOLDER_MTIME,
 				path: 'References',
@@ -1805,7 +1864,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1845,7 +1905,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1885,7 +1946,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1930,7 +1992,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -1972,7 +2035,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -2015,7 +2079,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -2059,7 +2124,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -2103,6 +2169,7 @@ describe('determineSortingGroup', () => {
 				groupIdx: 0,
 				isFolder: true,
 				sortString: "References",
+				sortStringWithExt: "References",
 				ctime: DEFAULT_FOLDER_CTIME,
 				mtime: DEFAULT_FOLDER_MTIME,
 				path: 'References',
@@ -2147,7 +2214,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -2188,7 +2256,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -2229,7 +2298,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -2282,7 +2352,8 @@ describe('determineSortingGroup', () => {
 			expect(result).toEqual({
 				groupIdx: 0,
 				isFolder: false,
-				sortString: "References.md",
+				sortString: "References",
+				sortStringWithExt: "References.md",
 				ctime: MOCK_TIMESTAMP + 222,
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md',
@@ -2332,7 +2403,8 @@ describe('determineSortingGroup', () => {
 		expect(result).toEqual({
 			groupIdx: 3,
 			isFolder: false,
-			sortString: "Abcdef!.md",
+			sortString: "Abcdef!",
+				sortStringWithExt: "Abcdef!.md",
 			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Abcdef!.md'
@@ -2381,7 +2453,8 @@ describe('determineSortingGroup', () => {
 		expect(result1).toEqual({
 			groupIdx: 1, // Imposed by combined groups
 			isFolder: false,
-			sortString: "Hello :-) ha.md",
+			sortString: "Hello :-) ha",
+				sortStringWithExt: "Hello :-) ha.md",
 			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Hello :-) ha.md'
@@ -2389,7 +2462,8 @@ describe('determineSortingGroup', () => {
 		expect(result2).toEqual({
 			groupIdx: 1, // Imposed by combined groups
 			isFolder: false,
-			sortString: "Hello World :-).md",
+			sortString: "Hello World :-)",
+				sortStringWithExt: "Hello World :-).md",
 			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Hello World :-).md'
@@ -2434,7 +2508,8 @@ describe('determineSortingGroup', () => {
 		expect(result).toEqual({
 			groupIdx: 2, // Imposed by combined groups
  			isFolder: false,
-			sortString: "Hello :-).md",
+			sortString: "Hello :-)",
+				sortStringWithExt: "Hello :-).md",
 			ctime: MOCK_TIMESTAMP + 222,
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Hello :-).md'
