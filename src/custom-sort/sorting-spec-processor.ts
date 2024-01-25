@@ -98,6 +98,10 @@ const ContextFreeProblems = new Set<ProblemCode>([
 const ThreeDots = '...';
 const ThreeDotsLength = ThreeDots.length;
 
+const AmbigueFourDotsEscaper = './...'
+const AmbigueFourDotsEscaperLength = AmbigueFourDotsEscaper.length
+const AmbigueFourDotsEscaperOverlap = 1  // Number of leading chars in the Escaper to retain in original string
+
 interface CustomSortOrderAscDescPair {
 	asc: CustomSortOrder
 	desc: CustomSortOrder
@@ -365,7 +369,7 @@ const inlineRegexSymbolsArrEscapedForRegex: Array<string> = [
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit2),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_0_to_3),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_CapitalLetter),
-	escapeRegexUnsafeCharacters(InlineRegexSymbol_LowercaseLetter)
+	escapeRegexUnsafeCharacters(InlineRegexSymbol_LowercaseLetter),
 ]
 
 interface RegexExpr {
@@ -380,7 +384,7 @@ const inlineRegexSymbolsToRegexExpressionsArr: { [key: string]: RegexExpr} = {
 	[InlineRegexSymbol_Digit2]: {regexExpr: '[0-9]'},
 	[InlineRegexSymbol_0_to_3]: {regexExpr: '[0-3]'},
 	[InlineRegexSymbol_CapitalLetter]: {regexExpr: '[\\p{Lu}\\p{Lt}]', isUnicode: true, isCaseSensitive: true},
-	[InlineRegexSymbol_LowercaseLetter]: {regexExpr: '\\p{Ll}', isUnicode: true, isCaseSensitive: true}
+	[InlineRegexSymbol_LowercaseLetter]: {regexExpr: '\\p{Ll}', isUnicode: true, isCaseSensitive: true},
 }
 
 const inlineRegexSymbolsDetectionRegex = new RegExp(inlineRegexSymbolsArrEscapedForRegex.join('|'), 'gi')
@@ -1554,7 +1558,7 @@ export class SortingSpecProcessor {
 		[Attribute.OrderUnspecified]: this.validateOrderAttrValue.bind(this)
 	}
 
-	 convertPlainStringSortingGroupSpecToArraySpec = (spec: string): Array<string> => {
+	convertPlainStringSortingGroupSpecToArraySpec = (spec: string): Array<string> => {
 		spec = spec.trim()
 		if (isThreeDots(spec)) {
 			return [ThreeDots]
@@ -1563,16 +1567,30 @@ export class SortingSpecProcessor {
 			return [ThreeDots, spec.substring(ThreeDotsLength)];
 		}
 		if (spec.endsWith(ThreeDots)) {
-			return [spec.substring(0, spec.length - ThreeDotsLength), ThreeDots];
+			if (spec.endsWith(AmbigueFourDotsEscaper)) {
+				return [spec.substring(0, spec.length - AmbigueFourDotsEscaperLength + AmbigueFourDotsEscaperOverlap), ThreeDots];
+			} else {
+				return [spec.substring(0, spec.length - ThreeDotsLength), ThreeDots];
+			}
 		}
 
 		const idx = spec.indexOf(ThreeDots);
+		const idxOfAmbigueFourDotsEscaper = spec.indexOf(AmbigueFourDotsEscaper)
 		if (idx > 0) {
-			return [
-				spec.substring(0, idx),
-				ThreeDots,
-				spec.substring(idx + ThreeDotsLength)
-			];
+			if (idxOfAmbigueFourDotsEscaper >= 0 &&
+				idxOfAmbigueFourDotsEscaper === idx - (AmbigueFourDotsEscaperLength - ThreeDotsLength) ) {
+				return [
+					spec.substring(0, idxOfAmbigueFourDotsEscaper + AmbigueFourDotsEscaperOverlap),
+					ThreeDots,
+					spec.substring(idx + ThreeDotsLength)
+				];
+			} else {
+				return [
+					spec.substring(0, idx),
+					ThreeDots,
+					spec.substring(idx + ThreeDotsLength)
+				];
+			}
 		}
 
 		// Unrecognized, treat as exact match
