@@ -202,8 +202,8 @@ const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byBookmarkOrder]: sorterByBookmarkOrder(StraightOrder),
 	[CustomSortOrder.byBookmarkOrderReverse]: sorterByBookmarkOrder(ReverseOrder),
-	[CustomSortOrder.fileFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? 1 : -1),
-	[CustomSortOrder.folderFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? -1 : 0),
+	[CustomSortOrder.fileFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder === b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? 1 : -1),
+	[CustomSortOrder.folderFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder === b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? -1 : 1),
 
 	// A fallback entry which should not be used - the getSorterFor() function below should protect against it
 	[CustomSortOrder.standardObsidian]: (a: FIFS, b: FIFS) => CollatorCompare(a.sortString, b.sortString),
