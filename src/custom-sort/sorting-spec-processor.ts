@@ -98,6 +98,10 @@ const ContextFreeProblems = new Set<ProblemCode>([
 const ThreeDots = '...';
 const ThreeDotsLength = ThreeDots.length;
 
+const AmbigueFourDotsEscaper = './...'
+const AmbigueFourDotsEscaperLength = AmbigueFourDotsEscaper.length
+const AmbigueFourDotsEscaperOverlap = 1  // Number of leading chars in the Escaper to retain in original string
+
 interface CustomSortOrderAscDescPair {
 	asc: CustomSortOrder
 	desc: CustomSortOrder
@@ -334,9 +338,6 @@ const CompoundNumberDashRegexSymbol: string = '\\-d+'  // Compound number with d
 const WordInASCIIRegexSymbol: string = '\\a+'
 const WordInAnyLanguageRegexSymbol: string = '\\A+'
 
-// _1_ prefix indicates a lexeme which includes another lexeme and thus has to become first-to-scan
-const _1_InlineRegexSymbol_Dot: string = '\\DOT'
-
 const InlineRegexSymbol_Digit1: string = '\\d'
 const InlineRegexSymbol_Digit2: string = '\\[0-9]'
 const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
@@ -364,7 +365,6 @@ const sortingSymbolsArr: Array<string> = [
 const sortingSymbolsRegex = new RegExp(sortingSymbolsArr.join('|'), 'gi')
 
 const inlineRegexSymbolsArrEscapedForRegex: Array<string> = [
-	escapeRegexUnsafeCharacters(_1_InlineRegexSymbol_Dot),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit1),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_Digit2),
 	escapeRegexUnsafeCharacters(InlineRegexSymbol_0_to_3),
@@ -380,7 +380,6 @@ interface RegexExpr {
 
 // Don't be confused if the source lexeme is equal to the resulting regex piece, logically these two distinct spaces
 const inlineRegexSymbolsToRegexExpressionsArr: { [key: string]: RegexExpr} = {
-	[_1_InlineRegexSymbol_Dot]: {regexExpr: '\\.'},
 	[InlineRegexSymbol_Digit1]: {regexExpr: '\\d'},
 	[InlineRegexSymbol_Digit2]: {regexExpr: '[0-9]'},
 	[InlineRegexSymbol_0_to_3]: {regexExpr: '[0-3]'},
@@ -1559,7 +1558,7 @@ export class SortingSpecProcessor {
 		[Attribute.OrderUnspecified]: this.validateOrderAttrValue.bind(this)
 	}
 
-	 convertPlainStringSortingGroupSpecToArraySpec = (spec: string): Array<string> => {
+	convertPlainStringSortingGroupSpecToArraySpec = (spec: string): Array<string> => {
 		spec = spec.trim()
 		if (isThreeDots(spec)) {
 			return [ThreeDots]
@@ -1568,16 +1567,30 @@ export class SortingSpecProcessor {
 			return [ThreeDots, spec.substring(ThreeDotsLength)];
 		}
 		if (spec.endsWith(ThreeDots)) {
-			return [spec.substring(0, spec.length - ThreeDotsLength), ThreeDots];
+			if (spec.endsWith(AmbigueFourDotsEscaper)) {
+				return [spec.substring(0, spec.length - AmbigueFourDotsEscaperLength + AmbigueFourDotsEscaperOverlap), ThreeDots];
+			} else {
+				return [spec.substring(0, spec.length - ThreeDotsLength), ThreeDots];
+			}
 		}
 
 		const idx = spec.indexOf(ThreeDots);
+		const idxOfAmbigueFourDotsEscaper = spec.indexOf(AmbigueFourDotsEscaper)
 		if (idx > 0) {
-			return [
-				spec.substring(0, idx),
-				ThreeDots,
-				spec.substring(idx + ThreeDotsLength)
-			];
+			if (idxOfAmbigueFourDotsEscaper >= 0 &&
+				idxOfAmbigueFourDotsEscaper === idx - (AmbigueFourDotsEscaperLength - ThreeDotsLength) ) {
+				return [
+					spec.substring(0, idxOfAmbigueFourDotsEscaper + AmbigueFourDotsEscaperOverlap),
+					ThreeDots,
+					spec.substring(idx + ThreeDotsLength)
+				];
+			} else {
+				return [
+					spec.substring(0, idx),
+					ThreeDots,
+					spec.substring(idx + ThreeDotsLength)
+				];
+			}
 		}
 
 		// Unrecognized, treat as exact match

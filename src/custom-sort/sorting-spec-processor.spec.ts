@@ -530,12 +530,15 @@ describe('SortingSpecProcessor', () => {
 const txtInputThreeDotsCases: string = `
 target-folder: AAA
 ...
-\\DOT...
 ....
-...\\DOT
-\\DOT...\\DOT
-..\\DOT...
-//\\......\\.
+         // Only in the below scenario the / is treated as empty-separator and swallowed
+./...    
+         // Below tricky and not obvious cases
+../...
+.../..
+../...S
+S.../..
+S../...S
 `
 
 const expectedSortSpecForThreeDotsCases: { [key: string]: CustomSortSpec } = {
@@ -543,25 +546,33 @@ const expectedSortSpecForThreeDotsCases: { [key: string]: CustomSortSpec } = {
 		groups: [{
 			type: CustomSortGroupType.MatchAll
 		},{
-			regexPrefix: { regex: /^\./i },
-			type: CustomSortGroupType.ExactPrefix
-		},{
 			exactSuffix: '.',
 			type: CustomSortGroupType.ExactSuffix
 		},{
-			regexSuffix: { regex: /\.$/i },
+			exactPrefix: '.',
+			type: CustomSortGroupType.ExactPrefix
+		},{
+			exactPrefix: '..',
+			type: CustomSortGroupType.ExactPrefix
+		},{
+			exactSuffix: '/..',
 			type: CustomSortGroupType.ExactSuffix
 		},{
-			regexPrefix: { regex: /^\./i },
-			regexSuffix: { regex: /\.$/i },
+			exactPrefix: '..',
+			exactSuffix: 'S',
 			type: CustomSortGroupType.ExactHeadAndTail
 		},{
-			regexPrefix: { regex: /^\.\.\./i },
-			type: CustomSortGroupType.ExactPrefix
+			exactPrefix: 'S',
+			exactSuffix: '/..',
+			type: CustomSortGroupType.ExactHeadAndTail
+		},{
+			exactPrefix: 'S..',
+			exactSuffix: 'S',
+			type: CustomSortGroupType.ExactHeadAndTail
 		},{
 			type: CustomSortGroupType.Outsiders
 		}],
-		outsidersGroupIdx: 6,
+		outsidersGroupIdx: 8,
 		targetFoldersPaths: ['AAA']
 	}
 }
@@ -2837,6 +2848,78 @@ describe('convertPlainStringSortingGroupSpecToArraySpec', () => {
 		const s = ' ...tion. !!!'
 		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
 			'...', 'tion. !!!'
+		])
+	})
+	it('should recognize four dots escaper - variant 0', () => {
+		const s = './...'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'.', '...'
+		])
+	})
+	it('should recognize four dots escaper - variant 1', () => {
+		const s = '../...'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'..', '...'
+		])
+	})
+	it('should recognize four dots escaper - variant 2', () => {
+		const s = './...Some'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'.', '...', 'Some'
+		])
+	})
+	it('should recognize four dots escaper - variant 3', () => {
+		const s = 'Some./...'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'Some.','...'
+		])
+	})
+	it('should recognize four dots escaper - variant 3a', () => {
+		const s = 'Some./.....'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'Some./..','...'
+		])
+	})
+	it('should recognize four dots escaper - variant 3b', () => {
+		const s = 'Some./.....X'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'Some.','...', '..X'
+		])
+	})
+	it('should recognize four dots escaper - variant 4', () => {
+		const s = 'Some./...Some'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'Some.','...', 'Some'
+		])
+	})
+	it('should recognize four dots escaper - tricky variant 4', () => {
+		const s = 'Some./... haha ...Some'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'Some.','...', ' haha ...Some'
+		])
+	})
+	it('should recognize four dots escaper - tricky variant 5', () => {
+		const s = 'S.../..'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'S','...', '/..'
+		])
+	})
+	it('should NOT recognize four dots escaper - tricky variant 1', () => {
+		const s = 'Some... haha ./...Some'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'Some','...', ' haha ./...Some'
+		])
+	})
+	it('should NOT recognize four dots escaper - tricky variant 2', () => {
+		const s = 'Some... haha .../...Some'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'Some', '...', ' haha .../...Some'
+		])
+	})
+	it('should NOT recognize four dots escaper - tricky variant 3', () => {
+		const s = '.../...'
+		expect(processor.convertPlainStringSortingGroupSpecToArraySpec(s)).toEqual([
+			'...', '/...'
 		])
 	})
 	it('should recognize some edge case', () => {
