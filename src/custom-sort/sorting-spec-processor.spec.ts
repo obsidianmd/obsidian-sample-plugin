@@ -14,16 +14,8 @@ import {
 	RomanNumberNormalizerFn,
 	SortingSpecProcessor
 } from "./sorting-spec-processor"
-import {
-	CustomSortGroupType,
-	CustomSortOrder,
-	CustomSortSpec,
-	IdentityNormalizerFn
-} from "./custom-sort-types";
-import {
-	FolderMatchingRegexp,
-	FolderMatchingTreeNode
-} from "./folder-matching-rules";
+import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, IdentityNormalizerFn} from "./custom-sort-types";
+import {FolderMatchingRegexp, FolderMatchingTreeNode} from "./folder-matching-rules";
 
 const txtInputExampleA: string = `
 order-asc: a-z
@@ -524,6 +516,49 @@ describe('SortingSpecProcessor', () => {
 		const inputTxtArr: Array<string> = txtInputStandardObsidianSortAttr.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForObsidianStandardSorting)
+	})
+})
+
+const txtInputFilesOrFoldersPreferred: string = `
+target-folder: AAA
+< a-z, files-first
+subitems1...
+  > folders-first, true a-z.
+subitems2...
+  < created, folders-first
+`
+
+const expectedSortSpecForFilesOrFoldersPreferred: { [key: string]: CustomSortSpec } = {
+	"AAA": {
+		defaultOrder: CustomSortOrder.alphabetical,
+		defaultSecondaryOrder: CustomSortOrder.fileFirst,
+		groups: [{
+			exactPrefix: 'subitems1',
+			order: CustomSortOrder.folderFirst,
+			secondaryOrder: CustomSortOrder.trueAlphabeticalWithFileExt,
+			type: CustomSortGroupType.ExactPrefix
+		},{
+			exactPrefix: 'subitems2',
+			order: CustomSortOrder.byCreatedTime,
+			secondaryOrder: CustomSortOrder.folderFirst,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 2,
+		targetFoldersPaths: ['AAA']
+	}
+}
+
+describe('SortingSpecProcessor', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should recognize the files / folders preferred as a primary and secondary orders', () => {
+		const inputTxtArr: Array<string> = txtInputFilesOrFoldersPreferred.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForFilesOrFoldersPreferred)
 	})
 })
 

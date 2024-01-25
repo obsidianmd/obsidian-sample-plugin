@@ -35,7 +35,11 @@ export enum CustomSortOrder {
 	standardObsidian,  // whatever user selected in the UI
 	byBookmarkOrder,
 	byBookmarkOrderReverse,
-	default = alphabetical
+	fileFirst,
+	folderFirst,
+	alphabeticalWithFilesPreferred, // When the (base)names are equal, the file has precedence over a folder
+	alphabeticalWithFoldersPreferred, // When the (base)names are equal, the file has precedence over a folder
+	default = alphabeticalWithFilesPreferred
 }
 
 export interface RecognizedOrderValue {
