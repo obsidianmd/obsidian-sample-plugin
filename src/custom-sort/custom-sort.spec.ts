@@ -23,6 +23,9 @@ import {
 	SorterFn
 } from './custom-sort';
 import {
+	_unitTests
+} from './custom-sort'
+import {
 	CustomSortGroupType,
 	CustomSortOrder,
 	CustomSortSpec,
@@ -2957,5 +2960,40 @@ describe('sorterByFolderCDate', () => {
 			expect(normalizedResultS2).toBe(orderStraightRevParams)
 			expect(normalizedResultR1).toBe(orderReverse)
 			expect(normalizedResultR2).toBe(orderReverseRevParams)
+		})
+})
+
+describe('fileGoesFirstWhenSameBasenameAsFolder', () => {
+	const file = 'file'
+	const folder = 'folder'
+	it.each([
+			// main scenario - file goes first unconditionally before folder with the same name
+		[0, file, folder, -1, 1],
+		[0, folder, file, 1, -1],
+			// Not possible - two folders with the same name - the test only documents the behavior for clarity
+		[0, folder, folder, 0, 0],
+			// Realistic yet useless - two files with the same basename,
+		[0, file, file, 0, 0],
+			// Obvious cases - text compare returned !== 0, simply pass through
+		[1, file, file, 1, 1],
+		[1, file, folder, 1, 1],
+		[1, folder, file, 1, 1],
+		[1, folder, folder, 1, 1],
+		[-1, file, file, -1, -1],
+		[-1, file, folder, -1, -1],
+		[-1, folder, file, -1, -1],
+		[-1, folder, folder, -1, -1],
+	])('text compare %s of %s %s gives %s (files first) and %s (folders first)',
+		(textCompare: number, aIsFolder: string, bIsFolder: string, filePreferredOder: number, folderPreferredOrder: number) => {
+			// given
+			const a: Partial<FolderItemForSorting> = { isFolder: aIsFolder === folder }
+			const b: Partial<FolderItemForSorting> = { isFolder: bIsFolder === folder }
+
+			const resultFilePreferred: number = _unitTests.fileGoesFirstWhenSameBasenameAsFolder(textCompare, a as FolderItemForSorting, b as FolderItemForSorting)
+			const resultFolderPreferred: number = _unitTests.folderGoesFirstWhenSameBasenameAsFolder(textCompare, a as FolderItemForSorting, b as FolderItemForSorting)
+
+			// then
+			expect(resultFilePreferred).toBe(filePreferredOder)
+			expect(resultFolderPreferred).toBe(folderPreferredOrder)
 		})
 })

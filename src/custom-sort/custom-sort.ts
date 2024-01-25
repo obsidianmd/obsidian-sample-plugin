@@ -169,8 +169,18 @@ export const sorterByFolderMDate:(reverseOrder?: boolean) => SorterFn = (reverse
 	}
 }
 
+type FIFS = FolderItemForSorting
+
+const fileGoesFirstWhenSameBasenameAsFolder = (stringCompareResult: number, a: FIFS, b: FIFS) =>
+	(!!stringCompareResult) ? stringCompareResult : (a.isFolder === b.isFolder ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? 1 : -1) );
+
+const folderGoesFirstWhenSameBasenameAsFolder = (stringCompareResult: number, a: FIFS, b: FIFS) =>
+	(!!stringCompareResult) ? stringCompareResult : (a.isFolder === b.isFolder ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? -1 : 1) );
+
 const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
+	[CustomSortOrder.alphabeticalWithFilesPreferred]: (a: FIFS, b: FIFS) => fileGoesFirstWhenSameBasenameAsFolder(CollatorCompare(a.sortString, b.sortString),a,b),
+	[CustomSortOrder.alphabeticalWithFoldersPreferred]: (a: FIFS, b: FIFS) => fileGoesFirstWhenSameBasenameAsFolder(CollatorCompare(a.sortString, b.sortString),a,b),
 	[CustomSortOrder.alphabeticalWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortStringWithExt, b.sortStringWithExt),
 	[CustomSortOrder.trueAlphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
 	[CustomSortOrder.trueAlphabeticalWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortStringWithExt, b.sortStringWithExt),
@@ -192,9 +202,11 @@ const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byBookmarkOrder]: sorterByBookmarkOrder(StraightOrder),
 	[CustomSortOrder.byBookmarkOrderReverse]: sorterByBookmarkOrder(ReverseOrder),
+	[CustomSortOrder.fileFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? 1 : -1),
+	[CustomSortOrder.folderFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? -1 : 0),
 
-	// This is a fallback entry which should not be used - the getSorterFor() function below should protect against it
-	[CustomSortOrder.standardObsidian]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
+	// A fallback entry which should not be used - the getSorterFor() function below should protect against it
+	[CustomSortOrder.standardObsidian]: (a: FIFS, b: FIFS) => CollatorCompare(a.sortString, b.sortString),
 };
 
 // Some sorters are different when used in primary vs. secondary sorting order
@@ -729,3 +741,8 @@ export const sortFolderItemsForBookmarking = function (folder: TFolder, items: A
 		return folderItems
 	}
 };
+
+export const _unitTests = {
+	fileGoesFirstWhenSameBasenameAsFolder: fileGoesFirstWhenSameBasenameAsFolder,
+	folderGoesFirstWhenSameBasenameAsFolder: folderGoesFirstWhenSameBasenameAsFolder
+}

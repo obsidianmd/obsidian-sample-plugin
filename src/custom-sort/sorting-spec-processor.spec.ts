@@ -527,6 +527,49 @@ describe('SortingSpecProcessor', () => {
 	})
 })
 
+const txtInputFilesOrFoldersPreferred: string = `
+target-folder: AAA
+< a-z, files-first
+subitems1...
+  > folders-first, true a-z.
+subitems2...
+  < created, folders-first
+`
+
+const expectedSortSpecForFilesOrFoldersPreferred: { [key: string]: CustomSortSpec } = {
+	"AAA": {
+		defaultOrder: CustomSortOrder.alphabetical,
+		defaultSecondaryOrder: CustomSortOrder.fileFirst,
+		groups: [{
+			exactPrefix: 'subitems1',
+			order: CustomSortOrder.folderFirst,
+			secondaryOrder: CustomSortOrder.trueAlphabeticalWithFileExt,
+			type: CustomSortGroupType.ExactPrefix
+		},{
+			exactPrefix: 'subitems2',
+			order: CustomSortOrder.byCreatedTime,
+			secondaryOrder: CustomSortOrder.folderFirst,
+			type: CustomSortGroupType.ExactPrefix
+		}, {
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 2,
+		targetFoldersPaths: ['AAA']
+	}
+}
+
+describe('SortingSpecProcessor', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should recognize the files / folders preferred as a primary and secondary orders', () => {
+		const inputTxtArr: Array<string> = txtInputFilesOrFoldersPreferred.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForFilesOrFoldersPreferred)
+	})
+})
+
 const txtInputThreeDotsCases: string = `
 target-folder: AAA
 ...

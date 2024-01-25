@@ -127,6 +127,8 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'standard': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
 	'ui selected': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
     'by-bookmarks-order': {asc: CustomSortOrder.byBookmarkOrder, desc: CustomSortOrder.byBookmarkOrderReverse},
+	'files-first': {asc: CustomSortOrder.fileFirst, desc: CustomSortOrder.fileFirst},
+	'folders-first': {asc: CustomSortOrder.folderFirst, desc: CustomSortOrder.folderFirst}
 }
 
 const OrderByMetadataLexeme: string = 'by-metadata:'
