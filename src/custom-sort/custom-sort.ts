@@ -49,6 +49,20 @@ export const CollatorCompare = new Intl.Collator(undefined, {
 	numeric: true,
 }).compare;
 
+export const CollatorCompareUpperFirst = new Intl.Collator(undefined, {
+	usage: "sort",
+	sensitivity: "base",
+	numeric: true,
+	caseFirst: "upper"
+}).compare;
+
+export const CollatorCompareLowerFirst = new Intl.Collator(undefined, {
+	usage: "sort",
+	sensitivity: "base",
+	numeric: true,
+	caseFirst: "lower"
+}).compare;
+
 export const CollatorTrueAlphabeticalCompare = new Intl.Collator(undefined, {
 	usage: "sort",
 	sensitivity: "base",
@@ -178,23 +192,27 @@ const folderGoesFirstWhenSameBasenameAsFolder = (stringCompareResult: number, a:
 	(!!stringCompareResult) ? stringCompareResult : (a.isFolder === b.isFolder ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? -1 : 1) );
 
 const Sorters: { [key in CustomSortOrder]: SorterFn } = {
-	[CustomSortOrder.alphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortString, b.sortString),
+	[CustomSortOrder.alphabetical]: (a: FIFS, b: FIFS) => CollatorCompare(a.sortString, b.sortString),
+	[CustomSortOrder.alphabeticalLowerFirst]: (a: FIFS, b: FIFS) => CollatorCompareLowerFirst(a.sortString, b.sortString),
+	[CustomSortOrder.alphabeticalUpperFirst]: (a: FIFS, b: FIFS) => CollatorCompareUpperFirst(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalWithFilesPreferred]: (a: FIFS, b: FIFS) => fileGoesFirstWhenSameBasenameAsFolder(CollatorCompare(a.sortString, b.sortString),a,b),
 	[CustomSortOrder.alphabeticalWithFoldersPreferred]: (a: FIFS, b: FIFS) => fileGoesFirstWhenSameBasenameAsFolder(CollatorCompare(a.sortString, b.sortString),a,b),
-	[CustomSortOrder.alphabeticalWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(a.sortStringWithExt, b.sortStringWithExt),
-	[CustomSortOrder.trueAlphabetical]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
-	[CustomSortOrder.trueAlphabeticalWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(a.sortStringWithExt, b.sortStringWithExt),
-	[CustomSortOrder.alphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortString, a.sortString),
-	[CustomSortOrder.alphabeticalReverseWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorCompare(b.sortStringWithExt, a.sortStringWithExt),
-	[CustomSortOrder.trueAlphabeticalReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(b.sortString, a.sortString),
-	[CustomSortOrder.trueAlphabeticalReverseWithFileExt]: (a: FolderItemForSorting, b: FolderItemForSorting) => CollatorTrueAlphabeticalCompare(b.sortStringWithExt, a.sortStringWithExt),
-	[CustomSortOrder.byModifiedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.mtime - b.mtime),
+	[CustomSortOrder.alphabeticalWithFileExt]: (a: FIFS, b: FIFS) => CollatorCompare(a.sortStringWithExt, b.sortStringWithExt),
+	[CustomSortOrder.trueAlphabetical]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
+	[CustomSortOrder.trueAlphabeticalWithFileExt]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(a.sortStringWithExt, b.sortStringWithExt),
+	[CustomSortOrder.alphabeticalReverse]: (a: FIFS, b: FIFS) => CollatorCompare(b.sortString, a.sortString),
+	[CustomSortOrder.alphabeticalLowerFirstReverse]: (a: FIFS, b: FIFS) => CollatorCompareLowerFirst(b.sortString, a.sortString),
+	[CustomSortOrder.alphabeticalUpperFirstReverse]: (a: FIFS, b: FIFS) => CollatorCompareUpperFirst(b.sortString, a.sortString),
+	[CustomSortOrder.alphabeticalReverseWithFileExt]: (a: FIFS, b: FIFS) => CollatorCompare(b.sortStringWithExt, a.sortStringWithExt),
+	[CustomSortOrder.trueAlphabeticalReverse]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(b.sortString, a.sortString),
+	[CustomSortOrder.trueAlphabeticalReverseWithFileExt]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(b.sortStringWithExt, a.sortStringWithExt),
+	[CustomSortOrder.byModifiedTime]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.mtime - b.mtime),
 	[CustomSortOrder.byModifiedTimeAdvanced]: sorterByFolderMDate(),
-	[CustomSortOrder.byModifiedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.mtime - a.mtime),
+	[CustomSortOrder.byModifiedTimeReverse]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.mtime - a.mtime),
 	[CustomSortOrder.byModifiedTimeReverseAdvanced]: sorterByFolderMDate(true),
-	[CustomSortOrder.byCreatedTime]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.ctime - b.ctime),
+	[CustomSortOrder.byCreatedTime]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.ctime - b.ctime),
 	[CustomSortOrder.byCreatedTimeAdvanced]: sorterByFolderCDate(),
-	[CustomSortOrder.byCreatedTimeReverse]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.ctime - a.ctime),
+	[CustomSortOrder.byCreatedTimeReverse]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.ctime - a.ctime),
 	[CustomSortOrder.byCreatedTimeReverseAdvanced]: sorterByFolderCDate(true),
 	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forPrimary),
@@ -202,8 +220,10 @@ const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byBookmarkOrder]: sorterByBookmarkOrder(StraightOrder),
 	[CustomSortOrder.byBookmarkOrderReverse]: sorterByBookmarkOrder(ReverseOrder),
-	[CustomSortOrder.fileFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder === b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? 1 : -1),
-	[CustomSortOrder.folderFirst]: (a: FolderItemForSorting, b: FolderItemForSorting) => (a.isFolder === b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? -1 : 1),
+	[CustomSortOrder.fileFirst]: (a: FIFS, b: FIFS) => (a.isFolder === b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? 1 : -1),
+	[CustomSortOrder.folderFirst]: (a: FIFS, b: FIFS) => (a.isFolder === b.isFolder) ? EQUAL_OR_UNCOMPARABLE : (a.isFolder ? -1 : 1),
+	[CustomSortOrder.vscUnicode]: (a: FIFS, b: FIFS) => (a.sortString === b.sortString) ? EQUAL_OR_UNCOMPARABLE : (a.sortString < b.sortString ? -1 : 1),
+	[CustomSortOrder.vscUnicodeReverse]: (a: FIFS, b: FIFS) => (a.sortString === b.sortString) ? EQUAL_OR_UNCOMPARABLE : (b.sortString < a.sortString ? -1 : 1),
 
 	// A fallback entry which should not be used - the getSorterFor() function below should protect against it
 	[CustomSortOrder.standardObsidian]: (a: FIFS, b: FIFS) => CollatorCompare(a.sortString, b.sortString),

@@ -116,8 +116,10 @@ const MAX_SORT_LEVEL: number = 1
 
 // remember about .toLowerCase() before comparison!
 const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
+	'a-zzz': {asc: CustomSortOrder.alphabeticalLowerFirst, desc: CustomSortOrder.alphabeticalLowerFirstReverse},
 	'a-z.': {asc: CustomSortOrder.alphabeticalWithFileExt, desc: CustomSortOrder.alphabeticalReverseWithFileExt},
 	'a-z': {asc: CustomSortOrder.alphabetical, desc: CustomSortOrder.alphabeticalReverse},
+	'aaa-z': {asc: CustomSortOrder.alphabeticalUpperFirst, desc: CustomSortOrder.alphabeticalUpperFirstReverse},
 	'true a-z.': {asc: CustomSortOrder.trueAlphabeticalWithFileExt, desc: CustomSortOrder.trueAlphabeticalReverseWithFileExt},
 	'true a-z': {asc: CustomSortOrder.trueAlphabetical, desc: CustomSortOrder.trueAlphabeticalReverse},
 	'created': {asc: CustomSortOrder.byCreatedTime, desc: CustomSortOrder.byCreatedTimeReverse},
@@ -128,7 +130,8 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'ui selected': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
     'by-bookmarks-order': {asc: CustomSortOrder.byBookmarkOrder, desc: CustomSortOrder.byBookmarkOrderReverse},
 	'files-first': {asc: CustomSortOrder.fileFirst, desc: CustomSortOrder.fileFirst},
-	'folders-first': {asc: CustomSortOrder.folderFirst, desc: CustomSortOrder.folderFirst}
+	'folders-first': {asc: CustomSortOrder.folderFirst, desc: CustomSortOrder.folderFirst},
+	'vsc-unicode': {asc: CustomSortOrder.vscUnicode, desc: CustomSortOrder.vscUnicodeReverse}
 }
 
 const OrderByMetadataLexeme: string = 'by-metadata:'

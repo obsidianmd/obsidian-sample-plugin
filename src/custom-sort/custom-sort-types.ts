@@ -13,10 +13,14 @@ export enum CustomSortGroupType {
 
 export enum CustomSortOrder {
 	alphabetical = 1,  // = 1 to allow: if (customSortOrder) { ...
+	alphabeticalLowerFirst,
+	alphabeticalUpperFirst,
 	alphabeticalWithFileExt,
 	trueAlphabetical,
 	trueAlphabeticalWithFileExt,
 	alphabeticalReverse,
+	alphabeticalLowerFirstReverse,
+	alphabeticalUpperFirstReverse,
 	alphabeticalReverseWithFileExt,
 	trueAlphabeticalReverse,
 	trueAlphabeticalReverseWithFileExt,
@@ -38,7 +42,9 @@ export enum CustomSortOrder {
 	fileFirst,
 	folderFirst,
 	alphabeticalWithFilesPreferred, // When the (base)names are equal, the file has precedence over a folder
-	alphabeticalWithFoldersPreferred, // When the (base)names are equal, the file has precedence over a folder
+	alphabeticalWithFoldersPreferred, // When the (base)names are equal, the file has precedence over a folder,
+	vscUnicode, // the Visual Studio Code lexicographic order named 'unicode' (which is very misleading, at the same time familiar to VS Code users
+	vscUnicodeReverse,         // ... see compareFilesUnicode function https://github.com/microsoft/vscode/blob/a19b2d5fb0202e00fb930dc850d2695ec512e495/src/vs/base/common/comparers.ts#L80
 	default = alphabeticalWithFilesPreferred
 }
 

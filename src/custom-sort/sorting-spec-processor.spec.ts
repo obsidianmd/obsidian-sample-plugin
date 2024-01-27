@@ -711,6 +711,84 @@ describe('SortingSpecProcessor', () => {
 	})
 })
 
+const txtInputExoticExperimentalSortAttr: string = `
+target-folder: upper first
+< aaa-z
+target-folder: upper first Rev
+> aaa-z
+target-folder: lower first
+< a-zzz
+target-folder: lower first Rev
+> a-zzz
+target-folder: VS Code unicode lexicographic
+< vsc-unicode
+target-folder: VS Code unicode lexicographic reverse
+> vsc-unicode
+`
+
+const expectedSortSpecForExoticExperimentalSorting: { [key: string]: CustomSortSpec } = {
+	"upper first": {
+		defaultOrder: CustomSortOrder.alphabeticalUpperFirst,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['upper first']
+	},
+	"upper first Rev": {
+		defaultOrder: CustomSortOrder.alphabeticalUpperFirstReverse,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['upper first Rev']
+	},
+	"lower first": {
+		defaultOrder: CustomSortOrder.alphabeticalLowerFirst,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['lower first']
+	},
+	"lower first Rev": {
+		defaultOrder: CustomSortOrder.alphabeticalLowerFirstReverse,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['lower first Rev']
+	},
+	"VS Code unicode lexicographic": {
+		defaultOrder: CustomSortOrder.vscUnicode,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['VS Code unicode lexicographic']
+	},
+	"VS Code unicode lexicographic reverse": {
+		defaultOrder: CustomSortOrder.vscUnicodeReverse,
+		groups: [{
+			type: CustomSortGroupType.Outsiders
+		}],
+		outsidersGroupIdx: 0,
+		targetFoldersPaths: ['VS Code unicode lexicographic reverse']
+	}
+}
+
+describe('SortingSpecProcessor', () => {
+	let processor: SortingSpecProcessor;
+	beforeEach(() => {
+		processor = new SortingSpecProcessor();
+	});
+	it('should recognize the exotic experimental sorting attribute for a folder', () => {
+		const inputTxtArr: Array<string> = txtInputExoticExperimentalSortAttr.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecForExoticExperimentalSorting)
+	})
+})
+
 const txtInputSimplistic1: string = `
 target-folder: /*
 /:files
