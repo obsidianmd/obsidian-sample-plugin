@@ -1,4 +1,5 @@
 import {
+	FileExplorerView,
 	FrontMatterCache,
 	MetadataCache,
 	Plugin,
@@ -684,8 +685,7 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 	})
 }
 
-export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
-	let fileExplorer = this.fileExplorer
+export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext, fileExplorer: FileExplorerView) {
 
 	// shallow copy of groups and expand folder-specific macros on them
 	sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
