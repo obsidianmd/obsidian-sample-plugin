@@ -1,5 +1,5 @@
-| :exclamation:  For users of Obsidian insider build versions                                                                                                                                                                  |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| :exclamation:  For users of Obsidian insider build versions (1.5.4 and up)|
+|----|
 | 1.5.4 insider build of Obsidian introduced breaking changes in JS code of File Explorer which prevents this custom-sort plugin from working. Please refrain from updating Obsidian until the code of custom-sort is updated. |
  
 > > This is a simple version of README which highlights the **basic scenario and most commonly used feature**
