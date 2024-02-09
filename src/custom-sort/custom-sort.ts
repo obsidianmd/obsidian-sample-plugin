@@ -685,7 +685,7 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 }
 
 export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
-	let fileExplorer = this.fileExplorer
+	let fileExplorerView = this.fileExplorer ?? this.view  // this.view replaces the former since 1.5.4 insider build
 
 	// shallow copy of groups and expand folder-specific macros on them
 	sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
@@ -710,12 +710,12 @@ export const folderSort = function (sortingSpec: CustomSortSpec, ctx: Processing
 		determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPluginInstance)
 	}
 
-	const comparator: SorterFn = getComparator(sortingSpec, fileExplorer.sortOrder)
+	const comparator: SorterFn = getComparator(sortingSpec, fileExplorerView.sortOrder)
 
 	folderItems.sort(comparator)
 
 	const items = folderItems
-		.map((item: FolderItemForSorting) => fileExplorer.fileItems[item.path])
+		.map((item: FolderItemForSorting) => fileExplorerView.fileItems[item.path])
 
 	if (requireApiVersion && requireApiVersion("0.15.0")) {
 		this.vChildren.setChildren(items);
