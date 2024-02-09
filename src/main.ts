@@ -622,7 +622,7 @@ export default class CustomSortPlugin extends Plugin {
 						}
 
 						if (sortSpec) {
-							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting(has), patchableFileExplorer);
+							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting(has));
 						} else {
 							return old.call(this, ...args);
 						}
