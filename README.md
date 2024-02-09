@@ -1,3 +1,7 @@
+| :exclamation:  For users of Obsidian insider build versions                                                                                                                                                                  |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.5.4 insider build of Obsidian introduced breaking changes in JS code of File Explorer which prevents this custom-sort plugin from working. Please refrain from updating Obsidian until the code of custom-sort is updated. |
+ 
 > > This is a simple version of README which highlights the **basic scenario and most commonly used feature**
 >
 > The [long and much more detailed advanced-README.md is here](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md)
