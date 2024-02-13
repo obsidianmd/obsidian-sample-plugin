@@ -116,10 +116,8 @@ const MAX_SORT_LEVEL: number = 1
 
 // remember about .toLowerCase() before comparison!
 const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
-	'a-zzz': {asc: CustomSortOrder.alphabeticalLowerFirst, desc: CustomSortOrder.alphabeticalLowerFirstReverse},
 	'a-z.': {asc: CustomSortOrder.alphabeticalWithFileExt, desc: CustomSortOrder.alphabeticalReverseWithFileExt},
 	'a-z': {asc: CustomSortOrder.alphabetical, desc: CustomSortOrder.alphabeticalReverse},
-	'aaa-z': {asc: CustomSortOrder.alphabeticalUpperFirst, desc: CustomSortOrder.alphabeticalUpperFirstReverse},
 	'true a-z.': {asc: CustomSortOrder.trueAlphabeticalWithFileExt, desc: CustomSortOrder.trueAlphabeticalReverseWithFileExt},
 	'true a-z': {asc: CustomSortOrder.trueAlphabetical, desc: CustomSortOrder.trueAlphabeticalReverse},
 	'created': {asc: CustomSortOrder.byCreatedTime, desc: CustomSortOrder.byCreatedTimeReverse},

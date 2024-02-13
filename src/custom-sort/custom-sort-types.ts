@@ -13,14 +13,10 @@ export enum CustomSortGroupType {
 
 export enum CustomSortOrder {
 	alphabetical = 1,  // = 1 to allow: if (customSortOrder) { ...
-	alphabeticalLowerFirst,
-	alphabeticalUpperFirst,
 	alphabeticalWithFileExt,
 	trueAlphabetical,
 	trueAlphabeticalWithFileExt,
 	alphabeticalReverse,
-	alphabeticalLowerFirstReverse,
-	alphabeticalUpperFirstReverse,
 	alphabeticalReverseWithFileExt,
 	trueAlphabeticalReverse,
 	trueAlphabeticalReverseWithFileExt,

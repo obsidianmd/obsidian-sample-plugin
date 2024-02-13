@@ -49,20 +49,6 @@ export const CollatorCompare = new Intl.Collator(undefined, {
 	numeric: true,
 }).compare;
 
-export const CollatorCompareUpperFirst = new Intl.Collator(undefined, {
-	usage: "sort",
-	sensitivity: "base",
-	numeric: true,
-	caseFirst: "upper"
-}).compare;
-
-export const CollatorCompareLowerFirst = new Intl.Collator(undefined, {
-	usage: "sort",
-	sensitivity: "base",
-	numeric: true,
-	caseFirst: "lower"
-}).compare;
-
 export const CollatorTrueAlphabeticalCompare = new Intl.Collator(undefined, {
 	usage: "sort",
 	sensitivity: "base",
@@ -193,16 +179,12 @@ const folderGoesFirstWhenSameBasenameAsFolder = (stringCompareResult: number, a:
 
 const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.alphabetical]: (a: FIFS, b: FIFS) => CollatorCompare(a.sortString, b.sortString),
-	[CustomSortOrder.alphabeticalLowerFirst]: (a: FIFS, b: FIFS) => CollatorCompareLowerFirst(a.sortString, b.sortString),
-	[CustomSortOrder.alphabeticalUpperFirst]: (a: FIFS, b: FIFS) => CollatorCompareUpperFirst(a.sortString, b.sortString),
 	[CustomSortOrder.alphabeticalWithFilesPreferred]: (a: FIFS, b: FIFS) => fileGoesFirstWhenSameBasenameAsFolder(CollatorCompare(a.sortString, b.sortString),a,b),
 	[CustomSortOrder.alphabeticalWithFoldersPreferred]: (a: FIFS, b: FIFS) => fileGoesFirstWhenSameBasenameAsFolder(CollatorCompare(a.sortString, b.sortString),a,b),
 	[CustomSortOrder.alphabeticalWithFileExt]: (a: FIFS, b: FIFS) => CollatorCompare(a.sortStringWithExt, b.sortStringWithExt),
 	[CustomSortOrder.trueAlphabetical]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(a.sortString, b.sortString),
 	[CustomSortOrder.trueAlphabeticalWithFileExt]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(a.sortStringWithExt, b.sortStringWithExt),
 	[CustomSortOrder.alphabeticalReverse]: (a: FIFS, b: FIFS) => CollatorCompare(b.sortString, a.sortString),
-	[CustomSortOrder.alphabeticalLowerFirstReverse]: (a: FIFS, b: FIFS) => CollatorCompareLowerFirst(b.sortString, a.sortString),
-	[CustomSortOrder.alphabeticalUpperFirstReverse]: (a: FIFS, b: FIFS) => CollatorCompareUpperFirst(b.sortString, a.sortString),
 	[CustomSortOrder.alphabeticalReverseWithFileExt]: (a: FIFS, b: FIFS) => CollatorCompare(b.sortStringWithExt, a.sortStringWithExt),
 	[CustomSortOrder.trueAlphabeticalReverse]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(b.sortString, a.sortString),
 	[CustomSortOrder.trueAlphabeticalReverseWithFileExt]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(b.sortStringWithExt, a.sortStringWithExt),
