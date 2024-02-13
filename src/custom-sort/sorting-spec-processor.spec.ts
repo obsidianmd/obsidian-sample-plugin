@@ -14,16 +14,8 @@ import {
 	RomanNumberNormalizerFn,
 	SortingSpecProcessor
 } from "./sorting-spec-processor"
-import {
-	CustomSortGroupType,
-	CustomSortOrder,
-	CustomSortSpec,
-	IdentityNormalizerFn
-} from "./custom-sort-types";
-import {
-	FolderMatchingRegexp,
-	FolderMatchingTreeNode
-} from "./folder-matching-rules";
+import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, IdentityNormalizerFn} from "./custom-sort-types";
+import {FolderMatchingRegexp, FolderMatchingTreeNode} from "./folder-matching-rules";
 
 const txtInputExampleA: string = `
 order-asc: a-z
@@ -714,8 +706,12 @@ describe('SortingSpecProcessor', () => {
 
 const txtInputExoticExperimentalSortAttr: string = `
 target-folder: VS Code unicode lexicographic
+%
+  > unicode-charcode
 < vsc-unicode
 target-folder: VS Code unicode lexicographic reverse
+%
+  < unicode-charcode
 > vsc-unicode
 `
 
@@ -723,7 +719,8 @@ const expectedSortSpecForExoticExperimentalSorting: { [key: string]: CustomSortS
 	"VS Code unicode lexicographic": {
 		defaultOrder: CustomSortOrder.vscUnicode,
 		groups: [{
-			type: CustomSortGroupType.Outsiders
+			type: CustomSortGroupType.Outsiders,
+			order: CustomSortOrder.vscUnicodeReverse
 		}],
 		outsidersGroupIdx: 0,
 		targetFoldersPaths: ['VS Code unicode lexicographic']
@@ -731,7 +728,8 @@ const expectedSortSpecForExoticExperimentalSorting: { [key: string]: CustomSortS
 	"VS Code unicode lexicographic reverse": {
 		defaultOrder: CustomSortOrder.vscUnicodeReverse,
 		groups: [{
-			type: CustomSortGroupType.Outsiders
+			type: CustomSortGroupType.Outsiders,
+			order: CustomSortOrder.vscUnicode
 		}],
 		outsidersGroupIdx: 0,
 		targetFoldersPaths: ['VS Code unicode lexicographic reverse']
