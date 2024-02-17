@@ -19,6 +19,11 @@
 		"esbuild": "0.17.3",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"typescript": "4.7.4",
+		"compare-versions": "^4.1.3",
+		"@codemirror/search": "6.0.0",
+		"@codemirror/view": "6.0.0",
+		"@codemirror/commands": "6.0.0",
+		"@codemirror/language": "https://github.com/lishid/cm-language"
 	}
 }
