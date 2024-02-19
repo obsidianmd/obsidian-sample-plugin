@@ -5,7 +5,8 @@ import {
 	requireApiVersion,
 	TAbstractFile,
 	TFile,
-	TFolder
+	TFolder,
+	Vault
 } from 'obsidian';
 import {
 	determineStarredStatusOf,
@@ -190,12 +191,16 @@ const Sorters: { [key in CustomSortOrder]: SorterFn } = {
 	[CustomSortOrder.trueAlphabeticalReverseWithFileExt]: (a: FIFS, b: FIFS) => CollatorTrueAlphabeticalCompare(b.sortStringWithExt, a.sortStringWithExt),
 	[CustomSortOrder.byModifiedTime]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.mtime - b.mtime),
 	[CustomSortOrder.byModifiedTimeAdvanced]: sorterByFolderMDate(),
+	[CustomSortOrder.byModifiedTimeAdvancedRecursive]: sorterByFolderMDate(),
 	[CustomSortOrder.byModifiedTimeReverse]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.mtime - a.mtime),
 	[CustomSortOrder.byModifiedTimeReverseAdvanced]: sorterByFolderMDate(true),
+	[CustomSortOrder.byModifiedTimeReverseAdvancedRecursive]: sorterByFolderMDate(true),
 	[CustomSortOrder.byCreatedTime]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (a.ctime - b.ctime),
 	[CustomSortOrder.byCreatedTimeAdvanced]: sorterByFolderCDate(),
+	[CustomSortOrder.byCreatedTimeAdvancedRecursive]: sorterByFolderCDate(),
 	[CustomSortOrder.byCreatedTimeReverse]: (a: FIFS, b: FIFS) => (a.isFolder && b.isFolder) ? CollatorCompare(a.sortString, b.sortString) : (b.ctime - a.ctime),
 	[CustomSortOrder.byCreatedTimeReverseAdvanced]: sorterByFolderCDate(true),
+	[CustomSortOrder.byCreatedTimeReverseAdvancedRecursive]: sorterByFolderCDate(true),
 	[CustomSortOrder.byMetadataFieldAlphabetical]: sorterByMetadataField(StraightOrder, !TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byMetadataFieldTrueAlphabetical]: sorterByMetadataField(StraightOrder, TrueAlphabetical, SortingLevelId.forPrimary),
 	[CustomSortOrder.byMetadataFieldAlphabeticalReverse]: sorterByMetadataField(ReverseOrder, !TrueAlphabetical, SortingLevelId.forPrimary),
@@ -577,17 +582,27 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 	}
 }
 
+const SortOrderRequiringRecursiveFolderDate = new Set<CustomSortOrder>([
+	CustomSortOrder.byModifiedTimeAdvancedRecursive,
+	CustomSortOrder.byModifiedTimeReverseAdvancedRecursive,
+	CustomSortOrder.byCreatedTimeAdvancedRecursive,
+	CustomSortOrder.byCreatedTimeReverseAdvancedRecursive
+])
+
+export const sortOrderNeedsFolderDeepDates = (...orders: Array<CustomSortOrder | undefined>): boolean => {
+	return orders.some((o) => o && SortOrderRequiringRecursiveFolderDate.has(o))
+}
+
 const SortOrderRequiringFolderDate = new Set<CustomSortOrder>([
+	...SortOrderRequiringRecursiveFolderDate,
 	CustomSortOrder.byModifiedTimeAdvanced,
 	CustomSortOrder.byModifiedTimeReverseAdvanced,
 	CustomSortOrder.byCreatedTimeAdvanced,
 	CustomSortOrder.byCreatedTimeReverseAdvanced
 ])
 
-export const sortOrderNeedsFolderDates = (order: CustomSortOrder | undefined, secondary?: CustomSortOrder): boolean => {
-	// The CustomSortOrder.standardObsidian used as default because it doesn't require date on folders
-	return SortOrderRequiringFolderDate.has(order ?? CustomSortOrder.standardObsidian)
-		|| SortOrderRequiringFolderDate.has(secondary ?? CustomSortOrder.standardObsidian)
+export const sortOrderNeedsFolderDates = (...orders: Array<CustomSortOrder | undefined>): boolean => {
+	return orders.some((o) => o && SortOrderRequiringFolderDate.has(o))
 }
 
 const SortOrderRequiringBookmarksOrder = new Set<CustomSortOrder>([
@@ -595,50 +610,54 @@ const SortOrderRequiringBookmarksOrder = new Set<CustomSortOrder>([
 	CustomSortOrder.byBookmarkOrderReverse
 ])
 
-export const sortOrderNeedsBookmarksOrder = (order: CustomSortOrder | undefined, secondary?: CustomSortOrder): boolean => {
-	// The CustomSortOrder.standardObsidian used as default because it doesn't require bookmarks order
-	return SortOrderRequiringBookmarksOrder.has(order ?? CustomSortOrder.standardObsidian)
-		|| SortOrderRequiringBookmarksOrder.has(secondary ?? CustomSortOrder.standardObsidian)
+export const sortOrderNeedsBookmarksOrder = (...orders: Array<CustomSortOrder | undefined>): boolean => {
+	return orders.some((o) => o && SortOrderRequiringBookmarksOrder.has(o))
 }
 
 // Syntax sugar for readability
 export type ModifiedTime = number
 export type CreatedTime = number
 
-export const determineDatesForFolder = (folder: TFolder, now: number): [ModifiedTime, CreatedTime] => {
+export const determineDatesForFolder = (folder: TFolder, recursive?: boolean): [ModifiedTime, CreatedTime] => {
 	let mtimeOfFolder: ModifiedTime = DEFAULT_FOLDER_MTIME
 	let ctimeOfFolder: CreatedTime = DEFAULT_FOLDER_CTIME
 
-	folder.children.forEach((item) => {
-		if (!isFolder(item)) {
-			const file: TFile = item as TFile
-			if (file.stat.mtime > mtimeOfFolder) {
-				mtimeOfFolder = file.stat.mtime
-			}
-			if (file.stat.ctime < ctimeOfFolder || ctimeOfFolder === DEFAULT_FOLDER_CTIME) {
-				ctimeOfFolder = file.stat.ctime
-			}
+	const checkFile = (abFile: TAbstractFile) => {
+		if (isFolder(abFile)) return
+
+		const file: TFile = abFile as TFile
+		if (file.stat.mtime > mtimeOfFolder) {
+			mtimeOfFolder = file.stat.mtime
 		}
-	})
+		if (file.stat.ctime < ctimeOfFolder || ctimeOfFolder === DEFAULT_FOLDER_CTIME) {
+			ctimeOfFolder = file.stat.ctime
+		}
+	}
+
+	if (recursive) {
+		 Vault.recurseChildren(folder, checkFile)
+	} else {
+		folder.children.forEach((item) => checkFile(item))
+	}
 	return [mtimeOfFolder, ctimeOfFolder]
 }
 
 export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec) => {
-	const Now: number = Date.now()
+	const foldersDatesNeeded = sortOrderNeedsFolderDates(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder)
+	const foldersDeepDatesNeeded = sortOrderNeedsFolderDeepDates(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder)
+
+	const groupOrders = sortingSpec.groups?.map((group) => ({
+		foldersDatesNeeded: sortOrderNeedsFolderDates(group.order, group.secondaryOrder),
+		foldersDeepDatesNeeded: sortOrderNeedsFolderDeepDates(group.order, group.secondaryOrder)
+	}))
+
 	folderItems.forEach((item) => {
 		if (item.folder) {
-			const folderDefaultSortRequiresFolderDate: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsFolderDates(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder))
-			let groupSortRequiresFolderDate: boolean = false
-			if (!folderDefaultSortRequiresFolderDate) {
-				const groupIdx: number | undefined = item.groupIdx
-				if (groupIdx !== undefined) {
-					const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
-					const groupSecondaryOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].secondaryOrder
-					groupSortRequiresFolderDate = !!groupOrder && sortOrderNeedsFolderDates(groupOrder, groupSecondaryOrder)
-				}
-			}
-			if (folderDefaultSortRequiresFolderDate || groupSortRequiresFolderDate) {
-				[item.mtime, item.ctime] = determineDatesForFolder(item.folder, Now)
+			if (foldersDatesNeeded || (item.groupIdx !== undefined && groupOrders[item.groupIdx].foldersDatesNeeded)) {
+				[item.mtime, item.ctime] = determineDatesForFolder(
+					item.folder,
+					foldersDeepDatesNeeded || (item.groupIdx !== undefined && groupOrders[item.groupIdx].foldersDeepDatesNeeded)
+				)
 			}
 		}
 	})
@@ -649,8 +668,9 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, plugin: BookmarksPluginInterface) => {
 	if (!plugin) return
 
+	const folderDefaultSortRequiresBookmarksOrder: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsBookmarksOrder(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder))
+
 	folderItems.forEach((item) => {
-		const folderDefaultSortRequiresBookmarksOrder: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsBookmarksOrder(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder))
 		let groupSortRequiresBookmarksOrder: boolean = false
 		if (!folderDefaultSortRequiresBookmarksOrder) {
 			const groupIdx: number | undefined = item.groupIdx

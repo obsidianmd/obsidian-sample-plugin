@@ -124,6 +124,8 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 	'modified': {asc: CustomSortOrder.byModifiedTime, desc: CustomSortOrder.byModifiedTimeReverse},
 	'advanced modified': {asc: CustomSortOrder.byModifiedTimeAdvanced, desc: CustomSortOrder.byModifiedTimeReverseAdvanced},
 	'advanced created': {asc: CustomSortOrder.byCreatedTimeAdvanced, desc: CustomSortOrder.byCreatedTimeReverseAdvanced},
+	'advanced recursive modified': {asc: CustomSortOrder.byModifiedTimeAdvancedRecursive, desc: CustomSortOrder.byModifiedTimeReverseAdvancedRecursive},
+	'advanced recursive created': {asc: CustomSortOrder.byCreatedTimeAdvancedRecursive, desc: CustomSortOrder.byCreatedTimeReverseAdvancedRecursive},
 	'standard': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
 	'ui selected': {asc: CustomSortOrder.standardObsidian, desc: CustomSortOrder.standardObsidian},
     'by-bookmarks-order': {asc: CustomSortOrder.byBookmarkOrder, desc: CustomSortOrder.byBookmarkOrderReverse},

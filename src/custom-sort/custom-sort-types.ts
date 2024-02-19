@@ -22,12 +22,16 @@ export enum CustomSortOrder {
 	trueAlphabeticalReverseWithFileExt,
 	byModifiedTime,   // New to old
 	byModifiedTimeAdvanced,
+	byModifiedTimeAdvancedRecursive,
 	byModifiedTimeReverse,  // Old to new
 	byModifiedTimeReverseAdvanced,
+	byModifiedTimeReverseAdvancedRecursive,
 	byCreatedTime,  // New to old
 	byCreatedTimeAdvanced,
+	byCreatedTimeAdvancedRecursive,
 	byCreatedTimeReverse,
 	byCreatedTimeReverseAdvanced,
+	byCreatedTimeReverseAdvancedRecursive,
 	byMetadataFieldAlphabetical,
 	byMetadataFieldTrueAlphabetical,
 	byMetadataFieldAlphabeticalReverse,

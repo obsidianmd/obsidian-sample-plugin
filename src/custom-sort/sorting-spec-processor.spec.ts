@@ -2325,6 +2325,14 @@ target-folder: AA
  < advanced created
 /:files Archive...
  > advanced created
+/folders Deep1...
+ < advanced recursive created
+/:files Deep2...
+ > advanced recursive created
+/folders Deep3...
+ < advanced recursive modified
+/:files Deep4...
+ > advanced recursive modified
 `
 
 const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: CustomSortSpec } = {
@@ -2373,12 +2381,32 @@ const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: Cust
 				exactPrefix: 'Archive',
 				foldersOnly: true,
 				order: CustomSortOrder.byCreatedTimeAdvanced,
-				type: 3
+				type: CustomSortGroupType.ExactPrefix
 		}, {
 				exactPrefix: 'Archive',
 				filesOnly: true,
 				order: CustomSortOrder.byCreatedTimeReverseAdvanced,
-				type: 3
+				type: CustomSortGroupType.ExactPrefix
+		}, {
+				exactPrefix: 'Deep1',
+				foldersOnly: true,
+				order: CustomSortOrder.byCreatedTimeAdvancedRecursive,
+				type: CustomSortGroupType.ExactPrefix
+		}, {
+				exactPrefix: 'Deep2',
+				filesOnly: true,
+				order: CustomSortOrder.byCreatedTimeReverseAdvancedRecursive,
+				type: CustomSortGroupType.ExactPrefix
+		}, {
+				exactPrefix: 'Deep3',
+				foldersOnly: true,
+				order: CustomSortOrder.byModifiedTimeAdvancedRecursive,
+				type: CustomSortGroupType.ExactPrefix
+		}, {
+				exactPrefix: 'Deep4',
+				filesOnly: true,
+				order: CustomSortOrder.byModifiedTimeReverseAdvancedRecursive,
+				type: CustomSortGroupType.ExactPrefix
 		}],
 		outsidersFilesGroupIdx: 1,
 		outsidersFoldersGroupIdx: 0,
