@@ -43,48 +43,12 @@ import {
 	ObsidianIconFolder_PluginInstance,
 	ObsidianIconFolderPlugin_Data
 } from "../../utils/ObsidianIconFolderPluginSignature";
-
-const mockTFile = (basename: string, ext: string, size?: number, ctime?: number, mtime?: number): TFile => {
-	return {
-		stat: {
-			ctime: ctime ?? 0,
-			mtime: mtime ?? 0,
-			size: size ?? 0
-		},
-		basename: basename,
-		extension: ext,
-		vault: {} as Vault, // To satisfy TS typechecking
-		path: `Some parent folder/${basename}.${ext}`,
-		name: `${basename}.${ext}`,
-		parent: {} as TFolder // To satisfy TS typechecking
-	}
-}
-
-const mockTFolder = (name: string, children?: Array<TFolder|TFile>, parent?: TFolder): TFolder => {
-	return {
-		isRoot(): boolean { return name === '/' },
-		vault: {} as Vault, // To satisfy TS typechecking
-		path: `${name}`,
-		name: name,
-		parent: parent ?? ({} as TFolder), // To satisfy TS typechecking
-		children: children ?? []
-	}
-}
-
-const MOCK_TIMESTAMP: number = 1656417542418
-const TIMESTAMP_OLDEST: number = MOCK_TIMESTAMP
-const TIMESTAMP_NEWEST: number = MOCK_TIMESTAMP + 1000
-const TIMESTAMP_INBETWEEN: number = MOCK_TIMESTAMP + 500
-
-const mockTFolderWithChildren = (name: string): TFolder => {
-	const child1: TFolder = mockTFolder('Section A')
-	const child2: TFolder = mockTFolder('Section B')
-	const child3: TFile = mockTFile('Child file 1 created as oldest, modified recently', 'md', 100, TIMESTAMP_OLDEST, TIMESTAMP_NEWEST)
-	const child4: TFile = mockTFile('Child file 2 created as newest, not modified at all', 'md', 100, TIMESTAMP_NEWEST, TIMESTAMP_NEWEST)
-	const child5: TFile = mockTFile('Child file 3 created inbetween, modified inbetween', 'md', 100, TIMESTAMP_INBETWEEN, TIMESTAMP_INBETWEEN)
-
-	return mockTFolder(name, [child1, child2, child3, child4, child5])
-}
+import {
+	MOCK_TIMESTAMP,
+	mockTFile,
+	mockTFolder,
+	mockTFolderWithChildren
+} from "../mocks";
 
 const MockedLoc: Pos = {
 	start: {col:0,offset:0,line:0},
@@ -2517,62 +2481,6 @@ describe('determineSortingGroup', () => {
 			mtime: MOCK_TIMESTAMP + 333,
 			path: 'Some parent folder/Hello :-).md'
 		});
-	})
-})
-
-describe('determineFolderDatesIfNeeded', () => {
-	it('should not be triggered if not needed - sorting method does not require it', () => {
-		// given
-		const folder: TFolder = mockTFolderWithChildren('Test folder 1')
-		const OUTSIDERS_GROUP_IDX = 0
-		const sortSpec: CustomSortSpec = {
-			targetFoldersPaths: ['/'],
-			groups: [{
-				type: CustomSortGroupType.Outsiders,
-				order: CustomSortOrder.alphabetical
-			}],
-			outsidersGroupIdx: OUTSIDERS_GROUP_IDX
-		}
-
-		// when
-		const result: FolderItemForSorting = determineSortingGroup(folder, sortSpec)
-		determineFolderDatesIfNeeded([result], sortSpec)
-
-		// then
-		expect(result.ctime).toEqual(DEFAULT_FOLDER_CTIME)
-		expect(result.mtime).toEqual(DEFAULT_FOLDER_CTIME)
-	})
-	it.each(
-		[
-			[CustomSortOrder.byCreatedTimeReverseAdvanced, undefined],
-			[CustomSortOrder.byCreatedTimeAdvanced, undefined],
-			[CustomSortOrder.byModifiedTimeAdvanced, undefined],
-			[CustomSortOrder.byModifiedTimeReverseAdvanced, undefined],
-			[CustomSortOrder.alphabetical, CustomSortOrder.byCreatedTimeReverseAdvanced],
-			[CustomSortOrder.alphabetical, CustomSortOrder.byCreatedTimeAdvanced],
-			[CustomSortOrder.alphabetical, CustomSortOrder.byModifiedTimeAdvanced],
-			[CustomSortOrder.alphabetical, CustomSortOrder.byModifiedTimeReverseAdvanced]
-	])('should correctly determine dates, if triggered by %s under default %s', (order: CustomSortOrder, folderOrder: CustomSortOrder | undefined) => {
-		// given
-		const folder: TFolder = mockTFolderWithChildren('Test folder 1')
-		const OUTSIDERS_GROUP_IDX = 0
-		const sortSpec: CustomSortSpec = {
-			targetFoldersPaths: ['/'],
-			defaultOrder: folderOrder,
-			groups: [{
-				type: CustomSortGroupType.Outsiders,
-				order: order
-			}],
-			outsidersGroupIdx: OUTSIDERS_GROUP_IDX
-		}
-
-		// when
-		const result: FolderItemForSorting = determineSortingGroup(folder, sortSpec)
-		determineFolderDatesIfNeeded([result], sortSpec)
-
-		// then
-		expect(result.ctime).toEqual(TIMESTAMP_OLDEST)
-		expect(result.mtime).toEqual(TIMESTAMP_NEWEST)
 	})
 })
 

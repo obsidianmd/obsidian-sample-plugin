@@ -618,6 +618,22 @@ export const sortOrderNeedsBookmarksOrder = (...orders: Array<CustomSortOrder | 
 export type ModifiedTime = number
 export type CreatedTime = number
 
+// TODO: determine how to selectively unmock the Vault.recurseChildren in integration jest test.
+//       Until then the implementation for testing is supplied explicitly below, copied from Obsidian code
+
+const recurseChildrenForUnitTests = ((root: TFolder, cb: (file: TAbstractFile) => any) => {
+	for (let itemsToIterate: TAbstractFile[] = [root]; itemsToIterate.length > 0;) {
+		let firstItem = itemsToIterate.pop();
+		if (firstItem) {
+			cb(firstItem)
+			if (isFolder(firstItem)) {
+				let childrenOfFolder = (firstItem as TFolder).children;
+				itemsToIterate = itemsToIterate.concat(childrenOfFolder)
+			}
+		}
+	}
+})
+
 export const determineDatesForFolder = (folder: TFolder, recursive?: boolean): [ModifiedTime, CreatedTime] => {
 	let mtimeOfFolder: ModifiedTime = DEFAULT_FOLDER_MTIME
 	let ctimeOfFolder: CreatedTime = DEFAULT_FOLDER_CTIME
@@ -635,7 +651,7 @@ export const determineDatesForFolder = (folder: TFolder, recursive?: boolean): [
 	}
 
 	if (recursive) {
-		 Vault.recurseChildren(folder, checkFile)
+		(Vault?.recurseChildren ?? recurseChildrenForUnitTests)(folder, checkFile)
 	} else {
 		folder.children.forEach((item) => checkFile(item))
 	}
