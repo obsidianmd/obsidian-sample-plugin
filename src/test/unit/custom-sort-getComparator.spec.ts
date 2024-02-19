@@ -4,9 +4,9 @@ import {
 	OS_byCreatedTime,
 	OS_byModifiedTime,
 	OS_byModifiedTimeReverse, SortingLevelId
-} from './custom-sort';
-import * as CustomSortModule from './custom-sort';
-import {CustomSortGroupType, CustomSortOrder, CustomSortSpec} from './custom-sort-types';
+} from '../../custom-sort/custom-sort';
+import * as CustomSortModule from '../../custom-sort/custom-sort';
+import {CustomSortGroupType, CustomSortOrder, CustomSortSpec} from '../../custom-sort/custom-sort-types';
 
 const MOCK_TIMESTAMP: number = 1656417542418
 

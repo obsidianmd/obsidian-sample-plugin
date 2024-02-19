@@ -1,6 +1,6 @@
 import {
 	FolderWildcardMatching
-} from './folder-matching-rules'
+} from '../../custom-sort/folder-matching-rules'
 
 type SortingSpec = string
 

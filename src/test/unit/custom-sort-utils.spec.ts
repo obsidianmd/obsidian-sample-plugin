@@ -2,14 +2,14 @@ import {
     CustomSortGroupType,
     CustomSortOrder,
     CustomSortSpec
-} from "./custom-sort-types";
+} from "../../custom-sort/custom-sort-types";
 import {
     collectSortingAndGroupingTypes,
     hasOnlyByBookmarkOrStandardObsidian,
     HasSortingOrGrouping,
     ImplicitSortspecForBookmarksIntegration
-} from "./custom-sort-utils";
-import {SortingSpecProcessor, SortSpecsCollection} from "./sorting-spec-processor";
+} from "../../custom-sort/custom-sort-utils";
+import {SortingSpecProcessor, SortSpecsCollection} from "../../custom-sort/sorting-spec-processor";
 
 type NM = number
 

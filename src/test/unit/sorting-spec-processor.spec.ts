@@ -13,9 +13,9 @@ import {
 	RegexpUsedAs,
 	RomanNumberNormalizerFn,
 	SortingSpecProcessor
-} from "./sorting-spec-processor"
-import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, IdentityNormalizerFn} from "./custom-sort-types";
-import {FolderMatchingRegexp, FolderMatchingTreeNode} from "./folder-matching-rules";
+} from "../../custom-sort/sorting-spec-processor"
+import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, IdentityNormalizerFn} from "../../custom-sort/custom-sort-types";
+import {FolderMatchingRegexp, FolderMatchingTreeNode} from "../../custom-sort/folder-matching-rules";
 
 const txtInputExampleA: string = `
 order-asc: a-z

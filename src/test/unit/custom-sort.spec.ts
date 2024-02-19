@@ -21,28 +21,28 @@ import {
 	sorterByFolderMDate,
 	sorterByMetadataField,
 	SorterFn
-} from './custom-sort';
+} from '../../custom-sort/custom-sort';
 import {
 	_unitTests
-} from './custom-sort'
+} from '../../custom-sort/custom-sort'
 import {
 	CustomSortGroupType,
 	CustomSortOrder,
 	CustomSortSpec,
 	RegExpSpec
-} from './custom-sort-types';
+} from '../../custom-sort/custom-sort-types';
 import {
 	CompoundDashNumberNormalizerFn,
 	CompoundDotRomanNumberNormalizerFn
-} from "./sorting-spec-processor";
+} from "../../custom-sort/sorting-spec-processor";
 import {
 	findStarredFile_pathParam,
 	Starred_PluginInstance
-} from "../utils/StarredPluginSignature";
+} from "../../utils/StarredPluginSignature";
 import {
 	ObsidianIconFolder_PluginInstance,
 	ObsidianIconFolderPlugin_Data
-} from "../utils/ObsidianIconFolderPluginSignature";
+} from "../../utils/ObsidianIconFolderPluginSignature";
 
 const mockTFile = (basename: string, ext: string, size?: number, ctime?: number, mtime?: number): TFile => {
 	return {

@@ -11,7 +11,7 @@ import {
 	CompoundRomanNumberDashRegexStr,
 	WordInASCIIRegexStr,
 	WordInAnyLanguageRegexStr
-} from "./matchers";
+} from "../../custom-sort/matchers";
 
 describe('Plain numbers regexp', () => {
 	let regexp: RegExp;

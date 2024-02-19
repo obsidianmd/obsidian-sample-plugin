@@ -2,8 +2,8 @@ import {
     _unitTests,
     BookmarkedParentFolder,
     OrderedBookmarks
-} from "./BookmarksCorePluginSignature";
-import {extractParentFolderPath} from "./utils";
+} from "../../utils/BookmarksCorePluginSignature";
+import {extractParentFolderPath} from "../../utils/utils";
 
 type Bookmarks_PluginInstance = any
 
