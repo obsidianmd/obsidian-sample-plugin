@@ -653,7 +653,7 @@ export const determineDatesForFolder = (folder: TFolder, recursive?: boolean): [
 	if (recursive) {
 		(Vault?.recurseChildren ?? recurseChildrenForUnitTests)(folder, checkFile)
 	} else {
-		folder.children.forEach((item) => checkFile(item))
+		folder.children.forEach(checkFile)
 	}
 	return [mtimeOfFolder, ctimeOfFolder]
 }
