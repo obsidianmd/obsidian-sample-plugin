@@ -24,7 +24,7 @@ Take full control of the order of your notes and folders:
 - folders not set up for the custom order remain on the standard Obsidian sorting
 - support for imposing inheritance of order specifications with flexible exclusion and overriding logic
 
-<h2 id="#table-of-contents">Table of Contents</h2> 
+## Table of Contents
 
 - [TL;DR Usage](#tldr-usage)
   - [Simple case 1: in root folder sort entries alphabetically treating folders and files equally](#simple-case-1-in-root-folder-sort-entries-alphabetically-treating-folders-and-files-equally)
