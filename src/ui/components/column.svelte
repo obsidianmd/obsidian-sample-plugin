@@ -71,8 +71,17 @@
 		e.preventDefault();
 		// Get the id of the target and add the moved element to the target's DOM
 		const droppedId = e.dataTransfer?.getData("text/plain");
-		if (droppedId && column !== "done" && column !== "uncategorised") {
-			taskActions.changeColumn(droppedId, column);
+		if (droppedId) {
+			switch (column) {
+				case "uncategorised":
+					break;
+				case "done":
+					taskActions.markDone(droppedId);
+					break;
+				default:
+					taskActions.changeColumn(droppedId, column);
+					break;
+			}
 		}
 	}
 </script>

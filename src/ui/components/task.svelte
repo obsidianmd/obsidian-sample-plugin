@@ -7,9 +7,11 @@
 	export let task: Task;
 	export let taskActions: TaskActions;
 
-	function handleSaveContent(
+	function handleContentBlur(
 		e: FocusEvent & { currentTarget: HTMLParagraphElement },
 	) {
+		isEditing = false;
+
 		const content = e.currentTarget.textContent;
 		if (!content) return;
 
@@ -25,8 +27,10 @@
 	}
 
 	let isDragging = false;
+	let isEditing = false;
 
 	function handleDragStart(e: DragEvent) {
+		isEditing = false;
 		isDragging = true;
 		isDraggingStore.set(true);
 		if (e.dataTransfer) {
@@ -39,6 +43,27 @@
 		isDragging = false;
 		isDraggingStore.set(false);
 	}
+
+	function handleDblClick(e: MouseEvent) {
+		const target = e.target as HTMLParagraphElement | null;
+		if (!target) {
+			return;
+		}
+
+		isEditing = true;
+		target.focus();
+
+		function onClickOutside(clickEvent: MouseEvent) {
+			if (!target.contains(clickEvent.targetNode)) {
+				isEditing = false;
+				window.removeEventListener("click", onClickOutside);
+			}
+		}
+
+		window.addEventListener("click", onClickOutside);
+	}
+
+	$: editableContentProps = isEditing ? { contenteditable: true } : {};
 </script>
 
 <div
@@ -51,9 +76,12 @@
 >
 	<div class="task-body">
 		<div class="task-content">
+			<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 			<p
-				contenteditable
-				on:blur={handleSaveContent}
+				{...editableContentProps}
+				class:editing={isEditing}
+				on:dblclick={handleDblClick}
+				on:blur={handleContentBlur}
 				on:keypress={handleKeypress}
 			>
 				{task.content}
@@ -83,12 +111,12 @@
 			grid-template-columns: 1fr auto;
 
 			p {
-				cursor: text;
 				word-break: break-word;
-				margin-top: 0;
+				margin: 0;
 
-				&:last-child {
-					margin-bottom: 0;
+				&.editing {
+					cursor: text;
+					background-color: var(--color-base-25);
 				}
 			}
 		}
