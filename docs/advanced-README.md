@@ -129,7 +129,7 @@ which can result in:
 
 ![Simplest example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/simplest-example.svg)
 
-[Back To Top](## Table of contents)
+[Back To Top](##Table of contents)
 
 ### Simple case 2: impose manual order of some items in root folder
 
