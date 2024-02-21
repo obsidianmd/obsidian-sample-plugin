@@ -52,34 +52,32 @@
 	$: tasksByColumn = groupByColumnTag($tasksStore);
 </script>
 
-<section>
-	<h1>Project Planner</h1>
-	<div class="columns">
-		<div>
+<div class="columns">
+	<div>
+		<Column
+			column={"uncategorised"}
+			hideOnEmpty={true}
+			tasks={tasksByColumn["uncategorised"]}
+			{taskActions}
+		/>
+		{#each columns as column}
 			<Column
-				column={"uncategorised"}
-				hideOnEmpty={true}
-				tasks={tasksByColumn["uncategorised"]}
+				{column}
+				tasks={tasksByColumn[column] ?? []}
 				{taskActions}
 			/>
-			{#each columns as column}
-				<Column
-					{column}
-					tasks={tasksByColumn[column] ?? []}
-					{taskActions}
-				/>
-			{/each}
-			<Column
-				column="done"
-				tasks={tasksByColumn["done"] ?? []}
-				{taskActions}
-			/>
-		</div>
+		{/each}
+		<Column
+			column="done"
+			tasks={tasksByColumn["done"] ?? []}
+			{taskActions}
+		/>
 	</div>
-</section>
+</div>
 
 <style>
 	.columns {
+		height: 100%;
 		max-width: 100vw;
 		overflow-x: scroll;
 		padding-bottom: var(--size-4-3);

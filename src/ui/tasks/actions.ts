@@ -1,13 +1,11 @@
 import { MarkdownView, type TFile, type Vault, type Workspace } from "obsidian";
 import type { Task } from "./task";
 import type { Metadata } from "./tasks";
-import type { ColumnTag, DefaultColumns } from "../columns/columns";
+import type { ColumnTag } from "../columns/columns";
 
 export type TaskActions = {
-	changeColumn: (
-		id: string,
-		newColumn: ColumnTag | Exclude<DefaultColumns, "uncategorised">
-	) => Promise<void>;
+	changeColumn: (id: string, newColumn: ColumnTag) => Promise<void>;
+	markDone: (id: string) => Promise<void>;
 	viewFile: (id: string) => Promise<void>;
 };
 
@@ -22,10 +20,7 @@ export function createTaskActions({
 	vault: Vault;
 	workspace: Workspace;
 }): TaskActions {
-	async function changeColumn(
-		id: string,
-		newColumn: ColumnTag | Exclude<DefaultColumns, "uncategorised">
-	) {
+	async function changeColumn(id: string, newColumn: ColumnTag) {
 		const metadata = metadataByTaskId.get(id);
 		const task = tasksByTaskId.get(id);
 
@@ -33,7 +28,24 @@ export function createTaskActions({
 			return;
 		}
 
-		const newTaskString = task.serialise({ column: newColumn });
+		const newTaskString = task.serialisedWithColumn(newColumn);
+		await updateRow(
+			vault,
+			metadata.fileHandle,
+			metadata.rowIndex,
+			newTaskString
+		);
+	}
+
+	async function markDone(id: string) {
+		const metadata = metadataByTaskId.get(id);
+		const task = tasksByTaskId.get(id);
+
+		if (!metadata || !task) {
+			return;
+		}
+
+		const newTaskString = task.serialisedAsDone(true);
 		await updateRow(
 			vault,
 			metadata.fileHandle,
@@ -57,7 +69,7 @@ export function createTaskActions({
 		editorView?.editor.setCursor(rowIndex);
 	}
 
-	return { changeColumn, viewFile };
+	return { changeColumn, markDone, viewFile };
 }
 
 async function updateRow(

@@ -16,7 +16,7 @@
 
 <style lang="scss">
 	.task {
-		background-color: var(--background-primary-alt);
+		background-color: var(--background-secondary-alt);
 		border-radius: var(--radius-m);
 		border: var(--border-width) solid var(--background-modifier-border);
 		padding: var(--size-4-2);

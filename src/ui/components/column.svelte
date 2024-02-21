@@ -58,7 +58,7 @@
 		padding: var(--size-4-3);
 		border-radius: var(--radius-m);
 		border: var(--border-width) solid var(--background-modifier-border);
-		background-color: var(--background-primary);
+		background-color: var(--background-secondary);
 	}
 
 	.column h2 {

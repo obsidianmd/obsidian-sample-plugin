@@ -40,9 +40,9 @@
 
 		menu.addItem((i) => {
 			i.setTitle(`Move to done`).onClick(() =>
-				taskActions.changeColumn(task.id, "done"),
+				taskActions.markDone(task.id),
 			);
-			if (task.column === "done") {
+			if (task.done) {
 				i.setDisabled(true);
 			}
 		});
