@@ -24,7 +24,7 @@ Take full control of the order of your notes and folders:
 - folders not set up for the custom order remain on the standard Obsidian sorting
 - support for imposing inheritance of order specifications with flexible exclusion and overriding logic
 
-<h2 id="#table-of-contents">Table of contents</h2> 
+<h2 id="#table-of-contents">Table of Contents</h2> 
 
 - [TL;DR Usage](#tldr-usage)
   - [Simple case 1: in root folder sort entries alphabetically treating folders and files equally](#simple-case-1-in-root-folder-sort-entries-alphabetically-treating-folders-and-files-equally)
@@ -129,7 +129,7 @@ which can result in:
 
 ![Simplest example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/simplest-example.svg)
 
-[⬆️ Back To Top](#table-of-contents)
+[🔼 Back To Top](#table-of-contents)
 
 ### Simple case 2: impose manual order of some items in root folder
 
@@ -152,6 +152,8 @@ sorting-spec: |
 produces:
 
 ![Simplest example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/simplest-example-2.svg)
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Example 3: In root folder, let files go first and folders get pushed to the bottom
 
@@ -180,6 +182,8 @@ sorting-spec: |
 will order items as:
 
 ![Files go first example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/files-go-first.svg)
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Example 4: In root folder, pin a focus note, then Inbox folder, and push archive to the bottom
 
@@ -217,6 +221,8 @@ folder which contains the note with the specification_.
 > If the `target-folder:` line is omitted, the specification will be applied to the parent folder of the note, which has
 > the same effect as `target-folder: .`
 
+[🔼 Back To Top](#table-of-contents)
+
 ### Example 5: P.A.R.A. method example
 
 The P.A.R.A. system for organizing digital information is based on the four specifically named folders ordered as in the
@@ -240,6 +246,8 @@ sorting-spec: |
 which will have the effect of:
 
 ![Result of the example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/p_a_r_a.svg)
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Example 6: P.A.R.A. example with smart syntax
 
@@ -265,6 +273,8 @@ It will give exactly the same order as in previous example:
 REMARK: the wildcard expression '...' can be used only once per line
 ```
 
+[🔼 Back To Top](#table-of-contents)
+
 ### Example 7: Apply the same sorting rules to two folders
 
 Let's tell a few folders to sort their child notes and child folders by created date reverse order (newer go first)
@@ -280,6 +290,8 @@ sorting-spec: |
 ```
 
 No visualization for this example needed
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Example 8: Specify rules for multiple folders
 
@@ -306,6 +318,8 @@ sorting-spec: |
 will have the effect of:
 
 ![Result of the example](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/multi-folder.svg)
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Example 9: Sort by numerical suffix
 
@@ -334,6 +348,8 @@ The effect is:
 
 ![Order by numerical suffix](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/by-suffix.svg)
 
+[🔼 Back To Top](#table-of-contents)
+
 ### Example 10: Sample book structure with Roman numbered chapters
 
 Roman numbers are also supported. This example uses the `\R+` token in connection with the wildcard `...`
@@ -356,6 +372,8 @@ it gives:
 
 ![Book - Roman chapters](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/roman-chapters.svg)
 
+[🔼 Back To Top](#table-of-contents)
+
 ### Example 11: Sample book structure with compound Roman number suffixes
 
 Roman compound numbers are also supported. This example uses the `\.R+` token (a Roman compound number with '.' as separator) in connection with the wildcard `...` (and the important SPACE inbetween).
@@ -376,6 +394,8 @@ the result is:
 
 ![Book - Roman compound suffixes](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/svg/roman-suffix.svg)
 
+[🔼 Back To Top](#table-of-contents)
+
 ### Example 12: Apply same sorting to all folders in the vault
 
 Apply the same advanced modified date sorting to all folders in the Vault. The advanced modified sorting treats the folders 
@@ -394,6 +414,8 @@ sorting-spec: |
     > advanced modified
 ---
 ```
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Example 13: Sorting rules inheritance by subfolders
 
@@ -430,6 +452,8 @@ sorting-spec: |
     sorting: standard
 ---
 ```
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Example 14: Grouping and sorting by metadata value
 
@@ -511,6 +535,8 @@ Then the remaining notes (not having the `Pages` metadata) are sorted by modific
 > The `with-metadata:` keyword can be used with other specifiers like `/:files with-metadata: Pages` or `/folders with-metadata: Pages`
 > If the metadata name is omitted, the default `sort-index-value` metadata name is assumed.
 
+[🔼 Back To Top](#table-of-contents)
+
 ## Alphabetical, Natural and True Alphabetical sorting orders
 
 The 'A-Z' sorting (visible in Obsidian UI of file explorer) at some point before the 1.0.0 release of Obsidian actually became the so-called 'natural' sort order.
@@ -540,6 +566,8 @@ sorting-spec: |
  < true a-z
 ```
 
+[🔼 Back To Top](#table-of-contents)
+
 ## Location of sorting specification YAML entry
 
 You can keep the custom sorting specifications in any of the following locations (or in all of them):
@@ -567,6 +595,8 @@ e.g. `Inbox/Inbox.md`). And for clarity, I keep the name of that designated note
 reference.
 
 <a name="ribbon_icon"></a>
+
+[🔼 Back To Top](#table-of-contents)
 
 ## Ribbon icon
 
@@ -602,6 +632,8 @@ On small-screen mobile devices (phones) the icon is static:
     - Click to enable and apply custom sorting or to disable custom sorting
     - To get notified about custom sort plugin state, enable the mobile-specific notifications in plugin settings
 
+[🔼 Back To Top](#table-of-contents)
+
 ## Installing the plugin
 
 ### From the official Obsidian Community Plugins page
@@ -609,6 +641,8 @@ On small-screen mobile devices (phones) the icon is static:
 The plugin could and should be installed from the official Obsidian Community Plugins list at https://obsidian.md/plugins
 or directly in the Obsidian app itself.
 Search the plugin by its name 'CUSTOM FILE EXPLORER SORTING'
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Installing the plugin using BRAT
 
@@ -626,6 +660,8 @@ Search the plugin by its name 'CUSTOM FILE EXPLORER SORTING'
 	2. `Add Beta Plugin`
 	3. Specify this repository: `SebastianMC/obsidian-custom-sort`
 3. Enable the `Custom File Explorer sorting` plugin (`Settings` -> `Community Plugins`)
+
+[🔼 Back To Top](#table-of-contents)
 
 ### Manually installing the plugin
 
@@ -646,8 +682,11 @@ Search the plugin by its name 'CUSTOM FILE EXPLORER SORTING'
 > Note: The `.obsidian` folder may be hidden.
 > On macOS, you should be able to press Command+Shift+Dot to show the folder in Finder.
 
+[🔼 Back To Top](#table-of-contents)
+
 ## Credits
 
 Thanks to [Nothingislost](https://github.com/nothingislost) for the monkey-patching ideas of File Explorer
 in [obsidian-bartender](https://github.com/nothingislost/obsidian-bartender)
 
+[🔼 Back To Top](#table-of-contents)
