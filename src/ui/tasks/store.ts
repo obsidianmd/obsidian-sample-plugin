@@ -24,23 +24,38 @@ export function createTasksStore(
 		if (!timer) {
 			timer = window.setTimeout(() => {
 				timer = undefined;
-				tasksStore.set([...tasksByTaskId.values()]);
+				tasksStore.set(
+					[...tasksByTaskId.values()].sort((a, b) => {
+						if (a.path !== b.path) {
+							return a.path.localeCompare(b.path);
+						}
+						return a.rowIndex - b.rowIndex;
+					})
+				);
 			}, 50);
 		}
 	}
 
-	for (const fileHandle of fileHandles) {
-		updateMapsFromFile({
-			fileHandle,
-			tasksByTaskId,
-			metadataByTaskId,
-			taskIdsByFileHandle,
-			vault,
-			columnTagTableStore,
-		}).then(() => {
-			debounceSetTasks();
-		});
+	function initialise() {
+		tasksByTaskId.clear();
+		metadataByTaskId.clear();
+		taskIdsByFileHandle.clear();
+
+		for (const fileHandle of fileHandles) {
+			updateMapsFromFile({
+				fileHandle,
+				tasksByTaskId,
+				metadataByTaskId,
+				taskIdsByFileHandle,
+				vault,
+				columnTagTableStore,
+			}).then(() => {
+				debounceSetTasks();
+			});
+		}
 	}
+
+	initialise();
 
 	registerEvent(
 		vault.on("modify", (fileHandle) => {
@@ -79,7 +94,14 @@ export function createTasksStore(
 	registerEvent(
 		vault.on("delete", (fileHandle) => {
 			if (fileHandle instanceof TFile) {
-				// TODO implement
+				const tasksToDelete = taskIdsByFileHandle.get(fileHandle);
+				if (!tasksToDelete) return;
+
+				for (const taskId of tasksToDelete) {
+					tasksByTaskId.delete(taskId);
+					metadataByTaskId.delete(taskId);
+				}
+				taskIdsByFileHandle.delete(fileHandle);
 			}
 		})
 	);
@@ -87,7 +109,7 @@ export function createTasksStore(
 	registerEvent(
 		vault.on("rename", (fileHandle) => {
 			if (fileHandle instanceof TFile) {
-				// TODO implement
+				initialise();
 			}
 		})
 	);

@@ -4,9 +4,11 @@ import type { Metadata } from "./tasks";
 import type { ColumnTag } from "../columns/columns";
 
 export type TaskActions = {
-	changeColumn: (id: string, newColumn: ColumnTag) => Promise<void>;
+	changeColumn: (id: string, column: ColumnTag) => Promise<void>;
 	markDone: (id: string) => Promise<void>;
+	updateContent: (id: string, content: string) => Promise<void>;
 	viewFile: (id: string) => Promise<void>;
+	archiveTasks: (ids: string[]) => Promise<void>;
 };
 
 export function createTaskActions({
@@ -20,7 +22,10 @@ export function createTaskActions({
 	vault: Vault;
 	workspace: Workspace;
 }): TaskActions {
-	async function changeColumn(id: string, newColumn: ColumnTag) {
+	async function updateRowWithTask(
+		id: string,
+		updater: (task: Task) => void
+	) {
 		const metadata = metadataByTaskId.get(id);
 		const task = tasksByTaskId.get(id);
 
@@ -28,7 +33,9 @@ export function createTaskActions({
 			return;
 		}
 
-		const newTaskString = task.serialisedWithColumn(newColumn);
+		updater(task);
+
+		const newTaskString = task.serialise();
 		await updateRow(
 			vault,
 			metadata.fileHandle,
@@ -37,39 +44,40 @@ export function createTaskActions({
 		);
 	}
 
-	async function markDone(id: string) {
-		const metadata = metadataByTaskId.get(id);
-		const task = tasksByTaskId.get(id);
+	return {
+		async changeColumn(id: string, column: ColumnTag) {
+			await updateRowWithTask(id, (task) => (task.column = column));
+		},
 
-		if (!metadata || !task) {
-			return;
-		}
+		async markDone(id: string) {
+			await updateRowWithTask(id, (task) => (task.done = true));
+		},
 
-		const newTaskString = task.serialisedAsDone(true);
-		await updateRow(
-			vault,
-			metadata.fileHandle,
-			metadata.rowIndex,
-			newTaskString
-		);
-	}
+		async updateContent(id: string, content: string) {
+			await updateRowWithTask(id, (task) => (task.content = content));
+		},
 
-	async function viewFile(id: string) {
-		const metadata = metadataByTaskId.get(id);
+		async archiveTasks(ids: string[]) {
+			for (const id of ids) {
+				await updateRowWithTask(id, (task) => task.archive());
+			}
+		},
 
-		if (!metadata) {
-			return;
-		}
+		async viewFile(id: string) {
+			const metadata = metadataByTaskId.get(id);
 
-		const { fileHandle, rowIndex } = metadata;
+			if (!metadata) {
+				return;
+			}
 
-		const leaf = workspace.getLeaf("tab");
-		await leaf.openFile(fileHandle);
-		const editorView = workspace.getActiveViewOfType(MarkdownView);
-		editorView?.editor.setCursor(rowIndex);
-	}
+			const { fileHandle, rowIndex } = metadata;
 
-	return { changeColumn, markDone, viewFile };
+			const leaf = workspace.getLeaf("tab");
+			await leaf.openFile(fileHandle);
+			const editorView = workspace.getActiveViewOfType(MarkdownView);
+			editorView?.editor.setCursor(rowIndex);
+		},
+	};
 }
 
 async function updateRow(

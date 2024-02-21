@@ -6,7 +6,7 @@ export class Task {
 	constructor(
 		rawContent: TaskString,
 		fileHandle: { path: string },
-		rowIndex: number,
+		readonly rowIndex: number,
 		columnTagTable: ColumnTagTable
 	) {
 		const [, remainder = ""] = rawContent.split("- [");
@@ -15,7 +15,7 @@ export class Task {
 		this._tags = getTags(content);
 
 		this._id = sha256(content + fileHandle.path + rowIndex).toString();
-		this._content = content;
+		this.content = content;
 		this._done = status === "x";
 		this._path = fileHandle.path;
 
@@ -27,7 +27,7 @@ export class Task {
 				this._tags.delete(tag);
 			}
 
-			this._content = this._content.replaceAll(`#${tag}`, "").trim();
+			this.content = this.content.replaceAll(`#${tag}`, "").trim();
 		}
 		if (this._done) {
 			this._column = undefined;
@@ -38,13 +38,10 @@ export class Task {
 	get id() {
 		return this._id;
 	}
-	private _content: string;
-	get content() {
-		return this._content;
-	}
+	content: string;
 
 	private _done: boolean;
-	get done() {
+	get done(): boolean {
 		return this._done;
 	}
 
@@ -53,26 +50,24 @@ export class Task {
 		return this._path;
 	}
 
-	private _column: ColumnTag | undefined;
-	get column() {
+	private _column: ColumnTag | "archived" | undefined;
+	get column(): ColumnTag | "archived" | undefined {
 		return this._column;
 	}
 
 	private readonly _tags: Set<string>;
 
-	serialisedAsDone(done: boolean): string {
+	set done(done: true) {
 		this._done = done;
 		this._column = undefined;
-		return this.serialise();
 	}
 
-	serialisedWithColumn(column: ColumnTag) {
+	set column(column: ColumnTag) {
 		this._column = column;
 		this._done = false;
-		return this.serialise();
 	}
 
-	private serialise(): string {
+	serialise(): string {
 		return [
 			`- [${this.done ? "x" : " "}] `,
 			this.content.trim(),
@@ -80,11 +75,19 @@ export class Task {
 			[...this._tags].map((tag) => ` #${tag}`).join(""),
 		].join("");
 	}
+
+	archive() {
+		this._done = true;
+		this._column = "archived";
+	}
 }
 
 type TaskString = Brand<string, "TaskString">;
 
 export function isTaskString(input: string): input is TaskString {
+	if (input.includes("#archived")) {
+		return false;
+	}
 	return taskStringRegex.test(input);
 }
 

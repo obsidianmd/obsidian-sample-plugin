@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Menu, setIcon } from "obsidian";
 	import {
 		columnTagTableStore,
 		type ColumnTag,
@@ -8,6 +9,8 @@
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
 	import TaskComponent from "./task.svelte";
+	import IconButton from "./icon_button.svelte";
+	import { isDraggingStore } from "../dnd/store";
 
 	export let column: ColumnTag | DefaultColumns;
 	export let hideOnEmpty: boolean = false;
@@ -37,46 +40,123 @@
 			return a.path.localeCompare(b.path);
 		}
 	});
+
+	function showMenu(e: MouseEvent) {
+		const menu = new Menu();
+
+		menu.addItem((i) => {
+			i.setTitle(`Archive all`).onClick(() =>
+				taskActions.archiveTasks(tasks.map(({ id }) => id)),
+			);
+		});
+
+		menu.showAtMouseEvent(e);
+	}
+
+	let isDraggedOver = false;
+
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault();
+		isDraggedOver = true;
+		if (e.dataTransfer) {
+			e.dataTransfer.dropEffect = "move";
+		}
+	}
+
+	function handleDragLeave(e: DragEvent) {
+		isDraggedOver = false;
+	}
+
+	function handleDrop(e: DragEvent) {
+		e.preventDefault();
+		// Get the id of the target and add the moved element to the target's DOM
+		const droppedId = e.dataTransfer?.getData("text/plain");
+		if (droppedId && column !== "done" && column !== "uncategorised") {
+			taskActions.changeColumn(droppedId, column);
+		}
+	}
 </script>
 
 {#if !hideOnEmpty || tasks.length}
-	<div class="column">
-		<h2>{columnTitle}</h2>
+	<div
+		role="group"
+		class="column"
+		class:drop-active={$isDraggingStore}
+		class:drop-hover={isDraggedOver}
+		on:dragover={handleDragOver}
+		on:dragleave={handleDragLeave}
+		on:drop={handleDrop}
+	>
+		<div class="header">
+			<h2>{columnTitle}</h2>
+			{#if column === "done"}
+				<IconButton icon="lucide-more-vertical" on:click={showMenu} />
+			{/if}
+		</div>
 		<div class="divide" />
-		<div class="tasks">
-			{#each sortedTasks as task}
-				<TaskComponent {task} {taskActions} />
-			{/each}
+		<div class="tasks-wrapper">
+			<div class="tasks">
+				{#each sortedTasks as task}
+					<TaskComponent {task} {taskActions} />
+				{/each}
+			</div>
 		</div>
 	</div>
 {/if}
 
-<style>
+<style lang="scss">
 	.column {
-		width: 220px;
+		display: flex;
+		flex-direction: column;
+		width: 300px;
 		flex-shrink: 0;
 		padding: var(--size-4-3);
 		border-radius: var(--radius-m);
 		border: var(--border-width) solid var(--background-modifier-border);
 		background-color: var(--background-secondary);
-	}
 
-	.column h2 {
-		font-size: var(--font-ui-larger);
-		font-weight: var(--font-bold);
-		margin: 0;
-	}
+		&.drop-active {
+			.tasks-wrapper {
+				.tasks {
+					opacity: 0.4;
+				}
+			}
 
-	.column .divide {
-		width: calc(100% + calc(2 * var(--size-4-3)));
-		border-bottom: var(--border-width) solid
-			var(--background-modifier-border);
-		margin: var(--size-4-3) calc(-1 * var(--size-4-3));
-	}
+			&.drop-hover {
+				.tasks-wrapper {
+					border-color: var(--color-base-70);
+				}
+			}
+		}
 
-	.column .tasks {
-		display: flex;
-		flex-direction: column;
-		gap: var(--size-4-2);
+		.header {
+			display: flex;
+			justify-content: space-between;
+
+			h2 {
+				font-size: var(--font-ui-larger);
+				font-weight: var(--font-bold);
+				margin: 0;
+			}
+		}
+
+		.divide {
+			width: calc(100% + calc(2 * var(--size-4-3)));
+			border-bottom: var(--border-width) solid
+				var(--background-modifier-border);
+			margin: var(--size-4-3) calc(-1 * var(--size-4-3));
+		}
+
+		.tasks-wrapper {
+			height: 100%;
+			border: var(--border-width) dashed transparent;
+			border-radius: var(--radius-m);
+
+			.tasks {
+				display: flex;
+				flex-direction: column;
+				gap: var(--size-4-2);
+			}
+		}
 	}
 </style>
