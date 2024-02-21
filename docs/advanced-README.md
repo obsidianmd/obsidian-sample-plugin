@@ -104,6 +104,8 @@ Click the [ribbon icon](#ribbon_icon) again to disable custom sorting and switch
 The [ribbon icon](#ribbon_icon) acts also as the visual indicator of the current state of the plugin - see
 the [ribbon icon](#ribbon_icon) section for details
 
+[🔼 Back To Top](#table-of-contents)
+
 ### Simple case 1: in root folder sort entries alphabetically treating folders and files equally
 
 The specified rule is to sort items alphabetically in the root folder of the vault 
