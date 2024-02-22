@@ -117,6 +117,7 @@
 	.column {
 		display: flex;
 		flex-direction: column;
+		align-self: flex-start;
 		width: 300px;
 		flex-shrink: 0;
 		padding: var(--size-4-3);
@@ -141,6 +142,9 @@
 		.header {
 			display: flex;
 			justify-content: space-between;
+			align-items: center;
+			height: 24px;
+			flex-shrink: 0;
 
 			h2 {
 				font-size: var(--font-ui-larger);
@@ -158,6 +162,7 @@
 
 		.tasks-wrapper {
 			height: 100%;
+			min-height: 50px;
 			border: var(--border-width) dashed transparent;
 			border-radius: var(--radius-m);
 

@@ -15,6 +15,7 @@
 		"@tsconfig/svelte": "^5.0.2",
 		"@types/crypto-js": "^4.2.2",
 		"@types/node": "^20.11.19",
+		"@types/showdown": "^2.0.6",
 		"@typescript-eslint/eslint-plugin": "7.0.1",
 		"@typescript-eslint/parser": "7.0.1",
 		"builtin-modules": "3.3.0",
@@ -29,6 +30,7 @@
 	"dependencies": {
 		"@floating-ui/dom": "^1.6.3",
 		"crypto-js": "^4.2.0",
-		"sass": "^1.71.1"
+		"sass": "^1.71.1",
+		"showdown": "^2.1.0"
 	}
 }

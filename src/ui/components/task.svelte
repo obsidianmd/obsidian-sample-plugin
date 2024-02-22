@@ -3,23 +3,30 @@
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
 	import TaskMenu from "./task_menu.svelte";
+	import { Converter } from "showdown";
 
 	export let task: Task;
 	export let taskActions: TaskActions;
 
+	const mdConverted = new Converter({
+		simplifiedAutoLink: true,
+		openLinksInNewWindow: true,
+		emoji: true,
+	});
+
 	function handleContentBlur(
-		e: FocusEvent & { currentTarget: HTMLParagraphElement },
+		e: FocusEvent & { currentTarget: HTMLTextAreaElement },
 	) {
 		isEditing = false;
 
-		const content = e.currentTarget.textContent;
+		const content = e.currentTarget.value;
 		if (!content) return;
 
 		taskActions.updateContent(task.id, content);
 	}
 
 	function handleKeypress(
-		e: KeyboardEvent & { currentTarget: HTMLParagraphElement },
+		e: KeyboardEvent & { currentTarget: HTMLTextAreaElement },
 	) {
 		if (e.key === "Enter") {
 			e.currentTarget.blur();
@@ -44,26 +51,29 @@
 		isDraggingStore.set(false);
 	}
 
+	let textAreaEl: HTMLTextAreaElement | undefined;
+
 	function handleDblClick(e: MouseEvent) {
-		const target = e.target as HTMLParagraphElement | null;
-		if (!target) {
-			return;
-		}
-
 		isEditing = true;
-		target.focus();
 
-		function onClickOutside(clickEvent: MouseEvent) {
-			if (!target.contains(clickEvent.targetNode)) {
-				isEditing = false;
-				window.removeEventListener("click", onClickOutside);
-			}
-		}
-
-		window.addEventListener("click", onClickOutside);
+		setTimeout(() => {
+			textAreaEl?.focus();
+		}, 100);
 	}
 
-	$: editableContentProps = isEditing ? { contenteditable: true } : {};
+	$: mdContent = mdConverted.makeHtml(task.content);
+
+	$: {
+		if (textAreaEl) {
+			textAreaEl.style.height = `0px`;
+			textAreaEl.style.height = `${textAreaEl.scrollHeight}px`;
+		}
+	}
+
+	function onInput(e: Event & { currentTarget: HTMLTextAreaElement }) {
+		e.currentTarget.style.height = `0px`;
+		e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+	}
 </script>
 
 <div
@@ -75,17 +85,20 @@
 	on:dragend={handleDragEnd}
 >
 	<div class="task-body">
-		<div class="task-content">
-			<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-			<p
-				{...editableContentProps}
-				class:editing={isEditing}
-				on:dblclick={handleDblClick}
-				on:blur={handleContentBlur}
-				on:keypress={handleKeypress}
-			>
-				{task.content}
-			</p>
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div class="task-content" on:dblclick={handleDblClick}>
+			{#if isEditing}
+				<textarea
+					class:editing={isEditing}
+					bind:this={textAreaEl}
+					on:blur={handleContentBlur}
+					on:keypress={handleKeypress}
+					on:input={onInput}
+					value={task.content}
+				/>
+			{:else}
+				{@html mdContent}
+			{/if}
 		</div>
 		<TaskMenu {task} {taskActions} />
 	</div>
@@ -113,11 +126,11 @@
 			p {
 				word-break: break-word;
 				margin: 0;
+			}
 
-				&.editing {
-					cursor: text;
-					background-color: var(--color-base-25);
-				}
+			textarea {
+				cursor: text;
+				background-color: var(--color-base-25);
 			}
 		}
 
@@ -132,5 +145,9 @@
 				font-size: var(--font-ui-smaller);
 			}
 		}
+	}
+
+	:global(.task-content *) {
+		margin: 0;
 	}
 </style>
