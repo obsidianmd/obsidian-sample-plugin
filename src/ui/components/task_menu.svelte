@@ -41,6 +41,26 @@
 			}
 		});
 
+		menu.addSeparator();
+
+		menu.addItem((i) => {
+			i.setTitle(`Allocate to Kate`).onClick(() =>
+				taskActions.changeOwner(task.id, "kate"),
+			);
+			if (task.owner === "kate") {
+				i.setDisabled(true);
+			}
+		});
+
+		menu.addItem((i) => {
+			i.setTitle(`Allocate to Chris`).onClick(() =>
+				taskActions.changeOwner(task.id, "chris"),
+			);
+			if (task.owner === "chris") {
+				i.setDisabled(true);
+			}
+		});
+
 		menu.showAtMouseEvent(e);
 	}
 </script>

@@ -27,6 +27,13 @@ export class Task {
 				this._tags.delete(tag);
 			}
 
+			if (tag === "kate" || tag === "chris") {
+				if (!this._owner) {
+					this._owner = tag;
+				}
+				this._tags.delete(tag);
+			}
+
 			this.content = this.content.replaceAll(`#${tag}`, "").trim();
 		}
 		if (this._done) {
@@ -44,6 +51,10 @@ export class Task {
 	get done(): boolean {
 		return this._done;
 	}
+	set done(done: true) {
+		this._done = done;
+		this._column = undefined;
+	}
 
 	private readonly _path: string;
 	get path() {
@@ -54,17 +65,19 @@ export class Task {
 	get column(): ColumnTag | "archived" | undefined {
 		return this._column;
 	}
-
-	private readonly _tags: Set<string>;
-
-	set done(done: true) {
-		this._done = done;
-		this._column = undefined;
-	}
-
 	set column(column: ColumnTag) {
 		this._column = column;
 		this._done = false;
+	}
+
+	private readonly _tags: Set<string>;
+
+	private _owner: "kate" | "chris" | undefined;
+	get owner(): "kate" | "chris" | undefined {
+		return this._owner;
+	}
+	set owner(column: "kate" | "chris") {
+		this._owner = column;
 	}
 
 	serialise(): string {
@@ -72,6 +85,7 @@ export class Task {
 			`- [${this.done ? "x" : " "}] `,
 			this.content.trim(),
 			this.column ? ` #${this.column}` : "",
+			this.owner ? ` #${this.owner}` : "",
 			[...this._tags].map((tag) => ` #${tag}`).join(""),
 		].join("");
 	}

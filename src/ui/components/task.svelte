@@ -104,6 +104,9 @@
 	</div>
 	<div class="task-footer">
 		<p>{task.path}</p>
+		{#if task.owner}
+			<p>#{task.owner}</p>
+		{/if}
 	</div>
 </div>
 

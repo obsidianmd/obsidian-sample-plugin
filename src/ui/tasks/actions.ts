@@ -5,6 +5,7 @@ import type { ColumnTag } from "../columns/columns";
 
 export type TaskActions = {
 	changeColumn: (id: string, column: ColumnTag) => Promise<void>;
+	changeOwner: (id: string, owner: "kate" | "chris") => Promise<void>;
 	markDone: (id: string) => Promise<void>;
 	updateContent: (id: string, content: string) => Promise<void>;
 	viewFile: (id: string) => Promise<void>;
@@ -45,25 +46,29 @@ export function createTaskActions({
 	}
 
 	return {
-		async changeColumn(id: string, column: ColumnTag) {
+		async changeColumn(id, column) {
 			await updateRowWithTask(id, (task) => (task.column = column));
 		},
 
-		async markDone(id: string) {
+		async changeOwner(id, owner) {
+			await updateRowWithTask(id, (task) => (task.owner = owner));
+		},
+
+		async markDone(id) {
 			await updateRowWithTask(id, (task) => (task.done = true));
 		},
 
-		async updateContent(id: string, content: string) {
+		async updateContent(id, content) {
 			await updateRowWithTask(id, (task) => (task.content = content));
 		},
 
-		async archiveTasks(ids: string[]) {
+		async archiveTasks(ids) {
 			for (const id of ids) {
 				await updateRowWithTask(id, (task) => task.archive());
 			}
 		},
 
-		async viewFile(id: string) {
+		async viewFile(id) {
 			const metadata = metadataByTaskId.get(id);
 
 			if (!metadata) {
@@ -74,6 +79,7 @@ export function createTaskActions({
 
 			const leaf = workspace.getLeaf("tab");
 			await leaf.openFile(fileHandle);
+
 			const editorView = workspace.getActiveViewOfType(MarkdownView);
 			editorView?.editor.setCursor(rowIndex);
 		},
