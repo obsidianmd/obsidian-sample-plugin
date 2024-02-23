@@ -1,9 +1,24 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import { AppView, APP_VIEW_NAME } from "./ui/entry";
+import { SettingTab } from "./settings/settings_tab";
+
+export type Settings = {
+	users: string[];
+};
+
+const DEFAULT_SETTINGS: Settings = {
+	users: [],
+};
 
 export default class Base extends Plugin {
 	async onload() {
-		this.registerView(APP_VIEW_NAME, (leaf) => new AppView(leaf));
+		await this.loadSettings();
+		this.addSettingTab(new SettingTab(this.app, this));
+
+		this.registerView(
+			APP_VIEW_NAME,
+			(leaf) => new AppView(leaf, this.settings)
+		);
 		this.addRibbonIcon("kanban-square", "Open Kanban", () =>
 			this.activateView()
 		);
@@ -29,5 +44,19 @@ export default class Base extends Plugin {
 
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		leaf && workspace.revealLeaf(leaf);
+	}
+
+	settings: Settings = DEFAULT_SETTINGS;
+
+	async loadSettings() {
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData()
+		);
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
 	}
 }

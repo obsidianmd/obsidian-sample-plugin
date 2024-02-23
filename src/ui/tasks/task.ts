@@ -1,6 +1,8 @@
 import sha256 from "crypto-js/sha256";
 import type { Brand } from "src/brand";
 import type { ColumnTag, ColumnTagTable } from "../columns/columns";
+import { get } from "svelte/store";
+import { userStore } from "../users/users";
 
 export class Task {
 	constructor(
@@ -19,6 +21,8 @@ export class Task {
 		this._done = status === "x";
 		this._path = fileHandle.path;
 
+		const users = get(userStore);
+
 		for (const tag of this._tags) {
 			if (tag in columnTagTable || tag === "done") {
 				if (!this._column) {
@@ -27,7 +31,7 @@ export class Task {
 				this._tags.delete(tag);
 			}
 
-			if (tag === "kate" || tag === "chris") {
+			if (tag in users) {
 				if (!this._owner) {
 					this._owner = tag;
 				}
@@ -72,11 +76,11 @@ export class Task {
 
 	private readonly _tags: Set<string>;
 
-	private _owner: "kate" | "chris" | undefined;
-	get owner(): "kate" | "chris" | undefined {
+	private _owner: string | undefined;
+	get owner(): string | undefined {
 		return this._owner;
 	}
-	set owner(column: "kate" | "chris") {
+	set owner(column: string) {
 		this._owner = column;
 	}
 

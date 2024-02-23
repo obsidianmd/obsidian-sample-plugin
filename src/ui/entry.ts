@@ -1,12 +1,17 @@
-import { ItemView } from "obsidian";
+import { ItemView, WorkspaceLeaf } from "obsidian";
 
 import Main from "./main.svelte";
+import type { Settings } from "../entry";
 
 export const APP_VIEW_NAME = "project-plan";
 
 export class AppView extends ItemView {
 	component: Main | undefined;
 	icon = "kanban-square";
+
+	constructor(leaf: WorkspaceLeaf, private readonly settings: Settings) {
+		super(leaf);
+	}
 
 	getViewType() {
 		this.leaf.openFile;
@@ -24,6 +29,7 @@ export class AppView extends ItemView {
 				workspace: this.app.workspace,
 				vault: this.app.vault,
 				registerEvent: this.registerEvent.bind(this),
+				userConfig: this.settings.users,
 			},
 		});
 	}

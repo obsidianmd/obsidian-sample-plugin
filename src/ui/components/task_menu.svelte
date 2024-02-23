@@ -4,6 +4,7 @@
 	import type { Task } from "../tasks/task";
 	import type { TaskActions } from "../tasks/actions";
 	import IconButton from "./icon_button.svelte";
+	import { userStore } from "../users/users";
 
 	export let task: Task;
 	export let taskActions: TaskActions;
@@ -43,22 +44,15 @@
 
 		menu.addSeparator();
 
-		menu.addItem((i) => {
-			i.setTitle(`Allocate to Kate`).onClick(() =>
-				taskActions.changeOwner(task.id, "kate"),
-			);
-			if (task.owner === "kate") {
-				i.setDisabled(true);
-			}
-		});
-
-		menu.addItem((i) => {
-			i.setTitle(`Allocate to Chris`).onClick(() =>
-				taskActions.changeOwner(task.id, "chris"),
-			);
-			if (task.owner === "chris") {
-				i.setDisabled(true);
-			}
+		Object.entries($userStore).map(([id, label]) => {
+			menu.addItem((i) => {
+				i.setTitle(`Allocate to ${label}`).onClick(() =>
+					taskActions.changeOwner(task.id, id),
+				);
+				if (task.owner === id) {
+					i.setDisabled(true);
+				}
+			});
 		});
 
 		menu.showAtMouseEvent(e);

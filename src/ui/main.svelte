@@ -10,6 +10,8 @@
 	} from "./columns/columns";
 	import type { Task } from "./tasks/task";
 	import Column from "./components/column.svelte";
+	import { userStore } from "./users/users";
+	import { kebab } from "src/kebab";
 
 	export let vault: Vault;
 	export let workspace: Workspace;
@@ -24,7 +26,14 @@
 			"Pending",
 		],
 	};
+	export let userConfig: string[];
 
+	$: userStore.set(
+		userConfig.reduce<Record<string, string>>((acc, curr) => {
+			acc[kebab(curr)] = curr;
+			return acc;
+		}, {}),
+	);
 	$: columnTagTableStore.set(createColumnTagTable(columnConfig));
 
 	const { tasksStore, taskActions } = createTasksStore(
@@ -58,42 +67,48 @@
 	let columns: ("uncategorised" | ColumnTag)[];
 	$: columns = Object.keys($columnTagTableStore) as ColumnTag[];
 
-	let filters: [unassigned: boolean, kate: boolean, chris: boolean] = [
-		true,
-		true,
-		true,
-	];
+	let showUnassigned: boolean = true;
+	let filters = new Set(userConfig.map(kebab));
 
 	$: filteredTasks = $tasksStore.filter((task) => {
-		switch (task.owner) {
-			case undefined:
-				return filters[0];
-			case "kate":
-				return filters[1];
-			case "chris":
-				return filters[2];
-			default:
-				return false;
+		if (!task.owner) {
+			return showUnassigned;
 		}
+
+		return filters.has(task.owner);
 	});
+
 	$: tasksByColumn = groupByColumnTag(filteredTasks);
 </script>
 
 <div class="main">
-	<div class="controls">
-		<label>
-			<input type="checkbox" bind:checked={filters[0]} />
-			Unassigned
-		</label>
-		<label>
-			<input type="checkbox" bind:checked={filters[1]} />
-			Kate
-		</label>
-		<label>
-			<input type="checkbox" bind:checked={filters[2]} />
-			Chris
-		</label>
-	</div>
+	{#if userConfig.length}
+		<div class="controls">
+			<label>
+				<input type="checkbox" bind:checked={showUnassigned} />
+				Unassigned
+			</label>
+			{#each userConfig as user, i}
+				<label>
+					<input
+						type="checkbox"
+						checked={filters.has(kebab(user))}
+						on:change={() => {
+							const userId = kebab(user);
+							const newFilters = new Set(filters);
+							if (newFilters.has(userId)) {
+								newFilters.delete(userId);
+							} else {
+								newFilters.add(userId);
+							}
+							filters = newFilters;
+						}}
+					/>
+					{user}
+				</label>
+			{/each}
+		</div>
+	{/if}
 	<div class="columns">
 		<div>
 			<Column

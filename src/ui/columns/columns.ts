@@ -1,4 +1,5 @@
 import type { Brand } from "src/brand";
+import { kebab } from "src/kebab";
 import { writable } from "svelte/store";
 
 export type ColumnConfig = {
@@ -16,18 +17,10 @@ export function createColumnTagTable({
 	const output: ColumnTagTable = {};
 
 	for (const column of columns) {
-		output[kebab(column)] = column;
+		output[kebab<ColumnTag>(column)] = column;
 	}
 
 	return output;
-}
-
-function kebab(input: string): ColumnTag {
-	return input
-		.toLowerCase() // all alphanumeric chars to lower case
-		.replaceAll(/\s/g, "-") // replace all whitespace with "-"
-		.replaceAll(/[^a-z0-9-]/g, "") // replace all other chars with ""
-		.replaceAll(/-+/g, "-") as ColumnTag; // collapse any consecutive "-" into a single "-"
 }
 
 export const columnTagTableStore = writable<ColumnTagTable>({});

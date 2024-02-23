@@ -151,6 +151,7 @@
 	}
 
 	:global(.task-content *) {
+		word-break: break-word;
 		margin: 0;
 	}
 </style>
