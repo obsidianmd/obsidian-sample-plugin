@@ -22,13 +22,15 @@
 		const content = e.currentTarget.value;
 		if (!content) return;
 
-		taskActions.updateContent(task.id, content);
+		const updatedContent = content.replaceAll("\n", "<br />");
+
+		taskActions.updateContent(task.id, updatedContent);
 	}
 
 	function handleKeypress(
 		e: KeyboardEvent & { currentTarget: HTMLTextAreaElement },
 	) {
-		if (e.key === "Enter") {
+		if (e.key === "Enter" && !e.shiftKey) {
 			e.currentTarget.blur();
 		}
 	}
@@ -94,7 +96,7 @@
 					on:blur={handleContentBlur}
 					on:keypress={handleKeypress}
 					on:input={onInput}
-					value={task.content}
+					value={task.content.replaceAll("<br />", "\n")}
 				/>
 			{:else}
 				{@html mdContent}
