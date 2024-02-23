@@ -85,7 +85,15 @@
 	{#if userConfig.length}
 		<div class="controls">
 			<label>
-				<input type="checkbox" bind:checked={showUnassigned} />
+				<input
+					type="checkbox"
+					bind:checked={showUnassigned}
+					on:dblclick={(e) => {
+						e.preventDefault();
+						filters = new Set([]);
+						showUnassigned = true;
+					}}
+				/>
 				Unassigned
 			</label>
 			{#each userConfig as user, i}
@@ -102,6 +110,11 @@
 								newFilters.add(userId);
 							}
 							filters = newFilters;
+						}}
+						on:dblclick={(e) => {
+							e.preventDefault();
+							filters = new Set([kebab(user)]);
+							showUnassigned = false;
 						}}
 					/>
 					{user}
