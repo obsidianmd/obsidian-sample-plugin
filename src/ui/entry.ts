@@ -30,6 +30,9 @@ export class AppView extends ItemView {
 				vault: this.app.vault,
 				registerEvent: this.registerEvent.bind(this),
 				userConfig: this.settings.users,
+				columnConfig: {
+					columns: this.settings.columns,
+				},
 			},
 		});
 	}

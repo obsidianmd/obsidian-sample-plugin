@@ -4,10 +4,12 @@ import { SettingTab } from "./settings/settings_tab";
 
 export type Settings = {
 	users: string[];
+	columns: string[];
 };
 
 const DEFAULT_SETTINGS: Settings = {
 	users: [],
+	columns: [],
 };
 
 export default class Base extends Plugin {
