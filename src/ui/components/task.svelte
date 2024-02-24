@@ -14,12 +14,10 @@
 		emoji: true,
 	});
 
-	function handleContentBlur(
-		e: FocusEvent & { currentTarget: HTMLTextAreaElement },
-	) {
+	function handleContentBlur() {
 		isEditing = false;
 
-		const content = e.currentTarget.value;
+		const content = textAreaEl?.value;
 		if (!content) return;
 
 		const updatedContent = content.replaceAll("\n", "<br />");
@@ -27,11 +25,15 @@
 		taskActions.updateContent(task.id, updatedContent);
 	}
 
-	function handleKeypress(
-		e: KeyboardEvent & { currentTarget: HTMLTextAreaElement },
-	) {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.currentTarget.blur();
+	function handleKeypress(e: KeyboardEvent) {
+		if ((e.key === "Enter" && !e.shiftKey) || e.key === "Escape") {
+			textAreaEl?.blur();
+		}
+	}
+
+	function handleOpenKeypress(e: KeyboardEvent) {
+		if (e.key === "Enter" || e.key === " ") {
+			handleFocus();
 		}
 	}
 
@@ -39,7 +41,7 @@
 	let isEditing = false;
 
 	function handleDragStart(e: DragEvent) {
-		isEditing = false;
+		handleContentBlur();
 		isDragging = true;
 		isDraggingStore.set(true);
 		if (e.dataTransfer) {
@@ -55,7 +57,7 @@
 
 	let textAreaEl: HTMLTextAreaElement | undefined;
 
-	function handleDblClick(e: MouseEvent) {
+	function handleFocus() {
 		isEditing = true;
 
 		setTimeout(() => {
@@ -87,8 +89,7 @@
 	on:dragend={handleDragEnd}
 >
 	<div class="task-body">
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div class="task-content" on:dblclick={handleDblClick}>
+		<div class="task-content">
 			{#if isEditing}
 				<textarea
 					class:editing={isEditing}
@@ -99,7 +100,16 @@
 					value={task.content.replaceAll("<br />", "\n")}
 				/>
 			{:else}
-				{@html mdContent}
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+				<span
+					class="content-preview"
+					on:dblclick={handleFocus}
+					on:keypress={handleOpenKeypress}
+					tabindex="0"
+				>
+					{@html mdContent}
+				</span>
 			{/if}
 		</div>
 		<TaskMenu {task} {taskActions} />
@@ -136,6 +146,17 @@
 			textarea {
 				cursor: text;
 				background-color: var(--color-base-25);
+				width: 100%;
+			}
+
+			.content-preview {
+				display: inline-block;
+				width: 100%;
+
+				&:focus-within {
+					box-shadow: 0 0 0 3px
+						var(--background-modifier-border-focus);
+				}
 			}
 		}
 

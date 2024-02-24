@@ -12,6 +12,15 @@
 	function showMenu(e: MouseEvent) {
 		const menu = new Menu();
 
+		const target = e.target as HTMLButtonElement | undefined;
+		if (!target) {
+			return;
+		}
+
+		const boundingRect = target.getBoundingClientRect();
+		const y = boundingRect.top + boundingRect.height / 2;
+		const x = boundingRect.left + boundingRect.width / 2;
+
 		menu.addItem((i) => {
 			i.setTitle(`Go to file`).onClick(() =>
 				taskActions.viewFile(task.id),
@@ -55,7 +64,7 @@
 			});
 		});
 
-		menu.showAtMouseEvent(e);
+		menu.showAtPosition({ x, y });
 	}
 </script>
 

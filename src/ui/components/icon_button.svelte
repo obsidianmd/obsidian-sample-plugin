@@ -12,10 +12,10 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<span bind:this={element} role="button" tabindex="0" on:click></span>
+<button bind:this={element} on:click></button>
 
 <style lang="scss">
-	span {
+	button {
 		width: 24px;
 		height: 24px;
 		display: flex;
@@ -24,9 +24,7 @@
 		border-radius: var(--radius-s);
 		transition: background linear 100ms;
 		cursor: pointer;
-
-		&:hover {
-			background: var(--background-modifier-hover);
-		}
+		background: unset;
+		padding: 0;
 	}
 </style>

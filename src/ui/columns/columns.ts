@@ -1,6 +1,6 @@
 import type { Brand } from "src/brand";
 import { kebab } from "src/kebab";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 
 export type ColumnConfig = {
 	columns: string[];
@@ -24,3 +24,9 @@ export function createColumnTagTable({
 }
 
 export const columnTagTableStore = writable<ColumnTagTable>({});
+
+export function isColumnTag(
+	input: ColumnTag | DefaultColumns
+): input is ColumnTag {
+	return input in get(columnTagTableStore);
+}

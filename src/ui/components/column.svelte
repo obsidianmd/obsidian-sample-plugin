@@ -5,6 +5,7 @@
 		type ColumnTag,
 		type DefaultColumns,
 		type ColumnTagTable,
+		isColumnTag,
 	} from "../columns/columns";
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
@@ -84,6 +85,14 @@
 			}
 		}
 	}
+
+	let buttonEl: HTMLSpanElement | undefined;
+
+	$: {
+		if (buttonEl) {
+			setIcon(buttonEl, "lucide-plus");
+		}
+	}
 </script>
 
 {#if !hideOnEmpty || tasks.length}
@@ -108,6 +117,18 @@
 				{#each sortedTasks as task}
 					<TaskComponent {task} {taskActions} />
 				{/each}
+				{#if isColumnTag(column)}
+					<button
+						on:click={async (e) => {
+							if (isColumnTag(column)) {
+								await taskActions.addNew(column, e);
+							}
+						}}
+					>
+						<span bind:this={buttonEl} />
+						Add new
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -170,6 +191,16 @@
 				display: flex;
 				flex-direction: column;
 				gap: var(--size-4-2);
+
+				button {
+					display: flex;
+					align-items: center;
+					cursor: pointer;
+
+					span {
+						height: 18px;
+					}
+				}
 			}
 		}
 	}

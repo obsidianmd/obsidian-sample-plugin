@@ -1,4 +1,10 @@
-import { MarkdownView, type TFile, type Vault, type Workspace } from "obsidian";
+import {
+	MarkdownView,
+	Menu,
+	TFile,
+	type Vault,
+	type Workspace,
+} from "obsidian";
 import type { Task } from "./task";
 import type { Metadata } from "./tasks";
 import type { ColumnTag } from "../columns/columns";
@@ -10,6 +16,7 @@ export type TaskActions = {
 	updateContent: (id: string, content: string) => Promise<void>;
 	viewFile: (id: string) => Promise<void>;
 	archiveTasks: (ids: string[]) => Promise<void>;
+	addNew: (column: ColumnTag, e: MouseEvent) => Promise<void>;
 };
 
 export function createTaskActions({
@@ -83,17 +90,93 @@ export function createTaskActions({
 			const editorView = workspace.getActiveViewOfType(MarkdownView);
 			editorView?.editor.setCursor(rowIndex);
 		},
+
+		async addNew(column, e) {
+			const files = vault
+				.getMarkdownFiles()
+				.sort((a, b) => a.path.localeCompare(b.path));
+
+			const target = e.target as HTMLButtonElement | undefined;
+			if (!target) {
+				return;
+			}
+
+			const boundingRect = target.getBoundingClientRect();
+			const y = boundingRect.top + boundingRect.height / 2;
+			const x = boundingRect.left + boundingRect.width / 2;
+
+			function createMenu(folder: Folder, parentMenu: Menu | undefined) {
+				const menu = new Menu();
+				menu.addItem((i) => {
+					i.setTitle(parentMenu ? `← back` : "Choose a file")
+						.setDisabled(!parentMenu)
+						.onClick(() => {
+							parentMenu?.showAtMouseEvent(e);
+						});
+				});
+
+				for (const [label, folderItem] of Object.entries(folder)) {
+					menu.addItem((i) => {
+						i.setTitle(
+							folderItem instanceof TFile ? label : label + " →"
+						).onClick(() => {
+							if (folderItem instanceof TFile) {
+								updateRow(
+									vault,
+									folderItem,
+									undefined,
+									`- [ ]  #${column}`
+								);
+							} else {
+								createMenu(folderItem, menu);
+							}
+						});
+					});
+				}
+
+				menu.showAtPosition({ x: x, y: y });
+			}
+
+			interface Folder {
+				[label: string]: Folder | TFile;
+			}
+			const folder: Folder = {};
+
+			for (const file of files) {
+				const segments = file.path.split("/");
+
+				let currFolder = folder;
+				for (const [i, segment] of segments.entries()) {
+					if (i === segments.length - 1) {
+						currFolder[segment] = file;
+					} else {
+						const nextFolder = currFolder[segment] || {};
+						if (nextFolder instanceof TFile) {
+							continue;
+						}
+						currFolder[segment] = nextFolder;
+						currFolder = nextFolder;
+					}
+				}
+			}
+
+			createMenu(folder, undefined);
+		},
 	};
 }
 
 async function updateRow(
 	vault: Vault,
 	fileHandle: TFile,
-	row: number,
+	row: number | undefined,
 	newText: string
 ) {
 	const file = await vault.read(fileHandle);
 	const rows = file.split("\n");
+
+	if (row == null) {
+		row = rows.length;
+	}
 
 	if (rows.length < row) {
 		return;
