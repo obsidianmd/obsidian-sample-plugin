@@ -16,6 +16,7 @@ export type TaskActions = {
 	updateContent: (id: string, content: string) => Promise<void>;
 	viewFile: (id: string) => Promise<void>;
 	archiveTasks: (ids: string[]) => Promise<void>;
+	deleteTask: (ids: string) => Promise<void>;
 	addNew: (column: ColumnTag, e: MouseEvent) => Promise<void>;
 };
 
@@ -75,6 +76,10 @@ export function createTaskActions({
 			}
 		},
 
+		async deleteTask(id) {
+			await updateRowWithTask(id, (task) => task.delete());
+		},
+
 		async viewFile(id) {
 			const metadata = metadataByTaskId.get(id);
 
@@ -111,7 +116,7 @@ export function createTaskActions({
 					i.setTitle(parentMenu ? `← back` : "Choose a file")
 						.setDisabled(!parentMenu)
 						.onClick(() => {
-							parentMenu?.showAtMouseEvent(e);
+							parentMenu?.showAtPosition({ x: x, y: y });
 						});
 				});
 
@@ -182,7 +187,11 @@ async function updateRow(
 		return;
 	}
 
-	rows[row] = newText;
+	if (newText === "") {
+		rows.splice(row, 1);
+	} else {
+		rows[row] = newText;
+	}
 	const newFile = rows.join("\n");
 	await vault.modify(fileHandle, newFile);
 }

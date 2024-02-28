@@ -60,6 +60,8 @@ export class Task {
 		this._column = undefined;
 	}
 
+	private _deleted: boolean = false;
+
 	private readonly _path: string;
 	get path() {
 		return this._path;
@@ -85,6 +87,10 @@ export class Task {
 	}
 
 	serialise(): string {
+		if (this._deleted) {
+			return "";
+		}
+
 		return [
 			`- [${this.done ? "x" : " "}] `,
 			this.content.trim(),
@@ -97,6 +103,10 @@ export class Task {
 	archive() {
 		this._done = true;
 		this._column = "archived";
+	}
+
+	delete() {
+		this._deleted = true;
 	}
 }
 

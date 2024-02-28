@@ -84,7 +84,7 @@
 	class="task"
 	class:is-dragging={isDragging}
 	role="group"
-	draggable={true}
+	draggable={!isEditing}
 	on:dragstart={handleDragStart}
 	on:dragend={handleDragEnd}
 >
@@ -100,16 +100,15 @@
 					value={task.content.replaceAll("<br />", "\n")}
 				/>
 			{:else}
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<span
+				<div
+					role="button"
 					class="content-preview"
-					on:dblclick={handleFocus}
+					on:mouseup={handleFocus}
 					on:keypress={handleOpenKeypress}
 					tabindex="0"
 				>
 					{@html mdContent}
-				</span>
+				</div>
 			{/if}
 		</div>
 		<TaskMenu {task} {taskActions} />
@@ -136,6 +135,7 @@
 		.task-body {
 			padding: var(--size-4-2);
 			display: grid;
+			gap: var(--size-4-2);
 			grid-template-columns: 1fr auto;
 
 			p {
@@ -143,19 +143,20 @@
 				margin: 0;
 			}
 
-			textarea {
-				cursor: text;
-				background-color: var(--color-base-25);
-				width: 100%;
-			}
+			.task-content {
+				display: grid;
 
-			.content-preview {
-				display: inline-block;
-				width: 100%;
+				textarea {
+					cursor: text;
+					background-color: var(--color-base-25);
+					width: 100%;
+				}
 
-				&:focus-within {
-					box-shadow: 0 0 0 3px
-						var(--background-modifier-border-focus);
+				.content-preview {
+					&:focus-within {
+						box-shadow: 0 0 0 3px
+							var(--background-modifier-border-focus);
+					}
 				}
 			}
 		}

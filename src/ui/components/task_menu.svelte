@@ -40,10 +40,8 @@
 			});
 		}
 
-		menu.addSeparator();
-
 		menu.addItem((i) => {
-			i.setTitle(`Move to done`).onClick(() =>
+			i.setTitle(`Move to Done`).onClick(() =>
 				taskActions.markDone(task.id),
 			);
 			if (task.done) {
@@ -62,6 +60,20 @@
 					i.setDisabled(true);
 				}
 			});
+		});
+
+		menu.addSeparator();
+
+		menu.addItem((i) => {
+			i.setTitle(`Archive task`).onClick(() =>
+				taskActions.archiveTasks([task.id]),
+			);
+		});
+
+		menu.addItem((i) => {
+			i.setTitle(`Delete task`).onClick(() =>
+				taskActions.deleteTask(task.id),
+			);
 		});
 
 		menu.showAtPosition({ x, y });
