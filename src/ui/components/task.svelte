@@ -57,7 +57,12 @@
 
 	let textAreaEl: HTMLTextAreaElement | undefined;
 
-	function handleFocus() {
+	function handleFocus(e: MouseEvent) {
+		const target = (e.target || e.currentTarget) as HTMLElement | undefined;
+		if (target?.tagName.toLowerCase() === "a") {
+			return;
+		}
+
 		isEditing = true;
 
 		setTimeout(() => {
