@@ -12,6 +12,8 @@
 	import Column from "./components/column.svelte";
 	import { userStore } from "./users/users";
 	import { kebab } from "src/kebab";
+	import SelectUser from "./components/select/select_user.svelte";
+	import SelectTag from "./components/select/select_tag.svelte";
 
 	export let vault: Vault;
 	export let workspace: Workspace;
@@ -28,6 +30,19 @@
 	};
 	export let userConfig: string[];
 
+	let selectableUsersList: { value: string; label: string }[] | undefined;
+	$: selectableUsersList = userConfig.length
+		? ["Unassigned", ...userConfig].map((label) => ({
+				value: kebab(label),
+				label,
+			}))
+		: undefined;
+
+	let selectedUsers: string[] = userConfig.length
+		? ["Unassigned", ...userConfig].map((label) => kebab(label))
+		: [];
+	$: selectedUsersSet = new Set(selectedUsers);
+
 	$: userStore.set(
 		userConfig.reduce<Record<string, string>>((acc, curr) => {
 			acc[kebab(curr)] = curr;
@@ -35,6 +50,16 @@
 		}, {}),
 	);
 	$: columnTagTableStore.set(createColumnTagTable(columnConfig));
+
+	$: tags = $tasksStore.reduce((acc, curr) => {
+		for (const tag of curr.tags) {
+			acc.add(tag);
+		}
+		return acc;
+	}, new Set<string>());
+
+	let selectedTags: string[] = [];
+	$: selectedTagsSet = new Set(selectedTags);
 
 	const { tasksStore, taskActions } = createTasksStore(
 		vault,
@@ -67,61 +92,39 @@
 	let columns: ("uncategorised" | ColumnTag)[];
 	$: columns = Object.keys($columnTagTableStore) as ColumnTag[];
 
-	let showUnassigned: boolean = true;
-	let filters = new Set(userConfig.map(kebab));
+	$: filteredByUser = selectedUsersSet.size
+		? $tasksStore.filter((task) => {
+				if (!task.owner) {
+					return selectedUsersSet.has("unassigned");
+				}
 
-	$: filteredTasks = $tasksStore.filter((task) => {
-		if (!task.owner) {
-			return showUnassigned;
-		}
+				return selectedUsersSet.has(task.owner);
+			})
+		: $tasksStore;
 
-		return filters.has(task.owner);
-	});
+	$: filteredByTag = selectedTagsSet.size
+		? filteredByUser.filter((task) => {
+				for (const tag of task.tags) {
+					if (selectedTagsSet.has(tag)) {
+						return true;
+					}
+				}
 
-	$: tasksByColumn = groupByColumnTag(filteredTasks);
+				return false;
+			})
+		: filteredByUser;
+
+	$: tasksByColumn = groupByColumnTag(filteredByTag);
 </script>
 
 <div class="main">
-	{#if userConfig.length}
-		<div class="controls">
-			<label>
-				<input
-					type="checkbox"
-					bind:checked={showUnassigned}
-					on:dblclick={(e) => {
-						e.preventDefault();
-						filters = new Set([]);
-						showUnassigned = true;
-					}}
-				/>
-				Unassigned
-			</label>
-			{#each userConfig as user, i}
-				<label>
-					<input
-						type="checkbox"
-						checked={filters.has(kebab(user))}
-						on:change={() => {
-							const userId = kebab(user);
-							const newFilters = new Set(filters);
-							if (newFilters.has(userId)) {
-								newFilters.delete(userId);
-							} else {
-								newFilters.add(userId);
-							}
-							filters = newFilters;
-						}}
-						on:dblclick={(e) => {
-							e.preventDefault();
-							filters = new Set([kebab(user)]);
-							showUnassigned = false;
-						}}
-					/>
-					{user}
-				</label>
-			{/each}
-		</div>
-	{/if}
+	<div class="controls">
+		{#if userConfig.length}
+			<SelectUser {userConfig} bind:value={selectedUsers} />
+		{/if}
+		<SelectTag tags={[...tags]} bind:value={selectedTags} />
+	</div>
+
 	<div class="columns">
 		<div>
 			<Column
@@ -154,14 +157,9 @@
 
 		.controls {
 			margin-bottom: var(--size-4-4);
-			display: flex;
+			display: grid;
 			gap: var(--size-4-8);
-
-			label {
-				display: flex;
-				align-items: center;
-				gap: var(--size-2-1);
-			}
+			grid-template-columns: 1fr 1fr;
 		}
 
 		.columns {

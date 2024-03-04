@@ -56,8 +56,18 @@
 
 	let isDraggedOver = false;
 
+	$: draggingData = $isDraggingStore;
+	$: canDrop = draggingData && draggingData.fromColumn !== column;
+
 	function handleDragOver(e: DragEvent) {
 		e.preventDefault();
+		if (!canDrop) {
+			if (e.dataTransfer) {
+				e.dataTransfer.dropEffect = "none";
+			}
+			return;
+		}
+
 		isDraggedOver = true;
 		if (e.dataTransfer) {
 			e.dataTransfer.dropEffect = "move";
@@ -70,6 +80,10 @@
 
 	function handleDrop(e: DragEvent) {
 		e.preventDefault();
+		if (!canDrop) {
+			return;
+		}
+
 		// Get the id of the target and add the moved element to the target's DOM
 		const droppedId = e.dataTransfer?.getData("text/plain");
 		if (droppedId) {
@@ -99,7 +113,7 @@
 	<div
 		role="group"
 		class="column"
-		class:drop-active={$isDraggingStore}
+		class:drop-active={!!draggingData}
 		class:drop-hover={isDraggedOver}
 		on:dragover={handleDragOver}
 		on:dragleave={handleDragLeave}

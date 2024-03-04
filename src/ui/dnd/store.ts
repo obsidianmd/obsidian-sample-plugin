@@ -1,3 +1,7 @@
 import { writable } from "svelte/store";
 
-export const isDraggingStore = writable<boolean>(false);
+type DraggingData = {
+	fromColumn: string | undefined;
+};
+
+export const isDraggingStore = writable<DraggingData | null>(null);

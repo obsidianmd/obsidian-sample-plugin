@@ -14,7 +14,7 @@ export class Task {
 		const [, remainder = ""] = rawContent.split("- [");
 		const [status, content = ""] = remainder.split("] ");
 
-		this._tags = getTags(content);
+		this.tags = getTags(content);
 
 		this._id = sha256(content + fileHandle.path + rowIndex).toString();
 		this.content = content;
@@ -23,23 +23,24 @@ export class Task {
 
 		const users = get(userStore);
 
-		for (const tag of this._tags) {
+		for (const tag of this.tags) {
 			if (tag in columnTagTable || tag === "done") {
 				if (!this._column) {
 					this._column = tag as ColumnTag;
 				}
-				this._tags.delete(tag);
+				this.tags.delete(tag);
+				this.content = this.content.replaceAll(`#${tag}`, "").trim();
 			}
 
 			if (tag in users) {
 				if (!this._owner) {
 					this._owner = tag;
 				}
-				this._tags.delete(tag);
+				this.tags.delete(tag);
+				this.content = this.content.replaceAll(`#${tag}`, "").trim();
 			}
-
-			this.content = this.content.replaceAll(`#${tag}`, "").trim();
 		}
+
 		if (this._done) {
 			this._column = undefined;
 		}
@@ -49,6 +50,7 @@ export class Task {
 	get id() {
 		return this._id;
 	}
+
 	content: string;
 
 	private _done: boolean;
@@ -76,7 +78,7 @@ export class Task {
 		this._done = false;
 	}
 
-	private readonly _tags: Set<string>;
+	readonly tags: Set<string>;
 
 	private _owner: string | undefined;
 	get owner(): string | undefined {
@@ -96,7 +98,6 @@ export class Task {
 			this.content.trim(),
 			this.column ? ` #${this.column}` : "",
 			this.owner ? ` #${this.owner}` : "",
-			[...this._tags].map((tag) => ` #${tag}`).join(""),
 		].join("");
 	}
 

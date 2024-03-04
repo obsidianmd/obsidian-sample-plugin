@@ -31,6 +31,7 @@
 		"@floating-ui/dom": "^1.6.3",
 		"crypto-js": "^4.2.0",
 		"sass": "^1.71.1",
-		"showdown": "^2.1.0"
+		"showdown": "^2.1.0",
+		"svelte-select": "^5.8.3"
 	}
 }

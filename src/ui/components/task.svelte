@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Tasks } from "obsidian";
 	import { isDraggingStore } from "../dnd/store";
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
@@ -43,7 +44,7 @@
 	function handleDragStart(e: DragEvent) {
 		handleContentBlur();
 		isDragging = true;
-		isDraggingStore.set(true);
+		isDraggingStore.set({ fromColumn: task.column });
 		if (e.dataTransfer) {
 			e.dataTransfer.setData("text/plain", task.id);
 			e.dataTransfer.dropEffect = "move";
@@ -52,13 +53,15 @@
 
 	function handleDragEnd() {
 		isDragging = false;
-		isDraggingStore.set(false);
+		isDraggingStore.set(null);
 	}
 
 	let textAreaEl: HTMLTextAreaElement | undefined;
 
-	function handleFocus(e: MouseEvent) {
-		const target = (e.target || e.currentTarget) as HTMLElement | undefined;
+	function handleFocus(e?: MouseEvent) {
+		const target = (e?.target || e?.currentTarget) as
+			| HTMLElement
+			| undefined;
 		if (target?.tagName.toLowerCase() === "a") {
 			return;
 		}
@@ -99,7 +102,6 @@
 				<textarea
 					class:editing={isEditing}
 					bind:this={textAreaEl}
-					on:blur={handleContentBlur}
 					on:keypress={handleKeypress}
 					on:input={onInput}
 					value={task.content.replaceAll("<br />", "\n")}
@@ -134,7 +136,7 @@
 		cursor: grab;
 
 		&.is-dragging {
-			opacity: 0.25;
+			opacity: 0.15;
 		}
 
 		.task-body {
