@@ -5,6 +5,25 @@
 ---
 Some sections added ad-hoc, to be integrated later
 
+## Table of Contents
+
+- [Hints, tips & tricks](#hints-tips--tricks)
+  - [Adding visual separators in File Explorer](#adding-visual-separators-in-file-explorer)
+- [Advanced features](#advanced-features)
+  - [Priorities of sorting groups](#priorities-of-sorting-groups)
+  - [Simple wildcards](#simple-wildcards)
+    - [A single digit (exactly one)](#a-single-digit-exactly-one)
+  - [Combining sorting groups](#combining-sorting-groups)
+    - [An edge case: two adjacent combined sorting groups](#an-edge-case-two-adjacent-combined-sorting-groups)
+  - [Bookmarks plugin integration](#bookmarks-plugin-integration)
+  - [Matching starred items](#matching-starred-items)
+  - [Options for target-folder: matching](#options-for-target-folder-matching)
+    - [By folder path (the default)](#by-folder-path-the-default)
+    - [By folder name](#by-folder-name)
+    - [By regexp (expert feature)](#by-regexp-expert-feature)
+    - [By wildcard](#by-wildcard)
+  - [Excluding folders from custom sorting](#excluding-folders-from-custom-sorting)
+
 # Hints, tips & tricks
 
 ## Adding visual separators in File Explorer
