@@ -1,5 +1,6 @@
 {
 	"name": "obsidian-plugin-template",
+	"repository": "https://github.com/brady691213/obsidian-plugin-template",
 	"version": "1.1.0",
 	"description": "This my Obsidian (https://obsidian.md) plugin template.",
 	"main": "main.js",
