@@ -1,6 +1,7 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
+// TODO: Attribution for original repo with MIT license.
 
 interface MyPluginSettings {
 	mySetting: string;
