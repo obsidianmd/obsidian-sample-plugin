@@ -1,9 +1,10 @@
-import {debounce, editorLivePreviewField, requestUrl} from "obsidian";
+import {debounce, editorLivePreviewField} from "obsidian";
 import {EditorView, Decoration, DecorationSet, ViewUpdate, ViewPlugin, WidgetType} from "@codemirror/view";
 import {StateField, StateEffect, StateEffectType} from "@codemirror/state";
 import {Range} from "@codemirror/rangeset";
 import {syntaxTree, tokenClassNodeProp} from "@codemirror/language";
 import LinkThumbnailPlugin from "./main";
+import { LinkThumbnailWidgetParams } from "./LinkThumbnailWidgetParams";
 
 //based on: https://gist.github.com/nothingislost/faa89aa723254883d37f45fd16162337
 
@@ -39,9 +40,13 @@ class StatefulDecorationSet {
                     div.addClass("cm-embed-block");
                     div.addClass("cm-embed-link");
                     // 넣을 EL 받아오기
-                    const params = await linkThumbnailWidgetParams(token.value);
+                    const linkEl = createEl("a");
+                    linkEl.href = token.value;
+                    linkEl.addClass("markdown-rendered");
+                    div.appendChild(linkEl);
+                    const params = await LinkThumbnailWidgetParams(token.value);
                     if (params != null) {
-                        div.innerHTML = params;
+                        linkEl.innerHTML = params;
                     } else {
                         return Decoration.none;
                     }
@@ -151,69 +156,5 @@ class EmojiWidget extends WidgetType {
 
     ignoreEvent(): boolean {
         return false;
-    }
-}
-
-export async function linkThumbnailWidgetParams(url: string) {
-    try {
-        // url 정규식
-        const urlRegex = new RegExp("^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$");
-        const urlT = urlRegex.exec(url);
-        if (urlT?.length != 0 && urlT != null) {
-            const domainUrl = url.replace(urlT[4], "");
-
-            const response = await requestUrl(url);
-            const responseDomain = await requestUrl(domainUrl);
-
-            if (response.status === 200) {
-                const htmlString = response.text;
-                const parser = new DOMParser();
-                const document = parser.parseFromString(htmlString, 'text/html');
-
-                const htmlDomainString = responseDomain.text;
-                const domainDocument = parser.parseFromString(htmlDomainString, 'text/html');
-        
-                const ogTitle = document.querySelector("meta[property='og:title']")?.getAttribute("content") || document.querySelector("title")?.textContent || domainDocument.querySelector("meta[property='og:title']")?.getAttribute("content") || domainDocument.querySelector("title")?.textContent || "";
-                const ogDescription = document.querySelector("meta[property='og:description']")?.getAttribute("content") || domainDocument.querySelector("meta[property='og:description']")?.getAttribute("content") || "";
-                const ogImage = document.querySelector("meta[property='og:image']")?.getAttribute("content") || domainDocument.querySelector("meta[property='og:image']")?.getAttribute("content") || "";
-                const ogImageAlt = document.querySelector("meta[property='og:image:alt']")?.getAttribute("content") || domainDocument.querySelector("meta[property='og:image']")?.getAttribute("content") || "";
-                const ogUrl = document.querySelector("meta[property='og:url']")?.getAttribute("content") || domainUrl;
-
-                let result = "";
-                if (ogImage === "") {
-                    result = `
-                    <a href="${url}">
-                         <div class="openGraphPreview">     
-                             <div class="se-oglink-info-container">
-                                 <strong class="se-oglink-info">${ogTitle}</strong>
-                                 <description class="se-oglink-summary">${ogDescription}</description>
-                                 <p class="se-oglink-url"> ${ogUrl}</p>
-                             </div>
-                         </div>
-                    </a>
-                    `
-                } else {
-                    result = `
-                    <a href="${url}">
-                         <div class="openGraphPreview">
-                            <div class="se-oglink-thumbnail">
-                                <img src="${ogImage}" alt="${ogImageAlt}" class="se-oglink-thumbnail-resource"></img>
-                            </div>     
-                             <div class="se-oglink-info-container">
-                                 <strong class="se-oglink-info">${ogTitle}</strong>
-                                 <description class="se-oglink-summary">${ogDescription}</description>
-                                 <p class="se-oglink-url"> ${ogUrl}</p>
-                             </div>
-                         </div>
-                    </a>
-                    `
-                }
-                return result;
-            }
-        }
-        return null
-    } catch (error) {
-        // console.error(error);
-        return null;
     }
 }

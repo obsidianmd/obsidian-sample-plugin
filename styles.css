@@ -8,6 +8,8 @@ If your plugin does not need CSS, delete this file.
 */
 
 a:has(.openGraphPreview) {
+    display: block;
+    padding-right: 0;
     text-decoration: none;
     background-image: none;
 }
