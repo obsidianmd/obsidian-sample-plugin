@@ -1,11 +1,11 @@
 import { MarkdownPostProcessorContext } from "obsidian";
-import MyPlugin from "./main";
+import LinkThumbnailPlugin from "./main";
 import { linkThumbnailWidgetParams } from "./EnbedDecoratiion";
 
 export class PostProcessor {
-	plugin: MyPlugin;
+	plugin: LinkThumbnailPlugin;
 
-	constructor(plugin: MyPlugin) {
+	constructor(plugin: LinkThumbnailPlugin) {
 		this.plugin = plugin;
 	}
 

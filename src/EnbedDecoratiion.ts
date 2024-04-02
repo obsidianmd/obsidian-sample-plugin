@@ -3,7 +3,7 @@ import {EditorView, Decoration, DecorationSet, ViewUpdate, ViewPlugin, WidgetTyp
 import {StateField, StateEffect, StateEffectType} from "@codemirror/state";
 import {Range} from "@codemirror/rangeset";
 import {syntaxTree, tokenClassNodeProp} from "@codemirror/language";
-import MyPlugin from "./main";
+import LinkThumbnailPlugin from "./main";
 
 //based on: https://gist.github.com/nothingislost/faa89aa723254883d37f45fd16162337
 
@@ -18,9 +18,9 @@ const statefulDecorations = defineStatefulDecoration();
 class StatefulDecorationSet {
     editor: EditorView;
     decoCache: { [cls: string]: Decoration } = Object.create(null);
-    plugin: MyPlugin;
+    plugin: LinkThumbnailPlugin;
 
-    constructor(editor: EditorView, plugin: MyPlugin) {
+    constructor(editor: EditorView, plugin: LinkThumbnailPlugin) {
         this.editor = editor;
         this.plugin = plugin;
     }
@@ -64,7 +64,7 @@ class StatefulDecorationSet {
     }
 }
 
-function buildViewPlugin(plugin: MyPlugin) {
+function buildViewPlugin(plugin: LinkThumbnailPlugin) {
     return ViewPlugin.fromClass(
         class {
             decoManager: StatefulDecorationSet;
@@ -105,7 +105,7 @@ function buildViewPlugin(plugin: MyPlugin) {
     );
 }
 
-export function asyncDecoBuilderExt(plugin: MyPlugin) {
+export function asyncDecoBuilderExt(plugin: LinkThumbnailPlugin) {
     return [statefulDecorations.field, buildViewPlugin(plugin)];
 }
 

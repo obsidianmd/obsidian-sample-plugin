@@ -4,7 +4,7 @@ import { PostProcessor } from './PostProcessor';
   
 
 
-export default class MyPlugin extends Plugin {
+export default class LinkThumbnailPlugin extends Plugin {
 	/**
 	 * @returns true if Live Preview is supported
 	 */
