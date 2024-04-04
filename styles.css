@@ -49,7 +49,7 @@ a:has(.openGraphPreview):hover {
     justify-content: center;
     gap: 8px;
     overflow: auto;
-    padding: var(--size-4-4) var(--size-4-2);
+    padding: var(--size-4-3) var(--size-4-2);
 }
 .openGraphPreview .se-oglink-info {
     display: block;

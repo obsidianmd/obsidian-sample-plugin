@@ -47,6 +47,7 @@ class StatefulDecorationSet {
                     const params = await LinkThumbnailWidgetParams(token.value);
                     if (params != null) {
                         linkEl.innerHTML = params;
+                        linkEl.addEventListener("click", (e) => e.stopPropagation());
                     } else {
                         return Decoration.none;
                     }
@@ -94,6 +95,7 @@ function buildViewPlugin(plugin: LinkThumbnailPlugin) {
                             const tokenProps = node.type.prop<string>(tokenClassNodeProp);
                             if (tokenProps && node.name === "url") {
                                 const value = view.state.doc.sliceString(from, to);
+                                console.log(tokenProps, node, value, view.state);
                                 if (value) {
                                     targetElements.push({from: from, to: to, value: value});
                                 }
