@@ -44,13 +44,12 @@ a:has(.openGraphPreview):hover {
     border-radius: 0 !important;
 }
 .openGraphPreview .se-oglink-info-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
     overflow: auto;
     padding: var(--size-4-3) var(--size-4-2);
-}
-.openGraphPreview .se-oglink-info {
-    display: block;
-    text-decoration: none;
-    color: var(--text-normal);
 }
 .openGraphPreview .se-oglink-summary {
     font-size: 0.8rem;
@@ -61,14 +60,12 @@ a:has(.openGraphPreview):hover {
     -webkit-box-orient: vertical;
     text-overflow: ellipsis;
     white-space: normal;
-    text-decoration: none;
     color: var(--text-normal);
 }
 .openGraphPreview .se-oglink-url {
     font-size: 0.8rem;
     margin-block: 0 !important;
     color: var(--link-color);
-    text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
