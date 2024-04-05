@@ -88,7 +88,7 @@ a:has(.openGraphPreview):hover {
     width: 100%;
 }
 
-@media (min-width: 500px) {
+@media screen and (min-width: 1000px) {
     .openGraphPreview {
         flex-direction: row;
     }
