@@ -77,12 +77,7 @@ a:has(.openGraphPreview):hover {
 
 .table-cards table .openGraphPreview,
 .cards table .openGraphPreview {
-    flex-direction: column;
     border: none;
-}
-.table-cards table .openGraphPreview .se-oglink-thumbnail,
-.cards table .openGraphPreview .se-oglink-thumbnail {
-    width: 100%;
 }
 
 @container openGraphPreview (width > 400px) {
