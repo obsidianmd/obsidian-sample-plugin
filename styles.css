@@ -44,7 +44,6 @@ a:has(.openGraphPreview):hover {
     border-radius: 0 !important;
 }
 .openGraphPreview .se-oglink-info-container {
-    width: min-content;
     overflow: auto;
     padding: var(--size-4-3) var(--size-4-2);
 }
@@ -86,5 +85,6 @@ a:has(.openGraphPreview):hover {
     }
     .openGraphPreview .se-oglink-thumbnail {
         width: 150px;
+        flex-shrink: 0;
     }
 }
