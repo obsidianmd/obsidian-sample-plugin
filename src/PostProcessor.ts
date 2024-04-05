@@ -14,7 +14,7 @@ export class PostProcessor {
 		context: MarkdownPostProcessorContext
 	) => {
 		// 링크 변환
-		const linkEls:Element[] = element.findAll("a.external-link:not(.cm-formatting)");
+		const linkEls:Element[] = element.findAll("a.external-link:not(.cm-formatting, .markdown-rendered)");
 		for (const linkEl of linkEls) {
 			// dataview 클래스를 가진 부모 요소를 확인합니다.
 			if (linkEl.closest(".dataview") !== null) {
@@ -24,7 +24,6 @@ export class PostProcessor {
 			const params = await LinkThumbnailWidgetParams(url);
 			if (params != null) {
 				linkEl.innerHTML = params;
-				linkEl.removeClass("external-link");
 				linkEl.addClass("markdown-rendered");
 				linkEl.addEventListener("click", (e) => e.stopPropagation());
 			}

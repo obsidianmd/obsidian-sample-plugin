@@ -27,36 +27,42 @@ class StatefulDecorationSet {
     }
 
     async computeAsyncDecorations(tokens: TokenSpec[]): Promise<DecorationSet | null> {
+        // 현재 모드 판별
         const isSourceMode = !this.editor.state.field(editorLivePreviewField);
-        if (isSourceMode) {
-            return Decoration.none;
-        } else {
-            const decorations: Range<Decoration>[] = [];
-            for (const token of tokens) {
-                let deco = this.decoCache[token.value];
-                if (!deco) {
-                    const div = createDiv();
-                    // 클래스 추가
-                    div.addClass("cm-embed-block");
-                    div.addClass("cm-embed-link");
-                    // 넣을 EL 받아오기
-                    const linkEl = createEl("a");
-                    linkEl.href = token.value;
-                    linkEl.addClass("markdown-rendered");
-                    div.appendChild(linkEl);
-                    const params = await LinkThumbnailWidgetParams(token.value);
-                    if (params != null) {
+        // 현재 선택된 부분
+        const selectFrom = this.editor.state.selection.main.from;
+        const selectTo = this.editor.state.selection.main.to;
+
+        const decorations: Range<Decoration>[] = [];
+        for (const token of tokens) {
+            const isSelected = (selectFrom <= token.to && selectTo >= token.from) || (selectFrom >= token.from && selectTo <= token.to);
+            
+            if (isSelected || isSourceMode) {
+                return Decoration.none;
+            }
+
+            let deco = this.decoCache[token.value];
+            if (!deco) {
+                const div = createDiv();
+                // 클래스 추가
+                div.addClass("cm-embed-block");
+                div.addClass("cm-embed-link");
+                // 넣을 EL 받아오기
+                const linkEl = createEl("a");
+                linkEl.href = token.value;
+                linkEl.addClass("markdown-rendered");
+                div.appendChild(linkEl);
+                LinkThumbnailWidgetParams(token.value).then(params => {
+                    if (params) {
                         linkEl.innerHTML = params;
                         linkEl.addEventListener("click", (e) => e.stopPropagation());
-                    } else {
-                        return Decoration.none;
                     }
-                    deco = this.decoCache[token.value] = Decoration.replace({widget: new EmojiWidget(div), block: true});
-                }
-                decorations.push(deco.range(token.from, token.to));
+                });
+                deco = this.decoCache[token.value] = Decoration.replace({widget: new EmojiWidget(div), block: true});
             }
-            return Decoration.set(decorations, true);
+            decorations.push(deco.range(token.from, token.to));
         }
+        return Decoration.set(decorations, true);
     }
 
     debouncedUpdate = debounce(this.updateAsyncDecorations, 100, true);
@@ -81,7 +87,7 @@ function buildViewPlugin(plugin: LinkThumbnailPlugin) {
             }
 
             update(update: ViewUpdate) {
-                if (update.docChanged || update.viewportChanged) {
+                if (update.docChanged || update.viewportChanged || update.selectionSet) {
                     this.buildAsyncDecorations(update.view);
                 }
             }
@@ -93,9 +99,9 @@ function buildViewPlugin(plugin: LinkThumbnailPlugin) {
                     tree.iterate({
                         enter: ({node, from, to}) => {
                             const tokenProps = node.type.prop<string>(tokenClassNodeProp);
+
                             if (tokenProps && node.name === "url") {
                                 const value = view.state.doc.sliceString(from, to);
-                                console.log(tokenProps, node, value, view.state);
                                 if (value) {
                                     targetElements.push({from: from, to: to, value: value});
                                 }
