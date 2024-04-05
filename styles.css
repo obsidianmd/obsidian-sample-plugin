@@ -12,6 +12,8 @@ a:has(.openGraphPreview) {
     padding-right: 0;
     text-decoration: none;
     background-image: none;
+    container-name: openGraphPreview;
+    container-type: inline-size;
 }
 a:has(.openGraphPreview):hover {
     text-decoration: none;
@@ -20,23 +22,21 @@ a:has(.openGraphPreview):hover {
     height: 100%;
     display: flex;
     flex-direction: column;
+    flex-wrap: nowrap;
     gap: 8px;
     border: var(--cards-border-width) solid var(--background-modifier-border);
     background: none;
     color: var(--text-normal);
     text-decoration: none;
     background: none;
+
 }
 .openGraphPreview:hover {
     text-decoration: none; 
     color: var(--text-normal);
 }
 .openGraphPreview .se-oglink-thumbnail {
-    flex-shrink: 0;
     width: 100%;
-
-    height: initial;
-    overflow: hidden;
 }
 .openGraphPreview .se-oglink-thumbnail-resource {
     height: 100%;
@@ -44,10 +44,7 @@ a:has(.openGraphPreview):hover {
     border-radius: 0 !important;
 }
 .openGraphPreview .se-oglink-info-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px;
+    width: min-content;
     overflow: auto;
     padding: var(--size-4-3) var(--size-4-2);
 }
@@ -88,7 +85,7 @@ a:has(.openGraphPreview):hover {
     width: 100%;
 }
 
-@media screen and (min-width: 1000px) {
+@container openGraphPreview (width > 400px) {
     .openGraphPreview {
         flex-direction: row;
     }
