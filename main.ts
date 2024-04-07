@@ -43,8 +43,6 @@ export default class budgetPlugin extends Plugin {
 	settings: BudgetSettings;
 
 	async onload() {
-		///// starting the app
-		// addRibbon icon
 		await this.loadSettings();
 
 		const ribbonIconEl = this.addRibbonIcon(
@@ -71,7 +69,7 @@ export default class budgetPlugin extends Plugin {
 				console.log("Debug: trigger new expense modal from ribbon");
 			}
 		);
-		// Adds a setting tag so the user ca configure the aspects of the plugin
+		// Adds a setting tag so the user can configure the aspects of the plugin
 		this.addSettingTab(new ExpenseSettingTab(this.app, this));
 	}
 
@@ -91,6 +89,7 @@ export default class budgetPlugin extends Plugin {
 }
 
 export class ExpenseModal extends Modal {
+	settings = DEFAULT_SETTINGS;
 	expenseAmount: string = "120";
 	expenseCategory: string;
 	expenseValue: string = "basics";
@@ -115,8 +114,22 @@ export class ExpenseModal extends Modal {
 		this.onSubmit = onSubmit;
 	}
 
+	// j'accède aux settings ok, mais pas les bons... ici ce sont les DEFAULT_SETTINGS et je veux les modifés !
+	async loadData(): Promise<void> {
+		await this.loadSettings();
+	}
+
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign(
+			{},
+			this.expenseCategory,
+			await this.loadData()
+		);
+	}
+
 	onOpen() {
 		const { contentEl } = this;
+		console.log(this.settings.expenseCategories);
 		contentEl.createEl("h1", { text: "Enter new Expense" });
 
 		new Setting(contentEl).setName("Amount").addText((text) =>
@@ -124,14 +137,6 @@ export class ExpenseModal extends Modal {
 				this.expenseAmount = value;
 			})
 		);
-
-		async function fetchData() {
-			const response = await fetch("data.json");
-			const data = await response.json();
-			console.log(data);
-		}
-
-		fetchData();
 
 		/* move this to the setting
 		const category = [
