@@ -51,6 +51,7 @@ class StatefulDecorationSet {
                 const linkEl = createEl("a");
                 linkEl.href = token.value;
                 linkEl.addClass("markdown-rendered");
+                linkEl.addClass("external-link");
                 div.appendChild(linkEl);
                 LinkThumbnailWidgetParams(token.value).then(params => {
                     if (params) {
