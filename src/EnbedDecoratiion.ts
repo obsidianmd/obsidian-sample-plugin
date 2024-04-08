@@ -59,7 +59,7 @@ class StatefulDecorationSet {
                         linkEl.addEventListener("click", (e) => e.stopPropagation());
                     }
                 });
-                deco = this.decoCache[token.value] = Decoration.replace({widget: new EmojiWidget(div), block: true});
+                deco = this.decoCache[token.value] = Decoration.replace({widget: new ogLinkWidget(div), block: true});
             }
             decorations.push(deco.range(token.from, token.to));
         }
@@ -147,7 +147,7 @@ function defineStatefulDecoration(): {
     return {update, field};
 }
 
-class EmojiWidget extends WidgetType {
+class ogLinkWidget extends WidgetType {
     private readonly source: HTMLDivElement;
 
     constructor(source: HTMLDivElement) {
@@ -155,7 +155,7 @@ class EmojiWidget extends WidgetType {
         this.source = source;
     }
 
-    eq(other: EmojiWidget) {
+    eq(other: ogLinkWidget) {
         return other == this;
     }
 

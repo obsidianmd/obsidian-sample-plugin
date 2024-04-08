@@ -1,4 +1,5 @@
 import { requestUrl } from "obsidian";
+import { decode } from 'iconv-lite';
 
 // url 정규식
 const urlRegex = new RegExp("^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$");
@@ -6,17 +7,30 @@ const urlRegex = new RegExp("^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|
 export async function LinkThumbnailWidgetParams(url: string) {
     const urlArr = urlRegex.exec(url);
     if (urlArr) {
-        try {
-            const response = await requestUrl(url);
-            const contextType = response.headers["content-type"];
-            if (contextType.toLocaleLowerCase().trim() === "text/html;charset=ms949") {
-                return null;
+        try { 
+            
+            const response = await requestUrl({
+                url:url,
+                throw: true
+            });
+            if (response && response.headers && response.headers['content-type'] && !response.headers['content-type']?.includes('text/')) {
+                throw new Error('Page must return a header content-type with text/');
             }
 
-            const htmlString = response.text;
+            // 인코딩 문제 해결
+            const bodyArrayBuffer = response.arrayBuffer;            
+            const charset = response.headers["content-type"].replace("text/html;charset=","").toLowerCase();
+
+            let body;
+            if (charset.trim() === "utf-8") {
+                body = Buffer.from(bodyArrayBuffer).toString('utf-8');
+            } else {
+                body = decode(Buffer.from(bodyArrayBuffer), charset);
+            }
+            
             const parser = new DOMParser();
-            const document = parser.parseFromString(htmlString, 'text/html');
-    
+            const document = parser.parseFromString(body, 'text/html');
+            
             const ogTitle = document.querySelector("meta[property='og:title']")?.getAttribute("content") || document.querySelector("title")?.textContent || "";
             const ogDescription = document.querySelector("meta[property='og:description']")?.getAttribute("content") || "";
             let ogImage = document.querySelector("meta[property='og:image']")?.getAttribute("content") || "";
@@ -39,8 +53,7 @@ export async function LinkThumbnailWidgetParams(url: string) {
             `
             return result;
         } catch (error) {
-            console.error(error);
-            return null;
+            throw new Error(error);
         }
     }
     return null

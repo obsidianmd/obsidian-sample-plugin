@@ -16,10 +16,7 @@ export class PostProcessor {
 		// 링크 변환
 		const linkEls:Element[] = element.findAll("a.external-link:not(.cm-formatting, .markdown-rendered)");
 		for (const linkEl of linkEls) {
-			// dataview 클래스를 가진 부모 요소를 확인합니다.
-			if (linkEl.closest(".dataview") !== null) {
-				continue;
-			}
+
 			const url = linkEl.innerHTML;
 			const params = await LinkThumbnailWidgetParams(url);
 			if (params != null) {
