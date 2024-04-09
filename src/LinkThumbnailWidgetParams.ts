@@ -24,29 +24,32 @@ function getLocalOgData(url: string) {
 
 async function saveLocalOgData(url:string, ogData: ogData) {
     const imgUrl = ogData.ogImage;
-    const lastDot = imgUrl.lastIndexOf(".");
-	const imgType = imgUrl.substring(lastDot, imgUrl.length).toLowerCase();
+    if (imgUrl !== "") {
+        const lastDot = imgUrl.lastIndexOf(".");
+        let imgType = imgUrl.substring(lastDot + 1, imgUrl.length).toLowerCase();
 
-    const file = await requestUrl({url:imgUrl, contentType: `image/${imgType}`});
-    const fileArrayBuffer = file.arrayBuffer;
-    // 방법 1) blob 변환
-    // const fileBlob = new Blob([fileArrayBuffer], { type: `image/${imgType}`});
-
-    // // 파일 리더 생성
-    // const reader = new FileReader();
-    // reader.readAsDataURL(fileBlob);
-    // let base64String = "";
-    // reader.onloadend = () => {
-    //     const base64 = reader.result;
-    //     if (typeof base64 === "string") base64String = base64;
-    // };
-
-    // 방법 2) ArrayBuffer 자체를 base64로 변환
-    const uint8 = new Uint8Array(fileArrayBuffer);
-    const base64String = btoa(uint8.reduce((data, byte)=> {
-        return data + String.fromCharCode(byte);
-      }, ''));
-    ogData.ogImage = `data:image/${imgType};charset=utf-8;base64,` + base64String;
+        const file = await requestUrl({url:imgUrl, contentType: `image/${imgType}`});
+        const fileArrayBuffer = file.arrayBuffer;
+        // 방법 1) blob 변환
+        // const fileBlob = new Blob([fileArrayBuffer], { type: `image/${imgType}`});
+    
+        // // 파일 리더 생성
+        // const reader = new FileReader();
+        // reader.readAsDataURL(fileBlob);
+        // let base64String = "";
+        // reader.onloadend = () => {
+        //     const base64 = reader.result;
+        //     if (typeof base64 === "string") base64String = base64;
+        // };
+    
+        // 방법 2) ArrayBuffer 자체를 base64로 변환
+        const uint8 = new Uint8Array(fileArrayBuffer);
+        const base64String = btoa(uint8.reduce((data, byte)=> {
+            return data + String.fromCharCode(byte);
+        }, ''));
+        if (imgType.includes("svg")) imgType += "+xml";
+        ogData.ogImage = `data:image/${imgType};charset=utf-8;base64,` + base64String;
+    }
 
     // 저장하기 전에 img 데이터를 url-> blob -> base64로 변환 후 저장
     localStorage.setItem(OGDATACHACHE + url, JSON.stringify(ogData));
