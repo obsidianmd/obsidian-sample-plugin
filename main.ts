@@ -53,6 +53,7 @@ export default class budgetPlugin extends Plugin {
 				// need to start modal
 				new ExpenseModal(
 					this.app,
+					this,
 					(
 						expenseAmount,
 						expenseCategory,
@@ -73,8 +74,6 @@ export default class budgetPlugin extends Plugin {
 		this.addSettingTab(new ExpenseSettingTab(this.app, this));
 	}
 
-	onunload(): void {}
-
 	async loadSettings(): Promise<void> {
 		this.settings = Object.assign(
 			{},
@@ -86,10 +85,12 @@ export default class budgetPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 	}
+
+	onunload(): void {}
 }
 
 export class ExpenseModal extends Modal {
-	settings = DEFAULT_SETTINGS;
+	plugin: budgetPlugin;
 	expenseAmount: string = "120";
 	expenseCategory: string;
 	expenseValue: string = "basics";
@@ -103,6 +104,7 @@ export class ExpenseModal extends Modal {
 
 	constructor(
 		app: App,
+		plugin: budgetPlugin,
 		onSubmit: (
 			expenseAmount: string,
 			expenseCategory: string,
@@ -111,77 +113,42 @@ export class ExpenseModal extends Modal {
 		) => void
 	) {
 		super(app);
+		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 	}
 
-	// j'accède aux settings ok, mais pas les bons... ici ce sont les DEFAULT_SETTINGS et je veux les modifés !
-	async loadData(): Promise<void> {
-		await this.loadSettings();
-	}
-
-	async loadSettings(): Promise<void> {
-		this.settings = Object.assign(
-			{},
-			this.expenseCategory,
-			await this.loadData()
-		);
-	}
-
-	onOpen() {
+	async onOpen() {
 		const { contentEl } = this;
-		console.log(this.settings.expenseCategories);
 		contentEl.createEl("h1", { text: "Enter new Expense" });
 
+		// get the data from the plugin settings
+		const pluginData = await this.plugin.loadData();
+
+		// input field for the expense amount
 		new Setting(contentEl).setName("Amount").addText((text) =>
 			text.onChange((value) => {
 				this.expenseAmount = value;
 			})
 		);
 
-		/* move this to the setting
-		const category = [
-			{ categoryId: 1, categoryName: "Eat", categoryIcon: "carrot" },
-			{
-				categoryId: 2,
-				categoryName: "Home",
-				categoryIcon: "home",
-			},
-			{
-				categoryId: 3,
-				categoryName: "Leisure",
-				categoryIcon: "armchair",
-			},
-			{
-				categoryId: 4,
-				categoryName: "Beauty",
-				categoryIcon: "glasses",
-			},
-			{
-				categoryId: 5,
-				categoryName: "Holidays",
-				categoryIcon: "caravan",
-			},
-			{
-				categoryId: 6,
-				categoryName: "Transport",
-				categoryIcon: "car",
-			},
-		];
-
+		// create category button with icon and tooltip
 		const categorySetting = new Setting(contentEl).setName("Category");
-		category.forEach((c) => {
-			const setting = categorySetting.addButton((btn: ButtonComponent) =>
-				btn
-					.setButtonText(c.categoryName)
-					.setIcon(c.categoryIcon)
-					.setTooltip(c.categoryName)
-					.onClick(() => {
-						this.expenseCategory = c.categoryName;
-						new Notice(`Selected Category: ${c.categoryName}`);
-						btn.setCta();
-					})
-			});
-		}); */
+
+		Object.entries(pluginData.expenseCategories).forEach(
+			([key, value]: [string, { icon: string; name: string }]) => {
+				categorySetting.addButton((btn: ButtonComponent) =>
+					btn
+						.setButtonText(key)
+						.setIcon(value.icon)
+						.setTooltip(value.name)
+						.onClick(() => {
+							this.expenseCategory = value.name;
+							new Notice(`Selected Category: ${value.name}`);
+							btn.setCta();
+						})
+				);
+			}
+		);
 
 		new Setting(contentEl).setName("Rating").addText((text) =>
 			text.onChange((value) => {
@@ -230,7 +197,7 @@ export class ExpenseModal extends Modal {
 		);
 	}
 	onClose() {
-		let { contentEl } = this;
+		const { contentEl } = this;
 		contentEl.empty();
 	}
 }
@@ -248,6 +215,7 @@ class ExpenseSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		const expenseCategories = this.plugin.settings.expenseCategories;
+		console.log(expenseCategories);
 		const expenseAccounts = this.plugin.settings.expenseAccounts;
 		const expenseValues = this.plugin.settings.expenseValues;
 
