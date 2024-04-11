@@ -1,7 +1,6 @@
 import {debounce, editorLivePreviewField} from "obsidian";
 import {EditorView, Decoration, DecorationSet, ViewUpdate, ViewPlugin, WidgetType} from "@codemirror/view";
-import {StateField, StateEffect, StateEffectType} from "@codemirror/state";
-import {Range} from "@codemirror/rangeset";
+import {StateField, StateEffect, StateEffectType, Range} from "@codemirror/state";
 import {syntaxTree, tokenClassNodeProp} from "@codemirror/language";
 import LinkThumbnailPlugin from "./main";
 import { LinkThumbnailWidgetParams } from "./LinkThumbnailWidgetParams";

@@ -1,4 +1,4 @@
-import { requestUrl } from "obsidian";
+import { RequestUrlParam, requestUrl } from "obsidian";
 import { decode } from 'iconv-lite';
 
 interface ogData {
@@ -14,7 +14,7 @@ const OGDATACHACHE = "ogDataCache"
 const urlRegex = new RegExp("^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$");
 
 // 로컬데이터 접근
-function getLocalOgData(url: string) {
+function loadLocalOgData(url: string) {
     const data = localStorage.getItem(OGDATACHACHE + url);
     if (data) {
         const ogData: ogData = JSON.parse(data);
@@ -25,30 +25,41 @@ function getLocalOgData(url: string) {
 async function saveLocalOgData(url:string, ogData: ogData) {
     const imgUrl = ogData.ogImage;
     if (imgUrl !== "") {
-        const lastDot = imgUrl.lastIndexOf(".");
-        let imgType = imgUrl.substring(lastDot + 1, imgUrl.length).toLowerCase();
+        try {
+            const lastDot = imgUrl.lastIndexOf(".");
+            let imgType = imgUrl.substring(lastDot + 1, imgUrl.length).toLowerCase();
+    
+            const options: RequestUrlParam = {
+                url: imgUrl,
+                method: "POST",
+                contentType: `image/${imgType}`
+            }
+    
+            const file = await requestUrl(options);
+            const fileArrayBuffer = file.arrayBuffer;
+            // 방법 1) blob 변환
+            // const fileBlob = new Blob([fileArrayBuffer], { type: `image/${imgType}`});
+        
+            // // 파일 리더 생성
+            // const reader = new FileReader();
+            // reader.readAsDataURL(fileBlob);
+            // let base64String = "";
+            // reader.onloadend = () => {
+            //     const base64 = reader.result;
+            //     if (typeof base64 === "string") base64String = base64;
+            // };
+        
+            // 방법 2) ArrayBuffer 자체를 base64로 변환
+            const uint8 = new Uint8Array(fileArrayBuffer);
+            const base64String = btoa(uint8.reduce((data, byte)=> {
+                return data + String.fromCharCode(byte);
+            }, ''));
+            if (imgType.includes("svg")) imgType += "+xml";
+            ogData.ogImage = `data:image/${imgType};charset=utf-8;base64,` + base64String;
 
-        const file = await requestUrl({url:imgUrl, contentType: `image/${imgType}`});
-        const fileArrayBuffer = file.arrayBuffer;
-        // 방법 1) blob 변환
-        // const fileBlob = new Blob([fileArrayBuffer], { type: `image/${imgType}`});
-    
-        // // 파일 리더 생성
-        // const reader = new FileReader();
-        // reader.readAsDataURL(fileBlob);
-        // let base64String = "";
-        // reader.onloadend = () => {
-        //     const base64 = reader.result;
-        //     if (typeof base64 === "string") base64String = base64;
-        // };
-    
-        // 방법 2) ArrayBuffer 자체를 base64로 변환
-        const uint8 = new Uint8Array(fileArrayBuffer);
-        const base64String = btoa(uint8.reduce((data, byte)=> {
-            return data + String.fromCharCode(byte);
-        }, ''));
-        if (imgType.includes("svg")) imgType += "+xml";
-        ogData.ogImage = `data:image/${imgType};charset=utf-8;base64,` + base64String;
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     // 저장하기 전에 img 데이터를 url-> blob -> base64로 변환 후 저장
@@ -60,7 +71,11 @@ async function getOgData(url: string) {
     const urlArr = urlRegex.exec(url);
     if (urlArr) {
         try { 
-            const response = await requestUrl(url);
+            const options: RequestUrlParam = {
+                url: url,
+                method: "POST",
+            }
+            const response = await requestUrl(options);
             if (response && response.headers && response.headers['content-type'] && !response.headers['content-type']?.includes('text/')) {
                 throw new Error('Page must return a header content-type with text/');
             }
@@ -101,6 +116,7 @@ async function getOgData(url: string) {
             return data;
         } catch (error) {
             console.error(error);
+            return null;
         }
     }
 }
@@ -119,7 +135,7 @@ function renderOgData(data:ogData) {
 }
 
 export async function LinkThumbnailWidgetParams(url: string) {
-    const data = getLocalOgData(url) || await getOgData(url);    
+    const data = loadLocalOgData(url) || await getOgData(url);    
     if (data) {
         const result = renderOgData(data);
         return result;
