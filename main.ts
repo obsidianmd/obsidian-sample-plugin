@@ -29,13 +29,14 @@ const DEFAULT_SETTINGS: BudgetSettings = {
 		{ name: "Transport", icon: "car" },
 	],
 	expenseAccounts: [
-		{ name: "Cash", icon: "Cash" },
-		{ name: "Credit Card", icon: "Credit Card" },
+		{ name: "Cash", icon: "coins" },
+		{ name: "Credit Card", icon: "credit-card" },
+		{ name: "Bank", icon: "landmark" },
 	],
 	expenseValues: [
-		{ name: "Basics", icon: "Basics" },
-		{ name: "Medium", icon: "Medium" },
-		{ name: "Luxury", icon: "Luxury" },
+		{ name: "Basics", icon: "gem" },
+		{ name: "Medium", icon: "gem" },
+		{ name: "Luxury", icon: "gem" },
 	],
 };
 
@@ -90,10 +91,11 @@ export default class budgetPlugin extends Plugin {
 }
 
 export class ExpenseModal extends Modal {
-	plugin: budgetPlugin;
-	expenseAmount: string = "120";
+	plugin: budgetPlugin = DEFAULT_SETTINGS;
+	expenseAmount: string;
+	expenseAccount: string;
 	expenseCategory: string;
-	expenseValue: string = "basics";
+	expenseValue: string;
 
 	onSubmit: (
 		expenseAmount: string,
@@ -124,6 +126,12 @@ export class ExpenseModal extends Modal {
 		// get the data from the plugin settings
 		const pluginData = await this.plugin.loadData();
 
+		// create a currency formatter
+		const formatter = new Intl.NumberFormat("fr-FR", {
+			style: "currency",
+			currency: pluginData.currency,
+		});
+
 		// input field for the expense amount
 		new Setting(contentEl).setName("Amount").addText((text) =>
 			text.onChange((value) => {
@@ -150,10 +158,41 @@ export class ExpenseModal extends Modal {
 			}
 		);
 
-		new Setting(contentEl).setName("Rating").addText((text) =>
-			text.onChange((value) => {
-				this.expenseValue = value;
-			})
+		// create account button with icon and tooltip
+		const accountSetting = new Setting(contentEl).setName("Account");
+
+		Object.entries(pluginData.expenseAccounts).forEach(
+			([key, value]: [string, { icon: string; name: string }]) => {
+				accountSetting.addButton((btn: ButtonComponent) =>
+					btn
+						.setButtonText(key)
+						.setIcon(value.icon)
+						.setTooltip(value.name)
+						.onClick(() => {
+							this.expenseAccount = value.name;
+							new Notice(`Selected Account: ${value.name}`);
+							btn.setCta();
+						})
+				);
+			}
+		);
+
+		const valueSetting = new Setting(contentEl).setName("Value");
+
+		Object.entries(pluginData.expenseValues).forEach(
+			([key, value]: [string, { icon: string; name: string }]) => {
+				valueSetting.addButton((btn: ButtonComponent) =>
+					btn
+						.setButtonText(key)
+						.setIcon(value.icon)
+						.setTooltip(value.name)
+						.onClick(() => {
+							this.expenseValue = value.name;
+							new Notice(`Selected Value: ${value.name}`);
+							btn.setCta();
+						})
+				);
+			}
 		);
 
 		new Setting(contentEl).addButton((btn) =>
@@ -187,7 +226,11 @@ export class ExpenseModal extends Modal {
 							editor.editor.setCursor(2, 0);
 							// insert the new expense on line 3
 							editor.editor.replaceSelection(
-								`| ${todayFormatted} | ${this.expenseAmount} | ${this.expenseCategory} | ${this.expenseAccount} | ${this.expenseValue} | \n`
+								`| ${todayFormatted} | ${formatter.format(
+									Number(this.expenseAmount)
+								)} | ${this.expenseCategory} | ${
+									this.expenseAccount
+								} | ${this.expenseValue} | \n`
 							);
 						}
 					} else {
@@ -229,7 +272,6 @@ class ExpenseSettingTab extends PluginSettingTab {
 							.setPlaceholder(`Name = ${item.name}`)
 							.setValue(item.name)
 							.onChange(async (value) => {
-								console.log("Updated name: " + value);
 								this.plugin.settings.expenseCategories[
 									index
 								].name = value;
@@ -241,7 +283,6 @@ class ExpenseSettingTab extends PluginSettingTab {
 							.setPlaceholder(`Icon = ${item.icon}`)
 							.setValue(item.icon)
 							.onChange(async (value) => {
-								console.log("Updated icon: " + value);
 								this.plugin.settings.expenseCategories[
 									index
 								].icon = value;
