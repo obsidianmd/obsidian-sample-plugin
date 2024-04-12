@@ -52,12 +52,13 @@ class StatefulDecorationSet {
                 linkEl.addClass("markdown-rendered");
                 linkEl.addClass("external-link");
                 div.appendChild(linkEl);
-                LinkThumbnailWidgetParams(token.value).then(params => {
-                    if (params) {
-                        linkEl.innerHTML = params;
-                        linkEl.addEventListener("click", (e) => e.stopPropagation());
-                    }
-                });
+                const params = await LinkThumbnailWidgetParams(token.value);
+                if (params) {
+                    linkEl.innerHTML = params;
+                    linkEl.addEventListener("click", (e) => e.stopPropagation());
+                } else if (params === null) {
+                    linkEl.innerHTML = token.value;
+                }
                 deco = this.decoCache[token.value] = Decoration.replace({widget: new ogLinkWidget(div), block: true});
             }
             decorations.push(deco.range(token.from, token.to));
