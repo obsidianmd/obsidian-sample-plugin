@@ -12,6 +12,7 @@ import {
 	Setting,
 	setIcon,
 } from "obsidian";
+import { ExpenseModal } from "./expenseModal";
 
 interface BudgetSettings {
 	expenseCategories: object;
@@ -19,7 +20,7 @@ interface BudgetSettings {
 	expenseValues: object;
 }
 
-const DEFAULT_SETTINGS: BudgetSettings = {
+export const DEFAULT_SETTINGS: BudgetSettings = {
 	expenseCategories: [
 		{ name: "Eat", icon: "carrot" },
 		{ name: "Home", icon: "home" },
@@ -46,31 +47,27 @@ export default class budgetPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		const ribbonIconEl = this.addRibbonIcon(
-			"dollar-sign",
-			"New Expense",
-			(evt: MouseEvent) => {
-				new Notice("New Expense Modal");
-				// need to start modal
-				new ExpenseModal(
-					this.app,
-					this,
-					(
-						expenseAmount,
-						expenseCategory,
-						expenseAccount,
-						expenseValue
-					) => {
-						new Notice(
-							`${expenseAmount}, ${expenseCategory}, ${expenseAccount}, ${expenseValue}`
-						);
-					}
-				).open();
+		this.addRibbonIcon("dollar-sign", "New Expense", (evt: MouseEvent) => {
+			new Notice("New Expense Modal");
+			// need to start modal
+			new ExpenseModal(
+				this.app,
+				this,
+				(
+					expenseAmount,
+					expenseCategory,
+					expenseAccount,
+					expenseValue
+				) => {
+					new Notice(
+						`${expenseAmount}, ${expenseCategory}, ${expenseAccount}, ${expenseValue}`
+					);
+				}
+			).open();
 
-				// need to set active md file to budget
-				console.log("Debug: trigger new expense modal from ribbon");
-			}
-		);
+			// need to set active md file to budget
+			console.log("Debug: trigger new expense modal from ribbon");
+		});
 		// Adds a setting tag so the user can configure the aspects of the plugin
 		this.addSettingTab(new ExpenseSettingTab(this.app, this));
 	}
@@ -88,161 +85,6 @@ export default class budgetPlugin extends Plugin {
 	}
 
 	onunload(): void {}
-}
-
-export class ExpenseModal extends Modal {
-	plugin: budgetPlugin = DEFAULT_SETTINGS;
-	expenseAmount: string;
-	expenseAccount: string;
-	expenseCategory: string;
-	expenseValue: string;
-
-	onSubmit: (
-		expenseAmount: string,
-		expenseCategory: string,
-		expenseAccount: string,
-		expenseValue: string
-	) => void;
-
-	constructor(
-		app: App,
-		plugin: budgetPlugin,
-		onSubmit: (
-			expenseAmount: string,
-			expenseCategory: string,
-			expenseAccount: string,
-			expenseValue: string
-		) => void
-	) {
-		super(app);
-		this.plugin = plugin;
-		this.onSubmit = onSubmit;
-	}
-
-	async onOpen() {
-		const { contentEl } = this;
-		contentEl.createEl("h1", { text: "Enter new Expense" });
-
-		// get the data from the plugin settings
-		const pluginData = await this.plugin.loadData();
-
-		// create a currency formatter
-		const formatter = new Intl.NumberFormat("fr-FR", {
-			style: "currency",
-			currency: pluginData.currency,
-		});
-
-		// input field for the expense amount
-		new Setting(contentEl).setName("Amount").addText((text) =>
-			text.onChange((value) => {
-				this.expenseAmount = value;
-			})
-		);
-
-		// create category button with icon and tooltip
-		const categorySetting = new Setting(contentEl).setName("Category");
-
-		Object.entries(pluginData.expenseCategories).forEach(
-			([key, value]: [string, { icon: string; name: string }]) => {
-				categorySetting.addButton((btn: ButtonComponent) =>
-					btn
-						.setButtonText(key)
-						.setIcon(value.icon)
-						.setTooltip(value.name)
-						.onClick(() => {
-							this.expenseCategory = value.name;
-							new Notice(`Selected Category: ${value.name}`);
-							btn.setCta();
-						})
-				);
-			}
-		);
-
-		// create account button with icon and tooltip
-		const accountSetting = new Setting(contentEl).setName("Account");
-
-		Object.entries(pluginData.expenseAccounts).forEach(
-			([key, value]: [string, { icon: string; name: string }]) => {
-				accountSetting.addButton((btn: ButtonComponent) =>
-					btn
-						.setButtonText(key)
-						.setIcon(value.icon)
-						.setTooltip(value.name)
-						.onClick(() => {
-							this.expenseAccount = value.name;
-							new Notice(`Selected Account: ${value.name}`);
-							btn.setCta();
-						})
-				);
-			}
-		);
-
-		const valueSetting = new Setting(contentEl).setName("Value");
-
-		Object.entries(pluginData.expenseValues).forEach(
-			([key, value]: [string, { icon: string; name: string }]) => {
-				valueSetting.addButton((btn: ButtonComponent) =>
-					btn
-						.setButtonText(key)
-						.setIcon(value.icon)
-						.setTooltip(value.name)
-						.onClick(() => {
-							this.expenseValue = value.name;
-							new Notice(`Selected Value: ${value.name}`);
-							btn.setCta();
-						})
-				);
-			}
-		);
-
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText("Submit")
-				.setCta()
-				.onClick(() => {
-					this.close();
-					this.onSubmit(
-						this.expenseAmount,
-						this.expenseCategory,
-						this.expenseAccount,
-						this.expenseValue
-					);
-					const file = this.app.workspace.getActiveFile();
-					if (file) {
-						console.log("Debug: active file", file.basename);
-						const editor =
-							this.app.workspace.getActiveViewOfType(
-								MarkdownView
-							);
-						if (editor) {
-							console.log("Debug: active editor", editor);
-							// get today date and format YYYY-MM-DD
-							const today = new Date();
-							const todayFormatted = today
-								.toISOString()
-								.split("T")[0];
-
-							// move the cursor on start of line 3
-							editor.editor.setCursor(2, 0);
-							// insert the new expense on line 3
-							editor.editor.replaceSelection(
-								`| ${todayFormatted} | ${formatter.format(
-									Number(this.expenseAmount)
-								)} | ${this.expenseCategory} | ${
-									this.expenseAccount
-								} | ${this.expenseValue} | \n`
-							);
-						}
-					} else {
-						console.log("Debug: no active file");
-					}
-				})
-		);
-	}
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
 }
 
 class ExpenseSettingTab extends PluginSettingTab {
