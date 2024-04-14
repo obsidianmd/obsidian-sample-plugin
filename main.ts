@@ -1,17 +1,5 @@
 import test from "node:test";
-import {
-	App,
-	ButtonComponent,
-	Editor,
-	MarkdownEditView,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-	setIcon,
-} from "obsidian";
+import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { ExpenseModal } from "./expenseModal";
 
 interface BudgetSettings {
@@ -100,23 +88,28 @@ class ExpenseSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		const expenseCategories = this.plugin.settings.expenseCategories;
-		console.log(expenseCategories);
 		const expenseAccounts = this.plugin.settings.expenseAccounts;
 		const expenseValues = this.plugin.settings.expenseValues;
 
-		new Setting(containerEl).setName("Expense Categories");
+		const categoriesDiv = containerEl.createDiv();
+		categoriesDiv.createEl("h2", { text: "Expense Categories" });
 		if (Array.isArray(expenseCategories)) {
 			expenseCategories.forEach((item, index) => {
-				new Setting(containerEl)
+				new Setting(containerEl.createDiv())
 					.setDesc(`Category number ${index + 1}`)
 					.addText((text) =>
 						text
 							.setPlaceholder(`Name = ${item.name}`)
 							.setValue(item.name)
 							.onChange(async (value) => {
-								this.plugin.settings.expenseCategories[
-									index
-								].name = value;
+								(
+									this.plugin.settings.expenseCategories as {
+										[index: number]: {
+											name: string;
+											icon: string;
+										};
+									}
+								)[index].name = value;
 								await this.plugin.saveSettings();
 							})
 					)
@@ -125,19 +118,25 @@ class ExpenseSettingTab extends PluginSettingTab {
 							.setPlaceholder(`Icon = ${item.icon}`)
 							.setValue(item.icon)
 							.onChange(async (value) => {
-								this.plugin.settings.expenseCategories[
-									index
-								].icon = value;
+								(
+									this.plugin.settings.expenseCategories as {
+										[index: number]: {
+											name: string;
+											icon: string;
+										};
+									}
+								)[index].icon = value;
 								await this.plugin.saveSettings();
 							})
 					);
 			});
 		}
 
-		new Setting(containerEl).setName("Expense Accounts");
+		const accountsDiv = containerEl.createDiv();
+		accountsDiv.createEl("h2", { text: "Expense Accounts" });
 		if (Array.isArray(expenseAccounts)) {
 			expenseAccounts.forEach((item, index) => {
-				new Setting(containerEl)
+				new Setting(containerEl.createDiv())
 					.setDesc(`Account number ${index + 1}`)
 					.addText((text) =>
 						text
@@ -145,7 +144,42 @@ class ExpenseSettingTab extends PluginSettingTab {
 							.setValue(item.name)
 							.onChange(async (value) => {
 								console.log("Updated name: " + value);
-								this.plugin.settings.expenseAccounts[
+								(
+									this.plugin.settings.expenseAccounts as {
+										[index: number]: { name: string };
+									}
+								)[index].name = value;
+								await this.plugin.saveSettings();
+							})
+					)
+					.addText((text) =>
+						text
+							.setPlaceholder(`Icon = ${item.icon}`)
+							.setValue(item.icon)
+							.onChange(async (value) => {
+								console.log("Updated icon: " + value);
+								(this.plugin.settings.expenseAccounts as any[])[
+									index
+								].icon = value;
+								await this.plugin.saveSettings();
+							})
+					);
+			});
+		}
+
+		const valuesDiv = containerEl.createDiv();
+		valuesDiv.createEl("h2", { text: "Expense Values" });
+		if (Array.isArray(expenseValues)) {
+			expenseValues.forEach((item, index) => {
+				new Setting(containerEl.createDiv())
+					.setDesc(`Account number ${index + 1}`)
+					.addText((text) =>
+						text
+							.setPlaceholder(`Name = ${item.name}`)
+							.setValue(item.name)
+							.onChange(async (value) => {
+								console.log("Updated name: " + value);
+								(this.plugin.settings.expenseValues as any[])[
 									index
 								].name = value;
 								await this.plugin.saveSettings();
@@ -157,39 +191,9 @@ class ExpenseSettingTab extends PluginSettingTab {
 							.setValue(item.icon)
 							.onChange(async (value) => {
 								console.log("Updated icon: " + value);
-								this.plugin.settings.expenseAccounts[
+								(this.plugin.settings.expenseValues as any[])[
 									index
 								].icon = value;
-								await this.plugin.saveSettings();
-							})
-					);
-			});
-		}
-
-		new Setting(containerEl).setName("Expense Values");
-		if (Array.isArray(expenseValues)) {
-			expenseValues.forEach((item, index) => {
-				new Setting(containerEl)
-					.setDesc(`Account number ${index + 1}`)
-					.addText((text) =>
-						text
-							.setPlaceholder(`Name = ${item.name}`)
-							.setValue(item.name)
-							.onChange(async (value) => {
-								console.log("Updated name: " + value);
-								this.plugin.settings.expenseValues[index].name =
-									value;
-								await this.plugin.saveSettings();
-							})
-					)
-					.addText((text) =>
-						text
-							.setPlaceholder(`Icon = ${item.icon}`)
-							.setValue(item.icon)
-							.onChange(async (value) => {
-								console.log("Updated icon: " + value);
-								this.plugin.settings.expenseValues[index].icon =
-									value;
 								await this.plugin.saveSettings();
 							})
 					);

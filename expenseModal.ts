@@ -1,3 +1,5 @@
+// this modal opens a new modal to add a new expense and write it down on the budgetMarkdownFile
+
 import {
 	App,
 	Modal,
@@ -53,12 +55,21 @@ export class ExpenseModal extends Modal {
 		});
 
 		// input field for the expense amount
-		// todo: add focus on this field
 		new Setting(contentEl).setName("Amount").addText((text) =>
 			text.onChange((value) => {
+				// convert comma to dot (need to check this if internationalizing)
+				if (value.includes(",")) {
+					value = value.replace(",", ".");
+				}
 				this.expenseAmount = value;
 			})
 		);
+
+		// focus on the input field expense
+		const inputElement = contentEl.querySelector("input");
+		if (inputElement) {
+			inputElement.focus();
+		}
 
 		// create category button with icon and tooltip
 		const categorySetting = new Setting(contentEl).setName("Category");
