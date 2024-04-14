@@ -1,6 +1,7 @@
 import test from "node:test";
 import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { ExpenseModal } from "./expenseModal";
+import { playWithTable } from "./expenseManipulation";
 
 interface BudgetSettings {
 	expenseCategories: object;
@@ -56,8 +57,14 @@ export default class budgetPlugin extends Plugin {
 			// need to set active md file to budget
 			console.log("Debug: trigger new expense modal from ribbon");
 		});
+
 		// Adds a setting tag so the user can configure the aspects of the plugin
 		this.addSettingTab(new ExpenseSettingTab(this.app, this));
+
+		// Adds a listener to the layout-ready event to trigger the playWithTable function
+		this.app.workspace.on("layout-ready", async () => {
+			await playWithTable(this.app);
+		});
 	}
 
 	async loadSettings(): Promise<void> {
