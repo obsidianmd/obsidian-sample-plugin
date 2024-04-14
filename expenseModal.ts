@@ -61,6 +61,13 @@ export class ExpenseModal extends Modal {
 				if (value.includes(",")) {
 					value = value.replace(",", ".");
 				}
+
+				// Check if the value is a decimal number
+				const decimalRegex = /^\d+(\.\d+)?$/;
+				if (!decimalRegex.test(value)) {
+					new Notice("Please enter a valid decimal number");
+					return;
+				}
 				this.expenseAmount = value;
 			})
 		);
@@ -149,9 +156,10 @@ export class ExpenseModal extends Modal {
 		);
 
 		// submit button
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText("Submit")
+		// todo: focus sur boutton submit lorsque touche enter hit
+
+		new Setting(contentEl).addButton((btn) => {
+			btn.setButtonText("Submit")
 				.setCta()
 				.onClick(() => {
 					// check if all fields are filled
@@ -161,7 +169,6 @@ export class ExpenseModal extends Modal {
 						this.expenseAccount &&
 						this.expenseValue
 					) {
-						new Notice("Expense added");
 						this.close();
 						this.onSubmit(
 							this.expenseAmount,
@@ -200,9 +207,10 @@ export class ExpenseModal extends Modal {
 						new Notice("Please fill all the fields");
 						return;
 					}
-				})
-		);
+				});
+		});
 	}
+
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
