@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "outline-task-list",
+	"name": "Outline to task list",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Convert a note's outline to a task list.",
+	"author": "alexandrerbb",
+	"authorUrl": "https://github.com/alexandrerbb",
 	"isDesktopOnly": false
 }
