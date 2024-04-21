@@ -10,8 +10,8 @@ This plugin adds the following commands to the command palette.
 
 ##### `Convert outline to a task list here.`
 
-Convert the active note outline to a task list, inserted at the cursor position.
+Convert the active note outline to a task list, and insert it at the cursor position.
 
 ##### `Convert outline to a task list in a new note.`
 
-Convert the active note outline to a task list, inserted in a new note.
+Convert the active note outline to a task list, and insert it in a new note.
