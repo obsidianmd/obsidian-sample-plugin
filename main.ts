@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS: BudgetSettings = {
 
 export default class budgetPlugin extends Plugin {
 	settings: BudgetSettings;
+	file: TFile;
 
 	async onload() {
 		await this.loadSettings();
@@ -61,9 +62,12 @@ export default class budgetPlugin extends Plugin {
 		// Adds a setting tag so the user can configure the aspects of the plugin
 		this.addSettingTab(new ExpenseSettingTab(this.app, this));
 
-		// Adds a listener to the layout-ready event to trigger the playWithTable function
-		this.app.workspace.on("layout-ready", async () => {
-			await playWithTable(this.app);
+		this.addCommand({
+			id: "play-with-table",
+			name: "Play with table",
+			callback: async () => {
+				await playWithTable(this.app);
+			},
 		});
 	}
 
