@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "code-editor",
+	"name": "Code Editor",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"author": "Allen7D",
+	"authorUrl": "https://github.com/Allen7D",
+	"fundingUrl": "https://github.com/Allen7D/obsidian-code-editor",
 	"isDesktopOnly": false
 }

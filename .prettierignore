@@ -1,0 +1,11 @@
+.DS_Store
+package.json
+/dist
+.eslintignore
+.editorconfig
+.gitignore
+.prettierignore
+LICENSE
+.eslintcache
+*.lock
+yarn-error.log
