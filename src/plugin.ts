@@ -75,11 +75,7 @@ export default class OutlineTaskListPlugin extends Plugin {
    * Build the task list from the specified outline.
    */
   static buildTasklist(outline: Outline): string {
-    return outline
-      .map(
-        (heading) => `${"\t".repeat(heading.treeLevel)}- [ ] ${heading.title}`,
-      )
-      .join("\r\n");
+    return outline.map((heading) => heading.toMarkdown()).join("\r\n");
   }
 
   /**
