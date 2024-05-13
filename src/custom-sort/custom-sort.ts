@@ -702,21 +702,45 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 	})
 }
 
-export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
+// This function is a replacement for the Obsidian File Explorer function sort(...) up to Obsidian 1.6.0
+//   when a major refactoring of sorting mechanics happened
+export const folderSort_vUpTo_1_6_0 = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
 
-	let fileExplorerView = this.fileExplorer ?? this.view  // this.view replaces the former since 1.5.4 insider build
+	const fileExplorerView = this.fileExplorer ?? this.view  // this.view replaces the former since 1.5.4 insider build
+	const folderUnderSort = this.file as TFolder
+	const sortOrder = this.sortOrder
+	const allFileItemsCollection = fileExplorerView.fileItems
+
+	const items = folderSortCore(folderUnderSort, sortOrder, sortingSpec, allFileItemsCollection, ctx)
+
+	if (requireApiVersion && requireApiVersion("0.15.0")) {
+		this.vChildren.setChildren(items);
+	} else {
+		this.children = items;
+	}
+}
+
+// This function is a replacement for the Obsidian File Explorer function getSortedFolderItems(...)
+//    which first appeared in Obsidian 1.6.0 and simplified a bit the plugin integration point
+export const getSortedFolderItems_vFrom_1_6_0 = function (sortedFolder: TFolder, sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
+	const sortOrder = this.sortOrder
+	const allFileItemsCollection = this.fileItems
+	return folderSortCore(sortedFolder, sortOrder, sortingSpec, allFileItemsCollection, ctx)
+}
+
+const folderSortCore = function (sortedFolder: TFolder, sortOrder: string, sortingSpec: CustomSortSpec, allFileItemsCollection: any, ctx: ProcessingContext) {
 
 	// shallow copy of groups and expand folder-specific macros on them
 	sortingSpec.groupsShadow = sortingSpec.groups?.map((group) => Object.assign({} as CustomSortGroup, group))
-	const parentFolderName: string|undefined = this.file.name
+	const parentFolderName: string|undefined = sortedFolder.name
 	expandMacros(sortingSpec, parentFolderName)
 
 	const folderItems: Array<FolderItemForSorting> = (sortingSpec.itemsToHide ?
-		this.file.children.filter((entry: TFile | TFolder) => {
+		sortedFolder.children.filter((entry: TFile | TFolder) => {
 			return !sortingSpec.itemsToHide!.has(entry.name)
 		})
 		:
-		this.file.children)
+		sortedFolder.children)
 		.map((entry: TFile | TFolder) => {
 			const itemForSorting: FolderItemForSorting = determineSortingGroup(entry, sortingSpec, ctx)
 			return itemForSorting
@@ -729,23 +753,14 @@ export const folderSort = function (sortingSpec: CustomSortSpec, ctx: Processing
 		determineBookmarksOrderIfNeeded(folderItems, sortingSpec, ctx.bookmarksPluginInstance)
 	}
 
-	const comparator: SorterFn = getComparator(sortingSpec, fileExplorerView.sortOrder)
+	const comparator: SorterFn = getComparator(sortingSpec, sortOrder)
 
 	folderItems.sort(comparator)
 
 	const items = folderItems
-		.map((item: FolderItemForSorting) => fileExplorerView.fileItems[item.path])
+		.map((item: FolderItemForSorting) => allFileItemsCollection[item.path])
 
-	if (requireApiVersion && requireApiVersion("0.16.0")) {
-		const scrollTop = fileExplorerView.navFileContainerEl.scrollTop
-		fileExplorerView.tree.infinityScroll.rootEl.vChildren.setChildren([items])
-		fileExplorerView.navFileContainerEl.scrollTop = scrollTop
-		fileExplorerView.tree.infinityScroll.compute()
-	} else if (requireApiVersion && requireApiVersion("0.15.0")) {
-		this.vChildren.setChildren(items);
-	} else {
-		this.children = items;
-	}
+	return items
 };
 
 // Returns a sorted copy of the input array, intentionally to keep it intact

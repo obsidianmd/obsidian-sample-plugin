@@ -21,7 +21,8 @@ import {
 } from 'obsidian';
 import {around} from 'monkey-around';
 import {
-	folderSort,
+	folderSort_vUpTo_1_6_0,
+	getSortedFolderItems_vFrom_1_6_0,
 	ObsidianStandardDefaultSortingName,
 	ProcessingContext,
 	sortFolderItemsForBookmarking
@@ -593,51 +594,86 @@ export default class CustomSortPlugin extends Plugin {
 		// That's why not showing and not logging error message here
 		patchableFileExplorer = patchableFileExplorer ?? this.checkFileExplorerIsAvailableAndPatchable(false)
 		if (patchableFileExplorer) {
-			// @ts-ignore
-			let tmpFolder = new TFolder(Vault, "");
-			let Folder = patchableFileExplorer.createFolderDom(tmpFolder).constructor;
-			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
-				sort(old: any) {
-					return function (...args: any[]) {
-						// quick check for plugin status
-						if (plugin.settings.suspended) {
-							return old.call(this, ...args);
-						}
+			if (requireApiVersion && requireApiVersion("1.6.0")) {
+				// Starting from Obsidian 1.6.0 the sorting mechanics has been significantly refactored internally in Obsidian
+				const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(patchableFileExplorer.constructor.prototype, {
+					getSortedFolderItems(old: any) {
+                        return function (...args: any[]) {
+                            // quick check for plugin status
+                            if (plugin.settings.suspended) {
+                                return old.call(this, ...args);
+                            }
 
-						if (plugin.ribbonIconStateInaccurate && plugin.ribbonIconEl) {
-							plugin.ribbonIconStateInaccurate = false
-							setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
-						}
+                            if (plugin.ribbonIconStateInaccurate && plugin.ribbonIconEl) {
+                                plugin.ribbonIconStateInaccurate = false
+                                setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
+                            }
 
-						const folder: TFolder = this.file
-						let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
+							const folder = args[0]
+                            let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
 
-						// Performance optimization
-						//     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
-						let has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
-						if (hasOnlyByBookmarkOrStandardObsidian(has)) {
-							const bookmarksPlugin: BookmarksPluginInterface|undefined = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
-							if ( !bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
-								sortSpec = null
+                            // Performance optimization
+                            //     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
+                            let has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
+                            if (hasOnlyByBookmarkOrStandardObsidian(has)) {
+                                const bookmarksPlugin: BookmarksPluginInterface|undefined = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
+                                if ( !bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
+                                    sortSpec = null
+                                }
+                            }
+
+                            if (sortSpec) {
+                                return getSortedFolderItems_vFrom_1_6_0.call(this, folder, sortSpec, plugin.createProcessingContextForSorting(has))
+							} else {
+								return old.call(this, ...args);
 							}
-						}
+						};
+					}
+				})
+				this.register(uninstallerOfFolderSortFunctionWrapper)
+				return true
+			} else {
+				// Up to Obsidian 1.6.0
+				// @ts-ignore
+				let tmpFolder = new TFolder(Vault, "");
+				let Folder = patchableFileExplorer.createFolderDom(tmpFolder).constructor;
+				const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
+					sort(old: any) {
+						return function (...args: any[]) {
+							// quick check for plugin status
+							if (plugin.settings.suspended) {
+								return old.call(this, ...args);
+							}
 
-						if (sortSpec) {
-							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting(has));
-						} else {
-							return old.call(this, ...args);
-						}
-					};
-				},*/
-				getSortedFolderItems(old: any) {
-					return function (...args: any[]) {
-						console.log(`Cuda cuda ${args?.length}`)
-						return old.call(this, ...args);
-					};
-				}
-			})
-			this.register(uninstallerOfFolderSortFunctionWrapper)
-			return true
+							if (plugin.ribbonIconStateInaccurate && plugin.ribbonIconEl) {
+								plugin.ribbonIconStateInaccurate = false
+								setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
+							}
+
+							const folder: TFolder = this.file
+							let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
+
+							// Performance optimization
+							//     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
+							let has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
+							if (hasOnlyByBookmarkOrStandardObsidian(has)) {
+								const bookmarksPlugin: BookmarksPluginInterface | undefined = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
+								if (!bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
+									sortSpec = null
+								}
+							}
+
+							if (sortSpec) {
+								return folderSort_vUpTo_1_6_0.call(this, sortSpec, plugin.createProcessingContextForSorting(has));
+							} else {
+								return old.call(this, ...args);
+							}
+						};
+					}
+				})
+				this.register(uninstallerOfFolderSortFunctionWrapper)
+				return true
+			}
 		} else {
 			return false
 		}
