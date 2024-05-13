@@ -704,8 +704,6 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 
 export const folderSort = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
 
-	console.log('3')
-
 	let fileExplorerView = this.fileExplorer ?? this.view  // this.view replaces the former since 1.5.4 insider build
 
 	// shallow copy of groups and expand folder-specific macros on them
@@ -738,19 +736,14 @@ export const folderSort = function (sortingSpec: CustomSortSpec, ctx: Processing
 	const items = folderItems
 		.map((item: FolderItemForSorting) => fileExplorerView.fileItems[item.path])
 
-	console.log(`4 of length ${items.length}`)
-
 	if (requireApiVersion && requireApiVersion("0.16.0")) {
-		console.log('4.3')
 		const scrollTop = fileExplorerView.navFileContainerEl.scrollTop
 		fileExplorerView.tree.infinityScroll.rootEl.vChildren.setChildren([items])
 		fileExplorerView.navFileContainerEl.scrollTop = scrollTop
 		fileExplorerView.tree.infinityScroll.compute()
 	} else if (requireApiVersion && requireApiVersion("0.15.0")) {
-		console.log('4.1')
 		this.vChildren.setChildren(items);
 	} else {
-		console.log('4.2')
 		this.children = items;
 	}
 };
