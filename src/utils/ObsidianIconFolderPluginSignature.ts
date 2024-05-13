@@ -1,4 +1,4 @@
-import {CommunityPlugin, TAbstractFile} from "obsidian";
+import {App, CommunityPlugin, TAbstractFile} from "obsidian";
 
 // For https://github.com/FlorianWoelki/obsidian-icon-folder
 
@@ -18,7 +18,7 @@ export interface ObsidianIconFolder_PluginInstance extends CommunityPlugin {
 // https://github.com/FlorianWoelki/obsidian-icon-folder/blob/fd9c7df1486744450cec3d7ee9cee2b34d008e56/manifest.json#L2
 export const ObsidianIconFolderPluginId: string = 'obsidian-icon-folder'
 
-export const getIconFolderPlugin = (): ObsidianIconFolder_PluginInstance | undefined => {
+export const getIconFolderPlugin = (app: App): ObsidianIconFolder_PluginInstance | undefined => {
     const iconFolderPlugin: CommunityPlugin | undefined = app?.plugins?.plugins?.[ObsidianIconFolderPluginId]
     if (iconFolderPlugin && iconFolderPlugin._loaded && app?.plugins?.enabledPlugins?.has(ObsidianIconFolderPluginId)) {
         const iconFolderPluginInstance: ObsidianIconFolder_PluginInstance = iconFolderPlugin as ObsidianIconFolder_PluginInstance

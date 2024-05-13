@@ -1,4 +1,5 @@
 import {
+    App,
     InstalledPlugin,
     PluginInstance,
     TAbstractFile,
@@ -110,6 +111,7 @@ const bookmarkedGroupEmptyOrOnlyTransparentForSortingDescendants = (group: Bookm
 
 class BookmarksPluginWrapper implements BookmarksPluginInterface {
 
+    app: App
     plugin: Bookmarks_PluginInstance|undefined
     groupNameForSorting: string|undefined
 
@@ -148,7 +150,7 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
     saveDataAndUpdateBookmarkViews = (updateBookmarkViews: boolean = true) => {
         this.plugin!.onItemsChanged(true)
         if (updateBookmarkViews) {
-            const bookmarksLeafs = app.workspace.getLeavesOfType('bookmarks')
+            const bookmarksLeafs = this.app!.workspace.getLeavesOfType('bookmarks')
             bookmarksLeafs?.forEach((leaf) => {
                 (leaf.view as any)?.update?.()
             })
@@ -259,7 +261,7 @@ class BookmarksPluginWrapper implements BookmarksPluginInterface {
 
 export const BookmarksCorePluginId: string = 'bookmarks'
 
-export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?: boolean, ensureCachePopulated?: boolean): BookmarksPluginInterface | undefined => {
+export const getBookmarksPlugin = (app: App, bookmarksGroupName?: string, forceFlushCache?: boolean, ensureCachePopulated?: boolean): BookmarksPluginInterface | undefined => {
     invalidateExpiredBookmarksCache(forceFlushCache)
     const installedBookmarksPlugin: InstalledPlugin | undefined = app?.internalPlugins?.getPluginById(BookmarksCorePluginId)
     if (installedBookmarksPlugin && installedBookmarksPlugin.enabled && installedBookmarksPlugin.instance) {
@@ -267,6 +269,7 @@ export const getBookmarksPlugin = (bookmarksGroupName?: string, forceFlushCache?
         // defensive programming, in case Obsidian changes its internal APIs
         if (typeof bookmarksPluginInstance?.[BookmarksPlugin_getBookmarks_methodName] === 'function' &&
             Array.isArray(bookmarksPluginInstance?.[BookmarksPlugin_items_collectionName])) {
+            bookmarksPlugin.app = app
             bookmarksPlugin.plugin = bookmarksPluginInstance
             bookmarksPlugin.groupNameForSorting = bookmarksGroupName
             if (ensureCachePopulated && !bookmarksCache) {

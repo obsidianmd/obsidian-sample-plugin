@@ -116,7 +116,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	readAndParseSortingSpec() {
-		const mCache: MetadataCache = app.metadataCache
+		const mCache: MetadataCache = this.app.metadataCache
 		let failed: boolean = false
 		let anySortingSpecFound: boolean = false
 		let errorMessage: string | null = null
@@ -134,7 +134,7 @@ export default class CustomSortPlugin extends Plugin {
 			)
 		}
 
-		Vault.recurseChildren(app.vault.getRoot(), (file: TAbstractFile) => {
+		Vault.recurseChildren(this.app.vault.getRoot(), (file: TAbstractFile) => {
 			if (failed) return
 			if (file instanceof TFile) {
 				const aFile: TFile = file as TFile
@@ -249,7 +249,7 @@ export default class CustomSortPlugin extends Plugin {
 		// Syntax sugar
 		const ForceFlushCache = true
 		if (!this.settings.suspended) {
-			getBookmarksPlugin(this.settings.bookmarksGroupToConsumeAsOrderingReference, ForceFlushCache)
+			getBookmarksPlugin(this.app, this.settings.bookmarksGroupToConsumeAsOrderingReference, ForceFlushCache)
 		}
 
 		if (fileExplorerView) {
@@ -306,7 +306,7 @@ export default class CustomSortPlugin extends Plugin {
 			this.ribbonIconStateInaccurate = true
 		}
 
-		this.addSettingTab(new CustomSortSettingTab(app, this));
+		this.addSettingTab(new CustomSortSettingTab(this.app, this));
 
 		this.registerEventHandlers()
 
@@ -321,7 +321,7 @@ export default class CustomSortPlugin extends Plugin {
 
 		this.registerEvent(
 			// Keep in mind: this event is triggered once after app starts and then after each modification of _any_ metadata
-			app.metadataCache.on("resolved", () => {
+			plugin.app.metadataCache.on("resolved", () => {
 				if (!this.settings.suspended) {
 					if (!this.initialAutoOrManualSortingTriggered) {
 						this.readAndParseSortingSpec()
@@ -365,7 +365,7 @@ export default class CustomSortPlugin extends Plugin {
 			(item: MenuItem) => {
 				item.setTitle(m ? 'Bookmark it for custom sorting' : 'Bookmark it for sorting');
 				item.onClick(() => {
-					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
 						bookmarksPlugin.bookmarkFolderItem(file)
 						bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
@@ -377,7 +377,7 @@ export default class CustomSortPlugin extends Plugin {
 			(item: MenuItem) => {
 				item.setTitle(m ? 'UNbookmark it from custom sorting' : 'UNbookmark it from sorting');
 				item.onClick(() => {
-					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
 						bookmarksPlugin.unbookmarkFolderItem(file)
 						bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
@@ -389,7 +389,7 @@ export default class CustomSortPlugin extends Plugin {
 			(item: MenuItem) => {
 				item.setTitle(m ? 'Bookmark it+siblings for custom sorting' : 'Bookmark it+siblings for sorting');
 				item.onClick(() => {
-					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
 						const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent, bookmarksPlugin)
 						bookmarksPlugin.bookmarkSiblings(orderedChildren)
@@ -402,7 +402,7 @@ export default class CustomSortPlugin extends Plugin {
 			(item: MenuItem) => {
 				item.setTitle(m ? 'UNbookmark it+siblings from custom sorting' : 'UNbookmark it+siblings from sorting');
 				item.onClick(() => {
-					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
 						const orderedChildren: Array<TAbstractFile> = file.parent.children.map((entry: TFile | TFolder) => entry)
 						bookmarksPlugin.unbookmarkSiblings(orderedChildren)
@@ -415,7 +415,7 @@ export default class CustomSortPlugin extends Plugin {
 			(item: MenuItem) => {
 				item.setTitle(m ? 'Bookmark selected for custom sorting' : 'Custom sort: bookmark selected for sorting');
 				item.onClick(() => {
-					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
 						files.forEach((file) => {
 							bookmarksPlugin.bookmarkFolderItem(file)
@@ -429,7 +429,7 @@ export default class CustomSortPlugin extends Plugin {
 			(item: MenuItem) => {
 				item.setTitle(m ? 'UNbookmark selected from custom sorting' : 'Custom sort: UNbookmark selected from sorting');
 				item.onClick(() => {
-					const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
 						files.forEach((file) => {
 							bookmarksPlugin.unbookmarkFolderItem(file)
@@ -440,7 +440,7 @@ export default class CustomSortPlugin extends Plugin {
 			};
 
 		this.registerEvent(
-			app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile, source: string, leaf?: WorkspaceLeaf) => {
+			this.app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile, source: string, leaf?: WorkspaceLeaf) => {
 				if (!this.settings.customSortContextSubmenu) return;  // Don't show the context menus at all
 
 				const customSortMenuItem = (item?: MenuItem) => {
@@ -457,7 +457,7 @@ export default class CustomSortPlugin extends Plugin {
 					if (submenu) submenu.addSeparator();
 
 					if (this.settings.bookmarksContextMenus) {
-						const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+						const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 						if (bookmarksPlugin) {
 							const itemAlreadyBookmarkedForSorting: boolean = bookmarksPlugin.isBookmarkedForSorting(file)
 							if (!itemAlreadyBookmarkedForSorting) {
@@ -502,7 +502,7 @@ export default class CustomSortPlugin extends Plugin {
 						if (submenu) submenu.addSeparator();
 
 						if (this.settings.bookmarksContextMenus) {
-							const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+							const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 							if (bookmarksPlugin) {
 								(submenu ?? menu).addItem(getBookmarkSelectedMenuItemForFiles(files));
 								(submenu ?? menu).addItem(getUnbookmarkSelectedMenuItemForFiles(files));
@@ -521,16 +521,17 @@ export default class CustomSortPlugin extends Plugin {
 		}
 
 		this.registerEvent(
-			app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
-				const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+			this.app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
+				const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 				if (bookmarksPlugin) {
 					bookmarksPlugin.updateSortingBookmarksAfterItemRenamed(file, oldPath)
 					bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 				}
 			})
 		)
-		app.vault.on("delete", (file: TAbstractFile) => {
-			const bookmarksPlugin = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+
+		this.app.vault.on("delete", (file: TAbstractFile) => {
+			const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 			if (bookmarksPlugin) {
 				bookmarksPlugin.updateSortingBookmarksAfterItemDeleted(file)
 				bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
@@ -557,7 +558,7 @@ export default class CustomSortPlugin extends Plugin {
 	}
 
 	initialize() {
-		app.workspace.onLayoutReady(() => {
+		this.app.workspace.onLayoutReady(() => {
 			this.fileExplorerFolderPatched = this.patchFileExplorerFolder();
 		})
 	}
@@ -576,10 +577,10 @@ export default class CustomSortPlugin extends Plugin {
 
 	createProcessingContextForSorting(has: HasSortingOrGrouping): ProcessingContext {
 		const ctx: ProcessingContext = {
-			_mCache: app.metadataCache,
-			starredPluginInstance: has.grouping.byStarred ? getStarredPlugin() : undefined,
-			bookmarksPluginInstance: has.grouping.byBookmarks || has.sorting.byBookmarks ?  getBookmarksPlugin(this.settings.bookmarksGroupToConsumeAsOrderingReference, false, true) : undefined,
-			iconFolderPluginInstance: has.grouping.byIcon ? getIconFolderPlugin() : undefined,
+			_mCache: this.app.metadataCache,
+			starredPluginInstance: has.grouping.byStarred ? getStarredPlugin(this.app) : undefined,
+			bookmarksPluginInstance: has.grouping.byBookmarks || has.sorting.byBookmarks ?  getBookmarksPlugin(this.app, this.settings.bookmarksGroupToConsumeAsOrderingReference, false, true) : undefined,
+			iconFolderPluginInstance: has.grouping.byIcon ? getIconFolderPlugin(this.app) : undefined,
 			plugin: this
 		}
 		return ctx
@@ -598,6 +599,7 @@ export default class CustomSortPlugin extends Plugin {
 			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
 				sort(old: any) {
 					return function (...args: any[]) {
+						console.log('1')
 						// quick check for plugin status
 						if (plugin.settings.suspended) {
 							return old.call(this, ...args);
@@ -615,13 +617,14 @@ export default class CustomSortPlugin extends Plugin {
 						//     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
 						let has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
 						if (hasOnlyByBookmarkOrStandardObsidian(has)) {
-							const bookmarksPlugin: BookmarksPluginInterface|undefined = getBookmarksPlugin(plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
+							const bookmarksPlugin: BookmarksPluginInterface|undefined = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
 							if ( !bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
 								sortSpec = null
 							}
 						}
 
 						if (sortSpec) {
+							console.log('2')
 							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting(has));
 						} else {
 							return old.call(this, ...args);
@@ -656,7 +659,7 @@ export default class CustomSortPlugin extends Plugin {
 
 	// Credits go to https://github.com/nothingislost/obsidian-bartender
 	getFileExplorer(): FileExplorerView | undefined {
-		let fileExplorer: FileExplorerView | undefined = app.workspace.getLeavesOfType("file-explorer")?.first()
+		let fileExplorer: FileExplorerView | undefined = this.app.workspace.getLeavesOfType("file-explorer")?.first()
 			?.view as unknown as FileExplorerView;
 		return fileExplorer;
 	}
