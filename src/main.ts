@@ -485,7 +485,7 @@ export default class CustomSortPlugin extends Plugin {
 			this.registerEvent(
 				// "files-menu" event was exposed in 1.4.11
 				// @ts-ignore
-				app.workspace.on("files-menu", (menu: Menu, files: TAbstractFile[], source: string, leaf?: WorkspaceLeaf) => {
+				this.app.workspace.on("files-menu", (menu: Menu, files: TAbstractFile[], source: string, leaf?: WorkspaceLeaf) => {
 					if (!this.settings.customSortContextSubmenu) return;  // Don't show the context menus at all
 
 					const customSortMenuItem = (item?: MenuItem) => {
@@ -599,7 +599,6 @@ export default class CustomSortPlugin extends Plugin {
 			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
 				sort(old: any) {
 					return function (...args: any[]) {
-						console.log('1')
 						// quick check for plugin status
 						if (plugin.settings.suspended) {
 							return old.call(this, ...args);
@@ -624,11 +623,16 @@ export default class CustomSortPlugin extends Plugin {
 						}
 
 						if (sortSpec) {
-							console.log('2')
 							return folderSort.call(this, sortSpec, plugin.createProcessingContextForSorting(has));
 						} else {
 							return old.call(this, ...args);
 						}
+					};
+				},*/
+				getSortedFolderItems(old: any) {
+					return function (...args: any[]) {
+						console.log(`Cuda cuda ${args?.length}`)
+						return old.call(this, ...args);
 					};
 				}
 			})
