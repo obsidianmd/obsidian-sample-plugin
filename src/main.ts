@@ -587,6 +587,32 @@ export default class CustomSortPlugin extends Plugin {
 		return ctx
 	}
 
+	resetIconInaccurateStateToEnabled() {
+		if (this.ribbonIconStateInaccurate && this.ribbonIconEl) {
+			this.ribbonIconStateInaccurate = false
+			setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
+		}
+	}
+
+	determineAndPrepareSortingDataForFolder(folder: TFolder) {
+		let sortSpec: CustomSortSpec | null | undefined = this.determineSortSpecForFolder(folder.path, folder.name)
+
+		// Performance optimization
+		//     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
+		let sortingAndGroupingStats: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
+		if (hasOnlyByBookmarkOrStandardObsidian(sortingAndGroupingStats)) {
+			const bookmarksPlugin: BookmarksPluginInterface | undefined = getBookmarksPlugin(this.app, this.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
+			if (!bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
+				sortSpec = null
+			}
+		}
+
+		return {
+			sortSpec: sortSpec,
+			sortingAndGroupingStats: sortingAndGroupingStats
+		}
+	}
+
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
 	patchFileExplorerFolder(patchableFileExplorer?: FileExplorerView): boolean {
 		let plugin = this;
@@ -604,26 +630,13 @@ export default class CustomSortPlugin extends Plugin {
                                 return old.call(this, ...args);
                             }
 
-                            if (plugin.ribbonIconStateInaccurate && plugin.ribbonIconEl) {
-                                plugin.ribbonIconStateInaccurate = false
-                                setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
-                            }
+                            plugin.resetIconInaccurateStateToEnabled()
 
 							const folder = args[0]
-                            let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
+							const sortingData = plugin.determineAndPrepareSortingDataForFolder(folder)
 
-                            // Performance optimization
-                            //     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
-                            let has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
-                            if (hasOnlyByBookmarkOrStandardObsidian(has)) {
-                                const bookmarksPlugin: BookmarksPluginInterface|undefined = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
-                                if ( !bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
-                                    sortSpec = null
-                                }
-                            }
-
-                            if (sortSpec) {
-                                return getSortedFolderItems_vFrom_1_6_0.call(this, folder, sortSpec, plugin.createProcessingContextForSorting(has))
+                            if (sortingData.sortSpec) {
+                                return getSortedFolderItems_vFrom_1_6_0.call(this, folder, sortingData.sortSpec, plugin.createProcessingContextForSorting(sortingData.sortingAndGroupingStats))
 							} else {
 								return old.call(this, ...args);
 							}
@@ -645,26 +658,13 @@ export default class CustomSortPlugin extends Plugin {
 								return old.call(this, ...args);
 							}
 
-							if (plugin.ribbonIconStateInaccurate && plugin.ribbonIconEl) {
-								plugin.ribbonIconStateInaccurate = false
-								setIcon(plugin.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
-							}
+							plugin.resetIconInaccurateStateToEnabled()
 
 							const folder: TFolder = this.file
-							let sortSpec: CustomSortSpec | null | undefined = plugin.determineSortSpecForFolder(folder.path, folder.name)
+							const sortingData = plugin.determineAndPrepareSortingDataForFolder(folder)
 
-							// Performance optimization
-							//     Primary intention: when the implicit bookmarks integration is enabled, remain on std Obsidian, if no need to involve bookmarks
-							let has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
-							if (hasOnlyByBookmarkOrStandardObsidian(has)) {
-								const bookmarksPlugin: BookmarksPluginInterface | undefined = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference, false, true)
-								if (!bookmarksPlugin?.bookmarksIncludeItemsInFolder(folder.path)) {
-									sortSpec = null
-								}
-							}
-
-							if (sortSpec) {
-								return folderSort_vUpTo_1_6_0.call(this, sortSpec, plugin.createProcessingContextForSorting(has));
+							if (sortingData.sortSpec) {
+								return folderSort_vUpTo_1_6_0.call(this, sortingData.sortSpec, plugin.createProcessingContextForSorting(sortingData.sortingAndGroupingStats));
 							} else {
 								return old.call(this, ...args);
 							}
