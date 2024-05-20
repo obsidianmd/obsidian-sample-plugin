@@ -38,10 +38,12 @@ export default class NyanBar extends Plugin {
 				const completionPercentage = getCheckboxCompletionPercentage(view);
 				el.createEl('h4').textContent = completionPercentage+'%'
 				let div = el.createEl('div')
+				div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
+				div.style.backgroundRepeat = 'repeat-x'
+				div.style.backgroundSize = 'contain'
 				div.style.display = 'flex'
 				div.style.width = '750px'
-				div.style.height = '47px'
-				div.style.borderRadius = '5px'
+				div.style.height = '42px'
 				let rainbowCont = div.createEl('div')
 				rainbowCont.style.marginTop = '2px'
 				rainbowCont.style.height = '32px'
@@ -64,9 +66,12 @@ export default class NyanBar extends Plugin {
                 if (source.trim() === '0') {
 					el.createEl('h4').textContent = '0%'
 					let div = el.createEl('div')
-					div.style.backgroundImage = ''
+					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
+					div.style.backgroundRepeat = 'repeat-x'
+					div.style.backgroundSize = 'contain'
 					div.style.display = 'flex'
-					div.style.borderRadius = '5px'
+					div.style.width = '750px'
+					div.style.height = '42px'
 					let nyancat = div.createEl('img')
 					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
 					nyancat.style.height = '50px'
@@ -79,10 +84,12 @@ export default class NyanBar extends Plugin {
                 if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
                     el.createEl('h4').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
 					let div = el.createEl('div')
+					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
+					div.style.backgroundRepeat = 'repeat-x'
+					div.style.backgroundSize = 'contain'
 					div.style.display = 'flex'
 					div.style.width = '750px'
-					div.style.height = '47px'
-					div.style.borderRadius = '5px'
+					div.style.height = '42px'
 					let rainbowCont = div.createEl('div')
 					rainbowCont.style.marginTop = '2px'
 					rainbowCont.style.height = '32px'
@@ -102,7 +109,19 @@ export default class NyanBar extends Plugin {
 						nyancat.style.transform = 'translateX(-48px) translateY(-5px)'
 					}
                 } else {
-					el.createEl('p').textContent = source
+					let div = el.createDiv()
+					div.style.display = 'block'
+					let e = div.createEl('h4')
+					e.style.color = '#ff144f'
+					e.textContent = '[ERROR: Invalid Value]'
+					e.style.margin = '0'
+					e.style.padding = '0'
+					let e1 = div.createEl('p')
+					e1.style.fontSize = '9px'
+					e1.style.color = '#717171'
+					e1.textContent = 'NYANBAR-ERROR'
+					e1.style.margin = '0'
+					e1.style.padding = '0'
 				}
             }
         });
