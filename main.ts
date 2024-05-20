@@ -42,13 +42,13 @@ export default class NyanBar extends Plugin {
 				div.style.backgroundRepeat = 'repeat-x'
 				div.style.backgroundSize = 'contain'
 				div.style.display = 'flex'
-				div.style.width = '750px'
+				div.style.width = '730px'
 				div.style.height = '42px'
 				let rainbowCont = div.createEl('div')
 				rainbowCont.style.marginTop = '2px'
-				rainbowCont.style.height = '32px'
+				rainbowCont.style.height = '35px'
 				rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
-				rainbowCont.style.backgroundSize = '97% 100%' // Ajuste del tamaño del fondo
+				rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 				rainbowCont.style.zIndex = '1'
 				let nyancat = div.createEl('img')
@@ -60,7 +60,7 @@ export default class NyanBar extends Plugin {
 				if(completionPercentage < 5) {
 					nyancat.style.transform = 'translateX(-10px) translateY(-5px)'
 				} else {
-					nyancat.style.transform = 'translateX(-48px) translateY(-5px)'
+					nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
 				}
 			} else {
                 if (source.trim() === '0') {
@@ -70,7 +70,7 @@ export default class NyanBar extends Plugin {
 					div.style.backgroundRepeat = 'repeat-x'
 					div.style.backgroundSize = 'contain'
 					div.style.display = 'flex'
-					div.style.width = '750px'
+					div.style.width = '730px'
 					div.style.height = '42px'
 					let nyancat = div.createEl('img')
 					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
@@ -88,13 +88,13 @@ export default class NyanBar extends Plugin {
 					div.style.backgroundRepeat = 'repeat-x'
 					div.style.backgroundSize = 'contain'
 					div.style.display = 'flex'
-					div.style.width = '750px'
+					div.style.width = '730px'
 					div.style.height = '42px'
 					let rainbowCont = div.createEl('div')
 					rainbowCont.style.marginTop = '2px'
-					rainbowCont.style.height = '32px'
+					rainbowCont.style.height = '35px'
 					rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
-					rainbowCont.style.backgroundSize = '97% 100%' // Ajuste del tamaño del fondo
+					rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 					rainbowCont.style.zIndex = '1'
 					let nyancat = div.createEl('img')
@@ -106,7 +106,104 @@ export default class NyanBar extends Plugin {
 					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
 						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
 					} else {
-						nyancat.style.transform = 'translateX(-48px) translateY(-5px)'
+						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+					}
+                } else {
+					let div = el.createDiv()
+					div.style.display = 'block'
+					let e = div.createEl('h4')
+					e.style.color = '#ff144f'
+					e.textContent = '[ERROR: Invalid Value]'
+					e.style.margin = '0'
+					e.style.padding = '0'
+					let e1 = div.createEl('p')
+					e1.style.fontSize = '9px'
+					e1.style.color = '#717171'
+					e1.textContent = 'NYANBAR-ERROR'
+					e1.style.margin = '0'
+					e1.style.padding = '0'
+				}
+            }
+        });
+
+		this.registerMarkdownCodeBlockProcessor('pusheenbar', async (source, el) => {
+            const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+            if (!markdownView) return;
+            const view = markdownView;
+            if (source.trim() === 'auto') {
+				// Calculate completion percentage based on checkboxes
+				const completionPercentage = getCheckboxCompletionPercentage(view);
+				el.createEl('h4').textContent = completionPercentage+'%'
+				let div = el.createEl('div')
+				div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
+				div.style.backgroundRepeat = 'repeat-x'
+				div.style.backgroundSize = 'contain'
+				div.style.display = 'flex'
+				div.style.width = '730px'
+				div.style.height = '42px'
+				let rainbowCont = div.createEl('div')
+				rainbowCont.style.marginTop = '2px'
+				rainbowCont.style.height = '35px'
+				rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
+				rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
+				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
+				rainbowCont.style.zIndex = '1'
+				let pusheencat = div.createEl('img')
+				pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
+				pusheencat.style.height = '50px'
+				pusheencat.style.marginTop = '2px'
+				pusheencat.style.width = 'auto'
+				pusheencat.style.zIndex = '2'
+				if(completionPercentage < 5) {
+					pusheencat.style.transform = 'translateX(-10px) translateY(-5px)'
+				} else {
+					pusheencat.style.transform = 'translateX(-15px) translateY(-5px)'
+				}
+			} else {
+                if (source.trim() === '0') {
+					el.createEl('h4').textContent = '0%'
+					let div = el.createEl('div')
+					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
+					div.style.backgroundRepeat = 'repeat-x'
+					div.style.backgroundSize = 'contain'
+					div.style.display = 'flex'
+					div.style.width = '730px'
+					div.style.height = '42px'
+					let nyancat = div.createEl('img')
+					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+					nyancat.style.height = '50px'
+					nyancat.style.marginTop = '2px'
+					nyancat.style.width = 'auto'
+					nyancat.style.zIndex = '2'
+					nyancat.style.transform = 'translateX(-10px) translateY(-5px)'
+                    return;
+                }
+                if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
+                    el.createEl('h4').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
+					let div = el.createEl('div')
+					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
+					div.style.backgroundRepeat = 'repeat-x'
+					div.style.backgroundSize = 'contain'
+					div.style.display = 'flex'
+					div.style.width = '730px'
+					div.style.height = '42px'
+					let rainbowCont = div.createEl('div')
+					rainbowCont.style.marginTop = '2px'
+					rainbowCont.style.height = '35px'
+					rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
+					rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
+					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
+					rainbowCont.style.zIndex = '1'
+					let nyancat = div.createEl('img')
+					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+					nyancat.style.height = '50px'
+					nyancat.style.marginTop = '2px'
+					nyancat.style.width = 'auto'
+					nyancat.style.zIndex = '2'
+					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
+						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+					} else {
+						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
 					}
                 } else {
 					let div = el.createDiv()
