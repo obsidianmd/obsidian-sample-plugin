@@ -150,14 +150,14 @@ export default class NyanBar extends Plugin {
 				rainbowCont.style.zIndex = '1'
 				let pusheencat = div.createEl('img')
 				pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
-				pusheencat.style.height = '50px'
+				pusheencat.style.height = '55px'
 				pusheencat.style.marginTop = '2px'
 				pusheencat.style.width = 'auto'
 				pusheencat.style.zIndex = '2'
 				if(completionPercentage < 5) {
-					pusheencat.style.transform = 'translateX(-10px) translateY(-5px)'
+					pusheencat.style.transform = 'translateX(-20px) translateY(-12px)'
 				} else {
-					pusheencat.style.transform = 'translateX(-15px) translateY(-5px)'
+					pusheencat.style.transform = 'translateX(-26px) translateY(-12px)'
 				}
 			} else {
                 if (source.trim() === '0') {
@@ -169,13 +169,13 @@ export default class NyanBar extends Plugin {
 					div.style.display = 'flex'
 					div.style.width = '730px'
 					div.style.height = '42px'
-					let nyancat = div.createEl('img')
-					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
-					nyancat.style.height = '50px'
-					nyancat.style.marginTop = '2px'
-					nyancat.style.width = 'auto'
-					nyancat.style.zIndex = '2'
-					nyancat.style.transform = 'translateX(-10px) translateY(-5px)'
+					let pusheencat = div.createEl('img')
+					pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
+					pusheencat.style.height = '55px'
+					pusheencat.style.marginTop = '2px'
+					pusheencat.style.width = 'auto'
+					pusheencat.style.zIndex = '2'
+					pusheencat.style.transform = 'translateX(-17px) translateY(-12px)'
                     return;
                 }
                 if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
@@ -190,20 +190,20 @@ export default class NyanBar extends Plugin {
 					let rainbowCont = div.createEl('div')
 					rainbowCont.style.marginTop = '2px'
 					rainbowCont.style.height = '35px'
-					rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
+					rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheenbow.gif')"
 					rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 					rainbowCont.style.zIndex = '1'
-					let nyancat = div.createEl('img')
-					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
-					nyancat.style.height = '50px'
-					nyancat.style.marginTop = '2px'
-					nyancat.style.width = 'auto'
-					nyancat.style.zIndex = '2'
-					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
-						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+					let pusheencat = div.createEl('img')
+					pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
+					pusheencat.style.height = '55px'
+					pusheencat.style.marginTop = '2px'
+					pusheencat.style.width = 'auto'
+					pusheencat.style.zIndex = '2'
+					if(Math.min(100, Math.max(0, Number(source.trim()))) < 5) {
+						pusheencat.style.transform = 'translateX(-20px) translateY(-12px)'
 					} else {
-						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+						pusheencat.style.transform = 'translateX(-26px) translateY(-12px)'
 					}
                 } else {
 					let div = el.createDiv()
@@ -232,9 +232,16 @@ export default class NyanBar extends Plugin {
         this.addCommand({
             id: 'add-nyanbar',
             name: 'Add NyanBar',
-            hotkeys: [{ modifiers: ['Mod', 'Shift'], key: 'b' }],
             editorCallback: (editor: Editor) => {
                 editor.setLine(editor.getCursor().line, '```nyanbar\nauto\n```');
+            },
+        });
+
+		this.addCommand({
+            id: 'add-pusheenbar',
+            name: 'Add PusheenBar',
+            editorCallback: (editor: Editor) => {
+                editor.setLine(editor.getCursor().line, '```pusheenbar\nauto\n```');
             },
         });
 
@@ -293,7 +300,7 @@ class SettingTab extends PluginSettingTab {
 
 			containerEl.createEl('img').src = 'https://github.com/xhyabunny/obsidian-sample-plugin/assets/106491722/262b2c04-c5bc-44a3-86d0-26967b9b4660'
 			
-			containerEl.createEl('h6').textContent = `Run "/add-nyanbar" then place a number from "0" to "100" or do "auto" for automatic progress according to the note's checked checkboxes.`;
+			containerEl.createEl('h6').textContent = `Run "/add-nyanbar" or "/add-pusheenbar" then place a number from "0" to "100" or do "auto" for automatic progress according to the note's checked checkboxes.`;
 			let e = containerEl.createEl('p')
 			e.style.color = '#FF1445'
 			e.textContent = 'WARNING: The progress bar update is WIP, switch between notes to update progress bar for now, if you know about obsidian API and want to help us finish the development of this Tool, please message @bonndubz on discord.'
