@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "nyanbar",
 	"version": "1.0.0",
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
