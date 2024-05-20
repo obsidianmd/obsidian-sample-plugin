@@ -144,7 +144,7 @@ export default class NyanBar extends Plugin {
 				let rainbowCont = div.createEl('div')
 				rainbowCont.style.marginTop = '2px'
 				rainbowCont.style.height = '35px'
-				rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
+				rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheenbow.gif')"
 				rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 				rainbowCont.style.zIndex = '1'
