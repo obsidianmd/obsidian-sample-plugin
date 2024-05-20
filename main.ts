@@ -126,7 +126,7 @@ class SettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('NyanBar')
-            .setDesc('Track your progress with NyanBar.');
+            .setDesc('Track your progress with NyanBar!');
 
 			containerEl.createEl('h6').textContent = `Run "/add-nyanbar" then place a number from "0" to "100" or do "auto" for automatic progress according to the note's checked checkboxes.`;
 			let e = containerEl.createEl('p')
