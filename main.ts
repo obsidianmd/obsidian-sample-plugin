@@ -24,14 +24,10 @@ export default class NyanBar extends Plugin {
             this.app.workspace.on('file-open', (file) => {
                 const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
                 if (activeView) {
-                    this.setupCheckboxListeners(activeView);
+                    // this.setupCheckboxListeners(activeView);
                 }
             })
         );
-
-		setInterval(()=>{
-			this.app.workspace.activeEditor?.editor?.refresh()
-		},200)
 
         this.registerMarkdownCodeBlockProcessor('nyanbar', async (source, el) => {
             const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -40,22 +36,71 @@ export default class NyanBar extends Plugin {
             if (source.trim() === 'auto') {
 				// Calculate completion percentage based on checkboxes
 				const completionPercentage = getCheckboxCompletionPercentage(view);
+				el.createEl('h4').textContent = completionPercentage+'%'
 				let div = el.createEl('div')
 				div.style.display = 'flex'
 				div.style.width = '750px'
-				div.style.height = '70px'
+				div.style.height = '47px'
+				div.style.borderRadius = '5px'
 				let rainbowCont = div.createEl('div')
-				rainbowCont.style.backgroundColor = 'red'
-				rainbowCont.style.backgroundImage = "url('./src/nyanbow.gif')"
-				rainbowCont.style.backgroundSize = completionPercentage + '% 100%' // Ajuste del tamaño del fondo
-				rainbowCont.style.width = '100%' // Asegurarse de que el contenedor ocupe todo el espacio
+				rainbowCont.style.marginTop = '2px'
+				rainbowCont.style.height = '32px'
+				rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
+				rainbowCont.style.backgroundSize = '97% 100%' // Ajuste del tamaño del fondo
+				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
+				rainbowCont.style.zIndex = '1'
+				let nyancat = div.createEl('img')
+				nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+				nyancat.style.height = '50px'
+				nyancat.style.marginTop = '2px'
+				nyancat.style.width = 'auto'
+				nyancat.style.zIndex = '2'
+				if(completionPercentage < 5) {
+					nyancat.style.transform = 'translateX(-10px) translateY(-5px)'
+				} else {
+					nyancat.style.transform = 'translateX(-48px) translateY(-5px)'
+				}
 			} else {
                 if (source.trim() === '0') {
-                    el.createEl('p').textContent = '0%';
+					el.createEl('h4').textContent = '0%'
+					let div = el.createEl('div')
+					div.style.backgroundImage = ''
+					div.style.display = 'flex'
+					div.style.borderRadius = '5px'
+					let nyancat = div.createEl('img')
+					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+					nyancat.style.height = '50px'
+					nyancat.style.marginTop = '2px'
+					nyancat.style.width = 'auto'
+					nyancat.style.zIndex = '2'
+					nyancat.style.transform = 'translateX(-10px) translateY(-5px)'
                     return;
                 }
                 if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
-                    el.createEl('p').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
+                    el.createEl('h4').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
+					let div = el.createEl('div')
+					div.style.display = 'flex'
+					div.style.width = '750px'
+					div.style.height = '47px'
+					div.style.borderRadius = '5px'
+					let rainbowCont = div.createEl('div')
+					rainbowCont.style.marginTop = '2px'
+					rainbowCont.style.height = '32px'
+					rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
+					rainbowCont.style.backgroundSize = '97% 100%' // Ajuste del tamaño del fondo
+					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
+					rainbowCont.style.zIndex = '1'
+					let nyancat = div.createEl('img')
+					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+					nyancat.style.height = '50px'
+					nyancat.style.marginTop = '2px'
+					nyancat.style.width = 'auto'
+					nyancat.style.zIndex = '2'
+					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
+						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+					} else {
+						nyancat.style.transform = 'translateX(-48px) translateY(-5px)'
+					}
                 } else {
 					el.createEl('p').textContent = source
 				}
@@ -81,7 +126,8 @@ export default class NyanBar extends Plugin {
         this.addSettingTab(new SettingTab(this.app, this));
     }
 
-    setupCheckboxListeners(view: MarkdownView) {
+    /*
+	setupCheckboxListeners(view: MarkdownView) {
         const checkboxes = view.contentEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
         checkboxes.forEach((checkbox) => {
             checkbox.addEventListener('change', () => {
@@ -109,6 +155,7 @@ export default class NyanBar extends Plugin {
             });
         });
     }
+	*/
 }
 
 class SettingTab extends PluginSettingTab {
@@ -128,6 +175,8 @@ class SettingTab extends PluginSettingTab {
             .setName('NyanBar')
             .setDesc('Track your progress with NyanBar!');
 
+			containerEl.createEl('img').src = 'https://github.com/xhyabunny/obsidian-sample-plugin/assets/106491722/262b2c04-c5bc-44a3-86d0-26967b9b4660'
+			
 			containerEl.createEl('h6').textContent = `Run "/add-nyanbar" then place a number from "0" to "100" or do "auto" for automatic progress according to the note's checked checkboxes.`;
 			let e = containerEl.createEl('p')
 			e.style.color = '#FF1445'
