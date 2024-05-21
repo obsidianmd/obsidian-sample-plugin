@@ -10,3 +10,5 @@ Bring life to your task progress with Nyan Cat progress bar !
 
 > [!WARNING]
 > The progress bar update is WIP, switch between notes to update progress bar for now, if you know about obsidian API and want to help us finish the development of this Tool, please message @bonndubz on discord. 
+
+## Tested By [@yosywozzy](https://github.com/yosywozzy) <img src="https://avatars.githubusercontent.com/u/169003340?v=4" width='30px' height='30px'/>
