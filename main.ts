@@ -207,7 +207,7 @@ class SettingTab extends PluginSettingTab {
 			
 			containerEl.createEl('h6').textContent = `Run "/add-nyanbar" or "/add-pusheenbar" then place a number from "0" to "100" or do "auto" for automatic progress according to the note's checked checkboxes.`;
 			let e = containerEl.createEl('p')
-			e.style.color = '#FF1445'
+			e.addClass('err')
 			e.textContent = 'WARNING: The progress bar update is WIP, switch between notes to update progress bar for now, if you know about obsidian API and want to help us finish the development of this Tool, please message @bonndubz on discord.'
 
 		}

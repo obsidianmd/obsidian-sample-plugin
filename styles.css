@@ -69,3 +69,7 @@
     margin: 0;
     padding: 0;
 }
+
+.err {
+    color: #FF1445
+}
