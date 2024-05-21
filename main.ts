@@ -184,37 +184,6 @@ export default class NyanBar extends Plugin {
         // This adds a settings tab so the user can configure various aspects of the plugin
         this.addSettingTab(new SettingTab(this.app, this));
     }
-
-    /*
-	setupCheckboxListeners(view: MarkdownView) {
-        const checkboxes = view.contentEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
-        checkboxes.forEach((checkbox) => {
-            checkbox.addEventListener('change', () => {
-				this.registerMarkdownCodeBlockProcessor('nyanbar', async (source, el) => {
-					const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-					if (!markdownView) return;
-					const view = markdownView;
-					if (source.trim() === 'auto') {
-						// Calculate completion percentage based on checkboxes
-						const completionPercentage = getCheckboxCompletionPercentage(view);
-						el.createEl('p').textContent = completionPercentage + '%';
-					} else {
-						if (source.trim() === '0') {
-							el.createEl('p').textContent = '0%';
-							return;
-						}
-						if (parseInt(source) && parseInt(source) <= 100 && parseInt(source) >= 0) {
-							el.createEl('p').textContent = Math.min(100, Math.max(0, Number(source))) + '%';
-						} else {
-							el.createEl('p').textContent = source
-						}
-					}
-				});
-                this.app.workspace.trigger('markdown:reprocess', view);
-            });
-        });
-    }
-	*/
 }
 
 class SettingTab extends PluginSettingTab {
