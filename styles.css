@@ -1,0 +1,71 @@
+.divCont {
+    background-image: url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif');
+    background-repeat: repeat-x;
+    background-size: contain;
+    display: flex;
+    width: 730px;
+    height: 42px;
+}
+
+.rainbowNyan {
+    margin-top: 2px;
+    height: 35px;
+    background-image: url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif');
+    background-size: 99% 100%;
+    z-index: 1;
+}
+
+.rainbowPusheen {
+    margin-top: 2px;
+    height: 35px;
+    background-image: url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheenbow.gif');
+    background-size: 99% 100%;
+    z-index: 1;
+}
+
+.imgNyan {
+    height: 50px;
+    margin-top: 2px;
+    width: auto;
+    z-index: 2;
+}
+
+.imgPusheen {
+    height: 55px;
+    margin-top: 2px;
+    width: auto;
+    z-index: 2;
+}
+
+.nyanTransform1 {
+    transform: translateX(-10px) translateY(-5px)
+}
+
+.nyanTransform2 {
+    transform: translateX(-15px) translateY(-5px)
+}
+
+.pusheenTransform1 {
+    transform: translateX(-20px) translateY(-12px)
+}
+
+.pusheenTransform2 {
+    transform: translateX(-26px) translateY(-12px)
+}
+
+.pusheenTransform3 {
+    transform: translateX(-17px) translateY(-12px)
+}
+
+.e {
+    color: #ff144f;
+    margin: 0;
+    padding: 0;
+}
+
+.e1 {
+    font-size: 9px;
+    color: #717171;
+    margin: 0;
+    padding: 0;
+}

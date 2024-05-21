@@ -38,90 +38,55 @@ export default class NyanBar extends Plugin {
 				const completionPercentage = getCheckboxCompletionPercentage(view);
 				el.createEl('h4').textContent = completionPercentage+'%'
 				let div = el.createEl('div')
-				div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
-				div.style.backgroundRepeat = 'repeat-x'
-				div.style.backgroundSize = 'contain'
-				div.style.display = 'flex'
-				div.style.width = '730px'
-				div.style.height = '42px'
+				div.addClass('divCont')
 				let rainbowCont = div.createEl('div')
-				rainbowCont.style.marginTop = '2px'
-				rainbowCont.style.height = '35px'
-				rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
-				rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
+				rainbowCont.addClass('rainbowNyan')
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-				rainbowCont.style.zIndex = '1'
 				let nyancat = div.createEl('img')
+				nyancat.addClass('imgNyan')
 				nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
-				nyancat.style.height = '50px'
-				nyancat.style.marginTop = '2px'
-				nyancat.style.width = 'auto'
-				nyancat.style.zIndex = '2'
 				if(completionPercentage < 5) {
-					nyancat.style.transform = 'translateX(-10px) translateY(-5px)'
+					nyancat.addClass('nyanTransform1')
+					nyancat.removeClass('nyanTransform2')
 				} else {
-					nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+					nyancat.addClass('nyanTransform2')
+					nyancat.removeClass('nyanTransform1')
 				}
 			} else {
                 if (source.trim() === '0') {
 					el.createEl('h4').textContent = '0%'
 					let div = el.createEl('div')
-					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
-					div.style.backgroundRepeat = 'repeat-x'
-					div.style.backgroundSize = 'contain'
-					div.style.display = 'flex'
-					div.style.width = '730px'
-					div.style.height = '42px'
+					div.addClass('divCont')
 					let nyancat = div.createEl('img')
 					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
-					nyancat.style.height = '50px'
-					nyancat.style.marginTop = '2px'
-					nyancat.style.width = 'auto'
-					nyancat.style.zIndex = '2'
-					nyancat.style.transform = 'translateX(-10px) translateY(-5px)'
+					nyancat.addClasses(['imgNyan','nyanTransform1'])
                     return;
                 }
                 if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
                     el.createEl('h4').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
 					let div = el.createEl('div')
-					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
-					div.style.backgroundRepeat = 'repeat-x'
-					div.style.backgroundSize = 'contain'
-					div.style.display = 'flex'
-					div.style.width = '730px'
-					div.style.height = '42px'
+					div.addClass('divCont')
 					let rainbowCont = div.createEl('div')
-					rainbowCont.style.marginTop = '2px'
-					rainbowCont.style.height = '35px'
-					rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif')"
-					rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
+					rainbowCont.addClass('rainbowNyan')
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-					rainbowCont.style.zIndex = '1'
 					let nyancat = div.createEl('img')
 					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
-					nyancat.style.height = '50px'
-					nyancat.style.marginTop = '2px'
-					nyancat.style.width = 'auto'
-					nyancat.style.zIndex = '2'
+					nyancat.addClass('imgNyan')
 					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
-						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+						nyancat.addClass('nyanTransform1')
+						nyancat.removeClass('nyanTransform2')
 					} else {
-						nyancat.style.transform = 'translateX(-15px) translateY(-5px)'
+						nyancat.addClass('nyanTransform2')
+						nyancat.removeClass('nyanTransform1')
 					}
                 } else {
 					let div = el.createDiv()
-					div.style.display = 'block'
 					let e = div.createEl('h4')
-					e.style.color = '#ff144f'
+					e.addClass('e')
 					e.textContent = '[ERROR: Invalid Value]'
-					e.style.margin = '0'
-					e.style.padding = '0'
 					let e1 = div.createEl('p')
-					e1.style.fontSize = '9px'
-					e1.style.color = '#717171'
+					e1.addClass('e1')
 					e1.textContent = 'NYANBAR-ERROR'
-					e1.style.margin = '0'
-					e1.style.padding = '0'
 				}
             }
         });
@@ -135,90 +100,61 @@ export default class NyanBar extends Plugin {
 				const completionPercentage = getCheckboxCompletionPercentage(view);
 				el.createEl('h4').textContent = completionPercentage+'%'
 				let div = el.createEl('div')
-				div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
-				div.style.backgroundRepeat = 'repeat-x'
-				div.style.backgroundSize = 'contain'
-				div.style.display = 'flex'
-				div.style.width = '730px'
-				div.style.height = '42px'
+				div.addClass('divCont')
 				let rainbowCont = div.createEl('div')
-				rainbowCont.style.marginTop = '2px'
-				rainbowCont.style.height = '35px'
-				rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheenbow.gif')"
-				rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
+				rainbowCont.addClass('rainbowPusheen')
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-				rainbowCont.style.zIndex = '1'
 				let pusheencat = div.createEl('img')
+				pusheencat.addClass('imgPusheen')
 				pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
-				pusheencat.style.height = '55px'
-				pusheencat.style.marginTop = '2px'
-				pusheencat.style.width = 'auto'
-				pusheencat.style.zIndex = '2'
 				if(completionPercentage < 5) {
-					pusheencat.style.transform = 'translateX(-20px) translateY(-12px)'
+					pusheencat.removeClass('pusheenTransform3')
+					pusheencat.removeClass('pusheenTransform2')
+					pusheencat.addClass('pusheenTransform1')
 				} else {
-					pusheencat.style.transform = 'translateX(-26px) translateY(-12px)'
+					pusheencat.removeClass('pusheenTransform3')
+					pusheencat.removeClass('pusheenTransform1')
+					pusheencat.addClass('pusheenTransform2')
 				}
 			} else {
                 if (source.trim() === '0') {
 					el.createEl('h4').textContent = '0%'
 					let div = el.createEl('div')
-					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
-					div.style.backgroundRepeat = 'repeat-x'
-					div.style.backgroundSize = 'contain'
-					div.style.display = 'flex'
-					div.style.width = '730px'
-					div.style.height = '42px'
+					div.addClass('divCont')
 					let pusheencat = div.createEl('img')
 					pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
-					pusheencat.style.height = '55px'
-					pusheencat.style.marginTop = '2px'
-					pusheencat.style.width = 'auto'
-					pusheencat.style.zIndex = '2'
-					pusheencat.style.transform = 'translateX(-17px) translateY(-12px)'
+					pusheencat.addClasses(['imgPusheen', 'pusheenTransform3'])
+					pusheencat.removeClass('pusheenTransform1')
+					pusheencat.removeClass('pusheenTransform2')
                     return;
                 }
                 if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
                     el.createEl('h4').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
 					let div = el.createEl('div')
-					div.style.backgroundImage = 'url(https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif)'
-					div.style.backgroundRepeat = 'repeat-x'
-					div.style.backgroundSize = 'contain'
-					div.style.display = 'flex'
-					div.style.width = '730px'
-					div.style.height = '42px'
+					div.addClass('divCont')
 					let rainbowCont = div.createEl('div')
-					rainbowCont.style.marginTop = '2px'
-					rainbowCont.style.height = '35px'
-					rainbowCont.style.backgroundImage = "url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheenbow.gif')"
-					rainbowCont.style.backgroundSize = '99% 100%' // Ajuste del tamaño del fondo
+					rainbowCont.addClass('rainbowPusheen')
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-					rainbowCont.style.zIndex = '1'
 					let pusheencat = div.createEl('img')
 					pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
-					pusheencat.style.height = '55px'
-					pusheencat.style.marginTop = '2px'
-					pusheencat.style.width = 'auto'
-					pusheencat.style.zIndex = '2'
+					pusheencat.addClass('imgPusheen')
 					if(Math.min(100, Math.max(0, Number(source.trim()))) < 5) {
-						pusheencat.style.transform = 'translateX(-20px) translateY(-12px)'
+						pusheencat.removeClass('pusheenTransform3')
+						pusheencat.removeClass('pusheenTransform2')
+						pusheencat.addClass('pusheenTransform1')
 					} else {
-						pusheencat.style.transform = 'translateX(-26px) translateY(-12px)'
+						pusheencat.removeClass('pusheenTransform3')
+						pusheencat.removeClass('pusheenTransform1')
+						pusheencat.addClass('pusheenTransform2')
 					}
                 } else {
 					let div = el.createDiv()
-					div.style.display = 'block'
 					let e = div.createEl('h4')
-					e.style.color = '#ff144f'
+					e.addClass('e')
 					e.textContent = '[ERROR: Invalid Value]'
-					e.style.margin = '0'
-					e.style.padding = '0'
 					let e1 = div.createEl('p')
-					e1.style.fontSize = '9px'
-					e1.style.color = '#717171'
+					e1.addClass('e1')
 					e1.textContent = 'NYANBAR-ERROR'
-					e1.style.margin = '0'
-					e1.style.padding = '0'
 				}
             }
         });
