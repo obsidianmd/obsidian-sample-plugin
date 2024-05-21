@@ -166,16 +166,16 @@ export default class NyanBar extends Plugin {
 
         // This adds a simple command that can be triggered anywhere
         this.addCommand({
-            id: 'add-nyanbar',
-            name: 'Add NyanBar',
+            id: 'nyan',
+            name: 'Add a Nyan Cat Bar',
             editorCallback: (editor: Editor) => {
                 editor.setLine(editor.getCursor().line, '```nyanbar\nauto\n```');
             },
         });
 
 		this.addCommand({
-            id: 'add-pusheenbar',
-            name: 'Add PusheenBar',
+            id: 'pusheen',
+            name: 'Add a Pusheen Cat Bar',
             editorCallback: (editor: Editor) => {
                 editor.setLine(editor.getCursor().line, '```pusheenbar\nauto\n```');
             },
