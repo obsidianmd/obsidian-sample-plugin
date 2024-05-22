@@ -44,7 +44,7 @@ export default class NyanBar extends Plugin {
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 				let nyancat = div.createEl('img')
 				nyancat.addClass('imgNyan')
-				nyancat.src = './src/nyan-cat.gif'
+				nyancat.src = './nyan-cat.gif'
 				if(completionPercentage < 5) {
 					nyancat.addClass('nyanTransform1')
 					nyancat.removeClass('nyanTransform2')
@@ -58,7 +58,7 @@ export default class NyanBar extends Plugin {
 					let div = el.createEl('div')
 					div.addClass('divCont')
 					let nyancat = div.createEl('img')
-					nyancat.src = './src/nyan-cat.gif'
+					nyancat.src = './nyan-cat.gif'
 					nyancat.addClasses(['imgNyan','nyanTransform1'])
                     return;
                 }
@@ -70,7 +70,7 @@ export default class NyanBar extends Plugin {
 					rainbowCont.addClass('rainbowNyan')
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 					let nyancat = div.createEl('img')
-					nyancat.src = './src/nyan-cat.gif'
+					nyancat.src = './nyan-cat.gif'
 					nyancat.addClass('imgNyan')
 					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
 						nyancat.addClass('nyanTransform1')
@@ -106,7 +106,7 @@ export default class NyanBar extends Plugin {
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 				let pusheencat = div.createEl('img')
 				pusheencat.addClass('imgPusheen')
-				pusheencat.src = './src/pusheen-cat.gif'
+				pusheencat.src = './pusheen-cat.gif'
 				if(completionPercentage < 5) {
 					pusheencat.removeClass('pusheenTransform3')
 					pusheencat.removeClass('pusheenTransform2')
@@ -122,7 +122,7 @@ export default class NyanBar extends Plugin {
 					let div = el.createEl('div')
 					div.addClass('divCont')
 					let pusheencat = div.createEl('img')
-					pusheencat.src = './src/pusheen-cat.gif'
+					pusheencat.src = './pusheen-cat.gif'
 					pusheencat.addClasses(['imgPusheen', 'pusheenTransform3'])
 					pusheencat.removeClass('pusheenTransform1')
 					pusheencat.removeClass('pusheenTransform2')
@@ -136,7 +136,7 @@ export default class NyanBar extends Plugin {
 					rainbowCont.addClass('rainbowPusheen')
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 					let pusheencat = div.createEl('img')
-					pusheencat.src = './src/pusheen-cat.gif'
+					pusheencat.src = './pusheen-cat.gif'
 					pusheencat.addClass('imgPusheen')
 					if(Math.min(100, Math.max(0, Number(source.trim()))) < 5) {
 						pusheencat.removeClass('pusheenTransform3')
