@@ -44,7 +44,7 @@ export default class NyanBar extends Plugin {
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 				let nyancat = div.createEl('img')
 				nyancat.addClass('imgNyan')
-				nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+				nyancat.src = './src/nyan-cat.gif'
 				if(completionPercentage < 5) {
 					nyancat.addClass('nyanTransform1')
 					nyancat.removeClass('nyanTransform2')
@@ -58,7 +58,7 @@ export default class NyanBar extends Plugin {
 					let div = el.createEl('div')
 					div.addClass('divCont')
 					let nyancat = div.createEl('img')
-					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+					nyancat.src = './src/nyan-cat.gif'
 					nyancat.addClasses(['imgNyan','nyanTransform1'])
                     return;
                 }
@@ -70,7 +70,7 @@ export default class NyanBar extends Plugin {
 					rainbowCont.addClass('rainbowNyan')
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 					let nyancat = div.createEl('img')
-					nyancat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/nyan-cat.gif'
+					nyancat.src = './src/nyan-cat.gif'
 					nyancat.addClass('imgNyan')
 					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
 						nyancat.addClass('nyanTransform1')
@@ -106,7 +106,7 @@ export default class NyanBar extends Plugin {
 				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 				let pusheencat = div.createEl('img')
 				pusheencat.addClass('imgPusheen')
-				pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
+				pusheencat.src = './src/pusheen-cat.gif'
 				if(completionPercentage < 5) {
 					pusheencat.removeClass('pusheenTransform3')
 					pusheencat.removeClass('pusheenTransform2')
@@ -122,7 +122,7 @@ export default class NyanBar extends Plugin {
 					let div = el.createEl('div')
 					div.addClass('divCont')
 					let pusheencat = div.createEl('img')
-					pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
+					pusheencat.src = './src/pusheen-cat.gif'
 					pusheencat.addClasses(['imgPusheen', 'pusheenTransform3'])
 					pusheencat.removeClass('pusheenTransform1')
 					pusheencat.removeClass('pusheenTransform2')
@@ -136,7 +136,7 @@ export default class NyanBar extends Plugin {
 					rainbowCont.addClass('rainbowPusheen')
 					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
 					let pusheencat = div.createEl('img')
-					pusheencat.src = 'https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheen-cat.gif'
+					pusheencat.src = './src/pusheen-cat.gif'
 					pusheencat.addClass('imgPusheen')
 					if(Math.min(100, Math.max(0, Number(source.trim()))) < 5) {
 						pusheencat.removeClass('pusheenTransform3')
@@ -159,15 +159,10 @@ export default class NyanBar extends Plugin {
             }
         });
 
-        this.addRibbonIcon('cat', 'NyanBar', () => {
-            // Called when the user clicks the icon.
-            new Notice(`${this.manifest.name}\nMade by ${this.manifest.author}\nv${this.manifest.version}`);
-        });
-
         // This adds a simple command that can be triggered anywhere
         this.addCommand({
             id: 'nyan',
-            name: 'Add a Nyan Cat Bar',
+            name: 'Add a nyan cat bar',
             editorCallback: (editor: Editor) => {
                 editor.setLine(editor.getCursor().line, '```nyanbar\nauto\n```');
             },
@@ -175,40 +170,11 @@ export default class NyanBar extends Plugin {
 
 		this.addCommand({
             id: 'pusheen',
-            name: 'Add a Pusheen Cat Bar',
+            name: 'Add a pusheen cat bar',
             editorCallback: (editor: Editor) => {
                 editor.setLine(editor.getCursor().line, '```pusheenbar\nauto\n```');
             },
         });
 
-        // This adds a settings tab so the user can configure various aspects of the plugin
-        this.addSettingTab(new SettingTab(this.app, this));
     }
-}
-
-class SettingTab extends PluginSettingTab {
-    plugin: NyanBar;
-
-    constructor(app: App, plugin: NyanBar) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
-
-    display(): void {
-        const { containerEl } = this;
-
-        containerEl.empty();
-
-        new Setting(containerEl)
-            .setName('NyanBar')
-            .setDesc('Track your progress with NyanBar!');
-
-			containerEl.createEl('img').src = 'https://github.com/xhyabunny/obsidian-sample-plugin/assets/106491722/262b2c04-c5bc-44a3-86d0-26967b9b4660'
-			
-			containerEl.createEl('h6').textContent = `Run "/nyan" or "/pusheen" then place a number from "0" to "100" or do "auto" for automatic progress according to the note's checked checkboxes.`;
-			let e = containerEl.createEl('p')
-			e.addClass('err')
-			e.textContent = 'WARNING: The progress bar update is WIP, switch between notes to update progress bar for now, if you know about obsidian API and want to help us finish the development of this Tool, please message @bonndubz on discord.'
-
-		}
 }

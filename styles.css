@@ -1,5 +1,5 @@
 .divCont {
-    background-image: url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/bg.gif');
+    background-image: url('./src/bg.gif');
     background-repeat: repeat-x;
     background-size: contain;
     display: flex;
@@ -10,7 +10,7 @@
 .rainbowNyan {
     margin-top: 2px;
     height: 35px;
-    background-image: url('https://raw.githubusercontent.com/xhyabunny/nyanbar/1691651e2ca9c07d83d5bca7ebd99ed3ebd076a0/src/nyanbow.gif');
+    background-image: url('./src/nyanbow.gif');
     background-size: 99% 100%;
     z-index: 1;
 }
@@ -18,7 +18,7 @@
 .rainbowPusheen {
     margin-top: 2px;
     height: 35px;
-    background-image: url('https://raw.githubusercontent.com/xhyabunny/nyanbar/master/src/pusheenbow.gif');
+    background-image: url('./src/pusheenbow.gif');
     background-size: 99% 100%;
     z-index: 1;
 }

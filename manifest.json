@@ -3,7 +3,7 @@
 	"name": "NyanBar",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Nyan Cat Progress Bar generator for Obsidian!",
+	"description": "Nyan Cat Progress Bar generator!",
 	"author": "xhyabunny",
 	"authorUrl": "https://xhyabunny.org",
 	"fundingUrl": "https://paypal.me/xhyabunny",
