@@ -103,6 +103,7 @@
 					class:editing={isEditing}
 					bind:this={textAreaEl}
 					on:keypress={handleKeypress}
+					on:blur={handleContentBlur}
 					on:input={onInput}
 					value={task.content.replaceAll("<br />", "\n")}
 				/>

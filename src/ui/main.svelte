@@ -14,6 +14,8 @@
 	import { kebab } from "src/kebab";
 	import SelectUser from "./components/select/select_user.svelte";
 	import SelectTag from "./components/select/select_tag.svelte";
+	import IconButton from "./components/icon_button.svelte";
+	import type { SettingValues } from "./settings/settings";
 
 	export let vault: Vault;
 	export let workspace: Workspace;
@@ -29,6 +31,7 @@
 		],
 	};
 	export let userConfig: string[];
+	export let openSettings: () => Promise<SettingValues>;
 
 	let selectableUsersList: { value: string; label: string }[] | undefined;
 	$: selectableUsersList = userConfig.length
@@ -115,9 +118,16 @@
 		: filteredByUser;
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
+
+	async function handleOpenSettings() {
+		const newSettings = await openSettings();
+	}
 </script>
 
 <div class="main">
+	<div class="settings">
+		<IconButton icon="lucide-settings" on:click={handleOpenSettings} />
+	</div>
 	<div class="controls">
 		{#if userConfig.length}
 			<SelectUser {userConfig} bind:value={selectedUsers} />
@@ -154,6 +164,11 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
+
+		.settings {
+			display: flex;
+			justify-content: flex-end;
+		}
 
 		.controls {
 			margin-bottom: var(--size-4-4);

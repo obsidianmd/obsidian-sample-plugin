@@ -1,6 +1,7 @@
-import { Plugin, WorkspaceLeaf } from "obsidian";
-import { AppView, APP_VIEW_NAME } from "./ui/entry";
+import { MarkdownView, Plugin, TFile, WorkspaceLeaf } from "obsidian";
+import { APP_VIEW_NAME } from "./ui/entry";
 import { SettingTab } from "./settings/settings_tab";
+import { KANBAN_VIEW_NAME, KanbanView } from "./ui/text_view";
 
 export type Settings = {
 	users: string[];
@@ -18,11 +19,16 @@ export default class Base extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 
 		this.registerView(
-			APP_VIEW_NAME,
-			(leaf) => new AppView(leaf, this.settings)
+			KANBAN_VIEW_NAME,
+			(leaf) => new KanbanView(leaf, this.settings)
 		);
-		this.addRibbonIcon("kanban-square", "Open Kanban", () =>
-			this.activateView()
+
+		this.switchToKanbanAfterLoad();
+
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", () => {
+				this.switchToKanbanAfterLoad();
+			})
 		);
 	}
 
@@ -60,5 +66,37 @@ export default class Base extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	private switchToKanbanAfterLoad() {
+		this.app.workspace.onLayoutReady(() => {
+			let leaf: WorkspaceLeaf;
+			for (leaf of this.app.workspace.getLeavesOfType("markdown")) {
+				if (
+					leaf.view instanceof MarkdownView &&
+					this.isKanbanFile(leaf.view.file)
+				) {
+					this.setKanbanView(leaf);
+				}
+			}
+		});
+	}
+
+	private isKanbanFile(file: TFile | null): boolean {
+		if (!file) {
+			return false;
+		}
+
+		const fileCache = this.app.metadataCache.getFileCache(file);
+		return (
+			!!fileCache?.frontmatter && !!fileCache.frontmatter["kanban_plugin"]
+		);
+	}
+
+	private async setKanbanView(leaf: WorkspaceLeaf) {
+		await leaf.setViewState({
+			type: KANBAN_VIEW_NAME,
+			state: leaf.view.getState(),
+		});
 	}
 }

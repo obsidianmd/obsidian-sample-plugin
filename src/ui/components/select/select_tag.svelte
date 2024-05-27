@@ -5,8 +5,10 @@
 	export let value: string[];
 </script>
 
-<BaseSelect
-	items={tags.map((tag) => ({ label: tag, value: tag }))}
-	bind:value
-	label="Filter by tab"
-/>
+{#if tags.length}
+	<BaseSelect
+		items={tags.map((tag) => ({ label: tag, value: tag }))}
+		bind:value
+		label="Filter by tag"
+	/>
+{/if}
