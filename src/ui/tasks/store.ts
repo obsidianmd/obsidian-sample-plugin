@@ -1,7 +1,7 @@
 import { TFile, Vault, type EventRef, Workspace } from "obsidian";
 import { updateMapsFromFile, type Metadata } from "./tasks";
 import { Task } from "./task";
-import { writable, type Writable } from "svelte/store";
+import { writable, type Readable, type Writable } from "svelte/store";
 import type { ColumnTagTable } from "../columns/columns";
 import { createTaskActions, type TaskActions } from "./actions";
 
@@ -9,8 +9,12 @@ export function createTasksStore(
 	vault: Vault,
 	workspace: Workspace,
 	registerEvent: (eventRef: EventRef) => void,
-	columnTagTableStore: Writable<ColumnTagTable>
-): { tasksStore: Writable<Task[]>; taskActions: TaskActions } {
+	columnTagTableStore: Readable<ColumnTagTable>
+): {
+	tasksStore: Writable<Task[]>;
+	taskActions: TaskActions;
+	initialise: () => void;
+} {
 	const tasksStore = writable<Task[]>([]);
 	let timer: number | undefined;
 
@@ -54,8 +58,6 @@ export function createTasksStore(
 			});
 		}
 	}
-
-	initialise();
 
 	registerEvent(
 		vault.on("modify", (fileHandle) => {
@@ -121,5 +123,5 @@ export function createTasksStore(
 		workspace,
 	});
 
-	return { tasksStore, taskActions };
+	return { tasksStore, taskActions, initialise };
 }

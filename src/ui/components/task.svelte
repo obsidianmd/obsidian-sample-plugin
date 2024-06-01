@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { Tasks } from "obsidian";
+	import type { ColumnTagTable } from "../columns/columns";
 	import { isDraggingStore } from "../dnd/store";
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
 	import TaskMenu from "./task_menu.svelte";
 	import { Converter } from "showdown";
+	import type { Readable } from "svelte/store";
 
 	export let task: Task;
 	export let taskActions: TaskActions;
+	export let columnTagTableStore: Readable<ColumnTagTable>;
 
 	const mdConverted = new Converter({
 		simplifiedAutoLink: true,
@@ -119,13 +121,10 @@
 				</div>
 			{/if}
 		</div>
-		<TaskMenu {task} {taskActions} />
+		<TaskMenu {task} {taskActions} {columnTagTableStore} />
 	</div>
 	<div class="task-footer">
 		<p>{task.path}</p>
-		{#if task.owner}
-			<p>#{task.owner}</p>
-		{/if}
 	</div>
 </div>
 

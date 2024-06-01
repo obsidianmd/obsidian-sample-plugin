@@ -1,8 +1,6 @@
 import sha256 from "crypto-js/sha256";
 import type { Brand } from "src/brand";
 import type { ColumnTag, ColumnTagTable } from "../columns/columns";
-import { get } from "svelte/store";
-import { userStore } from "../users/users";
 
 export class Task {
 	constructor(
@@ -21,20 +19,10 @@ export class Task {
 		this._done = status === "x";
 		this._path = fileHandle.path;
 
-		const users = get(userStore);
-
 		for (const tag of this.tags) {
 			if (tag in columnTagTable || tag === "done") {
 				if (!this._column) {
 					this._column = tag as ColumnTag;
-				}
-				this.tags.delete(tag);
-				this.content = this.content.replaceAll(`#${tag}`, "").trim();
-			}
-
-			if (tag in users) {
-				if (!this._owner) {
-					this._owner = tag;
 				}
 				this.tags.delete(tag);
 				this.content = this.content.replaceAll(`#${tag}`, "").trim();
@@ -80,14 +68,6 @@ export class Task {
 
 	readonly tags: Set<string>;
 
-	private _owner: string | undefined;
-	get owner(): string | undefined {
-		return this._owner;
-	}
-	set owner(column: string) {
-		this._owner = column;
-	}
-
 	serialise(): string {
 		if (this._deleted) {
 			return "";
@@ -97,7 +77,6 @@ export class Task {
 			`- [${this.done ? "x" : " "}] `,
 			this.content.trim(),
 			this.column ? ` #${this.column}` : "",
-			this.owner ? ` #${this.owner}` : "",
 		].join("");
 	}
 

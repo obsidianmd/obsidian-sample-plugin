@@ -1,10 +1,7 @@
 //
 
 import { App, Modal, Setting } from "obsidian";
-
-export type SettingValues = {
-	include: string;
-};
+import type { SettingValues } from "./settings_store";
 
 export class SettingsModal extends Modal {
 	constructor(
@@ -18,22 +15,23 @@ export class SettingsModal extends Modal {
 		this.contentEl.createEl("h1", { text: "Settings" });
 
 		new Setting(this.contentEl)
-			.setName("Include paths glob")
+			.setName("Columns")
+			.setDesc('The column names separated by a comma ","')
+			.setClass("kanban-setting")
 			.addText((text) => {
-				text.setValue(this.settings.include);
+				text.setValue(this.settings.columns.join(", "));
 				text.onChange((value) => {
-					this.settings.include = value;
+					this.settings.columns = value
+						.split(",")
+						.map((column) => column.trim());
 				});
 			});
 
 		new Setting(this.contentEl).addButton((btn) =>
-			btn
-				.setButtonText("Submit")
-				.setCta()
-				.onClick(() => {
-					this.close();
-					this.onSubmit(this.settings);
-				})
+			btn.setButtonText("Save").onClick(() => {
+				this.close();
+				this.onSubmit(this.settings);
+			})
 		);
 	}
 

@@ -1,11 +1,10 @@
 {
-	"id": "obsidian-project-kanban",
-	"name": "Project Kanban",
-	"version": "1.1.0",
+	"id": "task-list-kanban",
+	"name": "Task List Kanban",
+	"version": "1.2.0",
 	"minAppVersion": "1.5.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
+	"description": "Kanban plugin to create task lists.",
+	"author": "Chris Kerr",
 	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
 }

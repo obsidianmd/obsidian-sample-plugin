@@ -1,7 +1,7 @@
 import type { TFile, Vault } from "obsidian";
 import { isTaskString, Task } from "./task";
 import type { ColumnTagTable } from "../columns/columns";
-import { get, type Writable } from "svelte/store";
+import { get, type Readable } from "svelte/store";
 
 export type Metadata = {
 	rowIndex: number;
@@ -24,7 +24,7 @@ export async function updateMapsFromFile({
 	metadataByTaskId: Map<string, Metadata>;
 	taskIdsByFileHandle: Map<TFile, Set<string>>;
 	vault: Vault;
-	columnTagTableStore: Writable<ColumnTagTable>;
+	columnTagTableStore: Readable<ColumnTagTable>;
 }) {
 	try {
 		const previousTaskIds =

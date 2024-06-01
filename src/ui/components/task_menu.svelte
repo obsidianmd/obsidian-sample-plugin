@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { Menu } from "obsidian";
-	import { columnTagTableStore, type ColumnTag } from "../columns/columns";
+	import { type ColumnTag, type ColumnTagTable } from "../columns/columns";
 	import type { Task } from "../tasks/task";
 	import type { TaskActions } from "../tasks/actions";
 	import IconButton from "./icon_button.svelte";
-	import { userStore } from "../users/users";
+	import type { Readable } from "svelte/store";
 
 	export let task: Task;
 	export let taskActions: TaskActions;
+	export let columnTagTableStore: Readable<ColumnTagTable>;
 
 	function showMenu(e: MouseEvent) {
 		const menu = new Menu();
@@ -47,19 +48,6 @@
 			if (task.done) {
 				i.setDisabled(true);
 			}
-		});
-
-		menu.addSeparator();
-
-		Object.entries($userStore).map(([id, label]) => {
-			menu.addItem((i) => {
-				i.setTitle(`Allocate to ${label}`).onClick(() =>
-					taskActions.changeOwner(task.id, id),
-				);
-				if (task.owner === id) {
-					i.setDisabled(true);
-				}
-			});
 		});
 
 		menu.addSeparator();

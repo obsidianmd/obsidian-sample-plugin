@@ -2,39 +2,75 @@ import { TextFileView, WorkspaceLeaf } from "obsidian";
 import matter from "front-matter";
 
 import Main from "./main.svelte";
-import type { Settings } from "../entry";
-import { SettingValues, SettingsModal } from "./settings/settings";
+import { SettingsModal } from "./settings/settings";
+import {
+	createSettingsStore,
+	parseSettingsString,
+	toSettingsString,
+	type SettingValues,
+} from "./settings/settings_store";
+import { get, type Readable, type Writable } from "svelte/store";
+import { createTasksStore } from "./tasks/store";
+import type { Task } from "./tasks/task";
+import type { TaskActions } from "./tasks/actions";
+import {
+	createColumnTagTableStore,
+	type ColumnTagTable,
+} from "./columns/columns";
 
 export const KANBAN_VIEW_NAME = "kanban-view";
 
 export class KanbanView extends TextFileView {
-	private localSettings: SettingValues = { include: "" };
+	private readonly settingsStore: Writable<SettingValues>;
+	private readonly columnTagTableStore: Readable<ColumnTagTable>;
+
+	private readonly tasksStore: Writable<Task[]>;
+	private readonly taskActions: TaskActions;
+	private readonly initialiseTasksStore: () => void;
 
 	component: Main | undefined;
 	icon = "kanban-square";
 
-	constructor(leaf: WorkspaceLeaf, private readonly settings: Settings) {
+	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
+
+		this.settingsStore = createSettingsStore();
+
+		this.columnTagTableStore = createColumnTagTableStore(
+			this.settingsStore
+		);
+
+		const { tasksStore, taskActions, initialise } = createTasksStore(
+			this.app.vault,
+			this.app.workspace,
+			this.registerEvent.bind(this),
+			this.columnTagTableStore
+		);
+
+		this.tasksStore = tasksStore;
+		this.taskActions = taskActions;
+		this.initialiseTasksStore = initialise;
 	}
 
 	private onLocalSettingsChange(newSettings: SettingValues) {
-		this.localSettings = newSettings;
+		this.settingsStore.set(newSettings);
+		this.initialiseTasksStore();
 		this.requestSave();
 	}
 
-	private openSettingsModal(): Promise<SettingValues> {
+	private openSettingsModal(): Promise<void> {
 		const settingsModal = new SettingsModal(
 			this.app,
-			this.localSettings,
+			structuredClone(get(this.settingsStore)),
 			(newSettings) => this.onLocalSettingsChange(newSettings)
 		);
 
 		settingsModal.open();
 		return new Promise((resolve) => {
 			settingsModal.onClose = () => {
-				resolve(this.localSettings);
+				resolve();
+				settingsModal.onClose = () => undefined;
 			};
-			settingsModal.onClose = () => undefined;
 		});
 	}
 
@@ -45,8 +81,9 @@ export class KanbanView extends TextFileView {
 
 	getViewData(): string {
 		const parsed = matter<{ kanban_plugin: string }>(this.data + "\n");
-
-		parsed.attributes["kanban_plugin"] = JSON.stringify(this.localSettings);
+		parsed.attributes["kanban_plugin"] = toSettingsString(
+			get(this.settingsStore)
+		);
 
 		return `---
 ${Object.entries(parsed.attributes)
@@ -58,17 +95,13 @@ ${parsed.body}
 	}
 
 	setViewData(data: string): void {
-		const parsed = matter<{ kanban_plugin: string }>(data + "\n");
-		if (parsed.attributes.kanban_plugin) {
-			try {
-				this.localSettings = JSON.parse(
-					parsed.attributes.kanban_plugin
-				);
-			} catch (e) {
-				console.log("caught", e);
-				this.localSettings = { include: "" };
-			}
-		}
+		this.settingsStore.set(this.getInitialSettings(data));
+		this.initialiseTasksStore();
+	}
+
+	private getInitialSettings(data: string): SettingValues {
+		const parsed = matter<{ kanban_plugin?: string }>(data + "\n");
+		return parseSettingsString(parsed.attributes.kanban_plugin ?? "");
 	}
 
 	clear(): void {
@@ -79,13 +112,9 @@ ${parsed.body}
 		this.component = new Main({
 			target: this.contentEl,
 			props: {
-				workspace: this.app.workspace,
-				vault: this.app.vault,
-				registerEvent: this.registerEvent.bind(this),
-				userConfig: this.settings.users,
-				columnConfig: {
-					columns: this.settings.columns,
-				},
+				tasksStore: this.tasksStore,
+				taskActions: this.taskActions,
+				columnTagTableStore: this.columnTagTableStore,
 				openSettings: () => this.openSettingsModal(),
 			},
 		});

@@ -1,32 +1,30 @@
 import type { Brand } from "src/brand";
 import { kebab } from "src/kebab";
-import { get, writable } from "svelte/store";
-
-export type ColumnConfig = {
-	columns: string[];
-};
+import { derived, get, type Readable, type Writable } from "svelte/store";
+import type { SettingValues } from "../settings/settings_store";
 
 export type DefaultColumns = "uncategorised" | "done";
 export type ColumnTag = Brand<string, "ColumnTag">;
 
 export type ColumnTagTable = Record<ColumnTag, string>;
 
-export function createColumnTagTable({
-	columns,
-}: ColumnConfig): ColumnTagTable {
-	const output: ColumnTagTable = {};
+export const createColumnTagTableStore = (
+	settingsStore: Writable<SettingValues>
+): Readable<ColumnTagTable> => {
+	return derived([settingsStore], ([settings]) => {
+		const output: ColumnTagTable = {};
 
-	for (const column of columns) {
-		output[kebab<ColumnTag>(column)] = column;
-	}
+		for (const column of settings.columns ?? []) {
+			output[kebab<ColumnTag>(column)] = column;
+		}
 
-	return output;
-}
-
-export const columnTagTableStore = writable<ColumnTagTable>({});
+		return output;
+	});
+};
 
 export function isColumnTag(
-	input: ColumnTag | DefaultColumns
+	input: ColumnTag | DefaultColumns,
+	columnTagTableStore: Readable<ColumnTagTable>
 ): input is ColumnTag {
 	return input in get(columnTagTableStore);
 }

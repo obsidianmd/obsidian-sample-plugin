@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Menu, setIcon } from "obsidian";
 	import {
-		columnTagTableStore,
 		type ColumnTag,
 		type DefaultColumns,
 		type ColumnTagTable,
@@ -12,11 +11,13 @@
 	import TaskComponent from "./task.svelte";
 	import IconButton from "./icon_button.svelte";
 	import { isDraggingStore } from "../dnd/store";
+	import type { Readable } from "svelte/store";
 
 	export let column: ColumnTag | DefaultColumns;
 	export let hideOnEmpty: boolean = false;
 	export let tasks: Task[];
 	export let taskActions: TaskActions;
+	export let columnTagTableStore: Readable<ColumnTagTable>;
 
 	function getColumnTitle(
 		column: ColumnTag | DefaultColumns,
@@ -129,12 +130,12 @@
 		<div class="tasks-wrapper">
 			<div class="tasks">
 				{#each sortedTasks as task}
-					<TaskComponent {task} {taskActions} />
+					<TaskComponent {task} {taskActions} {columnTagTableStore} />
 				{/each}
-				{#if isColumnTag(column)}
+				{#if isColumnTag(column, columnTagTableStore)}
 					<button
 						on:click={async (e) => {
-							if (isColumnTag(column)) {
+							if (isColumnTag(column, columnTagTableStore)) {
 								await taskActions.addNew(column, e);
 							}
 						}}

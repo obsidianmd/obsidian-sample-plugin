@@ -11,7 +11,6 @@ import type { ColumnTag } from "../columns/columns";
 
 export type TaskActions = {
 	changeColumn: (id: string, column: ColumnTag) => Promise<void>;
-	changeOwner: (id: string, owner: string) => Promise<void>;
 	markDone: (id: string) => Promise<void>;
 	updateContent: (id: string, content: string) => Promise<void>;
 	viewFile: (id: string) => Promise<void>;
@@ -56,10 +55,6 @@ export function createTaskActions({
 	return {
 		async changeColumn(id, column) {
 			await updateRowWithTask(id, (task) => (task.column = column));
-		},
-
-		async changeOwner(id, owner) {
-			await updateRowWithTask(id, (task) => (task.owner = owner));
 		},
 
 		async markDone(id) {

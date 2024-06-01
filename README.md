@@ -1,96 +1,71 @@
-# Obsidian Sample Plugin
+# Task List Kanban
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+The Task List Kanban is a free and open source Obsidian plugin that automatically imports all your 'tasks' within obsidian files into a kanban view. This plugin was created to reduce duplication of effort when managing and prioritising tasks. Any time you have a task that needs to be done, simply note it down using the 'task' format in an obsidian file, and it will automatically appear in your Task List Kanban - it's that easy!
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+By adding tags to your tasks using '#', you can allocate tasks to specific columns in your kanban, as well as add additional tags that you can use to filter. From the kanban view, you can easily move your tasks between columns, archive tasks, apply or change filters, and even jump straight to the file where the task sits. Any change made to a task from the kanban view will also update the task in its file, and visa versa.
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+SCREENSHOT OR VIDEO HERE
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+## How to use the Task List Kanban
 
-## First time developing plugins?
+### Where to find the Task List Kanban within Obsidian
 
-Quick starting guide for new plugin devs:
+The Task List Kanban can be found in the left hand side toolbar in Obsidian. Click the icon to open the Task List Kanban.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+IMAGE HERE
 
-## Releasing new releases
+### Setting up your kanban & managing columns
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+You'll want to set up the columns that you want to appear in your kanban, including the number of columns.
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+xxxxx
 
-## Adding your plugin to the community plugin list
+You will be able to rename/add/remove these columns at anytime. However! Please think carefully when naming your columns, as any tasks you add to that column will be associated with the exact column name. This means that if you change a column name in the future, all the tasks associated with the old version of that column will end up in 'uncategorised'. They are NOT automatically applied to the new naming of the column.
 
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### Adding a task to your kanban
 
-## How to use
+Create a 'task' in any Obsidian file. You can do this by highlighting any text, right clicking, and then selling Paragraph > Task list.
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+IMAGE HERE
 
-## Manually installing the plugin
+This task will now automatically appear in your kanban, under the 'Uncategorised' column. (Note this Uncategorised column will only display if you have uncategorised tasks.)
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+To place the task in a column you have two choices to do this:
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+1. From within the Obsidian file, add text to the task that reads '#[name of column]'
+2. From within the Kanban view, drag the task from uncategorised to whichever column you desire. This will automatically add to the task file the text, '#[name of column]'
 
-## Funding URL
+The text '#[name of column]' will not be visible in the kanban view, so it won't clog up your tasks!
+You can only assign each task to one column within your kanban.
 
-You can include funding URLs where people who use your plugin can financially support it.
+IMAGE HERE
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+### Managing tasks within your kanban
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
+From within the kanban view, you have a range of options when managing your tasks.
 
-If you have multiple URLs, you can also do:
+**Editing tasks**
+You can edit the text of your tasks, as well as add or edit any tags, from within the kanban view. Click the task text and start editing! This will update the task within its file also.
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+**Moving tasks between columns**
+To move tasks between kanban columns, either drag and drop the task, or click the task's settings icon and select the desired column.
 
-## API Documentation
+**Archive tasks**
+You can archive any tasks by clicking the task's settings icon, and choosing archive. This will xxxxxxx
 
-See https://github.com/obsidianmd/obsidian-api
+**Done column**
+The final column in the kanban has an additional settings menu. This allows you to quickly and easily delete/archive all tasks within this column. The idea is that if tasks have made it to this column, they have been completed, and you will likely want to delete or archive these completed tasks at some stage!
+
+### Tagging tasks & filtering tasks within your kanban
+
+You may wish to add tags to tasks in order to enable filtering within your kanban. For example, you could add a tag with the name of the project it relates to, which would allow you to then filter your kanban by project name.
+
+**Tagging a task**
+To add a tag to a task, add the text, '#[tag name]' to anywhere within your task. If you have created this tag previously, you will be prompted to autocomplete the tag with that text. This '#[tag name]' will be visible within the kanban view as well as the text file.
+
+IMAGE HERE
+
+**Filtering tasks within the kanban view**
+To filter tasks when in the kanban view, type the tag name into the filter bar at the top right. You can select as many tags as you like.Your kanban will now only display tasks that include that tag.
+
+IMAGE HERE

@@ -1,58 +1,20 @@
 <script lang="ts">
-	import { type EventRef, type Vault, type Workspace } from "obsidian";
-	import { createTasksStore } from "./tasks/store";
 	import {
-		columnTagTableStore,
-		createColumnTagTable,
-		type ColumnConfig,
 		type ColumnTag,
+		type ColumnTagTable,
 		type DefaultColumns,
 	} from "./columns/columns";
 	import type { Task } from "./tasks/task";
 	import Column from "./components/column.svelte";
-	import { userStore } from "./users/users";
-	import { kebab } from "src/kebab";
-	import SelectUser from "./components/select/select_user.svelte";
 	import SelectTag from "./components/select/select_tag.svelte";
 	import IconButton from "./components/icon_button.svelte";
-	import type { SettingValues } from "./settings/settings";
+	import type { Writable, Readable } from "svelte/store";
+	import type { TaskActions } from "./tasks/actions";
 
-	export let vault: Vault;
-	export let workspace: Workspace;
-	export let registerEvent: (eventRef: EventRef) => void;
-	export let columnConfig: ColumnConfig = {
-		columns: [
-			"Later",
-			"Soonish",
-			"Next week",
-			"This week",
-			"Today",
-			"Pending",
-		],
-	};
-	export let userConfig: string[];
-	export let openSettings: () => Promise<SettingValues>;
-
-	let selectableUsersList: { value: string; label: string }[] | undefined;
-	$: selectableUsersList = userConfig.length
-		? ["Unassigned", ...userConfig].map((label) => ({
-				value: kebab(label),
-				label,
-			}))
-		: undefined;
-
-	let selectedUsers: string[] = userConfig.length
-		? ["Unassigned", ...userConfig].map((label) => kebab(label))
-		: [];
-	$: selectedUsersSet = new Set(selectedUsers);
-
-	$: userStore.set(
-		userConfig.reduce<Record<string, string>>((acc, curr) => {
-			acc[kebab(curr)] = curr;
-			return acc;
-		}, {}),
-	);
-	$: columnTagTableStore.set(createColumnTagTable(columnConfig));
+	export let tasksStore: Writable<Task[]>;
+	export let taskActions: TaskActions;
+	export let openSettings: () => Promise<void>;
+	export let columnTagTableStore: Readable<ColumnTagTable>;
 
 	$: tags = $tasksStore.reduce((acc, curr) => {
 		for (const tag of curr.tags) {
@@ -63,13 +25,6 @@
 
 	let selectedTags: string[] = [];
 	$: selectedTagsSet = new Set(selectedTags);
-
-	const { tasksStore, taskActions } = createTasksStore(
-		vault,
-		workspace,
-		registerEvent,
-		columnTagTableStore,
-	);
 
 	function groupByColumnTag(
 		tasks: Task[],
@@ -95,18 +50,8 @@
 	let columns: ("uncategorised" | ColumnTag)[];
 	$: columns = Object.keys($columnTagTableStore) as ColumnTag[];
 
-	$: filteredByUser = selectedUsersSet.size
-		? $tasksStore.filter((task) => {
-				if (!task.owner) {
-					return selectedUsersSet.has("unassigned");
-				}
-
-				return selectedUsersSet.has(task.owner);
-			})
-		: $tasksStore;
-
 	$: filteredByTag = selectedTagsSet.size
-		? filteredByUser.filter((task) => {
+		? $tasksStore.filter((task) => {
 				for (const tag of task.tags) {
 					if (selectedTagsSet.has(tag)) {
 						return true;
@@ -115,12 +60,12 @@
 
 				return false;
 			})
-		: filteredByUser;
+		: $tasksStore;
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
 	async function handleOpenSettings() {
-		const newSettings = await openSettings();
+		openSettings();
 	}
 </script>
 
@@ -129,9 +74,6 @@
 		<IconButton icon="lucide-settings" on:click={handleOpenSettings} />
 	</div>
 	<div class="controls">
-		{#if userConfig.length}
-			<SelectUser {userConfig} bind:value={selectedUsers} />
-		{/if}
 		<SelectTag tags={[...tags]} bind:value={selectedTags} />
 	</div>
 
@@ -142,18 +84,21 @@
 				hideOnEmpty={true}
 				tasks={tasksByColumn["uncategorised"]}
 				{taskActions}
+				{columnTagTableStore}
 			/>
 			{#each columns as column}
 				<Column
 					{column}
 					tasks={tasksByColumn[column] ?? []}
 					{taskActions}
+					{columnTagTableStore}
 				/>
 			{/each}
 			<Column
 				column="done"
 				tasks={tasksByColumn["done"] ?? []}
 				{taskActions}
+				{columnTagTableStore}
 			/>
 		</div>
 	</div>

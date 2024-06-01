@@ -6,3 +6,16 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.kanban-setting.setting-item {
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.kanban-setting .setting-item-control {
+	margin-top: var(--size-4-2);
+}
+
+.kanban-setting .setting-item-control > input {
+	width: 100%;
+}
