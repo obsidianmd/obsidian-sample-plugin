@@ -12,6 +12,22 @@ export default class Base extends Plugin {
 				this.switchToKanbanAfterLoad();
 			})
 		);
+
+		this.app.workspace.on("file-menu", (menu, file) => {
+			menu.addItem((item) => {
+				item.setTitle("New kanban")
+					.setIcon("square-kanban")
+					.onClick(async () => {
+						const newFile = await this.app.vault.create(
+							file.path + "/Kanban-" + Date.now() + ".md",
+							`---\nkanban_plugin: {}\n---\n`
+						);
+						this.app.workspace
+							.getActiveViewOfType(MarkdownView)
+							?.leaf.openFile(newFile);
+					});
+			});
+		});
 	}
 
 	onunload() {}

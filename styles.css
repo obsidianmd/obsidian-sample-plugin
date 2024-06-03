@@ -7,15 +7,15 @@ If your plugin does not need CSS, delete this file.
 
 */
 
-.kanban-setting.setting-item {
+.setting-item.column {
 	flex-direction: column;
 	align-items: stretch;
 }
 
-.kanban-setting .setting-item-control {
+.setting-item.column .setting-item-control {
 	margin-top: var(--size-4-2);
 }
 
-.kanban-setting .setting-item-control > input {
+.setting-item.column .setting-item-control > input {
 	width: 100%;
 }

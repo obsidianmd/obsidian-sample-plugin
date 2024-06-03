@@ -22,7 +22,11 @@ export const KANBAN_VIEW_NAME = "kanban-view";
 
 export class KanbanView extends TextFileView {
 	private readonly settingsStore: Writable<SettingValues>;
+	private readonly destroySettingsStore: () => void;
+
 	private readonly columnTagTableStore: Readable<ColumnTagTable>;
+
+	private filenameFilter: string | null = null;
 
 	private readonly tasksStore: Writable<Task[]>;
 	private readonly taskActions: TaskActions;
@@ -35,6 +39,19 @@ export class KanbanView extends TextFileView {
 		super(leaf);
 
 		this.settingsStore = createSettingsStore();
+		this.destroySettingsStore = this.settingsStore.subscribe((settings) => {
+			switch (settings.scope) {
+				case "everywhere":
+					this.filenameFilter = null;
+					break;
+				case "folder":
+					this.filenameFilter = this.file?.parent?.path ?? null;
+					break;
+				default:
+					this.filenameFilter = null;
+					break;
+			}
+		});
 
 		this.columnTagTableStore = createColumnTagTableStore(
 			this.settingsStore
@@ -44,7 +61,8 @@ export class KanbanView extends TextFileView {
 			this.app.vault,
 			this.app.workspace,
 			this.registerEvent.bind(this),
-			this.columnTagTableStore
+			this.columnTagTableStore,
+			() => this.filenameFilter
 		);
 
 		this.tasksStore = tasksStore;
@@ -122,5 +140,6 @@ ${parsed.body}
 
 	async onClose() {
 		this.component?.$destroy();
+		this.destroySettingsStore();
 	}
 }

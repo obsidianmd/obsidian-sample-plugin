@@ -9,7 +9,8 @@ export function createTasksStore(
 	vault: Vault,
 	workspace: Workspace,
 	registerEvent: (eventRef: EventRef) => void,
-	columnTagTableStore: Readable<ColumnTagTable>
+	columnTagTableStore: Readable<ColumnTagTable>,
+	getFilenameFilter: () => string | null
 ): {
 	tasksStore: Writable<Task[]>;
 	taskActions: TaskActions;
@@ -40,12 +41,21 @@ export function createTasksStore(
 		}
 	}
 
+	function shouldHandle(file: TFile): boolean {
+		const filenameFilter = getFilenameFilter()?.replace(/^\//, "");
+		return !filenameFilter || file.path.startsWith(filenameFilter);
+	}
+
 	function initialise() {
 		tasksByTaskId.clear();
 		metadataByTaskId.clear();
 		taskIdsByFileHandle.clear();
 
 		for (const fileHandle of fileHandles) {
+			if (!shouldHandle(fileHandle)) {
+				continue;
+			}
+
 			updateMapsFromFile({
 				fileHandle,
 				tasksByTaskId,
@@ -61,7 +71,7 @@ export function createTasksStore(
 
 	registerEvent(
 		vault.on("modify", (fileHandle) => {
-			if (fileHandle instanceof TFile) {
+			if (fileHandle instanceof TFile && shouldHandle(fileHandle)) {
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,
@@ -78,7 +88,7 @@ export function createTasksStore(
 
 	registerEvent(
 		vault.on("create", (fileHandle) => {
-			if (fileHandle instanceof TFile) {
+			if (fileHandle instanceof TFile && shouldHandle(fileHandle)) {
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,

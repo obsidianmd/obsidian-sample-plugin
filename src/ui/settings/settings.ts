@@ -17,13 +17,25 @@ export class SettingsModal extends Modal {
 		new Setting(this.contentEl)
 			.setName("Columns")
 			.setDesc('The column names separated by a comma ","')
-			.setClass("kanban-setting")
+			.setClass("column")
 			.addText((text) => {
 				text.setValue(this.settings.columns.join(", "));
 				text.onChange((value) => {
 					this.settings.columns = value
 						.split(",")
 						.map((column) => column.trim());
+				});
+			});
+
+		new Setting(this.contentEl)
+			.setName("Folder scope")
+			.setDesc("Where should we try to find tasks for this Kanban?")
+			.addDropdown((dropdown) => {
+				dropdown.addOption("folder", "This folder");
+				dropdown.addOption("everywhere", "Every folder");
+				dropdown.setValue(this.settings.scope);
+				dropdown.onChange((value) => {
+					this.settings.scope = value as "folder" | "everywhere";
 				});
 			});
 
