@@ -1,6 +1,6 @@
 # Task List Kanban
 
-The Task List Kanban is a free and open source Obsidian plugin that automatically imports all your 'tasks' within obsidian files into a kanban view. This plugin was created to reduce duplication of effort when managing and prioritising tasks. Any time you have a task that needs to be done, simply note it down using the 'task' format in an obsidian file, and it will automatically appear in your Task List Kanban - it's that easy!
+The Task List Kanban is a free and open source Obsidian plugin that automatically imports all your 'tasks' within obsidian files into a kanban view. This plugin was created to reduce duplication of effort when managing and prioritising tasks. Any time you have a task that needs to be done, simply note it down using the 'task' format in an obsidian file, and it will automatically appear in your Task List Kanban.
 
 By adding tags to your tasks using '#', you can allocate tasks to specific columns in your kanban, as well as add additional tags that you can use to filter. From the kanban view, you can easily move your tasks between columns, archive tasks, apply or change filters, and even jump straight to the file where the task sits. Any change made to a task from the kanban view will also update the task in its file, and visa versa.
 
