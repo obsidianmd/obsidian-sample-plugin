@@ -616,6 +616,17 @@ export default class CustomSortPlugin extends Plugin {
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
 	patchFileExplorerFolder(patchableFileExplorer?: FileExplorerView): boolean {
 		let plugin = this;
+		const requestStandardObsidianSortAfter = (patchUninstaller: MonkeyAroundUninstaller|undefined) => {
+			return () => {
+				if (patchUninstaller) patchUninstaller()
+
+				const fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable(false)
+				if (fileExplorerView) {
+					fileExplorerView.requestSort()
+				}
+			}
+		}
+
 		// patching file explorer might fail here because of various non-error reasons.
 		// That's why not showing and not logging error message here
 		patchableFileExplorer = patchableFileExplorer ?? this.checkFileExplorerIsAvailableAndPatchable(false)
@@ -643,7 +654,7 @@ export default class CustomSortPlugin extends Plugin {
 						};
 					}
 				})
-				this.register(uninstallerOfFolderSortFunctionWrapper)
+				this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
 				return true
 			} else {
 				// Up to Obsidian 1.6.0
@@ -671,7 +682,7 @@ export default class CustomSortPlugin extends Plugin {
 						};
 					}
 				})
-				this.register(uninstallerOfFolderSortFunctionWrapper)
+				this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
 				return true
 			}
 		} else {
