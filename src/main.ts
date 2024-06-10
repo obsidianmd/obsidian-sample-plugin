@@ -232,7 +232,6 @@ export default class CustomSortPlugin extends Plugin {
 			if (this.sortSpecCache) {
 				if (fileExplorerView) {
 					this.showNotice('Custom sort ON');
-					this.initialAutoOrManualSortingTriggered = true
 					iconToSet = ICON_SORT_ENABLED_ACTIVE
 				} else {
 					this.showNotice('Custom sort GENERAL PROBLEM. See console for detailed message.');
@@ -256,6 +255,7 @@ export default class CustomSortPlugin extends Plugin {
 		if (fileExplorerView) {
 			if (this.fileExplorerFolderPatched) {
 				fileExplorerView.requestSort();
+				this.initialAutoOrManualSortingTriggered = true
 			}
 		} else {
 			if (iconToSet === ICON_SORT_ENABLED_ACTIVE) {
@@ -326,14 +326,23 @@ export default class CustomSortPlugin extends Plugin {
 				if (!this.settings.suspended) {
 					if (!this.initialAutoOrManualSortingTriggered) {
 						this.readAndParseSortingSpec()
-						this.initialAutoOrManualSortingTriggered = true
 						if (this.sortSpecCache) { // successful read of sorting specifications?
 							this.showNotice('Custom sort ON')
-							const fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable(false)
+							let fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable(false)
+							if (fileExplorerView && !this.fileExplorerFolderPatched) {
+								this.fileExplorerFolderPatched = this.patchFileExplorerFolder(fileExplorerView);
+
+								if (!this.fileExplorerFolderPatched) {
+									fileExplorerView = undefined
+								}
+							}
 							if (fileExplorerView) {
 								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
 								fileExplorerView.requestSort()
+								this.initialAutoOrManualSortingTriggered = true
 							} else {
+								// Remark: in this case the File Explorer will render later on with standard Obsidian sort
+								// and a different event will be responsible for patching it and applying the custom sort
 								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_NOT_APPLIED)
 								plugin.ribbonIconStateInaccurate = true
 							}
