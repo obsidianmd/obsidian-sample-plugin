@@ -1,4 +1,4 @@
-> | :exclamation:  Breaking changes in Obsidian 1.6.3 causing a minor issue - no solution yet|
+> | :exclamation:  Breaking changes in Obsidian 1.6.3 causing a minor issue - update the plugin to 2.1.11 or newer|
 > |----------------------------------------------|
 > |[More details](README.notice.for.Obsidian.1.6.3.md)| 
 
