@@ -5,6 +5,8 @@
     display: flex;
     width: 730px;
     height: 42px;
+    margin-bottom: -20px;
+    padding: 0;
 }
 
 .rainbowNyan {
@@ -84,4 +86,11 @@
 
 .err {
     color: #FF1445
+}
+
+.txt {
+    color: #222222;
+    margin: 0;
+    padding: 0;
+    width: max-content;
 }

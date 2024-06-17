@@ -18,144 +18,96 @@ function getCheckboxCompletionPercentage(view: MarkdownView): number {
     return Math.round((checkedCount / totalCheckboxes) * 100);
 }
 
+
 export default class NyanBar extends Plugin {
     async onload() {
-        this.registerEvent(
-            this.app.workspace.on('file-open', (file) => {
-                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (activeView) {
-                    // this.setupCheckboxListeners(activeView);
-                }
-            })
-        );
+        const renderBar = (el: HTMLElement, completionPercentage: number, catType: string) => {
+            let div = el.createEl('div');
+            div.addClass('divCont');
+            let rainbowCont = div.createEl('div');
+            if (catType === 'nyan') {
+                rainbowCont.addClass('rainbowNyan');
+            } else if (catType === 'pusheen') {
+                rainbowCont.addClass('rainbowPusheen');
+            }
+            rainbowCont.style.width = completionPercentage + '%'; // Ensure the container takes full width
+            let catImg = div.createEl('img');
+            catImg.addClass('img' + catType.charAt(0).toUpperCase() + catType.slice(1));
+            let txt = el.createEl('h4');
+            txt.textContent = completionPercentage + '%';
+            txt.addClass('txt');
+            if (completionPercentage < 5) {
+                catImg.addClass(catType + 'Transform1');
+                catImg.removeClass(catType + 'Transform2');
+            } else {
+                catImg.addClass(catType + 'Transform2');
+                catImg.removeClass(catType + 'Transform1');
+            }
+        };
 
-        this.registerMarkdownCodeBlockProcessor('nyanbar', async (source, el) => {
+        this.registerMarkdownCodeBlockProcessor('nyanbar', async (source, el, ctx) => {
             const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (!markdownView) return;
-            const view = markdownView;
+
+            let completionPercentage = 0;
+
             if (source.trim() === 'auto') {
-				// Calculate completion percentage based on checkboxes
-				const completionPercentage = getCheckboxCompletionPercentage(view);
-				el.createEl('h4').textContent = completionPercentage+'%'
-				let div = el.createEl('div')
-				div.addClass('divCont')
-				let rainbowCont = div.createEl('div')
-				rainbowCont.addClass('rainbowNyan')
-				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-				let nyancat = div.createEl('img')
-				nyancat.addClass('imgNyan')
-				if(completionPercentage < 5) {
-					nyancat.addClass('nyanTransform1')
-					nyancat.removeClass('nyanTransform2')
-				} else {
-					nyancat.addClass('nyanTransform2')
-					nyancat.removeClass('nyanTransform1')
-				}
-			} else {
-                if (source.trim() === '0') {
-					el.createEl('h4').textContent = '0%'
-					let div = el.createEl('div')
-					div.addClass('divCont')
-					let nyancat = div.createEl('img')
-					nyancat.addClass('imgNyan')
-					nyancat.addClass('nyanTransform1')
+                const checkboxes = markdownView.contentEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+                const totalCheckboxes = checkboxes.length;
+                let checkedCount = 0;
+
+                checkboxes.forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        checkedCount++;
+                    }
+                });
+
+                completionPercentage = totalCheckboxes > 0 ? Math.round((checkedCount / totalCheckboxes) * 100) : 0;
+            } else {
+                if (parseInt(source.trim()) >= 0 && parseInt(source.trim()) <= 100) {
+                    completionPercentage = Math.min(100, Math.max(0, Number(source.trim())));
+                } else {
+                    el.createEl('h4', { text: '[ERROR: Invalid Value]' }).addClass('e');
+                    el.createEl('p', { text: 'NYANBAR-ERROR' }).addClass('e1');
                     return;
                 }
-                if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
-                    el.createEl('h4').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
-					let div = el.createEl('div')
-					div.addClass('divCont')
-					let rainbowCont = div.createEl('div')
-					rainbowCont.addClass('rainbowNyan')
-					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-					let nyancat = div.createEl('img')
-					nyancat.addClass('imgNyan')
-					if(Math.min(100, Math.max(0, Number(source.trim()))) < 14) {
-						nyancat.addClass('nyanTransform1')
-						nyancat.removeClass('nyanTransform2')
-					} else {
-						nyancat.addClass('nyanTransform2')
-						nyancat.removeClass('nyanTransform1')
-					}
-                } else {
-					let div = el.createDiv()
-					let e = div.createEl('h4')
-					e.addClass('e')
-					e.textContent = '[ERROR: Invalid Value]'
-					let e1 = div.createEl('p')
-					e1.addClass('e1')
-					e1.textContent = 'NYANBAR-ERROR'
-				}
             }
+
+            renderBar(el, completionPercentage, 'nyan');
         });
 
-		this.registerMarkdownCodeBlockProcessor('pusheenbar', async (source, el) => {
+        this.registerMarkdownCodeBlockProcessor('pusheenbar', async (source, el, ctx) => {
             const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (!markdownView) return;
-            const view = markdownView;
+
+            let completionPercentage = 0;
+
             if (source.trim() === 'auto') {
-				// Calculate completion percentage based on checkboxes
-				const completionPercentage = getCheckboxCompletionPercentage(view);
-				el.createEl('h4').textContent = completionPercentage+'%'
-				let div = el.createEl('div')
-				div.addClass('divCont')
-				let rainbowCont = div.createEl('div')
-				rainbowCont.addClass('rainbowPusheen')
-				rainbowCont.style.width = completionPercentage+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-				let pusheencat = div.createEl('img')
-				pusheencat.addClass('imgPusheen')
-				if(completionPercentage < 5) {
-					pusheencat.removeClass('pusheenTransform3')
-					pusheencat.removeClass('pusheenTransform2')
-					pusheencat.addClass('pusheenTransform1')
-				} else {
-					pusheencat.removeClass('pusheenTransform3')
-					pusheencat.removeClass('pusheenTransform1')
-					pusheencat.addClass('pusheenTransform2')
-				}
-			} else {
-                if (source.trim() === '0') {
-					el.createEl('h4').textContent = '0%'
-					let div = el.createEl('div')
-					div.addClass('divCont')
-					let pusheencat = div.createEl('img')
-					pusheencat.addClass('imgPusheen')
-					pusheencat.addClass('pusheenTransform3')
-					pusheencat.removeClass('pusheenTransform1')
-					pusheencat.removeClass('pusheenTransform2')
+                const checkboxes = markdownView.contentEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+                const totalCheckboxes = checkboxes.length;
+                let checkedCount = 0;
+
+                checkboxes.forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        checkedCount++;
+                    }
+                });
+
+                completionPercentage = totalCheckboxes > 0 ? Math.round((checkedCount / totalCheckboxes) * 100) : 0;
+            } else {
+                if (parseInt(source.trim()) >= 0 && parseInt(source.trim()) <= 100) {
+                    completionPercentage = Math.min(100, Math.max(0, Number(source.trim())));
+                } else {
+                    el.createEl('h4', { text: '[ERROR: Invalid Value]' }).addClass('e');
+                    el.createEl('p', { text: 'PUSHEENBAR-ERROR' }).addClass('e1');
                     return;
                 }
-                if (parseInt(source.trim()) && parseInt(source.trim()) <= 100 && parseInt(source.trim()) >= 0) {
-                    el.createEl('h4').textContent = Math.min(100, Math.max(0, Number(source.trim()))) + '%';
-					let div = el.createEl('div')
-					div.addClass('divCont')
-					let rainbowCont = div.createEl('div')
-					rainbowCont.addClass('rainbowPusheen')
-					rainbowCont.style.width = Math.min(100, Math.max(0, Number(source.trim())))+'%' // Asegurarse de que el contenedor ocupe todo el espacio
-					let pusheencat = div.createEl('img')
-					pusheencat.addClass('imgPusheen')
-					if(Math.min(100, Math.max(0, Number(source.trim()))) < 5) {
-						pusheencat.removeClass('pusheenTransform3')
-						pusheencat.removeClass('pusheenTransform2')
-						pusheencat.addClass('pusheenTransform1')
-					} else {
-						pusheencat.removeClass('pusheenTransform3')
-						pusheencat.removeClass('pusheenTransform1')
-						pusheencat.addClass('pusheenTransform2')
-					}
-                } else {
-					let div = el.createDiv()
-					let e = div.createEl('h4')
-					e.addClass('e')
-					e.textContent = '[ERROR: Invalid Value]'
-					let e1 = div.createEl('p')
-					e1.addClass('e1')
-					e1.textContent = 'NYANBAR-ERROR'
-				}
             }
+
+            renderBar(el, completionPercentage, 'pusheen');
         });
 
-        // This adds a simple command that can be triggered anywhere
+        // Optional: Commands and other onload setup
         this.addCommand({
             id: 'nyan',
             name: 'Add a nyan cat bar',
@@ -164,13 +116,12 @@ export default class NyanBar extends Plugin {
             },
         });
 
-		this.addCommand({
+        this.addCommand({
             id: 'pusheen',
             name: 'Add a pusheen cat bar',
             editorCallback: (editor: Editor) => {
                 editor.setLine(editor.getCursor().line, '```pusheenbar\nauto\n```');
             },
         });
-
     }
 }
