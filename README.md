@@ -1,3 +1,4 @@
+![nyanbar](https://github.com/xhyabunny/nyanbar/assets/106491722/0513fea4-074b-4486-9046-1abfb5d7acd0)
 # NyanBar
 Bring life to your task progress with Nyan Cat progress bar ! 
 
