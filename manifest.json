@@ -3,7 +3,7 @@
 	"name": "Task List Kanban",
 	"version": "1.2.1",
 	"minAppVersion": "1.5.0",
-	"description": "Sorts all your 'tasks' within obsidian files into a kanban view. Reduce duplication of effort when managing and prioritising tasks by simply using the 'task' format in your obsidian files to automatically appear in your Task List Kanban.",
+	"description": "Organizes all of the tasks within your files into a kanban view. Reduce duplication of effort when managing and prioritising tasks by simply using the task format in your files to automatically appear in your Task List Kanban.",
 	"author": "Chris Kerr",
 	"authorUrl": "https://github.com/chrskerr/chrskerr",
 	"isDesktopOnly": false
