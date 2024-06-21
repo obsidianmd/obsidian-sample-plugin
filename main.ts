@@ -1,23 +1,4 @@
-import { App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-
-function getCheckboxCompletionPercentage(view: MarkdownView): number {
-    const checkboxes = view.contentEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
-    const totalCheckboxes = checkboxes.length;
-    let checkedCount = 0;
-
-    checkboxes.forEach((checkbox) => {
-        if (checkbox.checked) {
-            checkedCount++;
-        }
-    });
-
-    if (totalCheckboxes === 0) {
-        return 0; // Return 0 if there are no checkboxes in the note
-    }
-
-    return Math.round((checkedCount / totalCheckboxes) * 100);
-}
-
+import { Editor, MarkdownView, Plugin } from 'obsidian';
 
 export default class NyanBar extends Plugin {
     async onload() {
@@ -46,23 +27,25 @@ export default class NyanBar extends Plugin {
         };
 
         this.registerMarkdownCodeBlockProcessor('nyanbar', async (source, el, ctx) => {
-            const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-            if (!markdownView) return;
+            if (!ctx.sourcePath) {
+                //codeblock rendered in page preview, no source path available.
+                return;
+            }
+            let checkedTasks = 0;
+            let totalTasks = 0;
+            for (const listItem of this.app.metadataCache.getCache(ctx.sourcePath)?.listItems!!) {
+                if(listItem.task) {
+                    totalTasks++;
+                    if(listItem.task === 'x') {
+                        checkedTasks++;
+                    }
+                }
+            }
 
             let completionPercentage = 0;
 
             if (source.trim() === 'auto') {
-                const checkboxes = markdownView.contentEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
-                const totalCheckboxes = checkboxes.length;
-                let checkedCount = 0;
-
-                checkboxes.forEach((checkbox) => {
-                    if (checkbox.checked) {
-                        checkedCount++;
-                    }
-                });
-
-                completionPercentage = totalCheckboxes > 0 ? Math.round((checkedCount / totalCheckboxes) * 100) : 0;
+                completionPercentage = totalTasks > 0 ? Math.round((checkedTasks / totalTasks) * 100) : 0;
             } else {
                 if (parseInt(source.trim()) >= 0 && parseInt(source.trim()) <= 100) {
                     completionPercentage = Math.min(100, Math.max(0, Number(source.trim())));
@@ -77,29 +60,31 @@ export default class NyanBar extends Plugin {
         });
 
         this.registerMarkdownCodeBlockProcessor('pusheenbar', async (source, el, ctx) => {
-            const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-            if (!markdownView) return;
+            if (!ctx.sourcePath) {
+                //codeblock rendered in page preview, no source path available.
+                return;
+            }
+            let checkedTasks = 0;
+            let totalTasks = 0;
+            for (const listItem of this.app.metadataCache.getCache(ctx.sourcePath)?.listItems!!) {
+                if(listItem.task) {
+                    totalTasks++;
+                    if(listItem.task === 'x') {
+                        checkedTasks++;
+                    }
+                }
+            }
 
             let completionPercentage = 0;
 
             if (source.trim() === 'auto') {
-                const checkboxes = markdownView.contentEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
-                const totalCheckboxes = checkboxes.length;
-                let checkedCount = 0;
-
-                checkboxes.forEach((checkbox) => {
-                    if (checkbox.checked) {
-                        checkedCount++;
-                    }
-                });
-
-                completionPercentage = totalCheckboxes > 0 ? Math.round((checkedCount / totalCheckboxes) * 100) : 0;
+                completionPercentage = totalTasks > 0 ? Math.round((checkedTasks / totalTasks) * 100) : 0;
             } else {
                 if (parseInt(source.trim()) >= 0 && parseInt(source.trim()) <= 100) {
                     completionPercentage = Math.min(100, Math.max(0, Number(source.trim())));
                 } else {
                     el.createEl('h4', { text: '[ERROR: Invalid Value]' }).addClass('e');
-                    el.createEl('p', { text: 'PUSHEENBAR-ERROR' }).addClass('e1');
+                    el.createEl('p', { text: 'NYANBAR-ERROR' }).addClass('e1');
                     return;
                 }
             }
