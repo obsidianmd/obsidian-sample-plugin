@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin } from 'obsidian';
+import { Editor, Plugin } from 'obsidian';
 
 export default class NyanBar extends Plugin {
     async onload() {
