@@ -1,4 +1,6 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, parseFrontMatterEntry } from 'obsidian';
+import { VIEW_TYPE_EXAMPLE, ExampleView } from 'law-view';
+import { getData }  from 'openlegaldataparser';
 
 // Remember to rename these classes and interfaces!
 
@@ -16,10 +18,17 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		//register law review view
+		this.registerView(
+			VIEW_TYPE_EXAMPLE,
+			(leaf) => new ExampleView(leaf)
+		  );
+
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			new Notice('This is a not notice!');
+			this.activateView();
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -81,6 +90,41 @@ export default class MyPlugin extends Plugin {
 	onunload() {
 
 	}
+	async activateView() {
+		const { workspace } = this.app;
+		new Notice('Opening view');
+	
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+
+		const paragraphs = this.getFrontMatterMeta();
+		
+		if (leaves.length > 0) {
+		  // A leaf with our view already exists, use that
+		  leaf = leaves[0];
+		} else {
+		  // Our view could not be found in the workspace, create a new leaf
+		  // in the right sidebar for it
+		  leaf = workspace.getRightLeaf(false);
+		  await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+
+		}
+		// "Reveal" the leaf in case it is in a collapsed sidebar
+		workspace.revealLeaf(leaf);
+	}
+	async getFrontMatterMeta(){
+		const { workspace } = this.app;
+		const actFile = workspace.getActiveFile();
+		  	if (!actFile) return
+			  const metadata = app.metadataCache.getFileCache(actFile);
+			if (!metadata) return console.log("no metadata");
+			let returner = metadata.frontmatter;
+			if (returner) {
+				console.log(returner['§']);
+				console.log(await getData(returner['§'][0]));
+			}			
+	}
+
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
