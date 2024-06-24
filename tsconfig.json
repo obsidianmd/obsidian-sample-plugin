@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "./",
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
     "target": "ES6",
     "allowJs": true,
     "noImplicitAny": true,
+    "outDir": "./dist",
     "moduleResolution": "node",
     "importHelpers": true,
     "isolatedModules": true,
@@ -19,5 +20,6 @@
     ]
   },
   "include": [
-    "**/*.ts"  ]
+    "**/*.ts"
+  ]
 }

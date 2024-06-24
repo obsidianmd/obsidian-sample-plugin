@@ -2,7 +2,7 @@
 	"name": "obsidian-sample-plugin",
 	"version": "1.0.0",
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
-	"main": "main.js",
+	"main": "src/main",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
@@ -23,6 +23,7 @@
 	},
 	"dependencies": {
 		"axios": "^1.7.2",
+		"cheerio": "^1.0.0-rc.12",
 		"oldp-api": "^0.1.0"
 	}
 }
