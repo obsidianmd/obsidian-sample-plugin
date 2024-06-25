@@ -3,9 +3,9 @@
 	"name": "Law References",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "bliblablub",
+	"description": "This plugin suggests laws to the user (including descriptions) on typing a paragraph symbol. Currently we only support german laws using openlegaldata.io.",
 	"author": "Silas Schimmel & Maris Beer",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/TheOnlySilas/obsidian-law-links",
+	"fundingUrl": "https://ko-fi.com/hackmybeer",
 	"isDesktopOnly": false
 }
