@@ -4,65 +4,84 @@ import { OldpApi, OldpSearchResponseItem } from "./api/opld";
 
 export default class LawSuggester extends EditorSuggest<OldpSearchResponseItem> {
     private readonly oldpApi = new OldpApi();
-	plugin: LawRefPlugin;
-	// todo: probably refactor this?
-	queryRegex = new RegExp(/(?:(?<=^|\n)|(?<=\s))§[-\w]+(?=\s|$)/gi);
+    plugin: LawRefPlugin;
+    queryRegex = new RegExp(/(?:(?<=^|\n)|(?<=\s))(§[-\w]+)(?=\s|$)/gi);
 
-	constructor(plugin: LawRefPlugin) {
-		super(plugin.app);
-		this.plugin = plugin;
-	}
+    constructor(plugin: LawRefPlugin) {
+        super(plugin.app);
+        this.plugin = plugin;
+    }
 
-	onTrigger(cursor: EditorPosition, editor: Editor, _: TFile): EditorSuggestTriggerInfo | null {
-		// todo: probably refactor selection
+    onTrigger(cursor: EditorPosition, editor: Editor, _: TFile): EditorSuggestTriggerInfo | null {
+		// TODO: fix previous match in same line not being detected
 		const sub = editor.getLine(cursor.line).slice(0, cursor.ch);
-		const matches = sub.match(this.queryRegex);
-		if (matches === null || matches.groups === null || matches.groups?.sc === null) return null;
+        const matches = sub.match(this.queryRegex);
+        if (matches === null || matches.length === 0) return null;
 
-		if (matches != null) console.log('matches', matches);
+        const lastMatch = matches[matches.length - 1];
+        const matchStart = sub.lastIndexOf(lastMatch);
 
-		return {
-			end: cursor,
-			start: {
-				ch: sub.lastIndexOf(matches.groups?.sc ?? ''),
-				line: cursor.line,
-			},
-            // always get latest
-			query: matches[matches.length - 1],
-		}
-	}
+        if (matchStart === -1) return null;
 
-	async getSuggestions(context: EditorSuggestContext): Promise<OldpSearchResponseItem[]> {
-        // TODO: fix bug where when you change something in the string at e.g. char 2 it only triggers rerender for substring
-		console.log('query', context.query?.replace('§', '').replace('-', ' ').replace('_', ' '))
+        return {
+            end: cursor,
+            start: {
+                ch: matchStart,
+                line: cursor.line,
+            },
+            query: lastMatch,
+        }
+    }
 
+    async getSuggestions(context: EditorSuggestContext): Promise<OldpSearchResponseItem[]> {
         const query = context.query?.replace('§', '').replace('-', ' ').replace('_', ' ');
 
-        // don't execute if input  length is under 2
-        if(query?.length < 2) return [];
+        if (query?.length < 2) return [];
 
-		return await this.oldpApi.search(query);
-	}
+        return await this.oldpApi.search(query);
+    }
 
     renderSuggestion(suggestion: OldpSearchResponseItem, el: HTMLElement): void {
-		// TODO refactor appearence and hover
+        const highlightMatch = (text: string, query: string) => {
+            const regex = new RegExp(`(${query.replace(/\s/g, '|')})`, 'gi');
+            return text.split(regex).map(part => {
+                if (part.match(regex)) {
+                    return `<strong>${part}</strong>`;
+                } else {
+                    return part;
+                }
+            }).join('');
+        };
+
+		// TODO: fix snippet not overflowing, needs to break out of container
+
+        const query = this.context?.query?.replace('§', '').replace('-', ' ').replace('_', ' ') || '';
+
         const outer = el.createDiv({ cls: "lawRef-suggestion-container" });
-		let shortcodeDiv = createDiv({ title: `${suggestion.snippet}` })
-		shortcodeDiv.setText(suggestion.title);
-		outer.appendChild(shortcodeDiv)
+    
+        const titleDiv = createDiv({ cls: "lawRef-title" });
+        titleDiv.innerHTML = highlightMatch(suggestion.title, query);
+        outer.appendChild(titleDiv);
+        
+        const snippetDiv = createDiv({ cls: "lawRef-snippet" });
+        snippetDiv.innerHTML = highlightMatch(suggestion.snippet, query);
+        outer.appendChild(snippetDiv);
+        
+        outer.addEventListener('mouseenter', () => {
+            snippetDiv.style.display = 'block';
+        });
+        outer.addEventListener('mouseleave', () => {
+            snippetDiv.style.display = 'none';
+        });
     }
 
     selectSuggestion(suggestion: OldpSearchResponseItem, evt: MouseEvent | KeyboardEvent): void {
-        // TODO: implement me
-		/*		if(!this.context) return;
-		const { start, end } = this.context;
-		const shortcode = suggestion.names.includes(suggestion.matchedName) ? suggestion.matchedName : suggestion.names[0]
-		const outEm = suggestion.names.some(n => windowsSupportedFirstChar.includes(n)) && suggestion.emoji.split("").length > 1 
-			? suggestion.emoji.split("")[0] 
-			: suggestion.emoji;
-		const repl = this.plugin.settings.immediateReplace ? outEm : `:${shortcode}: `;
+        if (!this.context) return;
 
-		this.context.editor.replaceRange(repl, start, end);
-		this.plugin.updateHistory(suggestion.matchedName); */
+        const { start, end } = this.context;
+        console.log('suggestion', suggestion);
+		// keep space at the end for hyper link
+        const linkEl = `[${suggestion.title}](${suggestion.link}) `;
+        this.context.editor.replaceRange(linkEl, start, end);
     }
 }

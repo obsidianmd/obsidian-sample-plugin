@@ -5,16 +5,16 @@ import LawSuggester from './lawSuggester';
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
+interface LawRefPluginSettings {
 	mySetting: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: LawRefPluginSettings = {
 	mySetting: 'default'
 }
 
 export default class LawRefPlugin extends Plugin {
-	settings: MyPluginSettings;
+	settings: LawRefPluginSettings;
 	private readonly OldpApi = new OldpApi();
 
 	async onload() {
@@ -56,11 +56,11 @@ export default class LawRefPlugin extends Plugin {
 		  // Our view could not be found in the workspace, create a new leaf
 		  // in the right sidebar for it
 		  leaf = workspace.getRightLeaf(false);
-		  await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+		  //await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
 
 		}
 		// "Reveal" the leaf in case it is in a collapsed sidebar
-		workspace.revealLeaf(leaf);
+		//workspace.revealLeaf(leaf);
 	}
 	async getFrontMatterMeta(){
 		const { workspace } = this.app;

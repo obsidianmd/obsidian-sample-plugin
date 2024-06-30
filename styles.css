@@ -1,24 +1,20 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
-
 .lawRef-suggestion-container {
-    display: flex;
-    place-content: space-between;
-  }
-  
-  .lawRef-suggestion-entry {
-    border-top: solid var(--background-secondary) 1px;
-    padding-left: 10px;
-  }
-  
-  .ES-suggestion-item {
-    border-top: solid var(--background-secondary) 1px;
-    padding-left: 10px;
-  }
-  
+  position: relative;
+}
+
+.lawRef-snippet {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  border-radius: 15px;
+  background-color: white;
+  padding: 0.9rem;
+  z-index: 100;
+  max-width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lawRef-suggestion-container:hover .lawRef-snippet {
+  display: block;
+}
