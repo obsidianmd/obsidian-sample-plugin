@@ -9,8 +9,17 @@ export class Task {
 		readonly rowIndex: number,
 		columnTagTable: ColumnTagTable
 	) {
-		const [, remainder = ""] = rawContent.split("- [");
-		const [status, content = ""] = remainder.split("] ");
+		const match = rawContent.match(taskStringRegex);
+		if (!match) {
+			throw new Error(
+				"Attempted to create a task from invalid raw content"
+			);
+		}
+
+		const [, status, content] = match;
+		if (!content) {
+			throw new Error("Content not found in raw content");
+		}
 
 		this.tags = getTags(content);
 
@@ -102,7 +111,7 @@ export function isTaskString(input: string): input is TaskString {
 // begins with 0 or more whitespace chars
 // then follows the pattern "- [ ]" OR "- [x]"
 // then contains an additional whitespace before any trailing content
-const taskStringRegex = /^\s*-\s\[[x\s]\]\s/;
+const taskStringRegex = /^\s*-\s\[([xX\s])\]\s(.+)/;
 
 function getTags(content: string): Set<string> {
 	const tags = new Set<string>();
