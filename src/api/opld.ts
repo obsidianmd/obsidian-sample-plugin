@@ -23,26 +23,26 @@ export class OldpApi {
     }
 
     private async getRawSearchResults(searchTerm: string): Promise<string | null> {
-        if (this.abortController) {
+        /*if (this.abortController) {
             // Abort the current request
             this.abortController.abort();
         }
 
-        // Create a new AbortController for the new request
-        this.abortController = new AbortController();
+        // TODO: fix this, after one abort all requests afterwords don't get used
+        this.abortController = new AbortController();*/
 
         try {
             const url = `${this.baseUrl}/search/?selected_facets=facet_model_name_exact%3ALaw&q=${encodeURIComponent(searchTerm)}`;
 
             const response = await this.axiosClient.get<string>(`${this.corsProxyUrl}/${url}`, {
-                signal: this.abortController.signal,
+                //signal: this.abortController.signal,
             });
             const html = response.data;
 
             return html;
         } catch (error: any) {
             // handle aborted "error"
-            if (this.abortController.signal.aborted || error?.code === 'ERR_CANCELED') return null;
+            //if (this.abortController.signal.aborted || error?.code === 'ERR_CANCELED') return null;
 
             console.error('Error fetching search results:', error);
 
