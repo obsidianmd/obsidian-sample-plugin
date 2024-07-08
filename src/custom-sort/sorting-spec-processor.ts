@@ -498,7 +498,7 @@ const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 	[Date_dd_Mmm_yyyy_RegexSymbol]: { // Intentionally retain character case
 		regexpStr: Date_dd_Mmm_yyyy_RegexStr,
 		normalizerFn: Date_dd_Mmm_yyyy_NormalizerFn,
-		advancedRegexType: AdvancedRegexType.RomanNumber
+		advancedRegexType: AdvancedRegexType.Date_dd_Mmm_yyyy
 	}
 }
 
