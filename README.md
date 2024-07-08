@@ -1,14 +1,8 @@
-> | :exclamation:  Breaking changes in Obsidian 1.6.3 causing a minor issue - update the plugin to 2.1.11 or newer|
+> | :exclamation:  Breaking changes in Obsidian - update the plugin newest version|
 > |----------------------------------------------|
-> |[More details](README.notice.for.Obsidian.1.6.3.md)| 
-
-> | :exclamation:  Breaking changes in Obsidian 1.6.0 (and newer) - update the plugin to 2.1.9 or newer|
-> |----------------------------------------------|
-> |[More details](README.notice.for.Obsidian.1.6.0.md)| 
-
-> | :exclamation:  Breaking changes in Obsidian 1.5.4 (and newer) - update the plugin to 2.1.7 or newer|
-> |----------------------------------------------|
-> |[More details](README.notice.for.Obsidian.1.5.4.md)|
+> | - Obsidian 1.6.3 - update the plugin to 2.1.11 or newer --> [More details](README.notice.for.Obsidian.1.6.3.md)| 
+> | - Obsidian 1.6.0 - update the plugin to 2.1.9 or newer --> [More details](README.notice.for.Obsidian.1.6.0.md)| 
+> | - Obsidian 1.5.4 - update the plugin to 2.1.7 or newer --> [More details](README.notice.for.Obsidian.1.5.4.md)|
 
 ---
 
@@ -19,7 +13,9 @@
 ---
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
 
-Take full control of the order of your notes and folders
+Take full control of the order of your notes and folders by:
+- **drag and drop** via boookmarks integration, and
+- **config-driven** sorting, allowing the fullest range of finegrained ordering
 
 The simplest usage scenario is to sort items via drag and drop:
 
