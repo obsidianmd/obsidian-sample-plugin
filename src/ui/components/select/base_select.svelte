@@ -30,7 +30,7 @@
 		--border="var(--border-width) solid var(--background-modifier-border)"
 		--border-focused="var(--border-width) solid var(--background-modifier-border-focus)"
 		--border-hover="var(--border-width) solid var(--background-modifier-border-hover)"
-		--border-radius="var(--radius-m)"
+		--border-radius="var(--input-radius)"
 		--item-hover-bg="var(--background-modifier-hover)"
 		--list-background="var(--background-primary)"
 		--list-border="var(--border-width) solid var(--background-modifier-border)"

@@ -50,8 +50,16 @@
 	let columns: ("uncategorised" | ColumnTag)[];
 	$: columns = Object.keys($columnTagTableStore) as ColumnTag[];
 
+	let filterText = "";
+
+	$: filteredByText = filterText
+		? $tasksStore.filter((task) =>
+				task.content.toLowerCase().includes(filterText.toLowerCase()),
+			)
+		: $tasksStore;
+
 	$: filteredByTag = selectedTagsSet.size
-		? $tasksStore.filter((task) => {
+		? filteredByText.filter((task) => {
 				for (const tag of task.tags) {
 					if (selectedTagsSet.has(tag)) {
 						return true;
@@ -60,7 +68,7 @@
 
 				return false;
 			})
-		: $tasksStore;
+		: filteredByText;
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
@@ -74,6 +82,15 @@
 		<IconButton icon="lucide-settings" on:click={handleOpenSettings} />
 	</div>
 	<div class="controls">
+		<div class="text-filter">
+			<label for="filter">Filter by content:</label>
+			<input
+				name="filter"
+				type="search"
+				bind:value={filterText}
+				placeholder="Type to search..."
+			/>
+		</div>
 		<SelectTag tags={[...tags]} bind:value={selectedTags} />
 	</div>
 
@@ -120,6 +137,23 @@
 			display: grid;
 			gap: var(--size-4-8);
 			grid-template-columns: 1fr 1fr;
+
+			.text-filter {
+				display: flex;
+				flex-direction: column;
+				flex-grow: 1;
+
+				label {
+					display: inline-block;
+					margin-bottom: var(--size-4-1);
+
+					~ input[type="search"] {
+						display: block;
+						flex-grow: 1;
+						background: var(--background-primary);
+					}
+				}
+			}
 		}
 
 		.columns {
