@@ -4,7 +4,7 @@ import {
 	CompoundDotNumberNormalizerFn,
 	ConsumedFolderMatchingRegexp,
 	consumeFolderByRegexpExpression,
-	convertPlainStringToRegex,
+	convertPlainStringToRegex, Date_dd_Mmm_yyyy_NormalizerFn,
 	detectSortingSymbols,
 	escapeRegexUnsafeCharacters,
 	extractSortingSymbol,
@@ -405,10 +405,16 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 				normalizerFn: IdentityNormalizerFn
 			}
 		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *([0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{4}) for the specific date format of 12\-Apr\-2024$/i,
+				normalizerFn: Date_dd_Mmm_yyyy_NormalizerFn
+			}
+		}, {
 			type: CustomSortGroupType.Outsiders
 		}],
 		targetFoldersPaths: ['mock-folder'],
-		outsidersGroupIdx: 7
+		outsidersGroupIdx: 8
 	}
 }
 
@@ -420,6 +426,7 @@ Plain syntax\\R+ ... works?
 And this kind of... \\D+plain syntax???
 Here goes ASCII word \\a+
 \\A+. is for any modern language word
+\\[dd-Mmm-yyyy] for the specific date format of 12-Apr-2024
 `
 
 describe('SortingSpecProcessor', () => {
@@ -3141,6 +3148,7 @@ describe('hasMoreThanOneSortingSymbol', () => {
 		['\\-r+', false], ['--\\-r+--\\-D+++', true],
 		['\\d+abcd\\d+efgh', true],
 		['\\R+abcd\\.R+efgh', true],
+		['\\R+abcd\\[dd-Mmm-yyyy]', true],
 		['\\d+\\.D+\\-d+\\R+\\.r+\\-R+ \\d+', true]
 	])('should correctly detect in >%s< (%s) sorting regex symbols', (s: string, b: boolean) => {
 		const result = hasMoreThanOneSortingSymbol(s)

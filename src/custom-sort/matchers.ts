@@ -1,3 +1,5 @@
+import {toString} from "builtin-modules";
+
 export const RomanNumberRegexStr: string = ' *([MDCLXVI]+)'; // Roman number
 export const CompoundRomanNumberDotRegexStr: string = ' *([MDCLXVI]+(?:\\.[MDCLXVI]+)*)';// Compound Roman number with dot as separator
 export const CompoundRomanNumberDashRegexStr: string = ' *([MDCLXVI]+(?:-[MDCLXVI]+)*)'; // Compound Roman number with dash as separator
@@ -5,6 +7,8 @@ export const CompoundRomanNumberDashRegexStr: string = ' *([MDCLXVI]+(?:-[MDCLXV
 export const NumberRegexStr: string = ' *(\\d+)';  // Plain number
 export const CompoundNumberDotRegexStr: string = ' *(\\d+(?:\\.\\d+)*)'; // Compound number with dot as separator
 export const CompoundNumberDashRegexStr: string = ' *(\\d+(?:-\\d+)*)'; // Compound number with dash as separator
+
+export const Date_dd_Mmm_yyyy_RegexStr: string = ' *([0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4})'; // Date like 01-Jan-2020
 
 export const DOT_SEPARATOR = '.'
 export const DASH_SEPARATOR = '-'
@@ -23,12 +27,16 @@ export const WordInAnyLanguageRegexStr = '(\\p{Letter}+)'   // remember about th
 
 export const WordInASCIIRegexStr = '([a-zA-Z]+)'
 
-export function prependWithZeros(s: string, minLength: number) {
-	if (s.length < minLength) {
-		const delta: number = minLength - s.length;
-		return '000000000000000000000000000'.substring(0, delta) + s;
+export function prependWithZeros(s: string|undefined, minLength: number): string {
+	if ('string' === typeof s) {
+		if (s.length < minLength) {
+			const delta: number = minLength - s.length;
+			return '000000000000000000000000000'.substring(0, delta) + s;
+		} else {
+			return s;
+		}
 	} else {
-		return s;
+		return prependWithZeros((s ?? '').toString(), minLength)
 	}
 }
 
@@ -94,4 +102,19 @@ export function getNormalizedRomanNumber(s: string, separator?: string, places?:
 	} else {
 		return `${prependWithZeros(romanToIntStr(s), places ?? DEFAULT_NORMALIZATION_PLACES)}//`
 	}
+}
+
+const DAY_POSITIONS = '00'.length
+const MONTH_POSITIONS = '00'.length
+const YEAR_POSITIONS = '0000'.length
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+export function getNormalizedDate_dd_Mmm_yyyy_NormalizerFn(s: string): string | null {
+	// Assumption - the regex date matched against input s, no extensive defensive coding needed
+	const components = s.split('-')
+	const day = prependWithZeros(components[0], DAY_POSITIONS)
+	const month = prependWithZeros( `${1 + MONTHS.indexOf(components[1])}`, MONTH_POSITIONS)
+	const year = prependWithZeros(components[2], YEAR_POSITIONS)
+	return `${year}-${month}-${day}//`
 }

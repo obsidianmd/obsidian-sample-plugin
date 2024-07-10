@@ -16,7 +16,9 @@ import {
 	CompoundRomanNumberDashRegexStr,
 	CompoundRomanNumberDotRegexStr,
 	DASH_SEPARATOR,
+	Date_dd_Mmm_yyyy_RegexStr,
 	DOT_SEPARATOR,
+	getNormalizedDate_dd_Mmm_yyyy_NormalizerFn,
 	getNormalizedNumber,
 	getNormalizedRomanNumber,
 	NumberRegexStr,
@@ -348,6 +350,8 @@ const InlineRegexSymbol_Digit1: string = '\\d'
 const InlineRegexSymbol_Digit2: string = '\\[0-9]'
 const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
 
+const Date_dd_Mmm_yyyy_RegexSymbol: string = '\\[dd-Mmm-yyyy]'
+
 const InlineRegexSymbol_CapitalLetter: string = '\\C'
 const InlineRegexSymbol_LowercaseLetter: string = '\\l'
 
@@ -365,7 +369,8 @@ const sortingSymbolsArr: Array<string> = [
 	escapeRegexUnsafeCharacters(CompoundRomanNumberDotRegexSymbol),
 	escapeRegexUnsafeCharacters(CompoundRomanNumberDashRegexSymbol),
 	escapeRegexUnsafeCharacters(WordInASCIIRegexSymbol),
-	escapeRegexUnsafeCharacters(WordInAnyLanguageRegexSymbol)
+	escapeRegexUnsafeCharacters(WordInAnyLanguageRegexSymbol),
+	escapeRegexUnsafeCharacters(Date_dd_Mmm_yyyy_RegexSymbol)
 ]
 
 const sortingSymbolsRegex = new RegExp(sortingSymbolsArr.join('|'), 'gi')
@@ -433,6 +438,7 @@ export const CompoundDashRomanNumberNormalizerFn: NormalizerFn = (s: string) => 
 export const NumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s)
 export const CompoundDotNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DOT_SEPARATOR)
 export const CompoundDashNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DASH_SEPARATOR)
+export const Date_dd_Mmm_yyyy_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_dd_Mmm_yyyy_NormalizerFn(s)
 
 export enum AdvancedRegexType {
 	None, // to allow if (advancedRegex)
@@ -443,7 +449,8 @@ export enum AdvancedRegexType {
 	CompoundDotRomanNumber,
 	CompoundDashRomanNumber,
 	WordInASCII,
-	WordInAnyLanguage
+	WordInAnyLanguage,
+	Date_dd_Mmm_yyyy
 }
 
 const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
@@ -487,6 +494,11 @@ const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 		normalizerFn: IdentityNormalizerFn,
 		advancedRegexType: AdvancedRegexType.WordInAnyLanguage,
 		unicodeRegex: true
+	},
+	[Date_dd_Mmm_yyyy_RegexSymbol]: { // Intentionally retain character case
+		regexpStr: Date_dd_Mmm_yyyy_RegexStr,
+		normalizerFn: Date_dd_Mmm_yyyy_NormalizerFn,
+		advancedRegexType: AdvancedRegexType.Date_dd_Mmm_yyyy
 	}
 }
 
