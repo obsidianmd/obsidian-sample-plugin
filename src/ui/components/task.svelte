@@ -10,6 +10,7 @@
 	export let task: Task;
 	export let taskActions: TaskActions;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
+	export let showFilepath: boolean;
 
 	const mdConverted = new Converter({
 		simplifiedAutoLink: true,
@@ -123,9 +124,11 @@
 		</div>
 		<TaskMenu {task} {taskActions} {columnTagTableStore} />
 	</div>
-	<div class="task-footer">
-		<p>{task.path}</p>
-	</div>
+	{#if showFilepath}
+		<div class="task-footer">
+			<p>{task.path}</p>
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">

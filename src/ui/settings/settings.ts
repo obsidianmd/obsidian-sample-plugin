@@ -39,6 +39,16 @@ export class SettingsModal extends Modal {
 				});
 			});
 
+		new Setting(this.contentEl)
+			.setName("Show filepath")
+			.setDesc("Show the filepath on each task in Kanban?")
+			.addToggle((toggle) => {
+				toggle.setValue(this.settings.showFilepath ?? true);
+				toggle.onChange((value) => {
+					this.settings.showFilepath = value;
+				});
+			});
+
 		new Setting(this.contentEl).addButton((btn) =>
 			btn.setButtonText("Save").onClick(() => {
 				this.close();

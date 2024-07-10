@@ -18,6 +18,7 @@
 	export let tasks: Task[];
 	export let taskActions: TaskActions;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
+	export let showFilepath: boolean;
 
 	function getColumnTitle(
 		column: ColumnTag | DefaultColumns,
@@ -130,7 +131,12 @@
 		<div class="tasks-wrapper">
 			<div class="tasks">
 				{#each sortedTasks as task}
-					<TaskComponent {task} {taskActions} {columnTagTableStore} />
+					<TaskComponent
+						{task}
+						{taskActions}
+						{columnTagTableStore}
+						{showFilepath}
+					/>
 				{/each}
 				{#if isColumnTag(column, columnTagTableStore)}
 					<button

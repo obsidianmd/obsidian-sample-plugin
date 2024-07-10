@@ -134,6 +134,7 @@ ${parsed.body}
 				taskActions: this.taskActions,
 				columnTagTableStore: this.columnTagTableStore,
 				openSettings: () => this.openSettingsModal(),
+				settingsStore: this.settingsStore,
 			},
 		});
 	}

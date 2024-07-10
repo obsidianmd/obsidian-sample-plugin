@@ -10,11 +10,13 @@
 	import IconButton from "./components/icon_button.svelte";
 	import type { Writable, Readable } from "svelte/store";
 	import type { TaskActions } from "./tasks/actions";
+	import type { SettingValues } from "./settings/settings_store";
 
 	export let tasksStore: Writable<Task[]>;
 	export let taskActions: TaskActions;
 	export let openSettings: () => Promise<void>;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
+	export let settingsStore: Writable<SettingValues>;
 
 	$: tags = $tasksStore.reduce((acc, curr) => {
 		for (const tag of curr.tags) {
@@ -72,6 +74,7 @@
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
+	$: showFilepath = $settingsStore.showFilepath ?? true;
 	async function handleOpenSettings() {
 		openSettings();
 	}
@@ -102,6 +105,7 @@
 				tasks={tasksByColumn["uncategorised"]}
 				{taskActions}
 				{columnTagTableStore}
+				{showFilepath}
 			/>
 			{#each columns as column}
 				<Column
@@ -109,6 +113,7 @@
 					tasks={tasksByColumn[column] ?? []}
 					{taskActions}
 					{columnTagTableStore}
+					{showFilepath}
 				/>
 			{/each}
 			<Column
@@ -116,6 +121,7 @@
 				tasks={tasksByColumn["done"] ?? []}
 				{taskActions}
 				{columnTagTableStore}
+				{showFilepath}
 			/>
 		</div>
 	</div>
