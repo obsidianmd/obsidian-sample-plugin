@@ -9,7 +9,13 @@ export class Task {
 		readonly rowIndex: number,
 		columnTagTable: ColumnTagTable
 	) {
-		const match = rawContent.match(taskStringRegex);
+		const [, blockLink] = rawContent.match(blockLinkRegexp) ?? [];
+		this.blockLink = blockLink;
+
+		const match = (
+			blockLink ? rawContent.replace(blockLinkRegexp, "") : rawContent
+		).match(taskStringRegex);
+
 		if (!match) {
 			throw new Error(
 				"Attempted to create a task from invalid raw content"
@@ -21,22 +27,25 @@ export class Task {
 			throw new Error("Content not found in raw content");
 		}
 
-		this.tags = getTags(content);
+		const tags = getTags(content);
 
 		this._id = sha256(content + fileHandle.path + rowIndex).toString();
 		this.content = content;
 		this._done = status === "x";
 		this._path = fileHandle.path;
 
-		for (const tag of this.tags) {
+		for (const tag of tags) {
 			if (tag in columnTagTable || tag === "done") {
 				if (!this._column) {
 					this._column = tag as ColumnTag;
 				}
-				this.tags.delete(tag);
+				tags.delete(tag);
 				this.content = this.content.replaceAll(`#${tag}`, "").trim();
 			}
 		}
+
+		this.tags = tags;
+		this.blockLink = blockLink;
 
 		if (this._done) {
 			this._column = undefined;
@@ -75,7 +84,8 @@ export class Task {
 		this._done = false;
 	}
 
-	readonly tags: Set<string>;
+	readonly blockLink: string | undefined;
+	readonly tags: ReadonlySet<string>;
 
 	serialise(): string {
 		if (this._deleted) {
@@ -86,7 +96,10 @@ export class Task {
 			`- [${this.done ? "x" : " "}] `,
 			this.content.trim(),
 			this.column ? ` #${this.column}` : "",
-		].join("");
+			this.blockLink ? ` ^${this.blockLink}` : "",
+		]
+			.join("")
+			.trimEnd();
 	}
 
 	archive() {
@@ -112,6 +125,7 @@ export function isTaskString(input: string): input is TaskString {
 // then follows the pattern "- [ ]" OR "- [x]"
 // then contains an additional whitespace before any trailing content
 const taskStringRegex = /^\s*-\s\[([xX\s])\]\s(.+)/;
+const blockLinkRegexp = /\s\^([a-zA-Z0-9-]+)$/;
 
 function getTags(content: string): Set<string> {
 	const tags = new Set<string>();

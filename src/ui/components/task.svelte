@@ -76,7 +76,9 @@
 		}, 100);
 	}
 
-	$: mdContent = mdConverted.makeHtml(task.content);
+	$: mdContent = mdConverted.makeHtml(
+		task.content + (task.blockLink ? ` ^${task.blockLink}` : ""),
+	);
 
 	$: {
 		if (textAreaEl) {

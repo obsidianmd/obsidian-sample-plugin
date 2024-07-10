@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"test": "vitest run"
 	},
 	"keywords": [],
 	"author": "",
@@ -26,7 +27,8 @@
 		"svelte": "^4.2.17",
 		"svelte-preprocess": "^5.1.4",
 		"tslib": "2.6.2",
-		"typescript": "5.4.5"
+		"typescript": "5.4.5",
+		"vitest": "^2.0.1"
 	},
 	"dependencies": {
 		"crypto-js": "^4.2.0",
