@@ -407,7 +407,7 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 		}, {
 			type: CustomSortGroupType.ExactName,
 			regexPrefix: {
-				regex: /^ *[0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{4} for the specific date format of 12\-Apr\-2024$/i,
+				regex: /^ *([0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{4}) for the specific date format of 12\-Apr\-2024$/i,
 				normalizerFn: Date_dd_Mmm_yyyy_NormalizerFn
 			}
 		}, {

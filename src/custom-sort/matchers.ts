@@ -8,7 +8,7 @@ export const NumberRegexStr: string = ' *(\\d+)';  // Plain number
 export const CompoundNumberDotRegexStr: string = ' *(\\d+(?:\\.\\d+)*)'; // Compound number with dot as separator
 export const CompoundNumberDashRegexStr: string = ' *(\\d+(?:-\\d+)*)'; // Compound number with dash as separator
 
-export const Date_dd_Mmm_yyyy_RegexStr: string = ' *[0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4}'; // Date like 01-Jan-2020
+export const Date_dd_Mmm_yyyy_RegexStr: string = ' *([0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4})'; // Date like 01-Jan-2020
 
 export const DOT_SEPARATOR = '.'
 export const DASH_SEPARATOR = '-'
