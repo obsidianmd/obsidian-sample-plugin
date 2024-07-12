@@ -1,15 +1,14 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-filterable-random-note",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
-	"main": "main.js",
+	"main": "src/main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "Tiramister",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
