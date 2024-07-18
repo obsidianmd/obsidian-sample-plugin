@@ -19,6 +19,7 @@
 	export let taskActions: TaskActions;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
 	export let showFilepath: boolean;
+	export let showTags: boolean;
 
 	function getColumnTitle(
 		column: ColumnTag | DefaultColumns,
@@ -136,6 +137,7 @@
 						{taskActions}
 						{columnTagTableStore}
 						{showFilepath}
+						{showTags}
 					/>
 				{/each}
 				{#if isColumnTag(column, columnTagTableStore)}

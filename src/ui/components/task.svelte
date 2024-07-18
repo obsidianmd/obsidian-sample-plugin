@@ -11,6 +11,7 @@
 	export let taskActions: TaskActions;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
 	export let showFilepath: boolean;
+	export let showTags: boolean;
 
 	const mdConverted = new Converter({
 		simplifiedAutoLink: true,
@@ -131,6 +132,13 @@
 			<p>{task.path}</p>
 		</div>
 	{/if}
+	{#if showTags}
+	  <div class="task-tags">
+		{#each task.tags as tag}
+		  <span class="tag">{tag}</span>
+		{/each}
+	  </div>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -177,11 +185,30 @@
 			border-top: var(--border-width) solid
 				var(--background-modifier-border);
 
-			padding: var(--size-4-2);
+			padding: var(--size-2-2);
 
 			p {
 				margin: 0;
 				font-size: var(--font-ui-smaller);
+			}
+		}
+
+		.task-tags {
+			display: flex;
+			//gap: var(--size-4-2);
+			padding: 2px;
+	
+			.tag {
+				background-color: var(--tag-background);
+				border: var(--tag-border-width) solid var(--tag-border-color);
+				border-radius: var(--tag-radius);
+				color: var(--tag-color);
+				font-size: var(--tag-size);
+				font-weight: var(--tag-weight);
+				text-decoration: var(--tag-decoration);
+				padding: var(--tag-padding-y) var(--tag-padding-x);
+				line-height: 1;
+				margin-bottom: 5px;
 			}
 		}
 	}

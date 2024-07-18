@@ -49,6 +49,16 @@ export class SettingsModal extends Modal {
 				});
 			});
 
+		new Setting(this.contentEl)
+			.setName("Show tags")
+			.setDesc("Show the tags on each task in Kanban?")
+			.addToggle((toggle) => {
+				toggle.setValue(this.settings.showTags ?? true);
+				toggle.onChange((value) => {
+					this.settings.showTags = value;
+				});
+			});
+
 		new Setting(this.contentEl).addButton((btn) =>
 			btn.setButtonText("Save").onClick(() => {
 				this.close();

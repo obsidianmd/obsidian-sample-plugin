@@ -41,8 +41,8 @@ export class Task {
 					this._column = tag as ColumnTag;
 				}
 				tags.delete(tag);
-				this.content = this.content.replaceAll(`#${tag}`, "").trim();
 			}
+				this.content = this.content.replaceAll(`#${tag}`, "").trim(); //Moving this section so it deletes all tags from content regardless.
 		}
 
 		this.tags = tags;
