@@ -96,6 +96,7 @@ export class Task {
 		return [
 			`- [${this.done ? "x" : " "}] `,
 			this.content.trim(),
+			this.tags.size > 0 ? ` ${Array.from(this.tags).map(tag => `#${tag}`).join(" ")}` : "", // CODE CHANGED HERE: Join tags with spaces
 			this.column ? ` #${this.column}` : "",
 			this.blockLink ? ` ^${this.blockLink}` : "",
 		]
