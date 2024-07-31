@@ -6,3 +6,11 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
+
+
+a { background-image: url('https://www.example.com/file.jpg'); }
+
+div { background-image: url('//example.com/file.jpg'); }
+
+a.test { color: pink !important; }

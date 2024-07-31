@@ -1,0 +1,9 @@
+{
+	"extends": ["stylelint-config-standard"],
+	"rules": {
+		"at-rule-disallowed-list": ["import"],
+		"function-url-no-scheme-relative": true,
+		"function-url-scheme-allowed-list": ["data"],
+		"declaration-no-important": true
+	}
+}
