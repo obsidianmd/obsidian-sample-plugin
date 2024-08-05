@@ -1,49 +1,40 @@
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
+// @ts-check
 import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
-});
+export default tseslint.config(
+	{
+		ignores: ["**/node_modules/", "**/main.js"],
+	},
+	eslint.configs.recommended,
+	{
+		plugins: {
+			"@typescript-eslint": tseslint.plugin,
+		},
 
-export default [{
-    ignores: ["**/node_modules/", "**/main.js"],
-}, ...compat.extends(
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-), {
-    plugins: {
-        "@typescript-eslint": typescriptEslint,
-    },
+		languageOptions: {
+			globals: {
+				...globals.node,
+			},
+			parser: tseslint.parser,
+			ecmaVersion: 5,
+			sourceType: "module",
+		},
 
-    languageOptions: {
-        globals: {
-            ...globals.node,
-        },
+		rules: {
+			"no-unused-vars": "off",
 
-        parser: tsParser,
-        ecmaVersion: 5,
-        sourceType: "module",
-    },
+			"@typescript-eslint/no-unused-vars": [
+				"error",
+				{
+					args: "none",
+				},
+			],
 
-    rules: {
-        "no-unused-vars": "off",
-
-        "@typescript-eslint/no-unused-vars": ["error", {
-            args: "none",
-        }],
-
-        "@typescript-eslint/ban-ts-comment": "off",
-        "no-prototype-builtins": "off",
-        "@typescript-eslint/no-empty-function": "off",
-    },
-}];
+			"@typescript-eslint/ban-ts-comment": "off",
+			"no-prototype-builtins": "off",
+			"@typescript-eslint/no-empty-function": "off",
+		},
+	},
+);
