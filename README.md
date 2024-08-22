@@ -30,6 +30,8 @@ Quick starting guide for new plugin devs:
 
 ## Releasing new releases
 
+### Manually
+
 - Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
 - Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
 - Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
@@ -38,6 +40,30 @@ Quick starting guide for new plugin devs:
 
 > You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
 > The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+
+### Automatically
+
+In [.github/release.yml](.github/workflows/release.yml) replace "my-plugin" with the name of your plugin on the following line,
+
+```yml
+  PLUGIN_NAME: my-plugin
+```
+
+After updating your plugin name, you can create and push a tag. For example,
+
+```bash
+git tag 1.2.3
+git push origin 1.2.3
+```
+
+Then [release.yml](.github/workflows/release.yml) will automatically:
+1. Update `manifest.json`, `package.json`, and `package-lock.json` with the version from your tag.
+2. Commit the updates to your repo (that you will need to pull down locally before making further changes)
+3. Create a new release for your tag in your [repo's Releases](https://github.com/obsidianmd/obsidian-sample-plugin/releases).
+
+Afterwards, you should manually update the Release's notes detailing your changes, and update your `versions.json` file with the minimum version of Obsidian your plugin supports.
+
+**Note:** Tag names must be in the format `x.y.z` without prefixing a `v`, for instance `1.0.0` is valid, but `v1.0.0` is not.
 
 ## Adding your plugin to the community plugin list
 
