@@ -1,5 +1,6 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin } from "obsidian";
+import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
 import { SampleSettingTab } from "./src/page/SampleSettingTab";
+import { SampleModal } from "./src/component/SampleModal";
 
 // Remember to rename these classes and interfaces!
 
@@ -24,7 +25,7 @@ export default class MyPlugin extends Plugin {
       (evt: MouseEvent) => {
         // Called when the user clicks the icon.
         new Notice("This is a notice!");
-      },
+      }
     );
     // Perform additional things with the ribbon
     ribbonIconEl.addClass("my-plugin-ribbon-class");
@@ -82,7 +83,7 @@ export default class MyPlugin extends Plugin {
 
     // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
     this.registerInterval(
-      window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000),
+      window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000)
     );
   }
 
@@ -94,21 +95,5 @@ export default class MyPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
-  }
-}
-
-class SampleModal extends Modal {
-  constructor(app: App) {
-    super(app);
-  }
-
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.setText("Woah!");
-  }
-
-  onClose() {
-    const { contentEl } = this;
-    contentEl.empty();
   }
 }
