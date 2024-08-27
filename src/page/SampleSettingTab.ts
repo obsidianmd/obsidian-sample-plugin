@@ -1,5 +1,5 @@
 import { PluginSettingTab, App, Setting } from "obsidian";
-import MyPlugin from "./main";
+import MyPlugin from "../../main";
 
 export class SampleSettingTab extends PluginSettingTab {
   plugin: MyPlugin;
@@ -24,7 +24,7 @@ export class SampleSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.mySetting = value;
             await this.plugin.saveSettings();
-          }),
+          })
       );
   }
 }
