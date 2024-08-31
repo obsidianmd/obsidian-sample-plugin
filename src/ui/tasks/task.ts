@@ -1,6 +1,7 @@
 import sha256 from "crypto-js/sha256";
 import type { Brand } from "src/brand";
 import type { ColumnTag, ColumnTagTable } from "../columns/columns";
+import { getTagsFromContent } from "src/parsing/tags/tags";
 
 export class Task {
 	constructor(
@@ -27,7 +28,7 @@ export class Task {
 			throw new Error("Content not found in raw content");
 		}
 
-		const tags = getTags(content);
+		const tags = getTagsFromContent(content);
 
 		this._id = sha256(content + fileHandle.path + rowIndex).toString();
 		this.content = content;
@@ -127,17 +128,3 @@ export function isTaskString(input: string): input is TaskString {
 const taskStringRegex = /^\s*-\s\[([xX\s])\]\s(.+)/;
 const blockLinkRegexp = /\s\^([a-zA-Z0-9-]+)$/;
 
-function getTags(content: string): Set<string> {
-	const tags = new Set<string>();
-
-	// starts with "#", ends with " ", only contains alphanumerics or "-"
-	const allMatches = content.matchAll(/#([\w-]+)/g);
-	for (const match of [...allMatches]) {
-		const maybeTag = match[1];
-		if (maybeTag) {
-			tags.add(maybeTag);
-		}
-	}
-
-	return tags;
-}

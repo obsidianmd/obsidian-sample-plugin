@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { kebab } from "src/kebab";
+	import { kebab } from "src/parsing/kebab/kebab";
 	import BaseSelect from "./base_select.svelte";
 
 	export let userConfig: string[];

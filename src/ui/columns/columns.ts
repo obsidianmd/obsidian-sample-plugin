@@ -1,5 +1,5 @@
 import type { Brand } from "src/brand";
-import { kebab } from "src/kebab";
+import { kebab } from "src/parsing/kebab/kebab";
 import { derived, get, type Readable, type Writable } from "svelte/store";
 import type { SettingValues } from "../settings/settings_store";
 

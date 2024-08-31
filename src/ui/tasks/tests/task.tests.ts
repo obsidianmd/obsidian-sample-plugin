@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isTaskString, Task } from "../task";
 import { type ColumnTag, type ColumnTagTable } from "src/ui/columns/columns";
-import { kebab } from "src/kebab";
+import { kebab } from "src/parsing/kebab/kebab";
 
 describe("Task", () => {
 	const columnTags: ColumnTagTable = {
