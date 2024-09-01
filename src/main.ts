@@ -125,10 +125,14 @@ export default class CustomSortPlugin extends Plugin {
 				if (aFile.name === SORTSPEC_FILE_NAME ||                         // file name == sortspec.md ?
 					aFile.name === `${SORTSPEC_FILE_NAME}.md` ||                 // file name == sortspec.md.md ?
 					aFile.basename === parent.name ||           // Folder Note mode: inside folder, same name
+
 					aFile.basename === this.settings.additionalSortspecFile ||   // when user configured _about_
 					aFile.name === this.settings.additionalSortspecFile ||       // when user configured _about_.md
 					aFile.path === this.settings.additionalSortspecFile ||       // when user configured Inbox/sort.md
-					aFile.path === `${this.settings.additionalSortspecFile}.md`  // when user configured Inbox/sort
+					aFile.path === `${this.settings.additionalSortspecFile}.md` || // when user configured Inbox/sort
+
+					aFile.basename === this.settings.indexNoteNameForFolderNotes ||   // when user configured as index
+					aFile.name === this.settings.indexNoteNameForFolderNotes          // when user configured as index.md
 				) {
 					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					// Warning: newer Obsidian versions can return objects as well, hence the explicit check for string value
@@ -713,7 +717,7 @@ export default class CustomSortPlugin extends Plugin {
 		const data: any = await this.loadData() || {}
 		const isFreshInstall: boolean = Object.keys(data).length === 0
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
-		if (requireApiVersion('1.2.0')) {
+		if (requireApiVersion('1.2.0') && isFreshInstall) {
 			this.settings = Object.assign(this.settings, DEFAULT_SETTING_FOR_1_2_0_UP)
 		}
 	}

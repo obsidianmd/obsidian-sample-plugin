@@ -4,6 +4,7 @@ import CustomSortPlugin from "./main";
 
 export interface CustomSortPluginSettings {
     additionalSortspecFile: string
+    indexNoteNameForFolderNotes: string
     suspended: boolean
     statusBarEntryEnabled: boolean
     notificationsEnabled: boolean
@@ -16,6 +17,7 @@ export interface CustomSortPluginSettings {
 
 export const DEFAULT_SETTINGS: CustomSortPluginSettings = {
     additionalSortspecFile: '',
+    indexNoteNameForFolderNotes: '',
     suspended: true,  // if false by default, it would be hard to handle the auto-parse after plugin install
     statusBarEntryEnabled: true,
     notificationsEnabled: true,
@@ -52,16 +54,10 @@ export class CustomSortSettingTab extends PluginSettingTab {
         // containerEl.createEl('h2', {text: 'Settings for Custom File Explorer Sorting Plugin'});
 
         const additionalSortspecFileDescr: DocumentFragment = sanitizeHTMLToDom(
-            'A note name or note path to scan (YAML frontmatter) for sorting specification in addition to the `sortspec` notes and Folder Notes<sup><b>*</b></sup>.'
+            'A note name or note path to scan (YAML frontmatter) for sorting specification in addition to the `sortspec` notes and Folder Notes.'
             + '<br>'
             + ' The `.md` filename suffix is optional.'
-            + '<p><b>(*)</b>&nbsp;if you employ the <i>Index-File based</i> approach to folder notes (as documented in '
-            + '<a href="https://github.com/aidenlx/alx-folder-note/wiki/folder-note-pref"'
-            + '>Aidenlx Folder Note preferences</a>'
-            + ') you can enter here the index note name, e.g. <b>_about_</b>'
             + '<br>'
-            + 'The <i>Inside Folder, with Same Name Recommended</i> mode of Folder Notes is handled automatically, no additional configuration needed.'
-            + '</p>'
             + '<p>NOTE: After updating this setting remember to refresh the custom sorting via clicking on the ribbon icon or via the <b>sort-on</b> command'
             + ' or by restarting Obsidian or reloading the vault</p>'
         )
@@ -70,10 +66,37 @@ export class CustomSortSettingTab extends PluginSettingTab {
             .setName('Path or name of additional note(s) containing sorting specification')
             .setDesc(additionalSortspecFileDescr)
             .addText(text => text
-                .setPlaceholder('e.g. _about_')
+                .setPlaceholder('e.g. sorting-configuration')
                 .setValue(this.plugin.settings.additionalSortspecFile)
                 .onChange(async (value) => {
                     this.plugin.settings.additionalSortspecFile = value.trim() ? normalizePath(value) : '';
+                    await this.plugin.saveSettings();
+                }));
+
+        const indexNoteNameDescr: DocumentFragment = sanitizeHTMLToDom(
+            'If you employ the <i>Index-File based</i> approach to folder notes (as documented in '
+            + '<a href="https://github.com/aidenlx/alx-folder-note/wiki/folder-note-pref"'
+            + '>Aidenlx Folder Note preferences</a>'
+            + ') enter here the index note name, e.g. <b>_about_</b> or <b>index</b>'
+            + '<br>'
+            + ' The `.md` filename suffix is optional.'
+            + '<br>'
+            + 'This will tell the plugin to read sorting specs and also folders metadata from these files.'
+            + '<br></br>'
+            + 'The <i>Inside Folder, with Same Name Recommended</i> mode of Folder Notes is handled automatically, no additional configuration needed.'
+            + '</p>'
+            + '<p>NOTE: After updating this setting remember to refresh the custom sorting via clicking on the ribbon icon or via the <b>sort-on</b> command'
+            + ' or by restarting Obsidian or reloading the vault</p>'
+        )
+
+        new Setting(containerEl)
+            .setName('Name of index note (Folder Notes support)')
+            .setDesc(indexNoteNameDescr)
+            .addText(text => text
+                .setPlaceholder('e.g. _about_ or index')
+                .setValue(this.plugin.settings.indexNoteNameForFolderNotes)
+                .onChange(async (value) => {
+                    this.plugin.settings.indexNoteNameForFolderNotes = value.trim() ? normalizePath(value) : '';
                     await this.plugin.saveSettings();
                 }));
 

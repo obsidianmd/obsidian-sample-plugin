@@ -466,12 +466,18 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 			case CustomSortGroupType.HasMetadataField:
 				if (group.withMetadataFieldName) {
 					if (ctx?._mCache) {
-						// For folders - scan metadata of 'folder note'
+						// For folders - scan metadata of 'folder note' in same-name-as-folder mode
 						const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
 						const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
 						const hasMetadata: boolean | undefined = frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
+						// For folders, if index-based folder note mode, scan the index file, giving it the priority
+						!!! Non trivial part: - need to know the folder-index name, this is hidden
+						!!! in plugin settings, not exposed - refactoring is a must.
+						if (aFolder && ctx?.plugin?.s) {
 
-						if (hasMetadata) {
+						}
+
+						if (hasMetadata || folderIndexNoteHasMetadata) {
 							determined = true
 						}
 					}
@@ -554,6 +560,12 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 		if (isPrimaryOrderByMetadata || isSecondaryOrderByMetadata || isDerivedPrimaryByMetadata || isDerivedSecondaryByMetadata) {
 			if (ctx?._mCache) {
 				// For folders - scan metadata of 'folder note'
+				// and if index-based folder note mode, scan the index file, giving it the priority
+				!!! Non trivial part: - need to know the folder-index-note name, this is hidden
+				!!! in plugin settings, not exposed - refactoring is a must.
+				!!!
+				!!! Then challenging part - how to easily rewrite the below code to handle scanning
+				!!! of two frontMatterCaches for folders and give the priority to folder-index-note based cache, if configured
 				const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
 				const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
 				if (isPrimaryOrderByMetadata) metadataValueToSortBy = frontMatterCache?.[group?.byMetadataField || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING]
