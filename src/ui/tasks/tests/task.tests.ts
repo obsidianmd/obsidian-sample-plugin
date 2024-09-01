@@ -12,7 +12,7 @@ describe("Task", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag";
 		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags);
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false);
 		}
 
 		expect(task).toBeTruthy();
@@ -24,7 +24,7 @@ describe("Task", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag #column";
 		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags);
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false);
 		}
 
 		expect(task).toBeTruthy();
@@ -36,7 +36,18 @@ describe("Task", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag #column";
 		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags);
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false);
+		}
+
+		const output = task?.serialise();
+		expect(taskString).toBe(output);
+	});
+
+	it("serialises a basic task string with a column and consolidate tags", () => {
+		let task: Task | undefined;
+		const taskString = "- [ ] Something #tag #column";
+		if (isTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, true);
 		}
 
 		const output = task?.serialise();
@@ -47,7 +58,7 @@ describe("Task", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag #column ^link-link";
 		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags);
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false);
 		}
 
 		expect(task).toBeTruthy();
@@ -59,7 +70,7 @@ describe("Task", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag ^link-link";
 		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags);
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false);
 			task.column = "column" as ColumnTag;
 		}
 
