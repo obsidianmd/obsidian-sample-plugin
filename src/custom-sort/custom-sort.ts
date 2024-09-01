@@ -34,10 +34,11 @@ import {
 import {
 	BookmarksPluginInterface
 } from "../utils/BookmarksCorePluginSignature";
+import {CustomSortPluginAPI} from "../custom-sort-plugin";
 
 export interface ProcessingContext {
 	// For internal transient use
-	plugin?: Plugin                     // to hand over the access to App instance to the sorting engine
+	plugin?: CustomSortPluginAPI                     // to hand over the access to App instance to the sorting engine
 	_mCache?: MetadataCache
 	starredPluginInstance?: Starred_PluginInstance
 	bookmarksPluginInstance?: BookmarksPluginInterface,
@@ -371,6 +372,15 @@ export const matchGroupRegex = (theRegex: RegExpSpec, nameForMatching: string): 
 	return [false, undefined, undefined]
 }
 
+const mdataValueFromFMCaches = (mdataFieldName: string, fc?: FrontMatterCache, fcPrio?: FrontMatterCache): any => {
+	let prioValue = undefined
+	if (fcPrio) {
+		prioValue = fcPrio?.[mdataFieldName]
+	}
+
+	return prioValue ?? fc?.[mdataFieldName]
+}
+
 export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: ProcessingContext): FolderItemForSorting {
 	let groupIdx: number
 	let determined: boolean = false
@@ -468,16 +478,18 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 					if (ctx?._mCache) {
 						// For folders - scan metadata of 'folder note' in same-name-as-folder mode
 						const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
-						const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
-						const hasMetadata: boolean | undefined = frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
+						let frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
+						let hasMetadata: boolean | undefined = frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
 						// For folders, if index-based folder note mode, scan the index file, giving it the priority
-						!!! Non trivial part: - need to know the folder-index name, this is hidden
-						!!! in plugin settings, not exposed - refactoring is a must.
-						if (aFolder && ctx?.plugin?.s) {
-
+						if (aFolder) {
+							const indexNoteBasename = ctx?.plugin?.indexNoteBasename()
+							if (indexNoteBasename) {
+								frontMatterCache = ctx._mCache.getCache(`${entry.path}/${indexNoteBasename}.md`)?.frontmatter
+								hasMetadata = hasMetadata || frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
+							}
 						}
 
-						if (hasMetadata || folderIndexNoteHasMetadata) {
+						if (hasMetadata) {
 							determined = true
 						}
 					}
@@ -561,17 +573,23 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 			if (ctx?._mCache) {
 				// For folders - scan metadata of 'folder note'
 				// and if index-based folder note mode, scan the index file, giving it the priority
-				!!! Non trivial part: - need to know the folder-index-note name, this is hidden
-				!!! in plugin settings, not exposed - refactoring is a must.
-				!!!
-				!!! Then challenging part - how to easily rewrite the below code to handle scanning
-				!!! of two frontMatterCaches for folders and give the priority to folder-index-note based cache, if configured
 				const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
 				const frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
-				if (isPrimaryOrderByMetadata) metadataValueToSortBy = frontMatterCache?.[group?.byMetadataField || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING]
-				if (isSecondaryOrderByMetadata) metadataValueSecondaryToSortBy = frontMatterCache?.[group?.byMetadataFieldSecondary || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING]
-				if (isDerivedPrimaryByMetadata) metadataValueDerivedPrimaryToSortBy = frontMatterCache?.[spec.byMetadataField || DEFAULT_METADATA_FIELD_FOR_SORTING]
-				if (isDerivedSecondaryByMetadata) metadataValueDerivedSecondaryToSortBy = frontMatterCache?.[spec.byMetadataFieldSecondary || DEFAULT_METADATA_FIELD_FOR_SORTING]
+				let prioFrontMatterCache: FrontMatterCache | undefined = undefined
+				if (aFolder) {
+					const indexNoteBasename = ctx?.plugin?.indexNoteBasename()
+					if (indexNoteBasename) {
+						prioFrontMatterCache = ctx._mCache.getCache(`${entry.path}/${indexNoteBasename}.md`)?.frontmatter
+					}
+				}
+				if (isPrimaryOrderByMetadata) metadataValueToSortBy =
+					mdataValueFromFMCaches (group?.byMetadataField || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,  frontMatterCache, prioFrontMatterCache)
+				if (isSecondaryOrderByMetadata) metadataValueSecondaryToSortBy =
+					mdataValueFromFMCaches (group?.byMetadataFieldSecondary || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING, frontMatterCache, prioFrontMatterCache)
+				if (isDerivedPrimaryByMetadata) metadataValueDerivedPrimaryToSortBy =
+					mdataValueFromFMCaches (spec.byMetadataField || DEFAULT_METADATA_FIELD_FOR_SORTING, frontMatterCache, prioFrontMatterCache)
+				if (isDerivedSecondaryByMetadata) metadataValueDerivedSecondaryToSortBy =
+					mdataValueFromFMCaches (spec.byMetadataFieldSecondary || DEFAULT_METADATA_FIELD_FOR_SORTING, frontMatterCache, prioFrontMatterCache)
 			}
 		}
 	}

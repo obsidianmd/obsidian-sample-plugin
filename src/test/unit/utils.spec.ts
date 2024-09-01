@@ -1,6 +1,7 @@
 import {
     lastPathComponent,
-    extractParentFolderPath
+    extractParentFolderPath,
+    extractBasename
 } from "../../utils/utils";
 
 describe('lastPathComponent and extractParentFolderPath', () => {
@@ -24,4 +25,21 @@ describe('lastPathComponent and extractParentFolderPath', () => {
             expect(extractedLastComponent).toBe(lastComponent)
         }
     )
+})
+
+describe('extractBasenane', () => {
+    const params: Array<(string|undefined)[]> = [
+        // Obvious
+        ['index', 'index'],
+        ['index.md', 'index'],
+        // Edge cases
+        ['',''],
+        [undefined,undefined],
+        ['.','.'],
+        ['.md',''],
+        ['.md.md','.md']
+    ];
+    it.each(params)('>%s< should become %s', (s: string|undefined, out: string|undefined) => {
+        expect(extractBasename(s)).toBe(out)
+    })
 })

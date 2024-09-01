@@ -50,8 +50,13 @@ import {
 	getBookmarksPlugin,
 	groupNameForPath
 } from "./utils/BookmarksCorePluginSignature";
-import {getIconFolderPlugin} from "./utils/ObsidianIconFolderPluginSignature";
-import {lastPathComponent} from "./utils/utils";
+import {
+	getIconFolderPlugin
+} from "./utils/ObsidianIconFolderPluginSignature";
+import {
+	extractBasename,
+	lastPathComponent
+} from "./utils/utils";
 import {
 	collectSortingAndGroupingTypes,
 	hasOnlyByBookmarkOrStandardObsidian,
@@ -64,6 +69,7 @@ import {
 	DEFAULT_SETTING_FOR_1_2_0_UP,
 	DEFAULT_SETTINGS
 } from "./settings";
+import {CustomSortPluginAPI} from "./custom-sort-plugin";
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
 const SORTINGSPEC_YAML_KEY: string = 'sorting-spec'
@@ -75,7 +81,10 @@ type MonkeyAroundUninstaller = () => void
 
 type ContextMenuProvider = (item: MenuItem) => void
 
-export default class CustomSortPlugin extends Plugin {
+export default class CustomSortPlugin
+	extends Plugin
+	implements CustomSortPluginAPI
+{
 	settings: CustomSortPluginSettings
 	statusBarItemEl: HTMLElement
 	ribbonIconEl: HTMLElement     // On small-screen mobile devices this is useless (ribbon is re-created on-the-fly)
@@ -725,5 +734,16 @@ export default class CustomSortPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
-}
 
+	// API
+	derivedIndexNoteNameForFolderNotes: string | undefined
+	indexNoteNameForFolderNotesDerivedFrom: any
+
+	indexNoteBasename(): string | undefined {
+		if (!(this.indexNoteNameForFolderNotesDerivedFrom === this.settings.indexNoteNameForFolderNotes)) {
+			this.derivedIndexNoteNameForFolderNotes = extractBasename(this.settings.indexNoteNameForFolderNotes)
+			this.indexNoteNameForFolderNotesDerivedFrom = this.settings.indexNoteNameForFolderNotes
+		}
+		return this.derivedIndexNoteNameForFolderNotes
+	}
+}
