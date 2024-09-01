@@ -107,7 +107,7 @@
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
-				showTags={showTags}
+				{showTags}
 			/>
 			{#each columns as column}
 				<Column
@@ -116,7 +116,7 @@
 					{taskActions}
 					{columnTagTableStore}
 					{showFilepath}
-					showTags={showTags}
+					{showTags}
 				/>
 			{/each}
 			<Column
@@ -125,7 +125,7 @@
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
-				showTags={showTags}
+				{showTags}
 			/>
 		</div>
 	</div>

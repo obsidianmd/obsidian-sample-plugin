@@ -92,6 +92,8 @@
 		e.currentTarget.style.height = `0px`;
 		e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
 	}
+
+	$: shouldShowTags = showTags && task.tags.size > 0;
 </script>
 
 <div
@@ -132,12 +134,17 @@
 			<p>{task.path}</p>
 		</div>
 	{/if}
-	{#if showTags}
-	  <div class="task-tags">
-		{#each task.tags as tag}
-		  <span class="tag">{tag}</span>
-		{/each}
-	  </div>
+	{#if shouldShowTags}
+		<div class="task-tags">
+			{#each task.tags as tag}
+				<span>
+					<!-- prettier-ignore -->
+					<span class="cm-formatting cm-formatting-hashtag cm-hashtag cm-hashtag-begin cm-list-1">#</span><span
+						class="cm-hashtag cm-hashtag-end cm-list-1">{tag}</span
+					>
+				</span>
+			{/each}
+		</div>
 	{/if}
 </div>
 
@@ -184,8 +191,8 @@
 		.task-footer {
 			border-top: var(--border-width) solid
 				var(--background-modifier-border);
-
-			padding: var(--size-2-2);
+			padding: var(--size-4-2);
+			padding-top: 0;
 
 			p {
 				margin: 0;
@@ -195,21 +202,10 @@
 
 		.task-tags {
 			display: flex;
-			//gap: var(--size-4-2);
-			padding: 2px;
-	
-			.tag {
-				background-color: var(--tag-background);
-				border: var(--tag-border-width) solid var(--tag-border-color);
-				border-radius: var(--tag-radius);
-				color: var(--tag-color);
-				font-size: var(--tag-size);
-				font-weight: var(--tag-weight);
-				text-decoration: var(--tag-decoration);
-				padding: var(--tag-padding-y) var(--tag-padding-x);
-				line-height: 1;
-				margin-bottom: 5px;
-			}
+			flex-wrap: wrap;
+			gap: var(--size-4-1) var(--size-2-1);
+			padding: var(--size-4-2) var(--size-2-2);
+			padding-top: 0;
 		}
 	}
 
