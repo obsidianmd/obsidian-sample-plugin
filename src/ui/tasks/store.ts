@@ -1,16 +1,18 @@
 import { TFile, Vault, type EventRef, Workspace } from "obsidian";
 import { updateMapsFromFile, type Metadata } from "./tasks";
 import { Task } from "./task";
-import { writable, type Readable, type Writable } from "svelte/store";
+import { get, writable, type Readable, type Writable } from "svelte/store";
 import type { ColumnTagTable } from "../columns/columns";
 import { createTaskActions, type TaskActions } from "./actions";
+import type { SettingValues } from "../settings/settings_store";
 
 export function createTasksStore(
 	vault: Vault,
 	workspace: Workspace,
 	registerEvent: (eventRef: EventRef) => void,
 	columnTagTableStore: Readable<ColumnTagTable>,
-	getFilenameFilter: () => string | null
+	getFilenameFilter: () => string | null,
+	settingsStore: Writable<SettingValues>
 ): {
 	tasksStore: Writable<Task[]>;
 	taskActions: TaskActions;
@@ -51,6 +53,8 @@ export function createTasksStore(
 		metadataByTaskId.clear();
 		taskIdsByFileHandle.clear();
 
+		const consolidateTags = get(settingsStore).consolidateTags ?? false;
+
 		for (const fileHandle of fileHandles) {
 			if (!shouldHandle(fileHandle)) {
 				continue;
@@ -63,6 +67,7 @@ export function createTasksStore(
 				taskIdsByFileHandle,
 				vault,
 				columnTagTableStore,
+				consolidateTags,
 			}).then(() => {
 				debounceSetTasks();
 			});
@@ -72,6 +77,8 @@ export function createTasksStore(
 	registerEvent(
 		vault.on("modify", (fileHandle) => {
 			if (fileHandle instanceof TFile && shouldHandle(fileHandle)) {
+				const consolidateTags =
+					get(settingsStore).consolidateTags ?? false;
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,
@@ -79,6 +86,7 @@ export function createTasksStore(
 					taskIdsByFileHandle,
 					vault,
 					columnTagTableStore,
+					consolidateTags,
 				}).then(() => {
 					debounceSetTasks();
 				});
@@ -89,6 +97,8 @@ export function createTasksStore(
 	registerEvent(
 		vault.on("create", (fileHandle) => {
 			if (fileHandle instanceof TFile && shouldHandle(fileHandle)) {
+				const consolidateTags =
+					get(settingsStore).consolidateTags ?? false;
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,
@@ -96,6 +106,7 @@ export function createTasksStore(
 					taskIdsByFileHandle,
 					vault,
 					columnTagTableStore,
+					consolidateTags,
 				}).then(() => {
 					debounceSetTasks();
 				});

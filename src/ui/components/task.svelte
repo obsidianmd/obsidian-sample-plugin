@@ -11,7 +11,7 @@
 	export let taskActions: TaskActions;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
 	export let showFilepath: boolean;
-	export let showTags: boolean;
+	export let consolidateTags: boolean;
 
 	const mdConverted = new Converter({
 		simplifiedAutoLink: true,
@@ -93,7 +93,7 @@
 		e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
 	}
 
-	$: shouldShowTags = showTags && task.tags.size > 0;
+	$: shouldconsolidateTags = consolidateTags && task.tags.size > 0;
 </script>
 
 <div
@@ -134,7 +134,7 @@
 			<p>{task.path}</p>
 		</div>
 	{/if}
-	{#if shouldShowTags}
+	{#if shouldconsolidateTags}
 		<div class="task-tags">
 			{#each task.tags as tag}
 				<span>

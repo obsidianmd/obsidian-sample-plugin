@@ -74,8 +74,8 @@
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
-	$: showFilepath = $settingsStore.showFilepath ?? true;
-	$: showTags = $settingsStore.showTags ?? true;
+	$: ({ showFilepath = true, consolidateTags = false } = $settingsStore);
+
 	async function handleOpenSettings() {
 		openSettings();
 	}
@@ -107,7 +107,7 @@
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
-				{showTags}
+				{consolidateTags}
 			/>
 			{#each columns as column}
 				<Column
@@ -116,7 +116,7 @@
 					{taskActions}
 					{columnTagTableStore}
 					{showFilepath}
-					{showTags}
+					{consolidateTags}
 				/>
 			{/each}
 			<Column
@@ -125,7 +125,7 @@
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
-				{showTags}
+				{consolidateTags}
 			/>
 		</div>
 	</div>

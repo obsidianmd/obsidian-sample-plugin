@@ -62,7 +62,8 @@ export class KanbanView extends TextFileView {
 			this.app.workspace,
 			this.registerEvent.bind(this),
 			this.columnTagTableStore,
-			() => this.filenameFilter
+			() => this.filenameFilter,
+			this.settingsStore
 		);
 
 		this.tasksStore = tasksStore;

@@ -7,7 +7,7 @@ const settingsObject = z.object({
 	columns: z.array(z.string()),
 	scope: z.union([z.literal("everywhere"), z.literal("folder")]),
 	showFilepath: z.boolean().default(true).optional(),
-	showTags: z.boolean().default(true).optional(),
+	consolidateTags: z.boolean().default(false).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;
@@ -16,7 +16,7 @@ const defaultSettings: SettingValues = {
 	columns: ["Later", "Soonish", "Next week", "This week", "Today", "Pending"],
 	scope: "folder",
 	showFilepath: true,
-	showTags: true,
+	consolidateTags: false,
 };
 
 export const createSettingsStore = () =>
