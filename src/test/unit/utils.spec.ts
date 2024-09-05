@@ -27,7 +27,7 @@ describe('lastPathComponent and extractParentFolderPath', () => {
     )
 })
 
-describe('extractBasenane', () => {
+describe('extractBasename', () => {
     const params: Array<(string|undefined)[]> = [
         // Obvious
         ['index', 'index'],
@@ -39,7 +39,7 @@ describe('extractBasenane', () => {
         ['.md',''],
         ['.md.md','.md']
     ];
-    it.each(params)('>%s< should become %s', (s: string|undefined, out: string|undefined) => {
+    it.each(params)('>%s< should result in %s', (s: string|undefined, out: string|undefined) => {
         expect(extractBasename(s)).toBe(out)
     })
 })

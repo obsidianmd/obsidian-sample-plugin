@@ -476,7 +476,7 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 			case CustomSortGroupType.HasMetadataField:
 				if (group.withMetadataFieldName) {
 					if (ctx?._mCache) {
-						// For folders - scan metadata of 'folder note' in same-name-as-folder mode
+						// For folders - scan metadata of 'folder note' in same-name-as-parent-folder mode
 						const notePathToScan: string = aFile ? entry.path : `${entry.path}/${entry.name}.md`
 						let frontMatterCache: FrontMatterCache | undefined = ctx._mCache.getCache(notePathToScan)?.frontmatter
 						let hasMetadata: boolean | undefined = frontMatterCache?.hasOwnProperty(group.withMetadataFieldName)
