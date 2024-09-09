@@ -1,0 +1,101 @@
+name: Release Package
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - package.json
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - package.json
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+        type: string
+
+jobs:
+  release:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Use your preferred version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Get version from package.json
+        id: get_version
+        run: |
+          VERSION=$(cat package.json | jq -r '.version')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set GitHub Token
+        run: echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Check if version exists in releases
+        id: version_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION_EXISTS=$(gh release list | grep -w "$VERSION" || true)
+          if [ -n "$VERSION_EXISTS" ]; then
+            echo "Version $VERSION already exists. Aborting."
+            exit 0
+          fi
+
+      - name: Update version in package.json (Manual Trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          npm version $VERSION --no-git-tag-version
+          echo "Updated package.json to version $VERSION"
+
+      - name: Update version in manifest.json
+        run: |
+          VERSION=$(cat package.json | jq -r '.version')
+          jq --arg v "$VERSION" '.version = $v' manifest.json > manifest_tmp.json
+          mv manifest_tmp.json manifest.json
+
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json manifest.json
+          git commit -m "Bump version to $VERSION"
+          git push
+
+      - name: Build the project
+        run: npm run build
+
+      - name: Create Release Directory
+        run: |
+          mkdir -p output
+          cp manifest.json output/
+          if [ -f styles.css ]; then
+            cp styles.css output/
+          fi
+          if [ -f main.js ]; then
+            cp main.js output/
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(cat package.json | jq -r '.version')
+          gh release create "$VERSION" ./output/* --title "v$VERSION" --notes "Release $VERSION"
