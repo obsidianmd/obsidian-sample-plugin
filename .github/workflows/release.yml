@@ -22,6 +22,7 @@ on:
 
 jobs:
   release:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     steps:
@@ -68,6 +69,15 @@ jobs:
           VERSION=$(cat package.json | jq -r '.version')
           jq --arg v "$VERSION" '.version = $v' manifest.json > manifest_tmp.json
           mv manifest_tmp.json manifest.json
+
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json manifest.json
+          git commit -m "Bump version to $VERSION"
+          git push
 
       - name: Build the project
         run: npm run build
