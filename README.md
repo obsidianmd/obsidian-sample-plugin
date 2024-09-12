@@ -21,6 +21,10 @@ The simplest usage scenario is to sort items via drag and drop:
 
 ![Drag and drop ordering simplest example](https://github.com/SebastianMC/obsidian-custom-sort/assets/23032356/25c997e3-c595-448c-a804-5fa9a66bae20)
 
+Another typical scenario is to apply different sorting order per folder:
+
+![Idea of different sorting order per folder](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/img/different-sorting-order-per-folder.png)
+
 For detailed instructions and videos go to [wiki documentation](https://github.com/SebastianMC/obsidian-custom-sort/wiki/How-to-order-items-in-File-Explorer-with-drag-and-drop%3F)
 
 More advanced capabilities available through config-driven sorting:
