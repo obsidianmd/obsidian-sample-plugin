@@ -178,17 +178,23 @@ export default class CustomSortPlugin
 
 	checkFileExplorerIsAvailableAndPatchable(logWarning: boolean = true): FileExplorerView | undefined {
 		let fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
-		if (fileExplorerView
-			&& typeof fileExplorerView.createFolderDom === 'function'
-			&& typeof fileExplorerView.requestSort === 'function') {
-			return fileExplorerView
-		} else {
-			// Various scenarios when File Explorer was turned off (e.g. by some other plugin)
-			if (logWarning) {
-				this.logWarningFileExplorerNotAvailable()
+		if (fileExplorerView && typeof fileExplorerView.requestSort === 'function') {
+			// The plugin integration points changed with Obsidian 1.6.0 hence the patchability-check should also be Obsidian version aware
+			if (requireApiVersion && requireApiVersion("1.6.0")) {
+				if (typeof fileExplorerView.getSortedFolderItems === 'function') {
+					return fileExplorerView
+				}
+			} else { // Obsidian versions prior to 1.6.0
+				if (typeof fileExplorerView.createFolderDom === 'function') {
+					return fileExplorerView
+				}
 			}
-			return undefined
 		}
+		// Various scenarios when File Explorer was turned off (e.g. by some other plugin)
+		if (logWarning) {
+			this.logWarningFileExplorerNotAvailable()
+		}
+		return undefined
 	}
 
 	logWarningFileExplorerNotAvailable() {
