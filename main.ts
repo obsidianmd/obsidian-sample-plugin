@@ -6,7 +6,7 @@ export default class NyanBar extends Plugin {
             let div = el.createEl('div');
             div.addClass('divCont');
             let rainbowCont = div.createEl('div');
-            if (catType === 'nyan') {
+            if (catType === 'nyan') { 
                 rainbowCont.addClass('rainbowNyan');
             } else if (catType === 'pusheen') {
                 rainbowCont.addClass('rainbowPusheen');
