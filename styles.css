@@ -9,6 +9,7 @@
   left: 0;
   border-radius: 15px;
   background-color: white;
+  color: black;
   padding: 0.9rem;
   z-index: 100;
   max-width: 300px;
@@ -17,4 +18,11 @@
 
 .lawRef-suggestion-container:hover .lawRef-snippet {
   display: block;
+}
+
+.LawRefContainer {
+  background-color: #929292; /* Grauer Hintergrund */
+  color: #000000; /* Schwarze Schrift */
+  padding: 10px; /* Etwas Innenabstand */
+  border-radius: 5px; /* Abgerundete Ecken */
 }

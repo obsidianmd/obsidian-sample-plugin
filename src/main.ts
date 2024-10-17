@@ -1,7 +1,9 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, MarkdownPostProcessorContext } from 'obsidian';
-import { VIEW_TYPE_EXAMPLE } from './law-view';
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, MarkdownPostProcessorContext, parseFrontMatterEntry } from 'obsidian';
+import { ExampleView, VIEW_TYPE_EXAMPLE } from './law-view';
 import { OldpApi } from './api/opld';
 import LawSuggester from './lawSuggester';
+import { lawRefPluginEditorProcessor } from './law-editor-processor';
+import { syntaxTree } from '@codemirror/language';
 
 // Remember to rename these classes and interfaces!
 
@@ -16,10 +18,10 @@ const DEFAULT_SETTINGS: LawRefPluginSettings = {
 export default class LawRefPlugin extends Plugin {
 	settings: LawRefPluginSettings;
 	private readonly OldpApi = new OldpApi();
-
 	async onload() {
 		await this.loadSettings();
-
+		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf))
+		this.registerEditorExtension(lawRefPluginEditorProcessor);
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
@@ -27,6 +29,12 @@ export default class LawRefPlugin extends Plugin {
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
 			console.log('click', evt);
+		});
+
+		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
+			// Called when the user clicks the icon.
+			new Notice('This is a notice!');
+			this.activateView();
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
@@ -56,24 +64,36 @@ export default class LawRefPlugin extends Plugin {
 		  // Our view could not be found in the workspace, create a new leaf
 		  // in the right sidebar for it
 		  leaf = workspace.getRightLeaf(false);
-		  //await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+		  await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+
 
 		}
+
+
 		// "Reveal" the leaf in case it is in a collapsed sidebar
-		//workspace.revealLeaf(leaf);
+		workspace.revealLeaf(leaf);
 	}
 	async getFrontMatterMeta(){
 		const { workspace } = this.app;
 		const actFile = workspace.getActiveFile();
 		  	if (!actFile) return
-			  const metadata = app.metadataCache.getFileCache(actFile);
-			if (!metadata) return console.log("no metadata");
-			let returner = metadata.frontmatter;
-			if (returner) {
-				const oldpApi = new OldpApi();
-				console.log(returner['§']);
-				console.log(await oldpApi.search(returner['§']));
-			}			
+			  const actFilemetadata = app.metadataCache.getFileCache(actFile);
+			if (!actFilemetadata) return console.log("no metadata");
+			let actFileFrontmatter = actFilemetadata.frontmatter;
+			let LawRefList = parseFrontMatterEntry(actFileFrontmatter, '§');
+			if (LawRefList) {
+				console.log(LawRefList);
+			}
+			this.app.workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE).forEach((leaf) => {
+				if (leaf.view instanceof ExampleView) {
+					const container = leaf.view.containerEl.children[1];
+					container.empty;
+					console.log(container)
+					LawRefList.forEach((element:string) => {
+						const elementResponse = this.OldpApi.search(element);
+						container.createEl("p", {cls: "LawRefContainer", text: element})});
+				}
+			  });
 	}
 
 
