@@ -5,8 +5,9 @@ import { OldpApi, OldpSearchResponseItem } from "./api/opld";
 export default class LawSuggester extends EditorSuggest<OldpSearchResponseItem> {
     private readonly oldpApi = new OldpApi();
     plugin: LawRefPlugin;
-    queryRegex = new RegExp(/(?:(?<=^|\n)|(?<=\s))(§[-\w]+)(?=\s|$)/gi);
-
+    queryRegex = new RegExp(/(?:(?<=^|\n)|(?<=\s))(§\s\d+\s\w+)(?=\s|$)/gi);
+    // Alte Fassung falls ich Scheiße gebaut habe /(?:(?<=^|\n)|(?<=\s))(§[-\w]+)(?=\s|$)/gi
+    
     constructor(plugin: LawRefPlugin) {
         super(plugin.app);
         this.plugin = plugin;

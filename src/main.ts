@@ -1,18 +1,17 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, MarkdownPostProcessorContext, parseFrontMatterEntry } from 'obsidian';
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, MarkdownPostProcessorContext, parseFrontMatterEntry, View, MarkdownView } from 'obsidian';
 import { ExampleView, VIEW_TYPE_EXAMPLE } from './law-view';
 import { OldpApi } from './api/opld';
 import LawSuggester from './lawSuggester';
-import { lawRefPluginEditorProcessor } from './law-editor-processor';
-import { syntaxTree } from '@codemirror/language';
+import { lawRefPluginEditorProcessor, underlineSelection } from './law-editor-processor';
 
 // Remember to rename these classes and interfaces!
 
 interface LawRefPluginSettings {
-	mySetting: string;
+	useSuggester: boolean;
 }
 
 const DEFAULT_SETTINGS: LawRefPluginSettings = {
-	mySetting: 'default'
+	useSuggester: false
 }
 
 export default class LawRefPlugin extends Plugin {
@@ -23,7 +22,7 @@ export default class LawRefPlugin extends Plugin {
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf))
 		this.registerEditorExtension(lawRefPluginEditorProcessor);
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new LawRefPluginSettingTab(this.app, this));
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
@@ -33,7 +32,10 @@ export default class LawRefPlugin extends Plugin {
 
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			
+			// @ts-expect-error, not typed
+			const CoMieditorView = this.app.workspace.activeEditor.editor.cm as EditorView;
+			underlineSelection(CoMieditorView);
 			this.activateView();
 		});
 
@@ -41,7 +43,9 @@ export default class LawRefPlugin extends Plugin {
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
 		// register suggestor on § key
-		this.registerEditorSuggest(new LawSuggester(this))
+		if (this.settings.useSuggester===true){
+			this.registerEditorSuggest(new LawSuggester(this))
+		}
 
 	}
 
@@ -55,7 +59,7 @@ export default class LawRefPlugin extends Plugin {
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
 
-		const paragraphs = this.getFrontMatterMeta();
+		//const paragraphs = this.getFrontMatterMeta();
 		
 		if (leaves.length > 0) {
 		  // A leaf with our view already exists, use that
@@ -73,7 +77,7 @@ export default class LawRefPlugin extends Plugin {
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		workspace.revealLeaf(leaf);
 	}
-	async getFrontMatterMeta(){
+	/**async getFrontMatterMeta(){
 		const { workspace } = this.app;
 		const actFile = workspace.getActiveFile();
 		  	if (!actFile) return
@@ -94,7 +98,7 @@ export default class LawRefPlugin extends Plugin {
 						container.createEl("p", {cls: "LawRefContainer", text: element})});
 				}
 			  });
-	}
+	}**/
 
 
 	async loadSettings() {
@@ -122,7 +126,7 @@ class SampleModal extends Modal {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
+class LawRefPluginSettingTab extends PluginSettingTab {
 	plugin: LawRefPlugin;
 
 	constructor(app: App, plugin: LawRefPlugin) {
@@ -136,13 +140,12 @@ class SampleSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+			.setName('Use the Suggester for law Refs')
+			.setDesc('Warning: This Feature can lead to overload the oldpapi - Changing this setting requires a restart')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.useSuggester)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.useSuggester = value;
 					await this.plugin.saveSettings();
 				}));
 	}
