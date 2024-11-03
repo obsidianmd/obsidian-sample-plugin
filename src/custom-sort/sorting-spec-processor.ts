@@ -116,6 +116,7 @@ interface CustomSortOrderAscDescPair {
 interface CustomSortOrderSpec {
 	order: CustomSortOrder
 	byMetadataField?: string
+	metadataFieldExtractor?: MDataExtractor
 }
 
 const MAX_SORT_LEVEL: number = 1
@@ -1578,13 +1579,7 @@ export class SortingSpecProcessor {
 			sortOrderSpec[level] = {
 				order: order!,
 				byMetadataField: metadataName,
-
 				metadataFieldExtractor: metadataExtractor
-
-					... and the carry the metadataFieldExtractor attribute down the parser, handle correctly in the 4-levels mdata sorting options
-				        and execute at runtime
-
-				    Seems to be far too complex to be worth it.
 			}
 		}
 		return sortOrderSpec
@@ -1595,8 +1590,10 @@ export class SortingSpecProcessor {
 		return recognized ? (recognized instanceof AttrError ? recognized : {
 			order: recognized[0].order,
 			applyToMetadataField: recognized[0].byMetadataField,
+			metadataValueExtractor: recognized[0].metadataFieldExtractor,
 			secondaryOrder: recognized[1]?.order,
-			secondaryApplyToMetadataField: recognized[1]?.byMetadataField
+			secondaryApplyToMetadataField: recognized[1]?.byMetadataField,
+			secondaryMetadataValueExtractor: recognized[1]?.metadataFieldExtractor
 		}) : null;
 	}
 

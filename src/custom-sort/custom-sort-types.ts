@@ -1,3 +1,5 @@
+import {MDataExtractor} from "./mdata-extractors";
+
 export enum CustomSortGroupType {
 	Outsiders, // Not belonging to any of other groups
 	MatchAll, // like a wildard *, used in connection with foldersOnly or filesOnly. The difference between the MatchAll and Outsiders is
@@ -51,8 +53,10 @@ export enum CustomSortOrder {
 export interface RecognizedOrderValue {
 	order: CustomSortOrder
 	applyToMetadataField?: string
+	metadataValueExtractor?: MDataExtractor
 	secondaryOrder?: CustomSortOrder
 	secondaryApplyToMetadataField?: string
+	secondaryMetadataValueExtractor?: MDataExtractor
 }
 
 export type NormalizerFn = (s: string) => string | null
