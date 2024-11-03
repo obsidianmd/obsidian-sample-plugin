@@ -33,6 +33,10 @@ import {
 	MATCH_CHILDREN_2_SUFFIX,
 	NO_PRIORITY
 } from "./folder-matching-rules"
+import {
+	MDataExtractor,
+	tryParseAsMDataExtractorSpec
+} from "./mdata-extractors";
 
 interface ProcessingContext {
 	folderPath: string
@@ -1497,10 +1501,30 @@ export class SortingSpecProcessor {
 			orderSpec = hasDirectionPostfix ? orderSpec.substring(hasDirectionPostfix.lexeme.length).trim() : orderSpec
 
 			let metadataName: string|undefined
+			let metadataExtractor: MDataExtractor|undefined
 			if (orderSpec.startsWith(OrderByMetadataLexeme)) {
 				applyToMetadata = true
-				metadataName = orderSpec.substring(OrderByMetadataLexeme.length).trim() || undefined
-				orderSpec = '' // metadataName is unparsed, consumes the remainder string, even if malformed, e.g. with infix spaces
+				const metadataNameAndOptionalExtractorSpec = orderSpec.substring(OrderByMetadataLexeme.length).trim() || undefined
+				if (metadataNameAndOptionalExtractorSpec) {
+					if (metadataNameAndOptionalExtractorSpec.indexOf(' ') > -1) {
+						const metadataSpec = metadataNameAndOptionalExtractorSpec.split(' ')
+						metadataName = metadataSpec.shift()
+						const metadataExtractorSpec = metadataSpec?.shift()
+						const hasMetadataExtractor = metadataExtractorSpec ? tryParseAsMDataExtractorSpec(metadataExtractorSpec) : undefined
+						if (hasMetadataExtractor) {
+							metadataExtractor = hasMetadataExtractor.m
+						} else {
+							// TODO: raise error of syntax error - metadata name followed by unrecognized text
+							//       take into account all of the texts resulting from the split(' ') - there could be more segments
+						}
+						orderSpec = '' // Intentionally ignore anything beyond the metadata name and extractor
+					} else {
+						metadataName = metadataNameAndOptionalExtractorSpec
+						orderSpec = '' // Intentionally ignore anything beyond the metadata name (and no known extractor)
+					}
+				} else {
+					orderSpec = ''
+				}
 			}
 
 			// check for any superfluous text
@@ -1553,7 +1577,14 @@ export class SortingSpecProcessor {
 			}
 			sortOrderSpec[level] = {
 				order: order!,
-				byMetadataField: metadataName
+				byMetadataField: metadataName,
+
+				metadataFieldExtractor: metadataExtractor
+
+					... and the carry the metadataFieldExtractor attribute down the parser, handle correctly in the 4-levels mdata sorting options
+				        and execute at runtime
+
+				    Seems to be far too complex to be worth it.
 			}
 		}
 		return sortOrderSpec
