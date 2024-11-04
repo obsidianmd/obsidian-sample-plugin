@@ -1086,8 +1086,10 @@ export class SortingSpecProcessor {
 				}
 				this.ctx.currentSpec.defaultOrder = (attr.value as RecognizedOrderValue).order
 				this.ctx.currentSpec.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
+				this.ctx.currentSpec.metadataFieldValueExtractor = (attr.value as RecognizedOrderValue).metadataValueExtractor
 				this.ctx.currentSpec.defaultSecondaryOrder = (attr.value as RecognizedOrderValue).secondaryOrder
 				this.ctx.currentSpec.byMetadataFieldSecondary = (attr.value as RecognizedOrderValue).secondaryApplyToMetadataField
+				this.ctx.currentSpec.metadataFieldSecondaryValueExtractor = (attr.value as RecognizedOrderValue).secondaryMetadataValueExtractor
 				return true;
 			} else if (attr.nesting > 0) { // For now only distinguishing nested (indented) and not-nested (not-indented), the depth doesn't matter
 				if (!this.ctx.currentSpec || !this.ctx.currentSpecGroup) {
@@ -1101,8 +1103,10 @@ export class SortingSpecProcessor {
 				}
 				this.ctx.currentSpecGroup.order = (attr.value as RecognizedOrderValue).order
 				this.ctx.currentSpecGroup.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
+				this.ctx.currentSpecGroup.metadataFieldValueExtractor = (attr.value as RecognizedOrderValue).metadataValueExtractor
 				this.ctx.currentSpecGroup.secondaryOrder = (attr.value as RecognizedOrderValue).secondaryOrder
 				this.ctx.currentSpecGroup.byMetadataFieldSecondary = (attr.value as RecognizedOrderValue).secondaryApplyToMetadataField
+				this.ctx.currentSpecGroup.metadataFieldSecondaryValueExtractor = (attr.value as RecognizedOrderValue).secondaryMetadataValueExtractor
 				return true;
 			}
 		}

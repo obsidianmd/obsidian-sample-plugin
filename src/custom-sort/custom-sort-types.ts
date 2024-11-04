@@ -75,9 +75,11 @@ export interface CustomSortGroup {
 	exactSuffix?: string
 	regexSuffix?: RegExpSpec
 	order?: CustomSortOrder
-	byMetadataField?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
+	byMetadataField?: string                       // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
+	metadataFieldValueExtractor?: MDataExtractor   //    and its sorting value extractor
 	secondaryOrder?: CustomSortOrder
 	byMetadataFieldSecondary?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
+	metadataFieldSecondaryValueExtractor?: MDataExtractor
 	filesOnly?: boolean
 	matchFilenameWithExt?: boolean
 	foldersOnly?: boolean
@@ -92,8 +94,10 @@ export interface CustomSortSpec {
 	targetFoldersPaths: Array<string>   // For root use '/'
 	defaultOrder?: CustomSortOrder
 	defaultSecondaryOrder?: CustomSortOrder
-	byMetadataField?: string            // for 'by-metadata:' if the defaultOrder is by metadata
+	byMetadataField?: string                 // for 'by-metadata:' if the defaultOrder is by metadata
+	metadataFieldValueExtractor?: MDataExtractor  //       and its sorting value extractor
 	byMetadataFieldSecondary?: string
+	metadataFieldSecondaryValueExtractor?: MDataExtractor
 	groups: Array<CustomSortGroup>
 	groupsShadow?: Array<CustomSortGroup>   // A shallow copy of groups, used at applying sorting for items in a folder.
 	                                        // Stores folder-specific values (e.g. macros expanded with folder-specific values)
