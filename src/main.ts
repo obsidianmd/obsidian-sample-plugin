@@ -1,5 +1,5 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, MarkdownPostProcessorContext, parseFrontMatterEntry, View, MarkdownView } from 'obsidian';
-import { ExampleView, VIEW_TYPE_EXAMPLE } from './law-view';
+import { ExampleView, VIEW_TYPE_EXAMPLE } from './law-sidebar';
 import { OldpApi } from './api/opld';
 import LawSuggester from './lawSuggester';
 import { lawRefPluginEditorProcessor, underlineSelection } from './law-editor-processor';
