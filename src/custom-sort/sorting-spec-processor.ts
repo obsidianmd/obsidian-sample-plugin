@@ -144,6 +144,8 @@ const OrderLiterals: { [key: string]: CustomSortOrderAscDescPair } = {
 
 const OrderByMetadataLexeme: string = 'by-metadata:'
 
+const ValueExtractorLexeme: string = 'using-extractor:'
+
 const OrderLevelsSeparator: string = ','
 
 enum Attribute {
@@ -1511,24 +1513,23 @@ export class SortingSpecProcessor {
 				applyToMetadata = true
 				const metadataNameAndOptionalExtractorSpec = orderSpec.substring(OrderByMetadataLexeme.length).trim() || undefined
 				if (metadataNameAndOptionalExtractorSpec) {
-					if (metadataNameAndOptionalExtractorSpec.indexOf(' ') > -1) {
-						const metadataSpec = metadataNameAndOptionalExtractorSpec.split(' ')
-						metadataName = metadataSpec.shift()
-						const metadataExtractorSpec = metadataSpec?.shift()
+					if (metadataNameAndOptionalExtractorSpec.indexOf(ValueExtractorLexeme) > -1) {
+						const metadataSpec = metadataNameAndOptionalExtractorSpec.split(ValueExtractorLexeme)
+						metadataName = metadataSpec.shift()?.trim()
+						const metadataExtractorSpec = metadataSpec?.shift()?.trim()
 						const hasMetadataExtractor = metadataExtractorSpec ? tryParseAsMDataExtractorSpec(metadataExtractorSpec) : undefined
 						if (hasMetadataExtractor) {
 							metadataExtractor = hasMetadataExtractor.m
 						} else {
-							// TODO: raise error of syntax error - metadata name followed by unrecognized text
-							//       take into account all of the texts resulting from the split(' ') - there could be more segments
+							return new AttrError(`${orderNameForErrorMsg} sorting order contains unrecognized value extractor: >>> ${metadataExtractorSpec} <<<`)
 						}
-						orderSpec = '' // Intentionally ignore anything beyond the metadata name and extractor
+						orderSpec = '' // all consumed as metadata and extractor
 					} else {
 						metadataName = metadataNameAndOptionalExtractorSpec
-						orderSpec = '' // Intentionally ignore anything beyond the metadata name (and no known extractor)
+						orderSpec = '' // all consumed as metadata name
 					}
 				} else {
-					orderSpec = ''
+					orderSpec = '' // no metadata name found
 				}
 			}
 

@@ -4,7 +4,8 @@ import {
 	CompoundDotNumberNormalizerFn,
 	ConsumedFolderMatchingRegexp,
 	consumeFolderByRegexpExpression,
-	convertPlainStringToRegex, Date_dd_Mmm_yyyy_NormalizerFn,
+	convertPlainStringToRegex,
+	Date_dd_Mmm_yyyy_NormalizerFn,
 	detectSortingSymbols,
 	escapeRegexUnsafeCharacters,
 	extractSortingSymbol,
@@ -14,8 +15,14 @@ import {
 	RomanNumberNormalizerFn,
 	SortingSpecProcessor
 } from "../../custom-sort/sorting-spec-processor"
-import {CustomSortGroupType, CustomSortOrder, CustomSortSpec, IdentityNormalizerFn} from "../../custom-sort/custom-sort-types";
+import {
+	CustomSortGroupType,
+	CustomSortOrder,
+	CustomSortSpec,
+	IdentityNormalizerFn
+} from "../../custom-sort/custom-sort-types";
 import {FolderMatchingRegexp, FolderMatchingTreeNode} from "../../custom-sort/folder-matching-rules";
+import {_unitTests} from "../../custom-sort/mdata-extractors";
 
 const txtInputExampleA: string = `
 order-asc: a-z
@@ -356,6 +363,17 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 	}
 }
 
+const txtInputExampleSortingSymbols: string = `
+/folders Chapter \\.d+ ...  
+/:files ...section \\-r+.
+% Appendix \\-d+ (attachments)
+Plain syntax\\R+ ... works?
+And this kind of... \\D+plain syntax???
+Here goes ASCII word \\a+
+\\A+. is for any modern language word
+\\[dd-Mmm-yyyy] for the specific date format of 12-Apr-2024
+`
+
 const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
 		groups: [{
@@ -418,16 +436,66 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 	}
 }
 
-const txtInputExampleSortingSymbols: string = `
-/folders Chapter \\.d+ ...  
-/:files ...section \\-r+.
-% Appendix \\-d+ (attachments)
-Plain syntax\\R+ ... works?
-And this kind of... \\D+plain syntax???
-Here goes ASCII word \\a+
-\\A+. is for any modern language word
-\\[dd-Mmm-yyyy] for the specific date format of 12-Apr-2024
+const txtInputExampleMDataExtractors1: string = `
+< a-z by-metadata: created-by using-extractor: date(dd/mm/yyyy)
+/folders Chapter...
+  > a-z by-metadata: updated-on using-extractor: date(mm/dd/yyyy)
 `
+
+// Tricky elements captured:
+// - Order a-z. for by metadata is transformed to a-z (there is no notion of 'file extension' in metadata values)
+
+const txtInputExampleMDataExtractors2: string = `
+< a-z. by-metadata: created by using-extractor: date(mm/dd/yyyy), < true a-z. by-metadata: using-extractor: date(dd/mm/yyyy)
+/folders ...Chapter
+  > a-z. by-metadata: updated-on using-extractor: date(dd/mm/yyyy), > true a-z by-metadata: md2 using-extractor: date(mm/dd/yyyy) 
+`
+
+const expectedSortSpecsExampleMDataExtractors1: { [key: string]: CustomSortSpec } = {
+	"mock-folder": {
+		defaultOrder: CustomSortOrder.byMetadataFieldAlphabetical,
+		byMetadataField: 'created-by',
+		metadataFieldValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy,
+		groups: [{
+			foldersOnly: true,
+			type: CustomSortGroupType.ExactPrefix,
+			exactPrefix: 'Chapter',
+			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+			byMetadataField: 'updated-on',
+			metadataFieldValueExtractor: _unitTests.extractorFnForDate_mmddyyyy
+		}, {
+			type: CustomSortGroupType.Outsiders
+		}],
+		targetFoldersPaths: ['mock-folder'],
+		outsidersGroupIdx: 1
+	}
+}
+
+const expectedSortSpecsExampleMDataExtractors2: { [key: string]: CustomSortSpec } = {
+	"mock-folder": {
+		defaultOrder: CustomSortOrder.byMetadataFieldAlphabetical,
+		byMetadataField: 'created by',
+		metadataFieldValueExtractor: _unitTests.extractorFnForDate_mmddyyyy,
+		defaultSecondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+		byMetadataFieldSecondary: '',
+		metadataFieldSecondaryValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy,
+		groups: [{
+			foldersOnly: true,
+			type: CustomSortGroupType.ExactSuffix,
+			exactSuffix: 'Chapter',
+			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+			byMetadataField: 'updated-on',
+			metadataFieldValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy,
+			secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+			byMetadataFieldSecondary: 'md2',
+			metadataFieldSecondaryValueExtractor: _unitTests.extractorFnForDate_mmddyyyy
+		}, {
+			type: CustomSortGroupType.Outsiders
+		}],
+		targetFoldersPaths: ['mock-folder'],
+		outsidersGroupIdx: 1
+	}
+}
 
 describe('SortingSpecProcessor', () => {
 	let processor: SortingSpecProcessor;
@@ -448,6 +516,16 @@ describe('SortingSpecProcessor', () => {
 		const inputTxtArr: Array<string> = txtInputExampleSortingSymbols.split('\n')
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleSortingSymbols)
+	})
+	it('should generate correct SortSpecs (example with mdata extractors)', () => {
+		const inputTxtArr: Array<string> = txtInputExampleMDataExtractors1.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleMDataExtractors1)
+	})
+	it('should generate correct SortSpecs (example with mdata extractors, advanced)', () => {
+		const inputTxtArr: Array<string> = txtInputExampleMDataExtractors2.split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result?.sortSpecByPath).toEqual(expectedSortSpecsExampleMDataExtractors2)
 	})
 })
 
@@ -2921,6 +2999,17 @@ describe('SortingSpecProcessor error detection and reporting', () => {
 		expect(errorsLogger).toHaveBeenNthCalledWith(1,
 			`${ERR_PREFIX} 7:InvalidAttributeValue Secondary sorting direction order-asc: and desc are contradicting ${ERR_SUFFIX_IN_LINE(2)}`)
 		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('sorting: standard, order-asc: modified desc by-metadata: xyz // <-- and it is checked earlier than the by-metadata incompatible order'))
+	})
+	it('should reject unknown value extractor', () => {
+		const inputTxtArr: Array<string> = `
+		< a-z. by-metadata: created by using-extractor: date(mm/dd/YYYY)
+		`.replace(/\t/gi, '').split('\n')
+		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
+		expect(result).toBeNull()
+		expect(errorsLogger).toHaveBeenCalledTimes(2)
+		expect(errorsLogger).toHaveBeenNthCalledWith(1,
+			`${ERR_PREFIX} 7:InvalidAttributeValue Primary sorting order contains unrecognized value extractor: >>> date(mm/dd/YYYY) <<< ${ERR_SUFFIX_IN_LINE(2)}`)
+		expect(errorsLogger).toHaveBeenNthCalledWith(2, ERR_LINE_TXT('< a-z. by-metadata: created by using-extractor: date(mm/dd/YYYY)'))
 	})
 })
 
