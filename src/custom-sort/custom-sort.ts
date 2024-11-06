@@ -17,6 +17,7 @@ import {
 	ObsidianIconFolder_PluginInstance
 } from '../utils/ObsidianIconFolderPluginSignature'
 import {
+	CustomSort,
 	CustomSortGroup,
 	CustomSortGroupType,
 	CustomSortOrder,
@@ -294,18 +295,18 @@ export const StandardPlainObsidianComparator = (order: string): PlainSorterFn =>
 	}
 }
 
-export const getSorterFnFor = (sorting: CustomSortOrder, currentUIselectedSorting?: string, sortLevelId?: SortingLevelId): SorterFn => {
-	if (sorting === CustomSortOrder.standardObsidian) {
-		sorting = StandardObsidianToCustomSort[currentUIselectedSorting ?? 'alphabetical'] ?? CustomSortOrder.alphabetical
-		return StandardObsidianComparator(sorting)
+export const getSorterFnFor = (order: CustomSortOrder, currentUIselectedSorting?: string, sortLevelId?: SortingLevelId): SorterFn => {
+	if (order === CustomSortOrder.standardObsidian) {
+		order = StandardObsidianToCustomSort[currentUIselectedSorting ?? 'alphabetical'] ?? CustomSortOrder.alphabetical
+		return StandardObsidianComparator(order)
 	} else {
 		// Some sorters have to know at which sorting level they are used
 		switch(sortLevelId) {
-			case SortingLevelId.forSecondary: return SortersForSecondary[sorting] ?? Sorters[sorting]
-			case SortingLevelId.forDerivedPrimary: return SortersForDerivedPrimary[sorting] ?? Sorters[sorting]
-			case SortingLevelId.forDerivedSecondary: return SortersForDerivedSecondary[sorting] ?? Sorters[sorting]
+			case SortingLevelId.forSecondary: return SortersForSecondary[order] ?? Sorters[order]
+			case SortingLevelId.forDerivedPrimary: return SortersForDerivedPrimary[order] ?? Sorters[order]
+			case SortingLevelId.forDerivedSecondary: return SortersForDerivedSecondary[order] ?? Sorters[order]
 			case SortingLevelId.forPrimary:
-			default: return Sorters[sorting]
+			default: return Sorters[order]
 		}
 	}
 }
@@ -315,13 +316,13 @@ export const getComparator = (sortSpec: CustomSortSpec, currentUIselectedSorting
 		if (itA.groupIdx != undefined && itB.groupIdx != undefined) {
 			if (itA.groupIdx === itB.groupIdx) {
 				const group: CustomSortGroup | undefined = sortSpec.groups[itA.groupIdx]
-				const primary: number = group?.order ? getSorterFnFor(group.order, currentUIselectedSorting, SortingLevelId.forPrimary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const primary: number = group?.sorting ? getSorterFnFor(group.sorting.order, currentUIselectedSorting, SortingLevelId.forPrimary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (primary !== EQUAL_OR_UNCOMPARABLE) return primary
-				const secondary: number = group?.secondaryOrder ? getSorterFnFor(group.secondaryOrder, currentUIselectedSorting, SortingLevelId.forSecondary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const secondary: number = group?.secondarySorting ? getSorterFnFor(group.secondarySorting.order, currentUIselectedSorting, SortingLevelId.forSecondary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (secondary !== EQUAL_OR_UNCOMPARABLE) return secondary
-				const folderLevel: number = sortSpec.defaultOrder ? getSorterFnFor(sortSpec.defaultOrder, currentUIselectedSorting, SortingLevelId.forDerivedPrimary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const folderLevel: number = sortSpec.defaultSorting ? getSorterFnFor(sortSpec.defaultSorting.order, currentUIselectedSorting, SortingLevelId.forDerivedPrimary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (folderLevel !== EQUAL_OR_UNCOMPARABLE) return folderLevel
-				const folderLevelSecondary: number = sortSpec.defaultSecondaryOrder ? getSorterFnFor(sortSpec.defaultSecondaryOrder, currentUIselectedSorting, SortingLevelId.forDerivedSecondary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
+				const folderLevelSecondary: number = sortSpec.defaultSecondarySorting ? getSorterFnFor(sortSpec.defaultSecondarySorting.order, currentUIselectedSorting, SortingLevelId.forDerivedSecondary)(itA, itB) : EQUAL_OR_UNCOMPARABLE
 				if (folderLevelSecondary !== EQUAL_OR_UNCOMPARABLE) return folderLevelSecondary
 				const defaultForUnspecified: number = getSorterFnFor(CustomSortOrder.default, undefined, SortingLevelId.forDefaultWhenUnspecified)(itA, itB)
 				return defaultForUnspecified
@@ -567,10 +568,10 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 
 	if (determined && determinedGroupIdx !== undefined) {  // <-- defensive code, maybe too defensive
 		const group: CustomSortGroup = spec.groups[determinedGroupIdx];
-		const isPrimaryOrderByMetadata: boolean = isByMetadata(group?.order)
-		const isSecondaryOrderByMetadata: boolean = isByMetadata(group?.secondaryOrder)
-		const isDerivedPrimaryByMetadata: boolean = isByMetadata(spec.defaultOrder)
-		const isDerivedSecondaryByMetadata: boolean = isByMetadata(spec.defaultSecondaryOrder)
+		const isPrimaryOrderByMetadata: boolean = isByMetadata(group?.sorting?.order)
+		const isSecondaryOrderByMetadata: boolean = isByMetadata(group?.secondarySorting?.order)
+		const isDerivedPrimaryByMetadata: boolean = isByMetadata(spec.defaultSorting?.order)
+		const isDerivedSecondaryByMetadata: boolean = isByMetadata(spec.defaultSecondarySorting?.order)
 		if (isPrimaryOrderByMetadata || isSecondaryOrderByMetadata || isDerivedPrimaryByMetadata || isDerivedSecondaryByMetadata) {
 			if (ctx?._mCache) {
 				// For folders - scan metadata of 'folder note'
@@ -586,26 +587,26 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 				}
 				if (isPrimaryOrderByMetadata) metadataValueToSortBy =
 					mdataValueFromFMCaches (
-						group?.byMetadataField || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,
-						group?.metadataFieldValueExtractor,
+						group.sorting!.byMetadata || group.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						group.sorting!.metadataValueExtractor,
 						frontMatterCache,
 						prioFrontMatterCache)
 				if (isSecondaryOrderByMetadata) metadataValueSecondaryToSortBy =
 					mdataValueFromFMCaches (
-						group?.byMetadataFieldSecondary || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,
-						group?.metadataFieldSecondaryValueExtractor,
+						group.secondarySorting!.byMetadata || group.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						group.secondarySorting!.metadataValueExtractor,
 						frontMatterCache,
 						prioFrontMatterCache)
 				if (isDerivedPrimaryByMetadata) metadataValueDerivedPrimaryToSortBy =
 					mdataValueFromFMCaches (
-						spec.byMetadataField || DEFAULT_METADATA_FIELD_FOR_SORTING,
-						spec.metadataFieldValueExtractor,
+						spec.defaultSorting!.byMetadata || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						spec.defaultSorting!.metadataValueExtractor,
 						frontMatterCache,
 						prioFrontMatterCache)
 				if (isDerivedSecondaryByMetadata) metadataValueDerivedSecondaryToSortBy =
 					mdataValueFromFMCaches (
-						spec.byMetadataFieldSecondary || DEFAULT_METADATA_FIELD_FOR_SORTING,
-						spec.metadataFieldSecondaryValueExtractor,
+						spec.defaultSecondarySorting!.byMetadata || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						spec.defaultSecondarySorting!.metadataValueExtractor,
 						frontMatterCache,
 						prioFrontMatterCache)
 			}
@@ -707,12 +708,12 @@ export const determineDatesForFolder = (folder: TFolder, recursive?: boolean): [
 }
 
 export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec) => {
-	const foldersDatesNeeded = sortOrderNeedsFolderDates(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder)
-	const foldersDeepDatesNeeded = sortOrderNeedsFolderDeepDates(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder)
+	const foldersDatesNeeded = sortOrderNeedsFolderDates(sortingSpec.defaultSorting?.order, sortingSpec.defaultSecondarySorting?.order)
+	const foldersDeepDatesNeeded = sortOrderNeedsFolderDeepDates(sortingSpec.defaultSorting?.order, sortingSpec.defaultSecondarySorting?.order)
 
 	const groupOrders = sortingSpec.groups?.map((group) => ({
-		foldersDatesNeeded: sortOrderNeedsFolderDates(group.order, group.secondaryOrder),
-		foldersDeepDatesNeeded: sortOrderNeedsFolderDeepDates(group.order, group.secondaryOrder)
+		foldersDatesNeeded: sortOrderNeedsFolderDates(group.sorting?.order, group.secondarySorting?.order),
+		foldersDeepDatesNeeded: sortOrderNeedsFolderDeepDates(group.sorting?.order, group.secondarySorting?.order)
 	}))
 
 	folderItems.forEach((item) => {
@@ -732,15 +733,15 @@ export const determineFolderDatesIfNeeded = (folderItems: Array<FolderItemForSor
 export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemForSorting>, sortingSpec: CustomSortSpec, plugin: BookmarksPluginInterface) => {
 	if (!plugin) return
 
-	const folderDefaultSortRequiresBookmarksOrder: boolean = !!(sortingSpec.defaultOrder && sortOrderNeedsBookmarksOrder(sortingSpec.defaultOrder, sortingSpec.defaultSecondaryOrder))
+	const folderDefaultSortRequiresBookmarksOrder: boolean = !!(sortingSpec.defaultSorting && sortOrderNeedsBookmarksOrder(sortingSpec.defaultSorting.order, sortingSpec.defaultSecondarySorting?.order))
 
 	folderItems.forEach((item) => {
 		let groupSortRequiresBookmarksOrder: boolean = false
 		if (!folderDefaultSortRequiresBookmarksOrder) {
 			const groupIdx: number | undefined = item.groupIdx
 			if (groupIdx !== undefined) {
-				const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].order
-				const groupSecondaryOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].secondaryOrder
+				const groupOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].sorting?.order
+				const groupSecondaryOrder: CustomSortOrder | undefined = sortingSpec.groups[groupIdx].secondarySorting?.order
 				groupSortRequiresBookmarksOrder = sortOrderNeedsBookmarksOrder(groupOrder, groupSecondaryOrder)
 			}
 		}

@@ -1,4 +1,5 @@
 import {
+	CustomSort,
 	CustomSortGroup,
 	CustomSortGroupType,
 	CustomSortOrder,
@@ -6,7 +7,7 @@ import {
 	DEFAULT_METADATA_FIELD_FOR_SORTING,
 	IdentityNormalizerFn,
 	NormalizerFn,
-	RecognizedOrderValue,
+	RecognizedSorting,
 	RegExpSpec
 } from "./custom-sort-types";
 import {isDefined, last} from "../utils/utils";
@@ -111,12 +112,6 @@ const AmbigueFourDotsEscaperOverlap = 1  // Number of leading chars in the Escap
 interface CustomSortOrderAscDescPair {
 	asc: CustomSortOrder
 	desc: CustomSortOrder
-}
-
-interface CustomSortOrderSpec {
-	order: CustomSortOrder
-	byMetadataField?: string
-	metadataFieldExtractor?: MDataExtractor
 }
 
 const MAX_SORT_LEVEL: number = 1
@@ -1081,34 +1076,28 @@ export class SortingSpecProcessor {
 				if (!this.ctx.currentSpec) {
 					this.ctx.currentSpec = this.putNewSpecForNewTargetFolder()
 				}
-				if (this.ctx.currentSpec.defaultOrder) {
+				if (this.ctx.currentSpec.defaultSorting) {
 					const folderPathsForProblemMsg: string = this.ctx.currentSpec.targetFoldersPaths.join(' :: ');
 					this.problem(ProblemCode.DuplicateOrderAttr, `Duplicate order specification for folder(s) ${folderPathsForProblemMsg}`)
 					return false;
 				}
-				this.ctx.currentSpec.defaultOrder = (attr.value as RecognizedOrderValue).order
-				this.ctx.currentSpec.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
-				this.ctx.currentSpec.metadataFieldValueExtractor = (attr.value as RecognizedOrderValue).metadataValueExtractor
-				this.ctx.currentSpec.defaultSecondaryOrder = (attr.value as RecognizedOrderValue).secondaryOrder
-				this.ctx.currentSpec.byMetadataFieldSecondary = (attr.value as RecognizedOrderValue).secondaryApplyToMetadataField
-				this.ctx.currentSpec.metadataFieldSecondaryValueExtractor = (attr.value as RecognizedOrderValue).secondaryMetadataValueExtractor
+				const rs: RecognizedSorting = attr.value  // Syntax sugar
+				this.ctx.currentSpec.defaultSorting = rs.primary
+				this.ctx.currentSpec.defaultSecondarySorting = rs.secondary
 				return true;
 			} else if (attr.nesting > 0) { // For now only distinguishing nested (indented) and not-nested (not-indented), the depth doesn't matter
 				if (!this.ctx.currentSpec || !this.ctx.currentSpecGroup) {
 					this.problem(ProblemCode.DanglingOrderAttr, `Nested (indented) attribute requires prior sorting group definition`)
 					return false;
 				}
-				if (this.ctx.currentSpecGroup.order) {
+				if (this.ctx.currentSpecGroup.sorting) {
 					const folderPathsForProblemMsg: string = this.ctx.currentSpec.targetFoldersPaths.join(' :: ');
 					this.problem(ProblemCode.DuplicateOrderAttr, `Duplicate order specification for a sorting rule of folder ${folderPathsForProblemMsg}`)
 					return false;
 				}
-				this.ctx.currentSpecGroup.order = (attr.value as RecognizedOrderValue).order
-				this.ctx.currentSpecGroup.byMetadataField = (attr.value as RecognizedOrderValue).applyToMetadataField
-				this.ctx.currentSpecGroup.metadataFieldValueExtractor = (attr.value as RecognizedOrderValue).metadataValueExtractor
-				this.ctx.currentSpecGroup.secondaryOrder = (attr.value as RecognizedOrderValue).secondaryOrder
-				this.ctx.currentSpecGroup.byMetadataFieldSecondary = (attr.value as RecognizedOrderValue).secondaryApplyToMetadataField
-				this.ctx.currentSpecGroup.metadataFieldSecondaryValueExtractor = (attr.value as RecognizedOrderValue).secondaryMetadataValueExtractor
+				const rs: RecognizedSorting = attr.value  // Syntax sugar
+				this.ctx.currentSpecGroup.sorting = rs.primary
+				this.ctx.currentSpecGroup.secondarySorting = rs.secondary
 				return true;
 			}
 		}
@@ -1397,7 +1386,7 @@ export class SortingSpecProcessor {
 					currentCombinedGroupIdx = i
 				} else {
 					// Ensure that the preceding group doesn't contain sorting order
-					if (spec.groups[i - 1].order) {
+					if (spec.groups[i - 1].sorting) {
 						this.problem(ProblemCode.OnlyLastCombinedGroupCanSpecifyOrder, 'Predecessor group of combined group cannot contain order specification. Put it at the last of group in combined groups')
 						return false
 					}
@@ -1412,34 +1401,26 @@ export class SortingSpecProcessor {
 
 		// Populate sorting order within combined groups
 		if (anyCombinedGroupPresent) {
-			let orderForCombinedGroup: CustomSortOrder | undefined
-			let byMetadataFieldForCombinedGroup: string | undefined
-			let secondaryOrderForCombinedGroup: CustomSortOrder | undefined
-			let secondaryByMetadataFieldForCombinedGroup: string | undefined
+			let sortingForCombinedGroup: CustomSort|undefined
+			let secondarySortingForCombinedGroup: CustomSort|undefined
 			let idxOfCurrentCombinedGroup: number | undefined = undefined
 			for (let i = spec.groups.length - 1; i >= 0; i--) {
 				const group: CustomSortGroup = spec.groups[i]
 
 				if (group.combineWithIdx !== undefined) {
 					if (group.combineWithIdx === idxOfCurrentCombinedGroup) { // a subsequent (2nd, 3rd, ...) group of combined (counting from the end)
-						group.order = orderForCombinedGroup
-						group.byMetadataField = byMetadataFieldForCombinedGroup
-						group.secondaryOrder = secondaryOrderForCombinedGroup
-						group.byMetadataFieldSecondary = secondaryByMetadataFieldForCombinedGroup
+						group.sorting = sortingForCombinedGroup
+						group.secondarySorting = secondarySortingForCombinedGroup
 					} else { // the first group of combined (counting from the end)
 						idxOfCurrentCombinedGroup = group.combineWithIdx
-						orderForCombinedGroup = group.order // could be undefined
-						byMetadataFieldForCombinedGroup = group.byMetadataField // could be undefined
-						secondaryOrderForCombinedGroup = group.secondaryOrder // could be undefined
-						secondaryByMetadataFieldForCombinedGroup = group.byMetadataFieldSecondary // could be undefined
+						sortingForCombinedGroup = group.sorting
+						secondarySortingForCombinedGroup = group.secondarySorting
 					}
 				} else {
 					// for sanity
 					idxOfCurrentCombinedGroup = undefined
-					orderForCombinedGroup = undefined
-					byMetadataFieldForCombinedGroup = undefined
-					secondaryOrderForCombinedGroup = undefined
-					secondaryByMetadataFieldForCombinedGroup = undefined
+					sortingForCombinedGroup = undefined
+					secondarySortingForCombinedGroup = undefined
 				}
 			}
 		}
@@ -1481,13 +1462,13 @@ export class SortingSpecProcessor {
 		}
 	}
 
-	private internalValidateOrderAttrValue = (sortOrderSpecText: string, prefixLexeme: string): Array<CustomSortOrderSpec>|AttrError|null => {
+	private internalValidateOrderAttrValue = (sortOrderSpecText: string, prefixLexeme: string): Array<CustomSort>|AttrError|null => {
 		if (sortOrderSpecText.indexOf(CommentPrefix) >= 0) {
 			sortOrderSpecText = sortOrderSpecText.substring(0, sortOrderSpecText.indexOf(CommentPrefix))
 		}
 
 		const sortLevels: Array<string> = `${prefixLexeme||''} ${sortOrderSpecText}`.trim().split(OrderLevelsSeparator)
-		let sortOrderSpec: Array<CustomSortOrderSpec> = []
+		let sortOrderSpec: Array<CustomSort> = []
 
 		// Max two levels are supported, excess levels specs are ignored
 		for (let level: number = 0; level <= MAX_SORT_LEVEL && level < sortLevels.length; level++) {
@@ -1583,22 +1564,18 @@ export class SortingSpecProcessor {
 			}
 			sortOrderSpec[level] = {
 				order: order!,
-				byMetadataField: metadataName,
-				metadataFieldExtractor: metadataExtractor
+				byMetadata: metadataName,
+				metadataValueExtractor: metadataExtractor
 			}
 		}
 		return sortOrderSpec
 	}
 
-	private validateOrderAttrValue: AttrValueValidatorFn = (v: string, attr: Attribute, attrLexeme: string): RecognizedOrderValue|AttrError|null => {
-		const recognized: Array<CustomSortOrderSpec>|AttrError|null = this.internalValidateOrderAttrValue(v, attrLexeme)
+	private validateOrderAttrValue: AttrValueValidatorFn = (v: string, attr: Attribute, attrLexeme: string): RecognizedSorting|AttrError|null => {
+		const recognized: Array<CustomSort>|AttrError|null = this.internalValidateOrderAttrValue(v, attrLexeme)
 		return recognized ? (recognized instanceof AttrError ? recognized : {
-			order: recognized[0].order,
-			applyToMetadataField: recognized[0].byMetadataField,
-			metadataValueExtractor: recognized[0].metadataFieldExtractor,
-			secondaryOrder: recognized[1]?.order,
-			secondaryApplyToMetadataField: recognized[1]?.byMetadataField,
-			secondaryMetadataValueExtractor: recognized[1]?.metadataFieldExtractor
+			primary: recognized[0],
+			secondary: recognized[1]
 		}) : null;
 	}
 
