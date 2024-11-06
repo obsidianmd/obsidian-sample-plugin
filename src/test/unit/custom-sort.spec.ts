@@ -1592,9 +1592,10 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldAlphabetical
+					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: 'metadata-field-for-sorting',
+					},
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -1634,9 +1635,9 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+					sorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+						byMetadata: 'metadata-field-for-sorting',},
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -1676,9 +1677,9 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldTrueAlphabetical
+					sorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: 'metadata-field-for-sorting', },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -1718,9 +1719,9 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataField: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
+					sorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+						byMetadata: 'metadata-field-for-sorting', },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -1761,8 +1762,8 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					byMetadataField: 'metadata-field-for-sorting',
-					order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+					sorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+						byMetadata: 'metadata-field-for-sorting', },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -1804,10 +1805,11 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldAlphabetical
+					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical },
 				}],
-				defaultOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-				byMetadataField: 'metadata-field-for-sorting-specified-on-target-folder'
+				defaultSorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+					byMetadata: 'metadata-field-for-sorting-specified-on-target-folder'
+				}
 			}
 			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
@@ -1846,7 +1848,7 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.HasMetadataField,
-					order: CustomSortOrder.byMetadataFieldAlphabetical,
+					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical, },
 					withMetadataFieldName: 'field-used-with-with-metadata-syntax'
 				}]
 			}
@@ -1888,7 +1890,7 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldAlphabetical
+					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -1931,10 +1933,10 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataFieldSecondary: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: 'metadata-field-for-sorting', },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -1974,10 +1976,10 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataFieldSecondary: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+						byMetadata: 'metadata-field-for-sorting', },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -2017,11 +2019,11 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataField: 'non-existing-mdata',
-					byMetadataFieldSecondary: 'metadata-field-for-sorting',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-					secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical
+					sorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: 'non-existing-mdata'},
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: 'metadata-field-for-sorting'},
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -2061,11 +2063,13 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
-					byMetadataField: 'metadata-field-for-sorting',
-					byMetadataFieldSecondary: 'metadata-field-for-sorting secondary',
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-					secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse
+					sorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: 'metadata-field-for-sorting',
+					},
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+						byMetadata: 'metadata-field-for-sorting secondary',
+					},
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -2108,9 +2112,10 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					byMetadataFieldSecondary: 'metadata-field-for-sorting',
-					order: CustomSortOrder.standardObsidian,
-					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+					sorting: { order: CustomSortOrder.standardObsidian,
+						byMetadata: 'metadata-field-for-sorting'
+					},
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -2152,12 +2157,13 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabetical },
 				}],
-				defaultOrder: CustomSortOrder.byCreatedTime,
-				defaultSecondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-				byMetadataFieldSecondary: 'metadata-field-for-sorting-specified-on-target-folder'
+				defaultSorting: { order: CustomSortOrder.byCreatedTime, },
+				defaultSecondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+					byMetadata: 'metadata-field-for-sorting-specified-on-target-folder'
+				},
 			}
 			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
@@ -2196,8 +2202,8 @@ describe('determineSortingGroup', () => {
 				targetFoldersPaths: ['/'],
 				groups: [{
 					type: CustomSortGroupType.HasMetadataField,
-					order: CustomSortOrder.standardObsidian,
-					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical,
+					sorting: { order: CustomSortOrder.standardObsidian, },
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabetical, },
 					withMetadataFieldName: 'field-used-with-with-metadata-syntax'
 				}]
 			}
@@ -2239,8 +2245,8 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byCreatedTimeReverse,
-					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabetical
+					sorting: { order: CustomSortOrder.byCreatedTimeReverse, },
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabetical },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {
@@ -2284,15 +2290,19 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					order: CustomSortOrder.byMetadataFieldAlphabetical,
-					byMetadataField: 'mdata-for-primary',
-					secondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-					byMetadataFieldSecondary: 'mdata-for-secondary'
+					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: 'mdata-for-primary',
+					},
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+						byMetadata: 'mdata-for-secondary'
+					},
 				}],
-				defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-				byMetadataField: 'mdata-for-default-primary',
-				defaultSecondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
-				byMetadataFieldSecondary: 'mdata-for-default-secondary'
+				defaultSorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+					byMetadata: 'mdata-for-default-primary',
+				},
+				defaultSecondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+					byMetadata: 'mdata-for-default-secondary'
+				},
 			}
 			const ctx: Partial<ProcessingContext> = {
 				_mCache: {
@@ -2338,24 +2348,24 @@ describe('determineSortingGroup', () => {
 		const sortSpec: CustomSortSpec = {
 			groups: [{
 				filesOnly: true,
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.MatchAll
 			}, {
 				foldersOnly: true,
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.MatchAll
 			}, {
 				exactSuffix: "def!",
 				priority: 2,
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.ExactSuffix
 			}, {
 				exactText: "Abcdef!",
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				priority: 3,
 				type: CustomSortGroupType.ExactName
 			}, {
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.Outsiders
 			}],
 			outsidersGroupIdx: 4,
@@ -2384,28 +2394,28 @@ describe('determineSortingGroup', () => {
 		const sortSpec: CustomSortSpec = {
 			groups: [{
 				exactSuffix: "def!",
-				order: CustomSortOrder.alphabeticalReverse,
+				sorting: { order: CustomSortOrder.alphabeticalReverse, },
 				type: CustomSortGroupType.ExactSuffix
 			}, {
 				exactPrefix: "Hello :-)",
-				order: CustomSortOrder.alphabeticalReverse,
+				sorting: { order: CustomSortOrder.alphabeticalReverse, },
 				type: CustomSortGroupType.ExactPrefix,
 				combineWithIdx: 1
 			}, {
 				exactText: "Hello World :-)",
-				order: CustomSortOrder.alphabeticalReverse,
+				sorting: { order: CustomSortOrder.alphabeticalReverse, },
 				type: CustomSortGroupType.ExactName,
 				combineWithIdx: 1
 			}, {
 				filesOnly: true,
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.MatchAll
 			}, {
 				foldersOnly: true,
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.MatchAll
 			}, {
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.Outsiders
 			}],
 			outsidersGroupIdx: 5,
@@ -2442,25 +2452,25 @@ describe('determineSortingGroup', () => {
 		const sortSpec: CustomSortSpec = {
 			groups: [{
 				filesOnly: true,
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.MatchAll
 			}, {
 				foldersOnly: true,
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.MatchAll
 			}, {
 				exactSuffix: "def!",
-				order: CustomSortOrder.alphabeticalReverse,
+				sorting: { order: CustomSortOrder.alphabeticalReverse, },
 				type: CustomSortGroupType.ExactSuffix,
 				combineWithIdx: 2
 			}, {
 				exactText: "Hello :-)",
-				order: CustomSortOrder.alphabeticalReverse,
+				sorting: { order: CustomSortOrder.alphabeticalReverse, },
 				type: CustomSortGroupType.ExactName,
 				priority: 1,
 				combineWithIdx: 2
 			}, {
-				order: CustomSortOrder.alphabetical,
+				sorting: { order: CustomSortOrder.alphabetical, },
 				type: CustomSortGroupType.Outsiders
 			}],
 			outsidersGroupIdx: 4,

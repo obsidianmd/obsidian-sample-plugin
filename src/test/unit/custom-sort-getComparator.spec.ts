@@ -14,18 +14,18 @@ const FlatLevelSortSpec: CustomSortSpec = {
 	groups: [{  // Not relevant in unit test
 		exactText: "Nothing",
 		filesOnly: true,
-		order: CustomSortOrder.alphabetical,
+		sorting: { order: CustomSortOrder.alphabetical, },
 		type: CustomSortGroupType.ExactName
 	},{  // prepared for unit test
 		exactPrefix: "Fi",
-		order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+		sorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse, },
 		type: CustomSortGroupType.ExactPrefix
 	},{  // Not relevant in unit test
 		type: CustomSortGroupType.Outsiders,
-		order: CustomSortOrder.byCreatedTime
+		sorting: { order: CustomSortOrder.byCreatedTime },
 	}],
 	outsidersGroupIdx: 2,
-	defaultOrder: CustomSortOrder.byCreatedTime,
+	defaultSorting: { order: CustomSortOrder.byCreatedTime, },
 	targetFoldersPaths: ['parent folder']
 }
 
@@ -33,19 +33,19 @@ const MultiLevelSortSpecGroupLevel: CustomSortSpec = {
 	groups: [{  // Not relevant in unit test
 		exactText: "Nothing",
 		filesOnly: true,
-		order: CustomSortOrder.alphabetical,
+		sorting: { order: CustomSortOrder.alphabetical, },
 		type: CustomSortGroupType.ExactName
 	},{  // prepared for unit test
 		exactPrefix: "Fi",
-		order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-		secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+		sorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse, },
+		secondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical, },
 		type: CustomSortGroupType.ExactPrefix
 	},{  // Not relevant in unit test
 		type: CustomSortGroupType.Outsiders,
-		order: CustomSortOrder.byCreatedTime
+		sorting: { order: CustomSortOrder.byCreatedTime },
 	}],
 	outsidersGroupIdx: 2,
-	defaultOrder: CustomSortOrder.byCreatedTime,
+	defaultSorting: { order: CustomSortOrder.byCreatedTime, },
 	targetFoldersPaths: ['parent folder']
 }
 
@@ -53,19 +53,19 @@ const MultiLevelSortSpecTargetFolderLevel: CustomSortSpec = {
 	groups: [{  // Not relevant in unit test
 		exactText: "Nothing",
 		filesOnly: true,
-		order: CustomSortOrder.alphabetical,
+		sorting: { order: CustomSortOrder.alphabetical, },
 		type: CustomSortGroupType.ExactName
 	},{  // prepared for unit test
 		exactPrefix: "Fi",
-		order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+		sorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse, },
 		type: CustomSortGroupType.ExactPrefix
 	},{  // Not relevant in unit test
 		type: CustomSortGroupType.Outsiders,
-		order: CustomSortOrder.byCreatedTime
+		sorting: { order: CustomSortOrder.byCreatedTime },
 	}],
 	outsidersGroupIdx: 2,
-	defaultOrder: CustomSortOrder.byCreatedTime,
-	defaultSecondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+	defaultSorting: { order: CustomSortOrder.byCreatedTime, },
+	defaultSecondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse, },
 	targetFoldersPaths: ['parent folder']
 }
 
@@ -73,20 +73,20 @@ const MultiLevelSortSpecAndTargetFolderLevel: CustomSortSpec = {
 	groups: [{  // Not relevant in unit test
 		exactText: "Nothing",
 		filesOnly: true,
-		order: CustomSortOrder.alphabetical,
+		sorting: { order: CustomSortOrder.alphabetical, },
 		type: CustomSortGroupType.ExactName
 	},{  // prepared for unit test
 		exactPrefix: "Fi",
-		order: CustomSortOrder.byMetadataFieldAlphabetical,
-		secondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+		sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical, },
+		secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse, },
 		type: CustomSortGroupType.ExactPrefix
 	},{  // Not relevant in unit test
 		type: CustomSortGroupType.Outsiders,
-		order: CustomSortOrder.byCreatedTime
+		sorting: { order: CustomSortOrder.byCreatedTime },
 	}],
 	outsidersGroupIdx: 2,
-	defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-	defaultSecondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+	defaultSorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical, },
+	defaultSecondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse, },
 	targetFoldersPaths: ['parent folder']
 }
 
