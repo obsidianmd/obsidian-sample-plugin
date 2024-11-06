@@ -2112,10 +2112,10 @@ describe('determineSortingGroup', () => {
 				groups: [{
 					type: CustomSortGroupType.ExactPrefix,
 					exactPrefix: 'Ref',
-					sorting: { order: CustomSortOrder.standardObsidian,
+					sorting: { order: CustomSortOrder.standardObsidian },
+					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
 						byMetadata: 'metadata-field-for-sorting'
 					},
-					secondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse },
 				}]
 			}
 			const ctx: Partial<ProcessingContext> = {

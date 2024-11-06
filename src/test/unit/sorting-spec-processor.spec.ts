@@ -8,7 +8,7 @@ import {
 	Date_dd_Mmm_yyyy_NormalizerFn,
 	detectSortingSymbols,
 	escapeRegexUnsafeCharacters,
-	extractSortingSymbol,
+	extractSortingSymbol, FolderPathToSortSpecMap,
 	hasMoreThanOneSortingSymbol,
 	NumberNormalizerFn,
 	RegexpUsedAs,
@@ -1548,8 +1548,10 @@ describe('SortingSpecProcessor', () => {
 		expect(result?.sortSpecByPath).toEqual({
 			"/": {
 				defaultSorting: { order: CustomSortOrder.byCreatedTime, },
-				defaultSecondarySorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse, },
-				byMetadataFieldSecondary: "someMdataFld",
+				defaultSecondarySorting: {
+					order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+					byMetadata: "someMdataFld"
+				},
 				groups: [{
 					exactText: "Nothing",
 					sorting: { order: CustomSortOrder.alphabeticalReverse, },
@@ -1571,25 +1573,37 @@ describe('SortingSpecProcessor', () => {
 				}, {
 					combineWithIdx: 4,
 					exactPrefix: "Abc",
-					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical, },
-					byMetadata: "abc-def",
-					secondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical, },
-					byMetadataFieldSecondary: "ghi-jkl1",
+					sorting: {
+						order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: "abc-def",
+					},
+					secondarySorting: {
+						order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: "ghi-jkl1"
+					},
 					type: CustomSortGroupType.ExactPrefix
 				}, {
 					combineWithIdx: 4,
 					exactSuffix: "Def",
-					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical, },
-					byMetadata: "abc-def",
-					secondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical, },
-					byMetadataFieldSecondary: "ghi-jkl1",
+					sorting: {
+						order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: "abc-def",
+					},
+					secondarySorting: {
+						order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: "ghi-jkl1"
+					},
 					type: CustomSortGroupType.ExactSuffix
 				}, {
 					combineWithIdx: 4,
-					sorting: { order: CustomSortOrder.byMetadataFieldAlphabetical, },
-					byMetadata: "abc-def",
-					secondarySorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical, },
-					byMetadataFieldSecondary: "ghi-jkl1",
+					sorting: {
+						order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: "abc-def"
+					},
+					secondarySorting: {
+						order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: "ghi-jkl1"
+					},
 					type: CustomSortGroupType.MatchAll
 				}, {
 					exactText: "Unreachable line",
@@ -1600,7 +1614,7 @@ describe('SortingSpecProcessor', () => {
 				outsidersGroupIdx: 8,
 				targetFoldersPaths: ['/']
 			}
-		})
+		} as FolderPathToSortSpecMap)
 		expect(result?.sortSpecByWildcard).toBeUndefined()
 	})
 })
