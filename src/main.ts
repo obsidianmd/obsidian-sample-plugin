@@ -2,7 +2,7 @@ import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace
 import { ExampleView, VIEW_TYPE_EXAMPLE } from './law-sidebar';
 import { OldpApi } from './api/opld';
 import LawSuggester from './lawSuggester';
-import { lawRefPluginEditorProcessor, underlineSelection } from './law-editor-processor';
+import {  lawRefPluginEditorProcessor, } from './law-editor-processor';
 
 // Remember to rename these classes and interfaces!
 
@@ -33,9 +33,6 @@ export default class LawRefPlugin extends Plugin {
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
 			
-			// @ts-expect-error, not typed
-			const CoMieditorView = this.app.workspace.activeEditor.editor.cm as EditorView;
-			underlineSelection(CoMieditorView);
 			this.activateView();
 		});
 
