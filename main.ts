@@ -1,134 +1,161 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
+export default class LineConverterPlugin extends Plugin {
+    async onload() {
+        this.registerMarkdownCodeBlockProcessor('line', async (source, el, ctx) => {
+            const convertedText = processLineBlock(source);
+            el.createEl('pre').setText(convertedText);
+        });
+    }
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+function processLineBlock(source: string): string {
+    const lines = source.split('\n');
+    const outputLines = [];
+    let prevIndentLevel = 0;
+    let listCounters: number[] = [];
+    let previousListType = '';
+
+    for (let line of lines) {
+        // Determine indentation level
+        const indentMatch = line.match(/^(\t+|\s+)/);
+        let indentLevel = 0;
+        if (indentMatch) {
+            const indent = indentMatch[1];
+            // For simplicity, consider each tab or 4 spaces as one indent level
+            const tabCount = (indent.match(/\t/g) || []).length;
+            const spaceCount = (indent.match(/ /g) || []).length;
+            indentLevel = tabCount + Math.floor(spaceCount / 4);
+            // Remove leading indentation
+            line = line.substring(indent.length);
+        }
+
+        // Now line has no leading indentation
+
+        // Handle headings
+        if (line.startsWith('# ')) {
+            line = line.replace(/^# (.*)$/, '【 $1 】');
+            outputLines.push(line);
+            continue;
+        } else if (line.startsWith('## ')) {
+            line = line.replace(/^## (.*)$/, '▋$1');
+            outputLines.push(line);
+            continue;
+        }
+
+        // Check for list items
+        let listItemMatch;
+        let isListItem = false;
+        let bullet = '';
+        let content = '';
+        let listType = '';
+
+        if (listItemMatch = line.match(/^- \[ \] (.*)/)) {
+            // Unchecked task
+            bullet = '🟩 ';
+            content = listItemMatch[1];
+            isListItem = true;
+            listType = 'task';
+        } else if (listItemMatch = line.match(/^- \[x\] (.*)/)) {
+            // Checked task
+            bullet = '✅ ';
+            content = listItemMatch[1];
+            isListItem = true;
+            listType = 'task';
+        } else if (listItemMatch = line.match(/^\d+\.\s+(.*)/)) {
+            // Ordered list item
+            bullet = ''; // numbering will be generated
+            content = listItemMatch[1];
+            isListItem = true;
+            listType = 'ordered';
+        } else if (listItemMatch = line.match(/^- (.*)/)) {
+            // Unordered list item
+            bullet = ''; // numbering will be generated
+            content = listItemMatch[1];
+            isListItem = true;
+            listType = 'unordered';
+        }
+
+        if (isListItem) {
+            // Handle list type change
+            if (listType !== previousListType && indentLevel === 0) {
+                // Reset counters when switching list types at top level
+                listCounters = [];
+                prevIndentLevel = 0;
+            }
+            previousListType = listType;
+
+            // Handle indent level
+            if (indentLevel > prevIndentLevel) {
+                // Entering new sublist level
+                listCounters.push(0);
+            } else if (indentLevel < prevIndentLevel) {
+                // Exiting to higher level(s)
+                while (listCounters.length > indentLevel) {
+                    listCounters.pop();
+                }
+            }
+
+            // At this point, listCounters.length == indentLevel + 1
+
+            // Increment counter at current level
+            if (listCounters.length == 0) {
+                listCounters.push(1);
+            } else {
+                listCounters[listCounters.length - 1]++;
+            }
+
+            // Reset counters for deeper levels
+            for (let i = listCounters.length; i < indentLevel + 1; i++) {
+                listCounters.push(1);
+            }
+
+            // Generate numbering
+            let numbering = listCounters.join('.');
+
+            // Apply formatting to content
+            content = applyFormatting(content);
+
+            if (bullet === '🟩 ' || bullet === '✅ ') {
+                // For top-level tasks, include bullet before numbering
+                numbering = bullet + numbering + '. ' + content;
+            } else {
+                numbering = numbering + '. ' + content;
+            }
+
+            // Add to output
+            outputLines.push(numbering);
+
+            prevIndentLevel = indentLevel;
+            continue;
+        } else {
+            // Not a list item
+
+            // Reset listCounters and prevIndentLevel if necessary
+            listCounters = [];
+            prevIndentLevel = 0;
+            previousListType = '';
+
+            // Apply formatting replacements to the line
+            line = applyFormatting(line);
+
+            outputLines.push(line);
+        }
+    }
+
+    return outputLines.join('\n');
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
-
-	async onload() {
-		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+function applyFormatting(text: string): string {
+    // Replace **bold** with  *bold*  (with spaces)
+    text = text.replace(/\*\*(.*?)\*\*/g, ' *$1* ');
+    // Replace *italic* with  _italic_ 
+    text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, ' _$1_ ');
+    // Replace ~~strike~~ with  ~strike~ 
+    text = text.replace(/~~(.*?)~~/g, ' ~$1~ ');
+    // Replace ==emphasize== with  `emphasize` 
+    text = text.replace(/==(.*?)==/g, ' `$1` ');
+    // Replace `quote` with  {quote} 
+    text = text.replace(/`(.*?)`/g, ' {$1} ');
+    return text;
 }
