@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-md-to-line-message",
+	"name": "Obsidian Markdown to LINE Message",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
+	"description": "Convert selected texts to LINE-flavor messages.",
+	"author": "Zhou Naihong",
+	"authorUrl": "https://github.com/naive231/obsidian-md-to-line-message",
 	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
 }
