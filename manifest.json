@@ -5,7 +5,6 @@
 	"minAppVersion": "0.15.0",
 	"description": "Convert selected texts to LINE-flavor messages.",
 	"author": "Zhou Naihong",
-	"authorUrl": "https://github.com/naive231/obsidian-md-to-line-message",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/naive231",
 	"isDesktopOnly": false
 }
