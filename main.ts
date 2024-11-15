@@ -1,4 +1,4 @@
-import { Plugin, setIcon } from 'obsidian';
+import { Plugin, setIcon, Notice } from 'obsidian';
 
 export default class LineConverterPlugin extends Plugin {
     async onload() {
@@ -11,8 +11,8 @@ export default class LineConverterPlugin extends Plugin {
             // Create the header for the code block (where buttons are placed)
             const codeBlockHeader = codeBlockEl.createEl('div', { cls: 'code-block-header' });
 
-            // Create the copy button
-            const copyButton = codeBlockHeader.createEl('div', { cls: 'copy-code-button' });
+            // Create the copy button with the 'clickable-icon' class
+            const copyButton = codeBlockHeader.createEl('div', { cls: 'copy-code-button clickable-icon' });
             setIcon(copyButton, 'copy');
 
             // Add event listener to copy the content to the clipboard
@@ -21,6 +21,9 @@ export default class LineConverterPlugin extends Plugin {
                     // Provide feedback to the user
                     copyButton.addClass('mod-copied');
                     setTimeout(() => copyButton.removeClass('mod-copied'), 1500);
+
+                    // Show a notification to the user
+                    new Notice('Copied to clipboard!');
                 });
             });
 
