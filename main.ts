@@ -1,10 +1,41 @@
-import { Plugin } from 'obsidian';
+import { Plugin, setIcon } from 'obsidian';
 
 export default class LineConverterPlugin extends Plugin {
     async onload() {
         this.registerMarkdownCodeBlockProcessor('line', async (source, el, ctx) => {
             const convertedText = processLineBlock(source);
-            el.createEl('pre').setText(convertedText);
+
+            // Create a code block container with the necessary classes
+            const codeBlockEl = el.createEl('div', { cls: 'code-block is-loaded' });
+
+            // Create the header for the code block (where buttons are placed)
+            const codeBlockHeader = codeBlockEl.createEl('div', { cls: 'code-block-header' });
+
+            // Create the copy button
+            const copyButton = codeBlockHeader.createEl('div', { cls: 'copy-code-button' });
+            setIcon(copyButton, 'copy');
+
+            // Add event listener to copy the content to the clipboard
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(convertedText).then(() => {
+                    // Provide feedback to the user
+                    copyButton.addClass('mod-copied');
+                    setTimeout(() => copyButton.removeClass('mod-copied'), 1500);
+                });
+            });
+
+            // Obsidian automatically adds the "Edit this block" button, so no need to add it manually
+
+            // Create the content area of the code block
+            const codeBlockContent = codeBlockEl.createEl('div', { cls: 'code-block-content' });
+
+            // Create the <pre> and <code> elements to display the converted text
+            const preEl = codeBlockContent.createEl('pre');
+            const codeEl = preEl.createEl('code');
+            codeEl.setText(convertedText);
+
+            // Append the code block to the element
+            el.appendChild(codeBlockEl);
         });
     }
 }
@@ -50,25 +81,25 @@ function processLineBlock(source: string): string {
         let content = '';
         let listType = '';
 
-        if (listItemMatch = line.match(/^- \[ \] (.*)/)) {
+        if ((listItemMatch = line.match(/^- \[ \] (.*)/))) {
             // Unchecked task
             bullet = '🟩 ';
             content = listItemMatch[1];
             isListItem = true;
             listType = 'task';
-        } else if (listItemMatch = line.match(/^- \[x\] (.*)/)) {
+        } else if ((listItemMatch = line.match(/^- \[x\] (.*)/))) {
             // Checked task
             bullet = '✅ ';
             content = listItemMatch[1];
             isListItem = true;
             listType = 'task';
-        } else if (listItemMatch = line.match(/^\d+\.\s+(.*)/)) {
+        } else if ((listItemMatch = line.match(/^\d+\.\s+(.*)/))) {
             // Ordered list item
             bullet = ''; // numbering will be generated
             content = listItemMatch[1];
             isListItem = true;
             listType = 'ordered';
-        } else if (listItemMatch = line.match(/^- (.*)/)) {
+        } else if ((listItemMatch = line.match(/^- (.*)/))) {
             // Unordered list item
             bullet = ''; // numbering will be generated
             content = listItemMatch[1];
@@ -99,7 +130,7 @@ function processLineBlock(source: string): string {
             // At this point, listCounters.length == indentLevel + 1
 
             // Increment counter at current level
-            if (listCounters.length == 0) {
+            if (listCounters.length === 0) {
                 listCounters.push(1);
             } else {
                 listCounters[listCounters.length - 1]++;
@@ -160,7 +191,9 @@ function applyFormatting(text: string): string {
     let remainingText = text;
 
     while (remainingText.length > 0) {
-        let earliestMatch: { pattern: any; match: RegExpExecArray; index: number } | null = null;
+        let earliestMatch:
+            | { pattern: any; match: RegExpExecArray; index: number }
+            | null = null;
         let earliestIndex = remainingText.length;
 
         // Find the earliest match among the patterns
@@ -182,12 +215,17 @@ function applyFormatting(text: string): string {
             result += remainingText.slice(0, earliestMatch.index);
 
             // Apply the replacement
-            let replacedText = earliestMatch.match[0].replace(earliestMatch.pattern.regex, earliestMatch.pattern.replacement);
+            let replacedText = earliestMatch.match[0].replace(
+                earliestMatch.pattern.regex,
+                earliestMatch.pattern.replacement
+            );
 
             result += replacedText;
 
             // Update remainingText
-            remainingText = remainingText.slice(earliestMatch.index + earliestMatch.match[0].length);
+            remainingText = remainingText.slice(
+                earliestMatch.index + earliestMatch.match[0].length
+            );
         } else {
             // No more matches, append the rest of the text
             result += remainingText;
@@ -197,4 +235,3 @@ function applyFormatting(text: string): string {
 
     return result;
 }
-
