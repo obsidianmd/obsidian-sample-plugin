@@ -85,6 +85,7 @@ Each item in hierarchical list should be on a new line without any indents.
 
 After installed and enabled the plugin, when you fill Obsidian-flavor Markdown texts into a "line" code block like this:
 
+```
 ```line
 # 主標題
 
@@ -109,7 +110,9 @@ After installed and enabled the plugin, when you fill Obsidian-flavor Markdown t
 - [x] 已完成項目
 ```
 
+
 This plugin should convert those texts to this:
+
 
 ```markdown
 【 主標題 】
