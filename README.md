@@ -83,7 +83,7 @@ Each item in hierarchical list should be on a new line without any indents.
 
 ## Usage
 
-After installed and enabled the plugin, when you fill Obsidian-flavor Markdown texts into a "line" code block like this:
+Chinese texts also supported. After installed and enabled the plugin, when you fill Obsidian-flavor Markdown texts into a "line" code block like this:
 
 ```
 ```line
