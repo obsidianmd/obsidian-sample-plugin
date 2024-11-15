@@ -147,21 +147,54 @@ function processLineBlock(source: string): string {
 }
 
 function applyFormatting(text: string): string {
-    if (text.includes('**')) {
-        // Replace **bold** with  *bold*  (with spaces)
-        text = text.replace(/\*\*(.*?)\*\*/g, ' *$1* ');
-    } else if (text.includes('*')) {
-        // Replace *italic* with  _italic_ 
-        text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, ' _$1_ ');
+    // Define the patterns and their replacements in order
+    const patterns = [
+        { regex: /\*\*(.*?)\*\*/, replacement: ' *$1* ' }, // bold
+        { regex: /(?<!\*)\*(?!\*)(.*?)\*(?!\*)/, replacement: ' _$1_ ' }, // italic
+        { regex: /~~(.*?)~~/, replacement: ' ~$1~ ' }, // strike
+        { regex: /==(.*?)==/, replacement: ' `$1` ' }, // emphasize
+        { regex: /`(.*?)`/, replacement: ' {$1} ' }, // quote
+    ];
+
+    let result = '';
+    let remainingText = text;
+
+    while (remainingText.length > 0) {
+        let earliestMatch: { pattern: any; match: RegExpExecArray; index: number } | null = null;
+        let earliestIndex = remainingText.length;
+
+        // Find the earliest match among the patterns
+        for (let pattern of patterns) {
+            pattern.regex.lastIndex = 0; // Reset regex index
+            let match = pattern.regex.exec(remainingText);
+            if (match && match.index < earliestIndex) {
+                earliestMatch = {
+                    pattern: pattern,
+                    match: match,
+                    index: match.index,
+                };
+                earliestIndex = match.index;
+            }
+        }
+
+        if (earliestMatch) {
+            // Append text before the match
+            result += remainingText.slice(0, earliestMatch.index);
+
+            // Apply the replacement
+            let replacedText = earliestMatch.match[0].replace(earliestMatch.pattern.regex, earliestMatch.pattern.replacement);
+
+            result += replacedText;
+
+            // Update remainingText
+            remainingText = remainingText.slice(earliestMatch.index + earliestMatch.match[0].length);
+        } else {
+            // No more matches, append the rest of the text
+            result += remainingText;
+            break;
+        }
     }
-    // Replace ~~strike~~ with  ~strike~ 
-    text = text.replace(/~~(.*?)~~/g, ' ~$1~ ');
-    if (text.includes('==')) {
-        // Replace ==emphasize== with  `emphasize` 
-        text = text.replace(/==(.*?)==/g, ' `$1` ');
-    } else if (text.includes('`')) {
-        // Replace `quote` with  {quote} 
-        text = text.replace(/`(.*?)`/g, ' {$1} ');
-    }
-    return text;
+
+    return result;
 }
+
