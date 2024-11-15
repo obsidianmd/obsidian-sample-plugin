@@ -6,6 +6,7 @@ The goal of this plugin is to convert Obsidian-flavored Markdown texts to messag
 
 Here are some supported Obsidian-flavored Markdown texts:
 
+```
 1. **bold**
 2. *italic*
 3. ~~strike~~
@@ -14,11 +15,13 @@ Here are some supported Obsidian-flavored Markdown texts:
 6. - [ ] unchecked
 7. - [x] checked
 8. # heading1
-9. ## heading2 
+9. ## heading2
+```
 
 According the reference source in [Formatting chat messages](
 "https://help.line.me/line/desktop/categoryId/50000280/3/pc?lang=en&contentId=20013876"), it will convert them into:
 
+```
 1. {*bold*}
 2. {_italic_}
 3. {~strike~}
@@ -28,6 +31,7 @@ According the reference source in [Formatting chat messages](
 7. {✅} checked
 8. 【 heading1  】
 9. ▋heading2
+```
 
 The "{xxx}" should be replaced with a space character. For example, the "{*bold}" should be the " *bold* ".
 
@@ -83,7 +87,7 @@ Each item in hierarchical list should be on a new line without any indents.
 
 ## Usage
 
-Chinese texts also supported. After installed and enabled the plugin, when you fill Obsidian-flavor Markdown texts into a "line" code block like this:
+**Chinese texts are also supported**. After installed and enabled the plugin, when you fill Obsidian-flavor Markdown texts into a "line" code block like this:
 
 ```
 ```line
