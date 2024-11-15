@@ -147,15 +147,21 @@ function processLineBlock(source: string): string {
 }
 
 function applyFormatting(text: string): string {
-    // Replace **bold** with  *bold*  (with spaces)
-    text = text.replace(/\*\*(.*?)\*\*/g, ' *$1* ');
-    // Replace *italic* with  _italic_ 
-    text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, ' _$1_ ');
+    if (text.includes('**')) {
+        // Replace **bold** with  *bold*  (with spaces)
+        text = text.replace(/\*\*(.*?)\*\*/g, ' *$1* ');
+    } else if (text.includes('*')) {
+        // Replace *italic* with  _italic_ 
+        text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, ' _$1_ ');
+    }
     // Replace ~~strike~~ with  ~strike~ 
     text = text.replace(/~~(.*?)~~/g, ' ~$1~ ');
-    // Replace ==emphasize== with  `emphasize` 
-    text = text.replace(/==(.*?)==/g, ' `$1` ');
-    // Replace `quote` with  {quote} 
-    text = text.replace(/`(.*?)`/g, ' {$1} ');
+    if (text.includes('==')) {
+        // Replace ==emphasize== with  `emphasize` 
+        text = text.replace(/==(.*?)==/g, ' `$1` ');
+    } else if (text.includes('`')) {
+        // Replace `quote` with  {quote} 
+        text = text.replace(/`(.*?)`/g, ' {$1} ');
+    }
     return text;
 }
