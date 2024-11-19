@@ -48,7 +48,7 @@ function processLineBlock(source: string): string {
     const outputLines = [];
     let prevIndentLevel = 0;
     let listCounters: number[] = [];
-    let previousListType = '';
+    let topLevelCounter = 0;
 
     for (let line of lines) {
         // Determine indentation level
@@ -111,31 +111,35 @@ function processLineBlock(source: string): string {
         }
 
         if (isListItem) {
-            // Handle indent level
-            if (indentLevel > prevIndentLevel) {
-                listCounters.push(0);
-            } else if (indentLevel < prevIndentLevel) {
-                while (listCounters.length > indentLevel) {
-                    listCounters.pop();
-                }
-            }
-
-            // At this point, listCounters.length == indentLevel + 1
-
-            // Increment counter at current level
-            if (listCounters.length === 0) {
-                listCounters.push(1);
+            // 处理顶级列表项
+            if (indentLevel === 0) {
+                topLevelCounter++;
+                listCounters = [topLevelCounter];
+                prevIndentLevel = 0;
             } else {
-                listCounters[listCounters.length - 1]++;
+                // 处理子列表项
+                // 确保 listCounters 数组长度与当前缩进级别匹配
+                while (listCounters.length <= indentLevel) {
+                    listCounters.push(0);
+                }
+                
+                // 如果缩进级别改变，调整计数器
+                if (indentLevel !== prevIndentLevel) {
+                    // 如果缩进更深，添加新的计数器
+                    if (indentLevel > prevIndentLevel) {
+                        listCounters[indentLevel] = 0;
+                    } else {
+                        // 如果缩进更浅，截断数组
+                        listCounters = listCounters.slice(0, indentLevel + 1);
+                    }
+                }
+                
+                // 增加当前级别的计数
+                listCounters[indentLevel]++;
             }
 
-            // Reset counters for deeper levels
-            for (let i = listCounters.length; i < indentLevel + 1; i++) {
-                listCounters.push(1);
-            }
-
-            // Generate numbering
-            let numbering = listCounters.join('.');
+            // 生成编号
+            let numbering = listCounters.slice(0, indentLevel + 1).join('.');
 
             // Apply formatting to content
             content = applyFormatting(content);
@@ -158,7 +162,6 @@ function processLineBlock(source: string): string {
             // Reset listCounters and prevIndentLevel if necessary
             listCounters = [];
             prevIndentLevel = 0;
-            previousListType = '';
 
             // Apply formatting replacements to the line
             line = applyFormatting(line);
