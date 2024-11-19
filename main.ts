@@ -111,20 +111,10 @@ function processLineBlock(source: string): string {
         }
 
         if (isListItem) {
-            // Handle list type change
-            if (listType !== previousListType && indentLevel === 0) {
-                // Reset counters when switching list types at top level
-                listCounters = [];
-                prevIndentLevel = 0;
-            }
-            previousListType = listType;
-
             // Handle indent level
             if (indentLevel > prevIndentLevel) {
-                // Entering new sublist level
                 listCounters.push(0);
             } else if (indentLevel < prevIndentLevel) {
-                // Exiting to higher level(s)
                 while (listCounters.length > indentLevel) {
                     listCounters.pop();
                 }
