@@ -177,7 +177,7 @@ function applyFormatting(text: string): string {
     // Define the patterns and their replacements in order
     const patterns = [
         { regex: /\*\*(.*?)\*\*/, replacement: ' *$1* ' }, // bold
-        { regex: /(?<!\*)\*(?!\*)(.*?)\*(?!\*)/, replacement: ' _$1_ ' }, // italic
+        { regex: /(^|[^*])\*(.*?)\*(?!\*)/, replacement: '$1_$2_' }, // italic
         { regex: /~~(.*?)~~/, replacement: ' ~$1~ ' }, // strike
         { regex: /==(.*?)==/, replacement: ' `$1` ' }, // emphasize
         { regex: /`(.*?)`/, replacement: ' {$1} ' }, // quote
