@@ -17,8 +17,11 @@
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
-		"obsidian": "latest",
+		"obsidian": "^1.7.2",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
+	},
+	"dependencies": {
+		"es6-promise": "^4.2.8"
 	}
 }
