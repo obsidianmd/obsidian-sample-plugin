@@ -1,3 +1,6 @@
 package-lock.json
 .cl
 tags
+main.js
+styles.css
+__pycache__
