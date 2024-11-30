@@ -4,7 +4,7 @@ export default class ExoPlugin extends Plugin {
 
 	async onload() {
 		this.addRibbonIcon('dice', 'Exo', () => {
-			new Notice('This is Exocortesx!');
+			new Notice('This is Exocortex!');
 		});
 	}
 
