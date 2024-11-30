@@ -3,9 +3,9 @@
 	"name": "Exocortex",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "prototype plugin implementing the Exocortex concept",
+	"author": "kitelev",
+	"authorUrl": "https://t.me/kitelev",
+	"fundingUrl": "https://buymeacoffee.com/kitelev",
 	"isDesktopOnly": false
 }
