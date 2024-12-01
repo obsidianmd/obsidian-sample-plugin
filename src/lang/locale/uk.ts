@@ -1,0 +1,3 @@
+// Ukrainian
+export default {
+}; 

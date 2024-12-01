@@ -1,0 +1,3 @@
+// Telugu
+export default {
+}; 

@@ -1,0 +1,3 @@
+// Chinese (Simplified)
+export default {
+}; 
