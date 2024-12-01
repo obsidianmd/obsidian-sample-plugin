@@ -1,15 +1,19 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-chess-mate",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Allows you to easily display chessboards and play games in PGN format directly in your notes",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"sass-dev": "sass --watch --update --style=expanded src/styles.scss:styles.css",
+		"sass-prod": "sass --no-source-map --style=compressed src/styles.scss:styles.css"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": [
+		"chess"
+	],
+	"author": "Riffaells",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
@@ -20,5 +24,9 @@
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
+	},
+	"dependencies": {
+		"lichess-pgn-viewer": "^2.1.3",
+		"sass": "^1.81.0"
 	}
 }
