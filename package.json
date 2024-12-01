@@ -6,9 +6,7 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"sass-dev": "sass --watch --update --style=expanded src/styles.scss:styles.css",
-		"sass-prod": "sass --no-source-map --style=compressed src/styles.scss:styles.css"
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [
 		"chess"

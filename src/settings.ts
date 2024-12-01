@@ -6,6 +6,7 @@ export interface ChessMateSettings {
     boardTheme: string;
     pieceTheme: string;
     showMoves: boolean;
+	accentColor: string;
     boardSize: number;
 }
 
@@ -13,6 +14,7 @@ export const DEFAULT_SETTINGS: ChessMateSettings = {
     boardTheme: 'brown',
     pieceTheme: 'cburnett',
     showMoves: true,
+	accentColor: "#ffeac3",
     boardSize: 600
 };
 
@@ -33,12 +35,7 @@ export class ChessMateSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName(t('settings.boardTheme'))
             .setDesc(t('settings.boardThemeDesc'))
-            .addDropdown(dropdown => dropdown
-                .addOptions({
-                    brown: t('settings.themeBrown'),
-                    blue: t('settings.themeBlue'),
-                    green: t('settings.themeGreen')
-                })
+            .addText(text => text
                 .setValue(this.plugin.settings.boardTheme)
                 .onChange(async (value) => {
                     this.plugin.settings.boardTheme = value;
