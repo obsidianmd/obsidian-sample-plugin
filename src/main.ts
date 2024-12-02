@@ -43,6 +43,7 @@ export default class ChessMatePlugin extends Plugin {
 					},
 				},
 
+
 			};
 
 			PgnViewer(boardElement, viewerConfig);

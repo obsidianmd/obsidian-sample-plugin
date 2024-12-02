@@ -1,9 +1,27 @@
 ﻿.chessmate-container {
+	font-style: normal !important;
+	font-family: var(--font-text), sans-serif !important;
 }
 
 :root {
-	--board-color: #ffffff;
-
+	--board-color: #f0d9b5;
+	--c-lpv-fbt-hover: var(--text-accent); /* Цвет фона кнопки при наведении */
+	--c-lpv-accent: var(--text-accent); /* Акцентный цвет */
+	--c-lpv-accent-over: white; /* Цвет акцента при наведении */
+	--c-lpv-bg-movelist: hsl(37, 5%, 18%); /* Цвет фона списка ходов */
+	--c-lpv-border: hsl(0, 0%, 25%); /* Цвет границы */
+	--c-lpv-bg-player: hsl(37, 5%, 18%); /* Цвет фона игрока */
+	--c-lpv-bg-pane: rgb(55.70322, 62.397225, 42.4422); /* Цвет фона панели */
+	--c-lpv-pgn-text: rgb(50.447466, 51.2240175, 43.25616); /* Цвет текста PGN */
+	--c-lpv-bg-controls: hsl(37, 5%, 18%); /* Цвет фона контролов */
+	--c-lpv-bg-variation: hsl(37, 5%, 15%); /* Цвет фона вариации */
+	--c-lpv-side-border: hsl(37, 5%, 13%); /* Цвет границы боковой панели */
+	--c-lpv-bg-inaccuracy-hover: rgb(58.4919, 85.98141, 100.6281); /* Цвет фона для неточностей при наведении */
+	--c-lpv-bg-mistake-hover: rgb(102.5865, 79.55235, 30.5235); /* Цвет фона для ошибок при наведении */
+	--c-lpv-bg-blunder-hover: rgb(100.7505, 57.29085, 55.3095); /* Цвет фона для грубых ошибок при наведении */
+	--c-lpv-bg-good-hover: rgb(61.6896, 99.41175, 64.9689); /* Цвет фона для хороших ходов при наведении */
+	--c-lpv-bg-brilliant-hover: rgb(43.71975, 91.3716, 47.839275); /* Цвет фона для блестящих ходов при наведении */
+	--c-lpv-bg-interesting-hover: rgb(105.6465, 67.69485, 98.1495); /* Цвет фона для интересных ходов при наведении */
 }
 
 .cg-wrap {
@@ -128,7 +146,6 @@ piece.fading {
 	display: flex;
 	pointer-events: none;
 	opacity: .8;
-	font-family: sans-serif;
 	font-size: 9px;
 	color: hsla(0, 0%, 100%, .8)
 }
@@ -198,7 +215,7 @@ cg-board square.premove-dest:hover {
 }
 
 cg-board square.last-move {
-	background-color: rgba(155, 199, 0, 0.41)
+	background-color: rgba(198, 255, 148, 0.75)
 }
 
 cg-board square.selected {
@@ -265,7 +282,7 @@ cg-board square.current-premove {
 	background: none;
 	border: none;
 	outline: none;
-	color: var(--c-lpv-font, #aaa);
+	color: var(--text-normal, #fff);
 	align-items: normal;
 	cursor: pointer;
 	text-transform: uppercase;
@@ -276,14 +293,14 @@ cg-board square.current-premove {
 
 @media (hover: hover) {
 	.lpv__fbt:hover:not(.disabled):not([disabled]) {
-		background: var(--c-lpv-fbt-hover, lpv-fbt-hover);
-		color: #fff
+		/*background: var(--c-lpv-fbt-hover, lpv-fbt-hover);*/
+		/*color: var(--text-normal, #fff);*/
 	}
 }
 
 .lpv__fbt.active {
 	background: var(--c-lpv-accent, hsl(88, 62%, 37%)) !important;
-	color: #fff
+	color: var(--text-normal, #fff);
 }
 
 .lpv__fbt.disabled, .lpv__fbt[disabled] {
@@ -296,7 +313,8 @@ cg-board square.current-premove {
 	display: block;
 	height: 0;
 	padding-bottom: 100%;
-	width: 100%
+	width: 100%;
+	max-height: 700px;
 }
 
 .lpv {
@@ -328,7 +346,7 @@ cg-board square.current-premove {
 }
 
 .lpv--moves-bottom .lpv__controls {
-	border-bottom: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))
+	/*border-bottom: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))*/
 }
 
 .lpv--moves-auto {
@@ -361,7 +379,7 @@ cg-board square.current-premove {
 }
 
 .lpv--players.lpv--moves-bottom .lpv__controls {
-	border-bottom: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))
+	/*border-bottom: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))*/
 }
 
 .lpv--players.lpv--moves-auto {
@@ -383,7 +401,11 @@ cg-board square.current-premove {
 }
 
 .lpv__side {
-	grid-area: side
+	grid-area: side;
+	opacity: 0.6;
+	overflow: hidden;
+	display: flex;
+	flex-flow: column
 }
 
 .lpv__player--top {
@@ -406,30 +428,23 @@ cg-board square.current-premove {
 	grid-area: 1/1/4/2
 }
 
-.lpv__side {
-	overflow: hidden;
-	display: flex;
-	flex-flow: column
-}
-
 .lpv__moves {
 	position: relative;
 	flex: 1 1 0;
 	display: flex;
 	flex-flow: row wrap;
 	overflow-y: auto;
-	background: var(--c-lpv-bg-movelist, hsl(37, 5%, 18%));
+	/*background: var(--c-lpv-bg-movelist, hsl(37, 5%, 18%));*/
 	align-items: center;
 	align-content: flex-start;
 	will-change: scroll-position;
 	user-select: none;
-	line-height: 1.7;
 	min-width: 20ch
 }
 
-.lpv__moves index {
-	color: var(--c-lpv-font-shy, rgb(109.0975, 108.21775, 106.8025))
-}
+/*.lpv__moves index {*/
+/*	color: var(--c-lpv-font-shy, rgb(109, 108, 106))*/
+/*}*/
 
 .lpv__moves > index {
 	flex: 0 0 15%;
@@ -442,12 +457,18 @@ cg-board square.current-premove {
 	border-radius: 3px;
 	padding-left: 3%;
 	font-weight: bold;
-	white-space: nowrap
+	white-space: nowrap;
 }
 
-.lpv__moves move.empty {
-	color: var(--c-lpv-font-shy, rgb(109.0975, 108.21775, 106.8025))
+variation move {
+	text-decoration: underline;
+
 }
+
+/*.lpv__moves move.empty {*/
+/*	color: var(--c-lpv-font-shy, rgb(109, 108, 106))*/
+/*}*/
+
 
 .lpv__moves move:not(.empty):hover {
 	background: var(--c-lpv-move-hover, rgb(63.21144, 78.35895, 41.2794));
@@ -456,7 +477,7 @@ cg-board square.current-premove {
 }
 
 .lpv__moves move.ancestor {
-	color: var(--c-lpv-past-moves, #aaa)
+	/*color: var(--c-lpv-past-moves, #aaa)*/
 }
 
 .lpv__moves move.current {
@@ -529,9 +550,8 @@ cg-board square.current-premove {
 
 .lpv__moves > comment {
 	flex: 1 1 100%;
-	background: var(--c-lpv-bg-variation, hsl(37, 5%, 15%));
-	border: 1px solid var(--c-lpv-side-border, hsl(37, 5%, 13%));
-	border-width: 1px 0;
+	/*background: var(--c-lpv-bg-variation, hsl(37, 5%, 15%));*/
+	/*border-width: 1px 0;*/
 	padding: .4em 1em;
 	line-height: 1.4;
 	overflow-wrap: break-word;
@@ -546,11 +566,11 @@ cg-board square.current-premove {
 	flex: 1 1 100%;
 	display: block;
 	overflow: hidden;
-	font-size: .8em;
-	background: var(--c-lpv-bg-variation, hsl(37, 5%, 15%));
-	border: 1px solid var(--c-lpv-side-border, hsl(37, 5%, 13%));
-	border-width: 1px 0;
-	padding: 0em .6em
+	font-size: 1em;
+	scale: 0.9;
+	/*background: var(--c-lpv-bg-variation, hsl(37, 5%, 15%));*/
+	/*border: 1px solid var(--c-lpv-side-border, hsl(37, 5%, 13%));*/
+	padding: 0 .6em
 }
 
 .lpv__moves > variation + variation {
@@ -583,7 +603,7 @@ cg-board square.current-premove {
 }
 
 .lpv__moves > variation paren {
-	color: var(--c-lpv-font-shy, rgb(109.0975, 108.21775, 106.8025))
+	color: var(--list-marker-color, #fff)
 }
 
 .lpv__moves > variation paren.open {
@@ -603,7 +623,7 @@ cg-board square.current-premove {
 }
 
 .lpv__player--bottom {
-	border-bottom: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))
+	/*border-bottom: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))*/
 }
 
 .lpv--controls-false .lpv__player--bottom {
@@ -616,7 +636,7 @@ cg-board square.current-premove {
 	flex-flow: row nowrap;
 	align-items: center;
 	gap: 1ch;
-	color: var(--c-lpv-font, #aaa);
+	color: var(--text-normal, #fff);
 	text-decoration: none
 }
 
@@ -664,7 +684,7 @@ cg-board square.current-premove {
 .lpv__pgn__text {
 	flex: 1 1 auto;
 	background: var(--c-lpv-pgn-text, rgb(50.447466, 51.2240175, 43.25616));
-	color: var(--c-lpv-font, #aaa);
+	color: var(--text-normal, #fff);
 	padding: .8em 1.3em
 }
 
@@ -673,14 +693,14 @@ cg-board square.current-premove {
 	flex-flow: row nowrap;
 	align-items: stretch;
 	user-select: none;
-	background: var(--c-lpv-bg-controls, hsl(37, 5%, 18%))
+	/*background: var(--c-lpv-bg-controls, hsl(37, 5%, 18%))*/
 }
 
 .lpv__controls .lpv__fbt {
 	flex: 1 1 auto;
-	font-size: 1.4em;
-	padding: .4em .7em;
-	border-left: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))
+	/*font-size: 1.4em;*/
+	/*padding: .4em .7em;*/
+	/*border-left: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))*/
 }
 
 .lpv__controls .lpv__fbt:first-child {
@@ -688,9 +708,10 @@ cg-board square.current-premove {
 }
 
 .lpv__controls__menu.lpv__fbt {
+	border: none;
 	flex: 0 1 auto;
 	width: 4em;
-	padding: .45em 1em .35em 1em;
+	/*padding: .45em 1em .35em 1em;*/
 	font-size: 1.1em
 }
 
@@ -704,11 +725,11 @@ cg-board square.current-premove {
 }
 
 .lpv *::-webkit-scrollbar-thumb {
-	background: var(--c-lpv-font-bg, rgb(72.556, 71.1484, 68.884))
+	background: var(--c-lpv-font-bg, rgb(72, 71, 68))
 }
 
 .lpv *::-webkit-scrollbar-thumb:hover, .lpv *::-webkit-scrollbar-thumb:active {
-	background: var(--c-lpv-font-shy, rgb(109.0975, 108.21775, 106.8025))
+	background: var(--list-marker-color, rgb(109, 108, 106))
 }
 
 @font-face {
@@ -717,7 +738,7 @@ cg-board square.current-premove {
 }
 
 .lpv__icon:before {
-	font-family: "lpv-fontello";
+	font-family: "lpv-fontello", sans-serif;
 	font-size: 1.1em;
 	width: 1em;
 	text-align: center;
@@ -746,11 +767,11 @@ cg-board square.current-premove {
 }
 
 .lpv {
-	border-radius: 5px;
-	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+	/*border-radius: 5px;*/
+	/*box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);*/
 	overflow: hidden;
-	background: var(--c-lpv-bg, hsl(37, 5%, 18%));
-	color: var(--c-lpv-font, #aaa);
+	/*background: var(--c-lpv-bg, hsl(37, 5%, 18%));*/
+	/*color: var(--c-lpv-font, #aaa);*/
 	box-sizing: border-box
 }
 
@@ -766,6 +787,17 @@ cg-board square.current-premove {
 	box-shadow: none
 }
 
-.lpv:focus {
-	outline: auto 2px var(--c-lpv-accent, hsl(88, 62%, 37%))
+.lpv button {
+	align-items: center;
+	background-position: 0 0;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	border: none;
+	overflow: hidden;
+	outline: none;
+	cursor: pointer;
+	margin: 5px;
+	border-radius: 5px;
+	box-shadow: none;
+
 }
