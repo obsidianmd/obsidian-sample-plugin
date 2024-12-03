@@ -28,7 +28,7 @@ export default class ChessMatePlugin extends Plugin {
 				// showMoves: options.showMoves === 'true' || this.settings.showMoves,
 				chessground: {
 					movable: {
-						free: options.editable === 'true' || false,
+						free: true,
 						color: 'both',
 					},
 					orientation: (options.orientation as 'white' | 'black') || 'white',
