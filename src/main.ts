@@ -42,6 +42,9 @@ export default class ChessMatePlugin extends Plugin {
 						red: { key: 'red', color: 'rgba(255,154,28,0.91)', opacity: 0.6 },
 					},
 				},
+				menu: {
+
+				}
 
 
 			};

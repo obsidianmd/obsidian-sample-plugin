@@ -11,17 +11,17 @@
 	--c-lpv-bg-movelist: hsl(37, 5%, 18%); /* Цвет фона списка ходов */
 	--c-lpv-border: hsl(0, 0%, 25%); /* Цвет границы */
 	--c-lpv-bg-player: hsl(37, 5%, 18%); /* Цвет фона игрока */
-	--c-lpv-bg-pane: rgb(55.70322, 62.397225, 42.4422); /* Цвет фона панели */
-	--c-lpv-pgn-text: rgb(50.447466, 51.2240175, 43.25616); /* Цвет текста PGN */
+	--c-lpv-bg-pane: rgba(21, 26, 21, 0.6); /* Цвет фона панели */
+	--c-lpv-pgn-text: rgb(50, 51, 43); /* Цвет текста PGN */
 	--c-lpv-bg-controls: hsl(37, 5%, 18%); /* Цвет фона контролов */
 	--c-lpv-bg-variation: hsl(37, 5%, 15%); /* Цвет фона вариации */
 	--c-lpv-side-border: hsl(37, 5%, 13%); /* Цвет границы боковой панели */
-	--c-lpv-bg-inaccuracy-hover: rgb(58.4919, 85.98141, 100.6281); /* Цвет фона для неточностей при наведении */
-	--c-lpv-bg-mistake-hover: rgb(102.5865, 79.55235, 30.5235); /* Цвет фона для ошибок при наведении */
-	--c-lpv-bg-blunder-hover: rgb(100.7505, 57.29085, 55.3095); /* Цвет фона для грубых ошибок при наведении */
-	--c-lpv-bg-good-hover: rgb(61.6896, 99.41175, 64.9689); /* Цвет фона для хороших ходов при наведении */
-	--c-lpv-bg-brilliant-hover: rgb(43.71975, 91.3716, 47.839275); /* Цвет фона для блестящих ходов при наведении */
-	--c-lpv-bg-interesting-hover: rgb(105.6465, 67.69485, 98.1495); /* Цвет фона для интересных ходов при наведении */
+	--c-lpv-bg-inaccuracy-hover: rgb(58, 85, 100); /* Цвет фона для неточностей при наведении */
+	--c-lpv-bg-mistake-hover: rgb(102, 79, 30); /* Цвет фона для ошибок при наведении */
+	--c-lpv-bg-blunder-hover: rgb(100, 57, 55); /* Цвет фона для грубых ошибок при наведении */
+	--c-lpv-bg-good-hover: rgb(61, 99, 64); /* Цвет фона для хороших ходов при наведении */
+	--c-lpv-bg-brilliant-hover: rgb(43, 91, 47); /* Цвет фона для блестящих ходов при наведении */
+	--c-lpv-bg-interesting-hover: rgb(105, 67, 98); /* Цвет фона для интересных ходов при наведении */
 }
 
 .cg-wrap {
@@ -300,7 +300,7 @@ cg-board square.current-premove {
 
 .lpv__fbt.active {
 	background: var(--c-lpv-accent, hsl(88, 62%, 37%)) !important;
-	color: var(--text-normal, #fff);
+	/*color: var(--text-normal, #fff);*/
 }
 
 .lpv__fbt.disabled, .lpv__fbt[disabled] {
@@ -566,8 +566,8 @@ variation move {
 	flex: 1 1 100%;
 	display: block;
 	overflow: hidden;
-	font-size: 1em;
-	scale: 0.9;
+	font-size: 0.9em;
+	/*scale: 0.9;*/
 	/*background: var(--c-lpv-bg-variation, hsl(37, 5%, 15%));*/
 	/*border: 1px solid var(--c-lpv-side-border, hsl(37, 5%, 13%));*/
 	padding: 0 .6em
@@ -636,7 +636,7 @@ variation move {
 	flex-flow: row nowrap;
 	align-items: center;
 	gap: 1ch;
-	color: var(--text-normal, #fff);
+	/*color: var(--text-normal, #fff);*/
 	text-decoration: none
 }
 
@@ -660,7 +660,7 @@ variation move {
 .lpv__pane {
 	z-index: 2;
 	border-bottom: 2px solid var(--c-lpv-accent, hsl(88, 62%, 37%));
-	background: var(--c-lpv-bg-pane, rgb(55.70322, 62.397225, 42.4422));
+	background: var(--c-lpv-bg-pane, rgb(55, 62, 42));
 	display: flex;
 	flex-flow: column;
 	justify-content: center
@@ -683,8 +683,8 @@ variation move {
 
 .lpv__pgn__text {
 	flex: 1 1 auto;
-	background: var(--c-lpv-pgn-text, rgb(50.447466, 51.2240175, 43.25616));
-	color: var(--text-normal, #fff);
+	/*background: var(--c-lpv-pgn-text, rgb(50, 51, 43));*/
+	/*color: var(--text-normal, #fff);*/
 	padding: .8em 1.3em
 }
 
