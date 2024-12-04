@@ -2,6 +2,10 @@
 
 export default {
     'settings.title': 'ChessMate Settings',
+    'settings.boardColor': 'Board Color',
+    'settings.boardColorDesc': 'Choose the color for the chess board',
+    'settings.maxBoardSize': 'Max Board Size',
+    'settings.maxBoardSizeDesc': 'Set the maximum size of the chess board (in pixels)',
     'settings.boardTheme': 'Board Theme',
     'settings.boardThemeDesc': 'Choose the color theme for the chess board',
     'settings.themeBrown': 'Brown',

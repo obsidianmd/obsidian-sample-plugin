@@ -25,7 +25,6 @@ export default class ChessMatePlugin extends Plugin {
 				pgn: options.pgn,
 				orientation: (options.orientation as 'white' | 'black') || 'white',
 				fen: options.fen || undefined,
-				// showMoves: options.showMoves === 'true' || this.settings.showMoves,
 				chessground: {
 					movable: {
 						free: true,
@@ -42,16 +41,13 @@ export default class ChessMatePlugin extends Plugin {
 						red: { key: 'red', color: 'rgba(255,154,28,0.91)', opacity: 0.6 },
 					},
 				},
-				menu: {
-
-				}
-
-
+				menu: {},
 			};
 
 			PgnViewer(boardElement, viewerConfig);
 
-			boardElement.style.setProperty('--board-color', this.settings.accentColor);
+			container.style.setProperty('--max-board-size', `${this.settings.maxBoardSize}px`);
+			container.style.setProperty('--board-color', this.settings.boardColor);
 		});
 	}
 

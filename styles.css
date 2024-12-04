@@ -397,7 +397,12 @@ cg-board square.current-premove {
 }
 
 .lpv__board {
-	grid-area: board
+	grid-area: board;
+	width: 100%; /* Или установите фиксированное значение */
+	height: auto;
+	max-width: var(--max-board-size, 1200); /* Установите максимальную ширину */
+	max-height: var(--max-board-size, 900); /* Установите максимальную высоту */
+
 }
 
 .lpv__side {
@@ -417,7 +422,8 @@ cg-board square.current-premove {
 }
 
 .lpv__controls {
-	grid-area: controls
+	grid-area: controls;
+	max-width: var(--max-board-size, 1200);
 }
 
 .lpv__menu, .lpv__pgn {
@@ -447,7 +453,7 @@ cg-board square.current-premove {
 /*}*/
 
 .lpv__moves > index {
-	flex: 0 0 15%;
+	flex: 0 0 10%;
 	margin-right: 3%;
 	display: flex;
 	justify-content: flex-end
