@@ -349,19 +349,7 @@ cg-board square.current-premove {
 	/*border-bottom: 1px solid var(--c-lpv-border, hsl(0, 0%, 25%))*/
 }
 
-.lpv--moves-auto {
-	grid-template-areas:"board      side" "controls   side";
-	grid-template-columns:minmax(200px, calc(100vh - var(--controls-height))) minmax(232px, 1fr);
-	grid-template-rows:auto var(--controls-height)
-}
 
-@media (max-width: 500px) {
-	.lpv--moves-auto {
-		grid-template-areas:"board" "controls" "side";
-		grid-template-columns:minmax(200px, calc(100vh - var(--controls-height) - 6em));
-		grid-template-rows:auto var(--controls-height)
-	}
-}
 
 .lpv--players.lpv--moves-false {
 	grid-template-areas:"player-top" "board" "player-bot" "controls";
@@ -396,22 +384,60 @@ cg-board square.current-premove {
 	}
 }
 
+
+
+
+
+
+
+
+
+
+.lpv--moves-auto {
+	display: grid;
+	grid-template-areas:
+		"board side"
+		"controls side"; /* Доска слева, side справа */
+	grid-template-columns: minmax(300px, 50%) minmax(200px, 1fr); /* Доска занимает 50%, но не меньше 300px, side занимает оставшееся пространство */
+	grid-template-rows: auto var(--controls-height); /* Контролы внизу */
+	gap: 10px;
+}
+
+@media (max-width: 500px) {
+	.lpv--moves-auto {
+		grid-template-areas:
+			"board"
+			"controls"
+			"side"; /* На мобильных side переходит вниз */
+		grid-template-columns: 1fr; /* Одна колонка */
+		grid-template-rows: auto var(--controls-height) auto;
+		gap: 10px;
+	}
+}
+
 .lpv__board {
 	grid-area: board;
-	width: 100%; /* Или установите фиксированное значение */
+	width: 100%; /* Занимает всё доступное пространство внутри заданных ограничений */
 	height: auto;
-	max-width: var(--max-board-size, 1200); /* Установите максимальную ширину */
-	max-height: var(--max-board-size, 900); /* Установите максимальную высоту */
-
+	max-width: var(--max-board-size, 600px); /* Максимальная ширина доски */
+	aspect-ratio: 1; /* Гарантия квадратной формы */
 }
 
 .lpv__side {
 	grid-area: side;
-	opacity: 0.6;
-	overflow: hidden;
+	overflow-y: auto; /* Прокрутка, если содержимое превышает размеры */
 	display: flex;
-	flex-flow: column
+	flex-flow: column;
+	min-width: 200px; /* Минимальная ширина для side */
 }
+
+.lpv__controls {
+	grid-area: controls;
+	max-width: var(--max-board-size, 1200px); /* Контролы центрируются */
+	justify-self: center;
+}
+
+
 
 .lpv__player--top {
 	grid-area: player-top
@@ -421,10 +447,6 @@ cg-board square.current-premove {
 	grid-area: player-bot
 }
 
-.lpv__controls {
-	grid-area: controls;
-	max-width: var(--max-board-size, 1200);
-}
 
 .lpv__menu, .lpv__pgn {
 	grid-area: 1/1/2/2
@@ -453,8 +475,9 @@ cg-board square.current-premove {
 /*}*/
 
 .lpv__moves > index {
-	flex: 0 0 10%;
-	margin-right: 3%;
+	/*flex: 0 0 10%;*/
+	/*margin-right: 3%;*/
+	margin-left: 10px;
 	display: flex;
 	justify-content: flex-end
 }
@@ -488,7 +511,8 @@ variation move {
 
 .lpv__moves move.current {
 	background: var(--c-lpv-current-move, rgb(83.23336, 120.92355, 38.1786)) !important;
-	color: var(--c-lpv-accent-over, white)
+	color: var(--c-lpv-accent-over, white);
+	margin-left: 10px;
 }
 
 .lpv__moves move.inaccuracy {
