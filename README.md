@@ -1,6 +1,6 @@
-# Obsidian Clipper Catalog
+# Clipper Catalog
 
-An Obsidian plugin that provides a powerful catalog interface for all your clipped web articles and content. Easily organize, search, and manage your web clippings within your Obsidian vault.
+A catalog view that provides a powerful interface for all your clipped web articles and content. Easily organize, search, and manage your web clippings within your vault.
 
 ## Features
 
@@ -9,7 +9,7 @@ An Obsidian plugin that provides a powerful catalog interface for all your clipp
 🏷️ Tag-based organization and filtering
 🔄 Real-time search and sorting capabilities
 ⚡ Command palette integration
-🎨 Clean, modern UI with Obsidian theme integration
+🎨 Clean, modern UI with theme integration
 📂 Advanced directory filtering options
 
 ## Installation
