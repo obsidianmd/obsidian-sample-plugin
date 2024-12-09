@@ -1,24 +1,37 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-clipper-catalog",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "This provides any Obsidian vault with a catalog of all the clippings gathered with a common source property.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"build": "tailwindcss -i ./src/styles.css -o ./styles.css --minify && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"css:dev": "tailwindcss -i ./src/styles.css -o ./styles.css --watch",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
-	},
+	  },
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
+	"bugs": {
+    "url": "https://github.com/soundslikeinfo/obsidian-clipper-catalog/issues"
+  },
+  "homepage": "https://github.com/soundslikeinfo/obsidian-clipper-catalog#readme",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
-		"builtin-modules": "3.3.0",
+		"@types/react": "^18.0.27",
+		"@types/react-dom": "^18.0.10",
+		"autoprefixer": "^10.4.20",
 		"esbuild": "0.17.3",
+		"lucide-react": "^0.454.0",
 		"obsidian": "latest",
+		"postcss": "^8.4.47",
+		"tailwindcss": "^3.4.14",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
-	}
+	  },
+	  "dependencies": {
+		"openai": "^3.2.1",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0"
+	  }
 }

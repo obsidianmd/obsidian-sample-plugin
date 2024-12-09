@@ -1,0 +1,109 @@
+/* Remove @tailwind base to prevent global style reset */
+@tailwind components;
+@tailwind utilities;
+
+/* Define keyframes for spin animation */
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scoped plugin styles */
+.clipper-catalog-plugin {
+  /* Add minimal reset only for our plugin elements */
+  & * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Loading spinner styles */
+  .loading-spinner-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .loading-spinner {
+    width: 1rem;
+    height: 1rem;
+    animation: spinner-rotate 1s linear infinite;
+  }
+
+  /* Error states */
+  .error-text {
+    font-size: 0.75rem;
+    color: #ef4444;
+  }
+
+  .input-error {
+    border-color: #ef4444;
+  }
+
+  /* Settings styles */
+  &.clipper-catalog-settings {
+    .setting-item {
+      border-top: none;
+      padding: 18px 0;
+    }
+
+    .setting-item-name {
+      color: var(--text-normal);
+      font-size: 1em;
+      font-weight: 500;
+    }
+
+    .setting-item-description {
+      color: var(--text-muted);
+      font-size: 0.85em;
+      line-height: 1.5;
+      max-width: 500px;
+      margin-right: 2em;
+    }
+
+    textarea, 
+    input[type="text"], 
+    input[type="password"], 
+    select {
+      background-color: var(--background-modifier-form-field);
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      color: var(--text-normal);
+      transition: all 200ms ease-in-out;
+    }
+
+    textarea:focus,
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus {
+      border-color: var(--interactive-accent);
+      box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+    }
+
+    textarea {
+      min-height: 100px;
+      width: 100%;
+      resize: vertical;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      height: 32px;
+      width: 100%;
+      max-width: 150px;
+    }
+
+    select {
+      height: 32px;
+      width: 100%;
+      max-width: 325px;
+    }
+  }
+}

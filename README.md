@@ -1,94 +1,125 @@
-# Obsidian Sample Plugin
+# Obsidian Clipper Catalog
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An Obsidian plugin that provides a powerful catalog interface for all your clipped web articles and content. Easily organize, search, and manage your web clippings within your Obsidian vault.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+🔍 Catalog all your clipped articles in one view
+📱 Fully responsive design that works on desktop and mobile
+🏷️ Tag-based organization and filtering
+🔄 Real-time search and sorting capabilities
+⚡ Command palette integration
+🎨 Clean, modern UI with Obsidian theme integration
+📂 Advanced directory filtering options
 
-## First time developing plugins?
+## Installation
 
-Quick starting guide for new plugin devs:
+### From Obsidian Community Plugins
+1. Open Obsidian Settings
+2. Go to Community Plugins and turn off Safe Mode
+3. Click Browse and search for "Clipper Catalog"
+4. Install the plugin and enable it
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+### Manual Installation
+1. Download the latest release from GitHub
+2. Extract the zip archive into your vault's `.obsidian/plugins` directory
+3. Enable the plugin in Obsidian's settings
 
-## Releasing new releases
+## Configuration
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+1. Open the plugin settings in Obsidian
+2. Configure the property name that identifies clipped content (default: 'source')
+3. The catalog will display all notes that contain the specified property with a URL value
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Usage
 
-## Adding your plugin to the community plugin list
+1. Open the Clipper Catalog view using:
+   - Command palette: Search for "Open Clipper Catalog"
+   - Or click the Clipper Catalog icon in the sidebar
+2. Browse, search, and filter your clipped articles
+3. Use advanced search options to exclude specific directories
+4. Click on article titles to open them in your vault
+5. Click on tags to filter by specific tags
+6. Sort by date, title, or path
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## Features
 
-## How to use
+### Search and Filter
+- Full-text search across titles and tags
+- Tag-based filtering
+- Directory exclusion options
+- Real-time updates
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+### Organization
+- Sort by multiple columns
+- Advanced directory filtering
+- Tag management
+- Path-based organization
 
-## Manually installing the plugin
+### Interface
+- Clean, modern design
+- Responsive layout
+- Theme-aware styling
+- Keyboard navigation
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+## Support
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+- For bugs or feature requests, please [open an issue](https://github.com/soundslikeinfo/obsidian-clipper-catalog/issues)
 
-## Funding URL
+## Privacy
 
-You can include funding URLs where people who use your plugin can financially support it.
+This plugin only reads and organizes notes within your local Obsidian vault. No data is sent to external servers.
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## Contributing
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Frequently Asked Questions
+
+### How does the plugin find my clipped articles?
+The plugin looks for notes in your vault that contain a specified property (default: 'source') with a URL value in the frontmatter. This can be changed in the plugin's settings.
+
+### Does it work on mobile?
+Yes! The plugin is fully compatible with both desktop and mobile versions of Obsidian.
+
+### Can I exclude certain folders from the catalog?
+Yes! Use the advanced search options to exclude specific directories from your catalog view.
+
+## Support
+
+- For bugs or feature requests, please [open an issue](https://github.com/soundslikeinfo/obsidian-clipper-catalog/issues)
+
+## Privacy
+
+This plugin sends article content to OpenAI's API for processing. Please review OpenAI's privacy policy and ensure you're comfortable with their data handling practices.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+### 🧠 Crafted with AI & Human Creativity
+```
+🎨 Design & Development
+Greg K. (@soundslikeinfo)
+
+🤖 AI Pair Programming
+Claude 3.5 Sonnet by Anthropic
 ```
 
-If you have multiple URLs, you can also do:
+### 💝 Support the Project
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+[![GitHub Stars](https://img.shields.io/github/stars/soundslikeinfo/obsidian-clipper-catalog?style=social)](https://github.com/soundslikeinfo/obsidian-clipper-catalog)
+[![Buy Me A Coffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/soundslikeinfo)
 
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+Made with ❤️ for the Obsidian Community

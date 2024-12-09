@@ -1,11 +1,13 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+    "id": "Clipper Catalog",
+    "name": "Clipper Catalog",
+    "version": "0.10.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
+	"description": "This provides any Obsidian vault with a catalog of all the clippings gathered with a common source property.",
 	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/soundslikeinfo",
+	"fundingUrl": {
+		"Buy Me a Coffee": "https://www.buymeacoffee.com/soundslikeinfo"
+	},
 	"isDesktopOnly": false
 }
