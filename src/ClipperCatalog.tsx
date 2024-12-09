@@ -95,14 +95,12 @@ const ClipperCatalog: React.FC<ClipperCatalogProps> = ({ app, plugin }) => {
   };
   
   const loadArticles = useCallback(async () => {
-    console.log("Starting to load articles...");
     setIsRefreshing(true);
     setError(null);
     
     try {
       const articleFiles: Article[] = [];
       const files = app.vault.getMarkdownFiles();
-      console.log(`Found ${files.length} markdown files`);
 
       for (const file of files) {
         try {
@@ -120,7 +118,6 @@ const ClipperCatalog: React.FC<ClipperCatalogProps> = ({ app, plugin }) => {
             const sourceMatch = frontmatter.match(sourcePropertyRegex);
 
             if (sourceMatch) {
-              console.log(`Processing file: ${file.path}`);
               const content = await app.vault.read(file);
               const title = file.basename;
 
@@ -154,10 +151,8 @@ const ClipperCatalog: React.FC<ClipperCatalogProps> = ({ app, plugin }) => {
         }
       }
 
-      console.log(`Processed ${articleFiles.length} articles`);
       setArticles(articleFiles);
     } catch (error) {
-      console.error("Error loading articles:", error);
       setError("Failed to load articles");
     } finally {
       setIsRefreshing(false);

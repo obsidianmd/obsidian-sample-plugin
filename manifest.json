@@ -1,9 +1,9 @@
 {
-    "id": "Clipper Catalog",
+    "id": "clipper-catalog",
     "name": "Clipper Catalog",
-    "version": "0.10.1",
+    "version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "This provides any Obsidian vault with a catalog of all the clippings gathered with a common source property.",
+	"description": "A catalog view of all the clippings gathered with a common source property.",
 	"author": "Obsidian",
 	"authorUrl": "https://github.com/soundslikeinfo",
 	"fundingUrl": {
