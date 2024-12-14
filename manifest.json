@@ -1,7 +1,7 @@
 {
 	"id": "ob-md-to-line-message",
 	"name": "OB-Markdown to LINE Message",
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"minAppVersion": "0.15.0",
 	"description": "Convert selected texts to LINE-flavor messages.",
 	"author": "Zhou Naihong",
