@@ -1,0 +1,116 @@
+name: Create Release
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        if: ${{ hashFiles('package.json') != '' }}
+        run: npm install
+
+      - name: Build the plugin
+        if: ${{ hashFiles('package.json') != '' }}
+        run: npm run build
+
+      - name: Extract version from manifest.json
+        id: get_version
+        run: |
+          version=$(jq -r '.version' manifest.json)
+          echo "Version found: $version"
+          echo "manifest_version=$version" >> $GITHUB_ENV
+
+      - name: Check if version exists
+        id: check_version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log("Checking version: " + process.env.manifest_version);
+            try {
+              const { data: releases } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: process.env.manifest_version
+              });
+              const exists = releases.tag_name === process.env.manifest_version;
+              console.log(`Version exists: ${exists}`);
+              core.setOutput("version_exists", exists);
+            } catch (error) {
+              if (error.status === 404) {
+                console.log('Release does not exist.');
+                core.setOutput("version_exists", false);
+              } else {
+                throw error;
+              }
+            }
+
+      - name: Bump version if exists
+        if: ${{ steps.check_version.outputs.version_exists == 'true' }}
+        run: |
+          version=$(jq -r '.version' manifest.json)
+          IFS='.' read -ra parts <<< "$version"
+          parts[-1]=$((parts[-1] + 1))
+          new_version="${parts[*]}"
+          new_version=${new_version// /.}
+          echo "New version in manifest.json: $new_version"
+          jq ".version = \"$new_version\"" manifest.json > tmp_manifest.json
+          mv tmp_manifest.json manifest.json
+          echo "New version in package.json: $new_version"
+          jq ".version = \"$new_version\"" package.json > tmp_package.json
+          mv tmp_package.json package.json
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add manifest.json package.json
+          git commit -m "Bump version to $new_version"
+          git push
+          echo "manifest_version=$new_version" >> $GITHUB_ENV
+
+          echo -e "\e[32mVersion bumped to $new_version\e[0m"
+          echo -e "\e[32mRelease will be created in new workflow\e[0m"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.manifest_version }}
+          release_name: Release ${{ env.manifest_version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./main.js
+          asset_name: main.js
+          asset_content_type: application/javascript
+
+      - name: Upload manifest.json
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./manifest.json
+          asset_name: manifest.json
+          asset_content_type: application/json
