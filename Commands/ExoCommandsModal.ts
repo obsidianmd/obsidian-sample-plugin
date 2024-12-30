@@ -5,7 +5,7 @@ import ExoCommands from "./ExoCommands";
 export class ExoCommandsModal extends FuzzySuggestModal<ExoCommand> {
 
 	getItems(): ExoCommand[] {
-		return ExoCommands.all();
+		return ExoCommands.all(this.app);
 	}
 
 	getItemText(cmd: ExoCommand): string {

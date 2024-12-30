@@ -5,6 +5,7 @@ export default class OpenRandomNoteExoCommand implements ExoCommand {
 	name: string = "Рандомная заметка из прошлого";
 
 	async execute(app: App): Promise<void> {
+
 		const files = app.vault.getFiles();
 		const today = new Date();
 		const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()).setHours(0, 0, 0, 0); // Дата месяц назад без времени
