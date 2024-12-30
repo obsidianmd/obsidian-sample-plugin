@@ -10,4 +10,8 @@ export default class ExoCommands {
 			new CountNotesExoCommand(app)
 		];
 	}
+
+	static bySlug(app: App, slug: string): ExoCommand | undefined {
+		return ExoCommands.all(app).find(c => c.slug === slug);
+	}
 }

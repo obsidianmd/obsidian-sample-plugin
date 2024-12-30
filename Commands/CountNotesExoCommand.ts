@@ -4,6 +4,7 @@ import NoteRepository from "../Domain/NoteRepository";
 
 export default class CountNotesExoCommand implements ExoCommand {
 	name: string = "Количество заметок";
+	slug: string = "count-notes";
 
 	constructor(private app: App) {
 	}
