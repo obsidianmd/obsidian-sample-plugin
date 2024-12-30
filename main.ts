@@ -1,26 +1,10 @@
-import {Notice, Plugin} from 'obsidian';
+import {Plugin} from 'obsidian';
+import {ExoCommandsModal} from "./Commands/ExoCommandsModal";
 
 export default class ExoPlugin extends Plugin {
-
 	async onload() {
-		this.addRibbonIcon('dice', 'Exo', () => {
-			this.showNotice();
+		this.addRibbonIcon('star', 'Exocortex Commands List', () => {
+			new ExoCommandsModal(this.app).open();
 		});
-
-		this.addCommand({
-			id: 'exo-first-notice',
-			name: 'Shows simple Notice',
-			callback: () => {
-				this.showNotice()
-			}
-		})
-	}
-
-	async showNotice(): Promise<void> {
-		new Notice('This is Exocortex!');
-	}
-
-	onunload() {
-
 	}
 }
