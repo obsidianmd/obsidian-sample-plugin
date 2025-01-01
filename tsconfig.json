@@ -24,6 +24,7 @@
 			"./types",
 			"./node_modules/obsidian-dataview"
 		],
+		"types": ["jest"],
 		"paths": {
 			"*": [
 				"./node_modules/obsidian-dataview/lib/*"

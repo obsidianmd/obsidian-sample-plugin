@@ -1,21 +1,19 @@
 import {Plugin} from 'obsidian';
-import {ExoCommandsModal} from "./Commands/ExoCommandsModal";
+import {ExoMainModal} from "./app/src/ExoMainModal";
 import "localforage";
-import ExoApi from "./ExoApi";
+import ExoApi from "./core/src/ExoApi";
+import ExoContext from "./common/ExoContext";
 
 export default class ExoPlugin extends Plugin {
 	private api: ExoApi;
+	private ctx: ExoContext;
 
 	async onload() {
-		this.addRibbonIcon('star', 'Exocortex Commands List', () => {
-			new ExoCommandsModal(this.app).open();
+		this.ctx = new ExoContext(this.app);
+		this.api = new ExoApi(this.ctx);
+
+		this.addRibbonIcon('star', 'Exocortex commands List', () => {
+			new ExoMainModal(this.ctx).open();
 		});
-
-		this.api = new ExoApi(this.app);
-		(this.app as any).plugins.plugins["exo-api"] = this.api;
-	}
-
-	onunload() {
-		delete (this.app as any).plugins.plugins["exo-api"];
 	}
 }
