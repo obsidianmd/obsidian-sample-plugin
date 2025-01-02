@@ -6,6 +6,7 @@ import {
 	consumeFolderByRegexpExpression,
 	convertPlainStringToRegex,
 	Date_dd_Mmm_yyyy_NormalizerFn,
+	Date_Mmm_dd_yyyy_NormalizerFn,
 	detectSortingSymbols,
 	escapeRegexUnsafeCharacters,
 	extractSortingSymbol,
@@ -363,17 +364,6 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 	}
 }
 
-const txtInputExampleSortingSymbols: string = `
-/folders Chapter \\.d+ ...  
-/:files ...section \\-r+.
-% Appendix \\-d+ (attachments)
-Plain syntax\\R+ ... works?
-And this kind of... \\D+plain syntax???
-Here goes ASCII word \\a+
-\\A+. is for any modern language word
-\\[dd-Mmm-yyyy] for the specific date format of 12-Apr-2024
-`
-
 const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
 		groups: [{
@@ -429,12 +419,30 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 				normalizerFn: Date_dd_Mmm_yyyy_NormalizerFn
 			}
 		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-3]*[0-9]-\d{4}) for the specific date format of Apr\-01\-2024$/i,
+				normalizerFn: Date_Mmm_dd_yyyy_NormalizerFn
+			}
+		}, {
 			type: CustomSortGroupType.Outsiders
 		}],
 		targetFoldersPaths: ['mock-folder'],
-		outsidersGroupIdx: 8
+		outsidersGroupIdx: 9
 	}
 }
+
+const txtInputExampleSortingSymbols: string = `
+/folders Chapter \\.d+ ...  
+/:files ...section \\-r+.
+% Appendix \\-d+ (attachments)
+Plain syntax\\R+ ... works?
+And this kind of... \\D+plain syntax???
+Here goes ASCII word \\a+
+\\A+. is for any modern language word
+\\[dd-Mmm-yyyy] for the specific date format of 12-Apr-2024
+\\[Mmm-dd-yyyy] for the specific date format of Apr-01-2024
+`
 
 const txtInputExampleMDataExtractors1: string = `
 < a-z by-metadata: created-by using-extractor: date(dd/mm/yyyy)

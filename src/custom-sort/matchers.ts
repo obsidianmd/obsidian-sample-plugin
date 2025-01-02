@@ -1,5 +1,3 @@
-import {toString} from "builtin-modules";
-
 export const RomanNumberRegexStr: string = ' *([MDCLXVI]+)'; // Roman number
 export const CompoundRomanNumberDotRegexStr: string = ' *([MDCLXVI]+(?:\\.[MDCLXVI]+)*)';// Compound Roman number with dot as separator
 export const CompoundRomanNumberDashRegexStr: string = ' *([MDCLXVI]+(?:-[MDCLXVI]+)*)'; // Compound Roman number with dash as separator
@@ -9,6 +7,7 @@ export const CompoundNumberDotRegexStr: string = ' *(\\d+(?:\\.\\d+)*)'; // Comp
 export const CompoundNumberDashRegexStr: string = ' *(\\d+(?:-\\d+)*)'; // Compound number with dash as separator
 
 export const Date_dd_Mmm_yyyy_RegexStr: string = ' *([0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4})'; // Date like 01-Jan-2020
+export const Date_Mmm_dd_yyyy_RegexStr: string = ' *((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-3]*[0-9]-\\d{4})'; // Date like Jan-01-2020
 
 export const DOT_SEPARATOR = '.'
 export const DASH_SEPARATOR = '-'
@@ -123,16 +122,4 @@ export function getNormalizedDate_NormalizerFn_for(separator: string, dayIdx: nu
 }
 
 export const getNormalizedDate_dd_Mmm_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 0, 1, 2, MONTHS)
-
-/*
-// Assumption - the regex date matched against input s, no extensive defensive coding needed
-const components = s.split('-')
-const day = prependWithZeros(components[0], DAY_POSITIONS)
-const month = prependWithZeros( `${1 + MONTHS.indexOf(components[1])}`, MONTH_POSITIONS)
-const year = prependWithZeros(components[2], YEAR_POSITIONS)
-return `${year}-${month}-${day}//`
-
- */
-
-
-
+export const getNormalizedDate_Mmm_dd_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 1, 0, 2, MONTHS)

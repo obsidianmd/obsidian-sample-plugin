@@ -17,8 +17,10 @@ import {
 	CompoundRomanNumberDotRegexStr,
 	DASH_SEPARATOR,
 	Date_dd_Mmm_yyyy_RegexStr,
+	Date_Mmm_dd_yyyy_RegexStr,
 	DOT_SEPARATOR,
 	getNormalizedDate_dd_Mmm_yyyy_NormalizerFn,
+	getNormalizedDate_Mmm_dd_yyyy_NormalizerFn,
 	getNormalizedNumber,
 	getNormalizedRomanNumber,
 	NumberRegexStr,
@@ -358,6 +360,7 @@ const InlineRegexSymbol_Digit2: string = '\\[0-9]'
 const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
 
 const Date_dd_Mmm_yyyy_RegexSymbol: string = '\\[dd-Mmm-yyyy]'
+const Date_Mmm_dd_yyyy_RegexSymbol: string = '\\[Mmm-dd-yyyy]'
 
 const InlineRegexSymbol_CapitalLetter: string = '\\C'
 const InlineRegexSymbol_LowercaseLetter: string = '\\l'
@@ -377,7 +380,8 @@ const sortingSymbolsArr: Array<string> = [
 	escapeRegexUnsafeCharacters(CompoundRomanNumberDashRegexSymbol),
 	escapeRegexUnsafeCharacters(WordInASCIIRegexSymbol),
 	escapeRegexUnsafeCharacters(WordInAnyLanguageRegexSymbol),
-	escapeRegexUnsafeCharacters(Date_dd_Mmm_yyyy_RegexSymbol)
+	escapeRegexUnsafeCharacters(Date_dd_Mmm_yyyy_RegexSymbol),
+	escapeRegexUnsafeCharacters(Date_Mmm_dd_yyyy_RegexSymbol)
 ]
 
 const sortingSymbolsRegex = new RegExp(sortingSymbolsArr.join('|'), 'gi')
@@ -446,6 +450,7 @@ export const NumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumb
 export const CompoundDotNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DOT_SEPARATOR)
 export const CompoundDashNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DASH_SEPARATOR)
 export const Date_dd_Mmm_yyyy_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_dd_Mmm_yyyy_NormalizerFn(s)
+export const Date_Mmm_dd_yyyy_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_Mmm_dd_yyyy_NormalizerFn(s)
 
 export enum AdvancedRegexType {
 	None, // to allow if (advancedRegex)
@@ -457,7 +462,8 @@ export enum AdvancedRegexType {
 	CompoundDashRomanNumber,
 	WordInASCII,
 	WordInAnyLanguage,
-	Date_dd_Mmm_yyyy
+	Date_dd_Mmm_yyyy,
+	Date_Mmm_dd_yyyy
 }
 
 const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
@@ -506,6 +512,11 @@ const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 		regexpStr: Date_dd_Mmm_yyyy_RegexStr,
 		normalizerFn: Date_dd_Mmm_yyyy_NormalizerFn,
 		advancedRegexType: AdvancedRegexType.Date_dd_Mmm_yyyy
+	},
+	[Date_Mmm_dd_yyyy_RegexSymbol]: { // Intentionally retain character case
+		regexpStr: Date_Mmm_dd_yyyy_RegexStr,
+		normalizerFn: Date_Mmm_dd_yyyy_NormalizerFn,
+		advancedRegexType: AdvancedRegexType.Date_Mmm_dd_yyyy
 	}
 }
 

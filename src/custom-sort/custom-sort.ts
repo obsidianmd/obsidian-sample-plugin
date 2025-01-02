@@ -241,7 +241,7 @@ const SortersForDerivedSecondary: { [key in CustomSortOrder]?: SorterFn } = {
 };
 
 // OS - Obsidian Sort
-const OS_alphabetical = 'alphabetical'
+export const OS_alphabetical = 'alphabetical'
 const OS_alphabeticalReverse = 'alphabeticalReverse'
 export const OS_byModifiedTime = 'byModifiedTime'
 export const OS_byModifiedTimeReverse = 'byModifiedTimeReverse'
@@ -812,7 +812,7 @@ const folderSortCore = function (sortedFolder: TFolder, sortOrder: string, sorti
 };
 
 // Returns a sorted copy of the input array, intentionally to keep it intact
-export const sortFolderItemsForBookmarking = function (folder: TFolder, items: Array<TAbstractFile>, sortingSpec: CustomSortSpec|null|undefined, ctx: ProcessingContext, uiSortOrder: string): Array<TAbstractFile> {
+export const sortFolderItems = function (folder: TFolder, items: Array<TAbstractFile>, sortingSpec: CustomSortSpec|null|undefined, ctx: ProcessingContext, uiSortOrder: string): Array<TAbstractFile> {
 	if (sortingSpec) {
 		const folderItemsByPath: { [key: string]: TAbstractFile } = {}
 
@@ -848,6 +848,9 @@ export const sortFolderItemsForBookmarking = function (folder: TFolder, items: A
 		return folderItems
 	}
 };
+
+// Exported legacy function name for backward compatibility
+export const sortFolderItemsForBookmarking = sortFolderItems
 
 export const _unitTests = {
 	fileGoesFirstWhenSameBasenameAsFolder: fileGoesFirstWhenSameBasenameAsFolder,
