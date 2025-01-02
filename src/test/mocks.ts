@@ -3,6 +3,9 @@ import {
     TFolder,
     Vault
 } from "obsidian";
+import {
+    lastPathComponent
+} from "../utils/utils";
 
 export const mockTFile = (basename: string, ext: string, size?: number, ctime?: number, mtime?: number): TFile => {
     return {
@@ -25,7 +28,7 @@ export const mockTFolder = (name: string, children?: Array<TFolder|TFile>, paren
         isRoot(): boolean { return name === '/' },
         vault: {} as Vault, // To satisfy TS typechecking
         path: `${name}`,
-        name: name,
+        name: lastPathComponent(name),
         parent: parent ?? ({} as TFolder), // To satisfy TS typechecking
         children: children ?? []
     }
@@ -52,4 +55,13 @@ export const mockTFolderWithChildren = (name: string): TFolder => {
     const child5: TFile = mockTFile('Child file 3 created inbetween, modified inbetween', 'md', 100, TIMESTAMP_INBETWEEN, TIMESTAMP_INBETWEEN)
 
     return mockTFolder(name, [child1, child2, child3, child4, child5, subfolder1, subfolder2])
+}
+
+export const mockTFolderWithDateNamedChildren = (name: string): TFolder => {
+    const child1: TFolder = mockTFolder('AAA Jan-01-2012')
+    const child2: TFile = mockTFile('BBB Dec-23-2024', 'md')
+    const child3: TFolder = mockTFolder('CCC Feb-28-2025')
+    const child4: TFile = mockTFile('DDD Jul-15-2024', 'md')
+
+    return mockTFolder(name, [child1, child2, child3, child4])
 }
