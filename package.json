@@ -7,12 +7,11 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"lint": "eslint --ext .js,.ts,.json src && stylelint styles.css",
+		"lint": "eslint --ext .js,.ts,.json src && stylelint styles.css && npx npm-package-json-lint .",
 		"link": "npm link eslint-plugin-obsidian",
 		"test": "npm run link && npm run lint"
 	},
 	"keywords": [],
-	"author": "",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
@@ -31,7 +30,10 @@
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"@microsoft/eslint-plugin-sdl": "0.2.2",
-		"globals": "14.0.0"
+		"globals": "14.0.0",
+		"npm-package-json-lint": "8.0.0",
+		"@sentry/browser": "8.47.0",
+		"posthog-node": "4.3.2"
 	},
 	"dependencies": {
 		"eslint-plugin-obsidian": "file:../eslint-plugin",

@@ -1,0 +1,32 @@
+{
+	"rules": {
+		"no-restricted-dependencies": [
+			"error",
+			[
+				"@sentry/*",
+				"posthog*",
+				"@posthog/*",
+				"posthog-node",
+				"@datadog/*",
+				"mixpanel",
+				"mixpanel/*",
+				"@analytics/*",
+				"logrocket"
+			]
+		],
+		"no-restricted-devDependencies": [
+			"error",
+			[
+				"@sentry/*",
+				"posthog*",
+				"@posthog/*",
+				"posthog-node",
+				"@datadog/*",
+				"mixpanel",
+				"mixpanel/*",
+				"@analytics/*",
+				"logrocket"
+			]
+		]
+	}
+}
