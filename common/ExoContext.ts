@@ -42,10 +42,10 @@ export default class ExoContext {
 		this.appUtils = new AppUtils(this.app);
 		this.layoutFactory = new LayoutFactory(this);
 
-		this.kObjectCreator = new KObjectCreator(this.appUtils);
 		this.dailyNoteCreator = new DailyNoteCreator(this.appUtils);
 		this.areaCreator = new AreaCreator(this.appUtils);
 		this.effortCreator = new EffortCreator(this.appUtils, this.areaCreator);
+		this.kObjectCreator = new KObjectCreator(this.appUtils, this);
 
 		this.dailyNoteRepository = new DailyNotePersistenceAdapter(this.appUtils, this.dailyNoteCreator);
 		this.kObjectUtility = new KObjectUtility(this);

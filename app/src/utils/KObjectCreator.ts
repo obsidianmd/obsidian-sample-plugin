@@ -4,12 +4,11 @@ import {KOC} from "../../../core/src/domain/KOC";
 import AppUtils from "./AppUtils";
 import Area from "../../../core/src/domain/Area";
 import {UUID} from "node:crypto";
-import Effort from "../../../core/src/domain/effort/Effort";
-import {EffortStatus} from "../../../core/src/domain/effort/EffortStatus";
 import KOCFactory from "./KOCFactory";
+import ExoContext from "../../../common/ExoContext";
 
 export default class KObjectCreator {
-	constructor(private appUtils: AppUtils) {
+	constructor(private appUtils: AppUtils, private ctx: ExoContext) {
 	}
 
 	createFromTFile(file: TFile) {
@@ -25,7 +24,7 @@ export default class KObjectCreator {
 			case KOC.EMS_AREA:
 				return this.createArea(file);
 			case KOC.EMS_EFFORT:
-				return await this.createEffort(file);
+				return await this.ctx.effortCreator.create(file);
 			default:
 				throw new Error("Not implemented createFromTFileTyped")
 		}
@@ -44,35 +43,6 @@ export default class KObjectCreator {
 		}
 
 		return new Area(id, file.name.replace(".md", ""), parentArea)
-	}
-
-	/**
-	 * @deprecated
-	 */
-	async createEffort(file: TFile): Promise<Effort> {
-		const koProperties = this.appUtils.getFrontmatterOrThrow(file);
-
-		const id: UUID = koProperties["uid"] as UUID;
-		const status: EffortStatus = koProperties["e-status"] as EffortStatus;
-		const started: Date | null = koProperties["started"] ? koProperties["started"] as Date : null;
-		const ended: Date | null = koProperties["ended"] ? koProperties["ended"] as Date : null;
-
-		let area: Area | null = null;
-		const areaStr: string = koProperties["area"];
-		if (areaStr) {
-			const file = this.appUtils.getTFileFromStrLink(areaStr);
-			area = this.createArea(file);
-		}
-
-		let parent: Effort | null = null;
-		const parentStr: string = koProperties["e-parent"];
-		if (parentStr) {
-			const file = this.appUtils.getTFileFromStrLink(parentStr);
-			parent = await this.createEffort(file);
-		}
-
-		const body: string = await this.appUtils.getFileBody(file);
-		return new Effort(id, file.name.replace(".md", ""), status, started, ended, area, parent, body);
 	}
 
 	getFileKoc(file: TFile): KOC {
