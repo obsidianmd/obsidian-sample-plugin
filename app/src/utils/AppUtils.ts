@@ -6,7 +6,24 @@ export default class AppUtils {
 	}
 
 	async createFile(path: string, textContent: string) {
-		await this.app.vault.create(path, textContent);
+		let file = await this.app.vault.create(path, textContent);
+		await this.waitCacheUpdate(file);
+	}
+
+	private async waitCacheUpdate(file: TFile) {
+		const fileCachePromise = new Promise<CachedMetadata | null>((resolve) => {
+			const onCacheUpdate = (updatedFile: TFile) => {
+				if (updatedFile.path === file.path) {
+					const fileCache = this.app.metadataCache.getFileCache(file);
+					this.app.metadataCache.off("changed", onCacheUpdate); // Убираем подписку
+					resolve(fileCache || null); // Обрабатываем случай с null
+				}
+			};
+
+			this.app.metadataCache.on("changed", onCacheUpdate);
+		});
+
+		await fileCachePromise;
 	}
 
 	async openKObject(ko: KObject) {

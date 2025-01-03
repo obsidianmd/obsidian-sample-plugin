@@ -10,7 +10,9 @@ export default class Effort extends KObject {
 				public status: EffortStatus,
 				public started: Date | null,
 				public ended: Date | null,
-				public area: Area | null) {
+				public area: Area | null,
+				public parent: Effort | null,
+				public body: string) {
 		super(id, KOC.EMS_EFFORT);
 	}
 

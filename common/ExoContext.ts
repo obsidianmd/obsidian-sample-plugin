@@ -14,6 +14,7 @@ import CreateEffortService from "../core/src/service/CreateEffortService";
 import EffortRepository from "../core/src/ports/output/EffortRepository";
 import EffortPersistenceAdapter from "../app/src/adapters/output/EffortPersistenceAdapter";
 import KObjectUtility from "../app/src/utils/KObjectUtility";
+import EffortPathRulesHelper from "../app/src/helpers/EffortPathRulesHelper";
 
 export default class ExoContext {
 	public readonly utils: Utils;
@@ -28,6 +29,7 @@ export default class ExoContext {
 	public readonly getCurrentDNUseCase: GetCurrentDailyNoteUseCase;
 	public readonly createEffortUseCase: CreateEffortUseCase;
 	public readonly effortRepository: EffortRepository;
+	public readonly effortPathRulesHelper: EffortPathRulesHelper;
 
 	constructor(public app: App) {
 		this.utils = new Utils(this.app);
@@ -41,5 +43,6 @@ export default class ExoContext {
 		this.getCurrentDNUseCase = new GetCurrentDailyNoteService(this.dailyNoteRepository);
 		this.effortRepository = new EffortPersistenceAdapter(this);
 		this.createEffortUseCase = new CreateEffortService(this.effortRepository);
+		this.effortPathRulesHelper = new EffortPathRulesHelper(this);
 	}
 }

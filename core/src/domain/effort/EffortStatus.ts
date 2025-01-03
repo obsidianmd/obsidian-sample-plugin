@@ -1,8 +1,8 @@
 export enum EffortStatus {
-	DRAFT,
-	BACKLOG,
-	READY,
-	STARTED,
-	ENDED,
-	TRASHED
+	DRAFT = "DRAFT",
+	BACKLOG = "BACKLOG",
+	READY = "READY",
+	STARTED = "STARTED",
+	ENDED = "ENDED",
+	TRASHED = "TRASHED"
 }

@@ -1,30 +1,48 @@
 import EffortRepository from "../../../../core/src/ports/output/EffortRepository";
 import Effort from "../../../../core/src/domain/effort/Effort";
 import ExoContext from "../../../../common/ExoContext";
+import Area from "../../../../core/src/domain/Area";
 
 export default class EffortPersistenceAdapter implements EffortRepository {
 	constructor(private ctx: ExoContext) {
 	}
 
 	async save(effort: Effort): Promise<void> {
-		const folderPath: string = this.getPathForCreate(effort)
+		const folderPath: string = this.ctx.effortPathRulesHelper.getEffortPath(effort)
 		const filePath = folderPath + "/" + effort.title + ".md";
-		const data: string = "---\ntags:\n - EMS/Effort\n---\n\nThis is effort created with Exo!";
-		await this.ctx.app.vault.create(filePath, data);
+		const data = this.serializeData(effort);
+
+		await this.ctx.appUtils.createFile(filePath, data);
 	}
 
-	// TODO should be in EffortPathRulesHelper in app module
-	getPathForCreate(effort: Effort): string {
-		if (effort.area !== null) {
-			const areaFile = this.ctx.appUtils.getObjectFileOrThrow(effort.area);
-			const areaFolder = areaFile.parent;
-			if (!areaFolder) {
-				throw new Error("Area file has no parent folder");
-			}
+	async update(effort: Effort): Promise<void> {
+		const file = this.ctx.appUtils.getObjectFileOrThrow(effort);
+		const data = this.serializeData(effort);
+		await this.ctx.app.vault.modify(file, data);
+	}
 
-			return areaFolder.path;
+	private serializeData(effort: Effort) {
+		let result = "";
+		result += "---\n"; // frontmatter start
+		result += "tags:\n";
+		result += " - EMS/Effort\n";
+		result += "uid: " + effort.id + "\n";
+		result += "e-status: " + effort.status + "\n";
+		if (effort.started) {
+			result += "started: " + effort.started + "\n";
 		}
+		if (effort.ended) {
+			result += "ended: " + effort.ended + "\n";
+		}
+		if (effort.area) {
+			result += "area: \"" + this.getLinkToArea(effort.area) + "\"\n";
+		}
+		result += "---\n"; // frontmatter end
+		result += effort.body;
+		return result;
+	}
 
-		return "/0 Inbox/";
+	private getLinkToArea(area: Area): string {
+		return `[[${area.name}]]`;
 	}
 }

@@ -16,6 +16,8 @@ export default class CreateEffortUnderAreaExoCommand implements ExoCommand {
 			throw new Error("Active file is not an Area");
 		}
 
-		this.ctx.createEffortUseCase.taskUnderArea(activeKo);
+		let effort = await this.ctx.createEffortUseCase.taskUnderArea(activeKo);
+
+		await this.ctx.appUtils.openKObject(effort);
 	}
 }

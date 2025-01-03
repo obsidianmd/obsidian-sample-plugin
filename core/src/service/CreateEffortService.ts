@@ -9,12 +9,12 @@ export default class CreateEffortService implements CreateEffortUseCase {
 	constructor(private effortRepository: EffortRepository) {
 	}
 
-	taskUnderArea(area: Area): Effort {
-		const title = "Task under " + area.name;
+	async taskUnderArea(area: Area): Promise<Effort> {
+		const title = crypto.randomUUID();
 		const id = crypto.randomUUID() as UUID;
-		const effort = new Effort(id, title, EffortStatus.DRAFT, null, null, area);
+		const effort = new Effort(id, title, EffortStatus.DRAFT, null, null, area, null, "Body");
 
-		this.effortRepository.save(effort);
+		await this.effortRepository.save(effort);
 
 		return effort;
 	}
