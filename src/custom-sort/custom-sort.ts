@@ -1,8 +1,6 @@
 import {
 	FrontMatterCache,
 	MetadataCache,
-	Plugin,
-	requireApiVersion,
 	TAbstractFile,
 	TFile,
 	TFolder,
@@ -719,28 +717,8 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 	})
 }
 
-// This function is a replacement for the Obsidian File Explorer function sort(...) up to Obsidian 1.6.0
-//   when a major refactoring of sorting mechanics happened
-export const folderSort_vUpTo_1_6_0 = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
-
-	const fileExplorerView = this.fileExplorer ?? this.view  // this.view replaces the former since 1.5.4 insider build
-	const folderUnderSort = this.file as TFolder
-	const sortOrder = this.sortOrder
-	const allFileItemsCollection = fileExplorerView.fileItems
-
-	const items = folderSortCore(folderUnderSort, sortOrder, sortingSpec, allFileItemsCollection, ctx)
-
-	if (requireApiVersion && requireApiVersion("0.15.0")) {
-		this.vChildren.setChildren(items);
-	} else {
-		this.children = items;
-	}
-}
-
-// This function is a replacement for the Obsidian File Explorer function getSortedFolderItems(...)
-//    which first appeared in Obsidian 1.6.0 and simplified a bit the plugin integration point
-export const getSortedFolderItems_vFrom_1_6_0 = function (sortedFolder: TFolder, sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
-	const sortOrder = this.sortOrder
+export const getSortedFolderItems = function (sortedFolder: TFolder, sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
+	const sortOrder = this.sortOrder   // this is bound to FileExplorer Obsidian component
 	const allFileItemsCollection = this.fileItems
 	return folderSortCore(sortedFolder, sortOrder, sortingSpec, allFileItemsCollection, ctx)
 }
