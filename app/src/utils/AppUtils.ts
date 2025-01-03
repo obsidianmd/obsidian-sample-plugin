@@ -60,7 +60,7 @@ export default class AppUtils {
 			return this.getFileByPathOrThrow(areaFileName + ".md");
 		} else {
 			const areaFileName = strLink.replace("[[", "").replace("]]", "");
-			return this.getFileByName(areaFileName + ".md");
+			return this.getFileByNameOrThrow(areaFileName + ".md");
 		}
 	}
 
@@ -98,9 +98,12 @@ export default class AppUtils {
 		return [];
 	}
 
-	// TODO rename and add `orThrow`
-	getFileByName(parentFileName: string): TFile {
-		return this.app.vault.getMarkdownFiles().filter(f => f.name == parentFileName)[0];
+	getFileByNameOrThrow(parentFileName: string): TFile {
+		let tFile = this.app.vault.getMarkdownFiles().filter(f => f.name == parentFileName)[0];
+		if (!tFile) {
+			throw new Error("File not found by name " + parentFileName);
+		}
+		return tFile;
 	}
 
 	getFileByPathOrThrow(filePath: string): TFile {
