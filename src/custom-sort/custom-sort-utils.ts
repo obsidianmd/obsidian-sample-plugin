@@ -16,7 +16,6 @@ export interface HasSortingTypes {
 
 export interface HasGroupingTypes {
     byBookmarks: number
-    byStarred: number
     byIcon: number
     total: number
 }
@@ -31,10 +30,6 @@ export const checkByBookmark = (has: HasSortingOrGrouping, order?: CustomSortOrd
     (order === CustomSortOrder.byBookmarkOrder || order === CustomSortOrder.byBookmarkOrderReverse) && has.sorting.byBookmarks++;
 }
 
-export const checkByStarred = (has: HasSortingOrGrouping, order?: CustomSortOrder, groupType?: CustomSortGroupType ) => {
-    groupType === CustomSortGroupType.StarredOnly && has.grouping.byStarred++;
-}
-
 export const checkByIcon = (has: HasSortingOrGrouping, order?: CustomSortOrder, groupType?: CustomSortGroupType ) => {
     groupType === CustomSortGroupType.HasIcon && has.grouping.byIcon++;
 }
@@ -45,7 +40,6 @@ export const checkStandardObsidian = (has: HasSortingOrGrouping, order?: CustomS
 
 export const doCheck = (has: HasSortingOrGrouping, order?: CustomSortOrder, groupType?: CustomSortGroupType) => {
     checkByBookmark(has, order, groupType)
-    checkByStarred(has, order, groupType)
     checkByIcon(has, order, groupType)
     checkStandardObsidian(has, order, groupType)
 
@@ -56,7 +50,7 @@ export const doCheck = (has: HasSortingOrGrouping, order?: CustomSortOrder, grou
 export const collectSortingAndGroupingTypes = (sortSpec?: CustomSortSpec|null): HasSortingOrGrouping => {
     const has: HasSortingOrGrouping = {
         grouping: {
-            byIcon: 0, byStarred: 0, byBookmarks: 0, total: 0
+            byIcon: 0, byBookmarks: 0, total: 0
         },
         sorting: {
             byBookmarks: 0, standardObsidian: 0, total: 0
