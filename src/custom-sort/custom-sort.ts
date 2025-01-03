@@ -1,17 +1,11 @@
 import {
 	FrontMatterCache,
 	MetadataCache,
-	Plugin,
-	requireApiVersion,
 	TAbstractFile,
 	TFile,
 	TFolder,
 	Vault
 } from 'obsidian';
-import {
-	determineStarredStatusOf,
-	Starred_PluginInstance
-} from '../utils/StarredPluginSignature';
 import {
 	determineIconOf,
 	ObsidianIconFolder_PluginInstance
@@ -41,7 +35,6 @@ export interface ProcessingContext {
 	// For internal transient use
 	plugin?: CustomSortPluginAPI                     // to hand over the access to App instance to the sorting engine
 	_mCache?: MetadataCache
-	starredPluginInstance?: Starred_PluginInstance
 	bookmarksPluginInstance?: BookmarksPluginInterface,
 	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
@@ -497,14 +490,6 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 					}
 				}
 				break
-			case CustomSortGroupType.StarredOnly:
-				if (ctx?.starredPluginInstance) {
-					const starred: boolean = determineStarredStatusOf(entry, aFile, ctx.starredPluginInstance)
-					if (starred) {
-						determined = true
-					}
-				}
-				break
 			case CustomSortGroupType.BookmarkedOnly:
 				if (ctx?.bookmarksPluginInstance) {
 					const bookmarkOrder: number | undefined = ctx?.bookmarksPluginInstance.determineBookmarkOrder(entry.path)
@@ -750,28 +735,8 @@ export const determineBookmarksOrderIfNeeded = (folderItems: Array<FolderItemFor
 	})
 }
 
-// This function is a replacement for the Obsidian File Explorer function sort(...) up to Obsidian 1.6.0
-//   when a major refactoring of sorting mechanics happened
-export const folderSort_vUpTo_1_6_0 = function (sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
-
-	const fileExplorerView = this.fileExplorer ?? this.view  // this.view replaces the former since 1.5.4 insider build
-	const folderUnderSort = this.file as TFolder
-	const sortOrder = this.sortOrder
-	const allFileItemsCollection = fileExplorerView.fileItems
-
-	const items = folderSortCore(folderUnderSort, sortOrder, sortingSpec, allFileItemsCollection, ctx)
-
-	if (requireApiVersion && requireApiVersion("0.15.0")) {
-		this.vChildren.setChildren(items);
-	} else {
-		this.children = items;
-	}
-}
-
-// This function is a replacement for the Obsidian File Explorer function getSortedFolderItems(...)
-//    which first appeared in Obsidian 1.6.0 and simplified a bit the plugin integration point
-export const getSortedFolderItems_vFrom_1_6_0 = function (sortedFolder: TFolder, sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
-	const sortOrder = this.sortOrder
+export const getSortedFolderItems = function (sortedFolder: TFolder, sortingSpec: CustomSortSpec, ctx: ProcessingContext) {
+	const sortOrder = this.sortOrder   // this is bound to FileExplorer Obsidian component
 	const allFileItemsCollection = this.fileItems
 	return folderSortCore(sortedFolder, sortOrder, sortingSpec, allFileItemsCollection, ctx)
 }

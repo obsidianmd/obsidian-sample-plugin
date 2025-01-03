@@ -41,9 +41,9 @@ with-metadata: Pages
  > a-z by-metadata: 
 /: with-icon:
 with-icon: RiClock24
-starred:
-/:files starred:
-/folders starred:
+bookmarked:
+/:files bookmarked:
+/folders bookmarked:
 
 :::: folder of bookmarks
 < by-bookmarks-order
@@ -106,9 +106,9 @@ target-folder: tricky folder 2
  > a-z by-metadata:
 /:files with-icon:
 /folders:files with-icon: RiClock24 
-/folders:files starred:
-/:files starred:
-/folders starred:
+/folders:files bookmarked:
+/:files bookmarked:
+/folders bookmarked:
 
 target-folder: folder of bookmarks
 order-asc: by-bookmarks-order
@@ -201,12 +201,12 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			type: CustomSortGroupType.HasIcon,
 			iconName: 'RiClock24'
 		}, {
-			type: CustomSortGroupType.StarredOnly
+			type: CustomSortGroupType.BookmarkedOnly
 		}, {
-			type: CustomSortGroupType.StarredOnly,
+			type: CustomSortGroupType.BookmarkedOnly,
 			filesOnly: true
 		}, {
-			type: CustomSortGroupType.StarredOnly,
+			type: CustomSortGroupType.BookmarkedOnly,
 			foldersOnly: true
 		}, {
 			type: CustomSortGroupType.Outsiders
