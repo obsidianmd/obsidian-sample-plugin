@@ -17,11 +17,6 @@ export default class OpenCurrentDailyNoteExoCommand implements ExoCommand {
 			throw new Error("No current daily note found");
 		}
 
-		let file = this.ctx.vaultAdapter.getObjectFile(currentDN);
-		if (!file) {
-			throw new Error("Daily note file not found");
-		}
-
-		await this.ctx.appUtils.openFile(file);
+		await this.ctx.appUtils.openKObject(currentDN);
 	}
 }

@@ -1,12 +1,12 @@
 import CountNotesUseCase from "../ports/input/CountNotesUseCase";
-import VaultAdapter from "../../../app/src/adapters/VaultAdapter";
+import AppUtils from "../../../app/src/utils/AppUtils";
 
 export default class CountNotesService implements CountNotesUseCase {
 
-	constructor(private vaultAdapter: VaultAdapter) {
+	constructor(private appUtils: AppUtils) {
 	}
 
 	count(): number {
-		return this.vaultAdapter.getAllMdFiles().length;
+		return this.appUtils.getAllMdFiles().length;
 	}
 }

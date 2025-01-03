@@ -2,7 +2,6 @@ import {App} from "obsidian";
 import DailyNoteRepository from "../core/src/ports/output/DailyNoteRepository";
 import Utils from "../core/src/utils/Utils";
 import DailyNoteCreator from "../app/src/utils/DailyNoteCreator";
-import VaultAdapter from "../app/src/adapters/VaultAdapter";
 import KObjectCreator from "../app/src/utils/KObjectCreator";
 import AppUtils from "../app/src/utils/AppUtils";
 import CountNotesUseCase from "../core/src/ports/input/CountNotesUseCase";
@@ -23,7 +22,6 @@ export default class ExoContext {
 	public readonly dailyNoteRepository: DailyNoteRepository;
 	public readonly kObjectUtility: KObjectUtility;
 
-	public readonly vaultAdapter: VaultAdapter;
 	public readonly appUtils: AppUtils;
 
 	public readonly countNotesUseCase: CountNotesUseCase;
@@ -34,13 +32,12 @@ export default class ExoContext {
 	constructor(public app: App) {
 		this.utils = new Utils(this.app);
 		this.appUtils = new AppUtils(this.app);
-		this.vaultAdapter = new VaultAdapter(this.app, this.appUtils);
 		this.kObjectCreator = new KObjectCreator(this.appUtils);
 		this.dailyNoteCreator = new DailyNoteCreator(this.appUtils);
-		this.dailyNoteRepository = new DailyNotePersistenceAdapter(this.appUtils, this.vaultAdapter, this.dailyNoteCreator);
+		this.dailyNoteRepository = new DailyNotePersistenceAdapter(this.appUtils, this.dailyNoteCreator);
 		this.kObjectUtility = new KObjectUtility(this);
 
-		this.countNotesUseCase = new CountNotesService(this.vaultAdapter);
+		this.countNotesUseCase = new CountNotesService(this.appUtils);
 		this.getCurrentDNUseCase = new GetCurrentDailyNoteService(this.dailyNoteRepository);
 		this.effortRepository = new EffortPersistenceAdapter(this);
 		this.createEffortUseCase = new CreateEffortService(this.effortRepository);

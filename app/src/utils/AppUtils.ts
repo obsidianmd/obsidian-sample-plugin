@@ -1,4 +1,5 @@
-import {App, FrontMatterCache, TFile} from "obsidian";
+import {App, CachedMetadata, FrontMatterCache, TFile} from "obsidian";
+import KObject from "../../../core/src/domain/KObject";
 
 export default class AppUtils {
 	constructor(private app: App) {
@@ -6,6 +7,11 @@ export default class AppUtils {
 
 	async createFile(path: string, textContent: string) {
 		await this.app.vault.create(path, textContent);
+	}
+
+	async openKObject(ko: KObject) {
+		const file = this.getObjectFileOrThrow(ko);
+		await this.openFile(file);
 	}
 
 	async openFile(file: TFile) {
@@ -65,4 +71,36 @@ export default class AppUtils {
 	}
 
 
+	getAllMdFiles() {
+		return this.app.vault.getMarkdownFiles();
+	}
+
+	getFileCache(file: TFile): CachedMetadata | null {
+		return this.app.metadataCache.getFileCache(file);
+	}
+
+	findMdWith(filter: (f: TFile) => boolean) {
+		return this.getAllMdFiles().filter(filter);
+	}
+
+	getObjectFileOrThrow(ko: KObject): TFile {
+		let res = this.getObjectFile(ko);
+		if (!res) {
+			throw new Error("Object file not found for " + ko);
+		}
+		return res;
+	}
+
+	getObjectFile(ko: KObject): TFile | null {
+		const a = this.findMdWith(f => {
+			const frontmatter = this.getFrontmatterOrNull(f);
+			if (!frontmatter) {
+				return false;
+			}
+
+			const id: string = frontmatter["uid"];
+			return id === ko.id;
+		});
+		return a[0];
+	}
 }

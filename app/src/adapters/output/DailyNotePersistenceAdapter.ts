@@ -1,13 +1,11 @@
 import DailyNote from "../../../../core/src/domain/DailyNote";
 import {TFile} from "obsidian";
-import VaultAdapter from "../VaultAdapter";
 import DailyNoteCreator from "../../utils/DailyNoteCreator";
 import AppUtils from "../../utils/AppUtils";
 import DailyNoteRepository from "../../../../core/src/ports/output/DailyNoteRepository";
 
 export default class DailyNotePersistenceAdapter implements DailyNoteRepository {
 	constructor(private appUtils: AppUtils,
-				private vaultAdapter: VaultAdapter,
 				private dailyNoteCreator: DailyNoteCreator) {
 	}
 
@@ -18,7 +16,7 @@ export default class DailyNotePersistenceAdapter implements DailyNoteRepository 
 	}
 
 	async findAll(): Promise<DailyNote[]> {
-		const rawDailyNotes: TFile[] = this.vaultAdapter.findMdWith((f: TFile) => {
+		const rawDailyNotes: TFile[] = this.appUtils.findMdWith((f: TFile) => {
 			return this.appUtils.getTagsFromFile(f).includes("TMS/DailyNote");
 		});
 
