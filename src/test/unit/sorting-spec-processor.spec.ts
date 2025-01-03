@@ -10,6 +10,7 @@ import {
 	detectSortingSymbols,
 	escapeRegexUnsafeCharacters,
 	extractSortingSymbol,
+	FolderPathToSortSpecMap,
 	hasMoreThanOneSortingSymbol,
 	NumberNormalizerFn,
 	RegexpUsedAs,
@@ -158,7 +159,7 @@ target-folder: Same rules as for References
 
 const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
-		defaultOrder: CustomSortOrder.alphabetical,
+		defaultSorting: { order: CustomSortOrder.alphabetical, },
 		groups: [{
 			foldersOnly: true,
 			type: CustomSortGroupType.MatchAll
@@ -188,12 +189,14 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			filesOnly: true,
 			type: CustomSortGroupType.HasMetadataField,
 			withMetadataFieldName: 'sort-index-value',
-			order: CustomSortOrder.byMetadataFieldAlphabetical,
-			byMetadataField: 'Some-dedicated-field',
+			sorting: {
+				order: CustomSortOrder.byMetadataFieldAlphabetical,
+				byMetadata: 'Some-dedicated-field',
+			}
 		}, {
 			type: CustomSortGroupType.HasMetadataField,
 			withMetadataFieldName: 'Pages',
-			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse
+			sorting: { order: CustomSortOrder.byMetadataFieldAlphabeticalReverse },
 		}, {
 			type: CustomSortGroupType.HasIcon,
 			filesOnly: true
@@ -217,17 +220,17 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 		]
 	},
 	"folder of bookmarks": {
-		defaultOrder: CustomSortOrder.byBookmarkOrder,
+		defaultSorting: { order: CustomSortOrder.byBookmarkOrder, },
 		groups: [
 			{
 				filesOnly: true,
-				order: CustomSortOrder.byBookmarkOrder,
+				sorting: { order: CustomSortOrder.byBookmarkOrder, },
 				type: CustomSortGroupType.BookmarkedOnly
 			},
 			{
 				exactText: "Abc",
 				foldersOnly: true,
-				order: CustomSortOrder.byBookmarkOrderReverse,
+				sorting: { order: CustomSortOrder.byBookmarkOrderReverse, },
 				type: CustomSortGroupType.ExactName
 			},
 			{
@@ -257,11 +260,11 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 			type: CustomSortGroupType.ExactPrefix
 		}, {
 			foldersOnly: true,
-			order: CustomSortOrder.byModifiedTimeReverseAdvanced,
+			sorting: { order: CustomSortOrder.byModifiedTimeReverseAdvanced, },
 			type: CustomSortGroupType.Outsiders
 		}, {
 			filesOnly: true,
-			order: CustomSortOrder.byModifiedTime,
+			sorting: { order: CustomSortOrder.byModifiedTime, },
 			type: CustomSortGroupType.Outsiders
 		}, {
 			exactPrefix: "Ref",
@@ -287,7 +290,7 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 		targetFoldersPaths: ['/']
 	},
 	"Sandbox": {
-		defaultOrder: CustomSortOrder.byModifiedTimeReverse,
+		defaultSorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 		groups: [{
 			exactText: "adfsasda",
 			filesOnly: true,
@@ -295,12 +298,12 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 		}, {
 			exactText: "sdsadasdsa",
 			foldersOnly: true,
-			order: CustomSortOrder.alphabeticalReverse,
+			sorting: { order: CustomSortOrder.alphabeticalReverse, },
 			type: CustomSortGroupType.ExactName
 		}, {
 			exactText: "fdsfdsfdsfs",
 			foldersOnly: true,
-			order: CustomSortOrder.byCreatedTimeReverse,
+			sorting: { order: CustomSortOrder.byCreatedTimeReverse, },
 			type: CustomSortGroupType.ExactName
 		}, {
 			type: CustomSortGroupType.Outsiders
@@ -309,20 +312,20 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 		targetFoldersPaths: ['Sandbox']
 	},
 	"Abcd efgh ijk": {
-		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 		groups: [{
 			exactPrefix: "Plain text spec bla bla bla (matches files and folders)",
 			type: CustomSortGroupType.ExactPrefix
 		}, {
 			exactText: "files only matching",
 			filesOnly: true,
-			order: CustomSortOrder.alphabeticalReverse,
+			sorting: { order: CustomSortOrder.alphabeticalReverse, },
 			matchFilenameWithExt: true,
 			type: CustomSortGroupType.ExactName
 		}, {
 			exactText: "folders only matching",
 			foldersOnly: true,
-			order: CustomSortOrder.alphabetical,
+			sorting: { order: CustomSortOrder.alphabetical, },
 			type: CustomSortGroupType.ExactName
 		}, {
 			exactText: "some-file (or folder)",
@@ -444,14 +447,14 @@ Here goes ASCII word \\a+
 \\[Mmm-dd-yyyy] for the specific date format of Apr-01-2024
 `
 
+// Tricky elements captured:
+// - Order a-z. for by metadata is transformed to a-z (there is no notion of 'file extension' in metadata values)
+
 const txtInputExampleMDataExtractors1: string = `
 < a-z by-metadata: created-by using-extractor: date(dd/mm/yyyy)
 /folders Chapter...
   > a-z by-metadata: updated-on using-extractor: date(mm/dd/yyyy)
 `
-
-// Tricky elements captured:
-// - Order a-z. for by metadata is transformed to a-z (there is no notion of 'file extension' in metadata values)
 
 const txtInputExampleMDataExtractors2: string = `
 < a-z. by-metadata: created by using-extractor: date(mm/dd/yyyy), < true a-z. by-metadata: using-extractor: date(dd/mm/yyyy)
@@ -461,16 +464,20 @@ const txtInputExampleMDataExtractors2: string = `
 
 const expectedSortSpecsExampleMDataExtractors1: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
-		defaultOrder: CustomSortOrder.byMetadataFieldAlphabetical,
-		byMetadataField: 'created-by',
-		metadataFieldValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy,
+		defaultSorting: {
+			order: CustomSortOrder.byMetadataFieldAlphabetical,
+			byMetadata: 'created-by',
+			metadataValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy
+		},
 		groups: [{
 			foldersOnly: true,
 			type: CustomSortGroupType.ExactPrefix,
 			exactPrefix: 'Chapter',
-			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-			byMetadataField: 'updated-on',
-			metadataFieldValueExtractor: _unitTests.extractorFnForDate_mmddyyyy
+			sorting: {
+				order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+				byMetadata: 'updated-on',
+				metadataValueExtractor: _unitTests.extractorFnForDate_mmddyyyy
+			}
 		}, {
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -481,22 +488,30 @@ const expectedSortSpecsExampleMDataExtractors1: { [key: string]: CustomSortSpec 
 
 const expectedSortSpecsExampleMDataExtractors2: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
-		defaultOrder: CustomSortOrder.byMetadataFieldAlphabetical,
-		byMetadataField: 'created by',
-		metadataFieldValueExtractor: _unitTests.extractorFnForDate_mmddyyyy,
-		defaultSecondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-		byMetadataFieldSecondary: '',
-		metadataFieldSecondaryValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy,
+		defaultSorting: {
+			order: CustomSortOrder.byMetadataFieldAlphabetical,
+			byMetadata: 'created by',
+			metadataValueExtractor: _unitTests.extractorFnForDate_mmddyyyy
+		},
+		defaultSecondarySorting: {
+			order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+			byMetadata: '',
+			metadataValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy
+		},
 		groups: [{
 			foldersOnly: true,
 			type: CustomSortGroupType.ExactSuffix,
 			exactSuffix: 'Chapter',
-			order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-			byMetadataField: 'updated-on',
-			metadataFieldValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy,
-			secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
-			byMetadataFieldSecondary: 'md2',
-			metadataFieldSecondaryValueExtractor: _unitTests.extractorFnForDate_mmddyyyy
+			sorting: {
+				order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+				byMetadata: 'updated-on',
+				metadataValueExtractor: _unitTests.extractorFnForDate_ddmmyyyy
+			},
+			secondarySorting: {
+				order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+				byMetadata: 'md2',
+				metadataValueExtractor: _unitTests.extractorFnForDate_mmddyyyy
+			}
 		}, {
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -504,6 +519,8 @@ const expectedSortSpecsExampleMDataExtractors2: { [key: string]: CustomSortSpec 
 		outsidersGroupIdx: 1
 	}
 }
+
+
 
 describe('SortingSpecProcessor', () => {
 	let processor: SortingSpecProcessor;
@@ -546,7 +563,7 @@ target-folder: BBB
 
 const expectedSortSpecsNotDuplicatedSortSpec: { [key: string]: CustomSortSpec } = {
 	"AAA": {
-		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -586,11 +603,11 @@ sorting: standard
 
 const expectedSortSpecForObsidianStandardSorting: { [key: string]: CustomSortSpec } = {
 	"AAA": {
-		defaultOrder: CustomSortOrder.standardObsidian,
+		defaultSorting: { order: CustomSortOrder.standardObsidian, },
 		groups: [{
 			exactText: 'Some folder',
 			foldersOnly: true,
-			order: CustomSortOrder.standardObsidian,
+			sorting: { order: CustomSortOrder.standardObsidian, },
 			type: CustomSortGroupType.ExactName
 		}, {
 			type: CustomSortGroupType.Outsiders
@@ -623,17 +640,17 @@ subitems2...
 
 const expectedSortSpecForFilesOrFoldersPreferred: { [key: string]: CustomSortSpec } = {
 	"AAA": {
-		defaultOrder: CustomSortOrder.alphabetical,
-		defaultSecondaryOrder: CustomSortOrder.fileFirst,
+		defaultSorting: { order: CustomSortOrder.alphabetical, },
+		defaultSecondarySorting: { order: CustomSortOrder.fileFirst, },
 		groups: [{
 			exactPrefix: 'subitems1',
-			order: CustomSortOrder.folderFirst,
-			secondaryOrder: CustomSortOrder.trueAlphabeticalWithFileExt,
+			sorting: { order: CustomSortOrder.folderFirst, },
+			secondarySorting: { order: CustomSortOrder.trueAlphabeticalWithFileExt, },
 			type: CustomSortGroupType.ExactPrefix
 		},{
 			exactPrefix: 'subitems2',
-			order: CustomSortOrder.byCreatedTime,
-			secondaryOrder: CustomSortOrder.folderFirst,
+			sorting: { order: CustomSortOrder.byCreatedTime, },
+			secondarySorting: { order: CustomSortOrder.folderFirst, },
 			type: CustomSortGroupType.ExactPrefix
 		}, {
 			type: CustomSortGroupType.Outsiders
@@ -734,7 +751,7 @@ target-folder: by-meta True Alpha Rev
 
 const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpec } = {
 	"True Alpha": {
-		defaultOrder: CustomSortOrder.trueAlphabetical,
+		defaultSorting: { order: CustomSortOrder.trueAlphabetical, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -742,7 +759,7 @@ const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpe
 		targetFoldersPaths: ['True Alpha']
 	},
 	"True Alpha Rev": {
-		defaultOrder: CustomSortOrder.trueAlphabeticalReverse,
+		defaultSorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -750,7 +767,7 @@ const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpe
 		targetFoldersPaths: ['True Alpha Rev']
 	},
 	"True Alpha withExt": {
-		defaultOrder: CustomSortOrder.trueAlphabeticalWithFileExt,
+		defaultSorting: { order: CustomSortOrder.trueAlphabeticalWithFileExt, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -758,7 +775,7 @@ const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpe
 		targetFoldersPaths: ['True Alpha withExt']
 	},
 	"True Alpha Rev withExt": {
-		defaultOrder: CustomSortOrder.trueAlphabeticalReverseWithFileExt,
+		defaultSorting: { order: CustomSortOrder.trueAlphabeticalReverseWithFileExt, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -766,7 +783,7 @@ const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpe
 		targetFoldersPaths: ['True Alpha Rev withExt']
 	},
 	"by-meta True Alpha": {
-		defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+		defaultSorting: { order: CustomSortOrder.byMetadataFieldTrueAlphabetical, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -774,8 +791,10 @@ const expectedSortSpecForTrueAlphabeticalSorting: { [key: string]: CustomSortSpe
 		targetFoldersPaths: ['by-meta True Alpha']
 	},
 	"by-meta True Alpha Rev": {
-		defaultOrder: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
-		byMetadataField: 'Some-attr',
+		defaultSorting: {
+			order: CustomSortOrder.byMetadataFieldTrueAlphabeticalReverse,
+			byMetadata: 'Some-attr'
+		},
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -810,19 +829,19 @@ target-folder: VS Code unicode lexicographic reverse
 
 const expectedSortSpecForExoticExperimentalSorting: { [key: string]: CustomSortSpec } = {
 	"VS Code unicode lexicographic": {
-		defaultOrder: CustomSortOrder.vscUnicode,
+		defaultSorting: { order: CustomSortOrder.vscUnicode, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders,
-			order: CustomSortOrder.vscUnicodeReverse
+			sorting: { order: CustomSortOrder.vscUnicodeReverse },
 		}],
 		outsidersGroupIdx: 0,
 		targetFoldersPaths: ['VS Code unicode lexicographic']
 	},
 	"VS Code unicode lexicographic reverse": {
-		defaultOrder: CustomSortOrder.vscUnicodeReverse,
+		defaultSorting: { order: CustomSortOrder.vscUnicodeReverse, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders,
-			order: CustomSortOrder.vscUnicode
+			sorting: { order: CustomSortOrder.vscUnicode },
 		}],
 		outsidersGroupIdx: 0,
 		targetFoldersPaths: ['VS Code unicode lexicographic reverse']
@@ -1080,7 +1099,7 @@ target-folder: regexp: /!: debug: ^r10 /[^/]/.+$
 `
 
 const expectedSortSpecTargetFolderRegexAndName1 = {
-	defaultOrder: CustomSortOrder.byModifiedTimeReverseAdvanced,
+	defaultSorting: { order: CustomSortOrder.byModifiedTimeReverseAdvanced, },
 	groups: [{
 		type: CustomSortGroupType.Outsiders
 	}],
@@ -1089,7 +1108,7 @@ const expectedSortSpecTargetFolderRegexAndName1 = {
 }
 
 const expectedSortSpecTargetFolderByName = {
-	defaultOrder: CustomSortOrder.alphabetical,
+	defaultSorting: { order: CustomSortOrder.alphabetical, },
 	groups: [{
 		type: CustomSortGroupType.Outsiders
 	}],
@@ -1480,7 +1499,7 @@ describe('SortingSpecProcessor', () => {
 			"/": {
 				groups: [{
 					exactText: "Nothing",
-					order: CustomSortOrder.alphabeticalReverse,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
 					type: CustomSortGroupType.ExactName
 				}, {
 					combineWithIdx: 1,
@@ -1498,16 +1517,16 @@ describe('SortingSpecProcessor', () => {
 				}, {
 					combineWithIdx: 4,
 					exactPrefix: "Abc",
-					order: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactPrefix
 				}, {
 					combineWithIdx: 4,
 					exactSuffix: "Def",
-					order: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactSuffix
 				}, {
 					combineWithIdx: 4,
-					order: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.MatchAll
 				}, {
 					exactText: "Unreachable line",
@@ -1539,13 +1558,15 @@ describe('SortingSpecProcessor', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			"/": {
-				defaultOrder: CustomSortOrder.byCreatedTime,
-				defaultSecondaryOrder: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
-				byMetadataFieldSecondary: "someMdataFld",
+				defaultSorting: { order: CustomSortOrder.byCreatedTime, },
+				defaultSecondarySorting: {
+					order: CustomSortOrder.byMetadataFieldAlphabeticalReverse,
+					byMetadata: "someMdataFld"
+				},
 				groups: [{
 					exactText: "Nothing",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.alphabetical,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.alphabetical, },
 					type: CustomSortGroupType.ExactName
 				}, {
 					combineWithIdx: 1,
@@ -1563,25 +1584,37 @@ describe('SortingSpecProcessor', () => {
 				}, {
 					combineWithIdx: 4,
 					exactPrefix: "Abc",
-					order: CustomSortOrder.byMetadataFieldAlphabetical,
-					byMetadataField: "abc-def",
-					secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-					byMetadataFieldSecondary: "ghi-jkl1",
+					sorting: {
+						order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: "abc-def",
+					},
+					secondarySorting: {
+						order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: "ghi-jkl1"
+					},
 					type: CustomSortGroupType.ExactPrefix
 				}, {
 					combineWithIdx: 4,
 					exactSuffix: "Def",
-					order: CustomSortOrder.byMetadataFieldAlphabetical,
-					byMetadataField: "abc-def",
-					secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-					byMetadataFieldSecondary: "ghi-jkl1",
+					sorting: {
+						order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: "abc-def",
+					},
+					secondarySorting: {
+						order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: "ghi-jkl1"
+					},
 					type: CustomSortGroupType.ExactSuffix
 				}, {
 					combineWithIdx: 4,
-					order: CustomSortOrder.byMetadataFieldAlphabetical,
-					byMetadataField: "abc-def",
-					secondaryOrder: CustomSortOrder.byMetadataFieldTrueAlphabetical,
-					byMetadataFieldSecondary: "ghi-jkl1",
+					sorting: {
+						order: CustomSortOrder.byMetadataFieldAlphabetical,
+						byMetadata: "abc-def"
+					},
+					secondarySorting: {
+						order: CustomSortOrder.byMetadataFieldTrueAlphabetical,
+						byMetadata: "ghi-jkl1"
+					},
 					type: CustomSortGroupType.MatchAll
 				}, {
 					exactText: "Unreachable line",
@@ -1592,7 +1625,7 @@ describe('SortingSpecProcessor', () => {
 				outsidersGroupIdx: 8,
 				targetFoldersPaths: ['/']
 			}
-		})
+		} as FolderPathToSortSpecMap)
 		expect(result?.sortSpecByWildcard).toBeUndefined()
 	})
 })
@@ -1611,11 +1644,11 @@ order-desc: standard desc, < ui selected asc
 
 const expectedSortSpecsStandardSortingVariants: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
-		defaultOrder: CustomSortOrder.standardObsidian,
-		defaultSecondaryOrder: CustomSortOrder.standardObsidian,
+		defaultSorting: { order: CustomSortOrder.standardObsidian, },
+		defaultSecondarySorting: { order: CustomSortOrder.standardObsidian, },
 		groups: [{
-			order: CustomSortOrder.standardObsidian,
-			secondaryOrder: CustomSortOrder.standardObsidian,
+			sorting: { order: CustomSortOrder.standardObsidian, },
+			secondarySorting: { order: CustomSortOrder.standardObsidian, },
 			type: CustomSortGroupType.Outsiders
 		}],
 		outsidersGroupIdx: 0,
@@ -1652,7 +1685,7 @@ describe('comments and higher level specs in sorting order spec', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			"mock-folder": {
-				defaultOrder: CustomSortOrder.byCreatedTimeReverse,
+				defaultSorting: { order: CustomSortOrder.byCreatedTimeReverse, },
 				groups: [{
 					type: CustomSortGroupType.Outsiders
 				}],
@@ -1669,7 +1702,7 @@ describe('comments and higher level specs in sorting order spec', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			"mock-folder": {
-				defaultOrder: CustomSortOrder.byCreatedTimeReverse,
+				defaultSorting: { order: CustomSortOrder.byCreatedTimeReverse, },
 				groups: [{
 					type: CustomSortGroupType.Outsiders
 				}],
@@ -1686,8 +1719,8 @@ describe('comments and higher level specs in sorting order spec', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			"mock-folder": {
-				defaultOrder: CustomSortOrder.byCreatedTimeReverse,
-				defaultSecondaryOrder: CustomSortOrder.byModifiedTime,
+				defaultSorting: { order: CustomSortOrder.byCreatedTimeReverse, },
+				defaultSecondarySorting: { order: CustomSortOrder.byModifiedTime, },
 				groups: [{
 					type: CustomSortGroupType.Outsiders
 				}],
@@ -1744,83 +1777,83 @@ describe('multi-level sorting', () => {
 			"mock-folder": {
 				groups: [{
 					exactText: "a pre",
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a pre 2",
-					order: CustomSortOrder.trueAlphabeticalWithFileExt,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabeticalWithFileExt, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a post 1",
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a post 2",
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a post",
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a none",
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a unspecified",
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				}, {
 					exactText: "a dbl specified",
-					order: CustomSortOrder.trueAlphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d pre",
-					order: CustomSortOrder.trueAlphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d pre 2",
-					order: CustomSortOrder.trueAlphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d post 1",
-					order: CustomSortOrder.trueAlphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d post 2",
-					order: CustomSortOrder.trueAlphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d post",
-					order: CustomSortOrder.trueAlphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d none",
-					order: CustomSortOrder.trueAlphabeticalReverseWithFileExt,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverseWithFileExt, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d unspecified",
-					order: CustomSortOrder.trueAlphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				}, {
 					exactText: "d dbl specified",
-					order: CustomSortOrder.trueAlphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					type: CustomSortGroupType.Outsiders
@@ -1871,83 +1904,83 @@ describe('multi-level sorting', () => {
 			"mock-folder": {
 				groups: [{
 					exactText: "a c a",
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byCreatedTime,
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTime, },
 					type: CustomSortGroupType.ExactName
 				}, {
 					exactText: "a c d",
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byCreatedTimeReverse,
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a ac a",
-					order: CustomSortOrder.alphabeticalWithFileExt,
-					secondaryOrder: CustomSortOrder.byCreatedTimeAdvanced,
+					sorting: { order: CustomSortOrder.alphabeticalWithFileExt, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTimeAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a ac d",
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byCreatedTimeReverseAdvanced,
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTimeReverseAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a m a",
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a m d",
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a am a",
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTimeAdvanced,
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "a am d",
-					order: CustomSortOrder.alphabetical,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverseAdvanced,
+					sorting: { order: CustomSortOrder.alphabetical, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverseAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d c a",
-					order: CustomSortOrder.alphabeticalReverseWithFileExt,
-					secondaryOrder: CustomSortOrder.byCreatedTime,
+					sorting: { order: CustomSortOrder.alphabeticalReverseWithFileExt, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTime, },
 					type: CustomSortGroupType.ExactName
 				}, {
 					exactText: "d c d",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byCreatedTimeReverse,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d ac a",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byCreatedTimeAdvanced,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTimeAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d ac d",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byCreatedTimeReverseAdvanced,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byCreatedTimeReverseAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d m a",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTime,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTime, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d m d",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverse,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverse, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d am a",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeAdvanced,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					exactText: "d am d",
-					order: CustomSortOrder.alphabeticalReverse,
-					secondaryOrder: CustomSortOrder.byModifiedTimeReverseAdvanced,
+					sorting: { order: CustomSortOrder.alphabeticalReverse, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeReverseAdvanced, },
 					type: CustomSortGroupType.ExactName
 				},{
 					type: CustomSortGroupType.Outsiders
@@ -1972,7 +2005,7 @@ describe('the sorting: prefix', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			'mock-folder': {
-				defaultOrder: CustomSortOrder.alphabetical,
+				defaultSorting: { order: CustomSortOrder.alphabetical, },
 				groups: [{
 					type: CustomSortGroupType.Outsiders
 				}],
@@ -1988,8 +2021,8 @@ describe('the sorting: prefix', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			'mock-folder': {
-				defaultOrder: CustomSortOrder.trueAlphabetical,
-				defaultSecondaryOrder: CustomSortOrder.byModifiedTimeAdvanced,
+				defaultSorting: { order: CustomSortOrder.trueAlphabetical, },
+				defaultSecondarySorting: { order: CustomSortOrder.byModifiedTimeAdvanced, },
 				groups: [{
 					type: CustomSortGroupType.Outsiders
 				}],
@@ -2005,7 +2038,7 @@ describe('the sorting: prefix', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			'mock-folder': {
-				defaultOrder: CustomSortOrder.alphabeticalReverse,
+				defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 				groups: [{
 					type: CustomSortGroupType.Outsiders
 				}],
@@ -2021,8 +2054,8 @@ describe('the sorting: prefix', () => {
 		const result = processor.parseSortSpecFromText(inputTxtArr, 'mock-folder', 'custom-name-note.md')
 		expect(result?.sortSpecByPath).toEqual({
 			'mock-folder': {
-				defaultOrder: CustomSortOrder.trueAlphabeticalReverse,
-				defaultSecondaryOrder: CustomSortOrder.byModifiedTimeReverseAdvanced,
+				defaultSorting: { order: CustomSortOrder.trueAlphabeticalReverse, },
+				defaultSecondarySorting: { order: CustomSortOrder.byModifiedTimeReverseAdvanced, },
 				groups: [{
 					type: CustomSortGroupType.Outsiders
 				}],
@@ -2040,8 +2073,8 @@ describe('the sorting: prefix', () => {
 		expect(result?.sortSpecByPath).toEqual({
 			'mock-folder': {
 				groups: [{
-					order: CustomSortOrder.alphabeticalReverseWithFileExt,
-					secondaryOrder: CustomSortOrder.byModifiedTimeAdvanced,
+					sorting: { order: CustomSortOrder.alphabeticalReverseWithFileExt, },
+					secondarySorting: { order: CustomSortOrder.byModifiedTimeAdvanced, },
 					type: CustomSortGroupType.Outsiders
 				}],
 				outsidersGroupIdx: 0,
@@ -2071,7 +2104,7 @@ target-folder: .
 
 const expectedSortSpecForMultiSpecAandB: { [key: string]: CustomSortSpec } = {
 	'mock-folder': {
-		defaultOrder: CustomSortOrder.alphabetical,
+		defaultSorting: { order: CustomSortOrder.alphabetical, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -2084,7 +2117,7 @@ const expectedWildcardMatchingTreeForMultiSpecAandB: FolderMatchingTreeNode<Cust
 	subtree: {
 		"mock-folder": {
 			matchAll: {
-				"defaultOrder": CustomSortOrder.alphabeticalReverse,
+				defaultSorting: { order: CustomSortOrder.alphabeticalReverse },
 				"groups": [{
 					"type": CustomSortGroupType.Outsiders
 					}],
@@ -2092,7 +2125,7 @@ const expectedWildcardMatchingTreeForMultiSpecAandB: FolderMatchingTreeNode<Cust
 				"targetFoldersPaths": ["mock-folder/*"]
 			},
 			matchChildren: {
-				"defaultOrder": CustomSortOrder.byModifiedTime,
+				defaultSorting: { order: CustomSortOrder.byModifiedTime },
 				"groups": [{
 					"type": CustomSortGroupType.Outsiders
 					}],
@@ -2125,7 +2158,7 @@ const expectedWildcardMatchingTreeForMultiSpecC: FolderMatchingTreeNode<CustomSo
 	subtree: {
 		"mock-folder": {
 			matchAll: {
-				"defaultOrder": CustomSortOrder.alphabeticalReverse,
+				defaultSorting: { order: CustomSortOrder.alphabeticalReverse },
 				"groups": [{
 					"type": CustomSortGroupType.Outsiders
 				}],
@@ -2168,7 +2201,7 @@ const expectedSortSpecForMultiSpecD: { [key: string]: CustomSortSpec } = {
 
 const expectedSortSpecForMultiSpecD_implicitCase: { [key: string]: CustomSortSpec } = {
 	'mock-folder': {
-		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -2198,7 +2231,7 @@ const expectedWildcardMatchingTreeForMultiSpecD_implicitCase: FolderMatchingTree
 	subtree: {
 		"mock-folder": {
 			matchAll: {
-				defaultOrder: CustomSortOrder.alphabeticalReverse,
+				defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 				"groups": [{
 					"type": CustomSortGroupType.Outsiders
 				}],
@@ -2235,7 +2268,7 @@ const expectedSortSpecForMultiSpecE: { [key: string]: CustomSortSpec } = {
 
 const expectedSortSpecForMultiSpecE_implicitCase: { [key: string]: CustomSortSpec } = {
 	'mock-folder': {
-		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -2265,7 +2298,7 @@ const expectedWildcardMatchingTreeForMultiSpecE_implicitCase: FolderMatchingTree
 	subtree: {
 		"mock-folder": {
 			matchChildren: {
-				defaultOrder: CustomSortOrder.alphabeticalReverse,
+				defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 				"groups": [{
 					"type": CustomSortGroupType.Outsiders
 				}],
@@ -2290,7 +2323,7 @@ const expectedWildcardMatchingTreeForMultiSpecDplusE_implicitCase: FolderMatchin
 				"targetFoldersPaths": ["mock-folder/*"]
 			},
 			matchChildren: {
-				defaultOrder: CustomSortOrder.alphabeticalReverse,
+				defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 				"groups": [{
 					"type": CustomSortGroupType.Outsiders
 				}],
@@ -2313,7 +2346,7 @@ target-folder: mock-folder
 
 const expectedSortSpecForMultiSpecF_implicitCase: { [key: string]: CustomSortSpec } = {
 	'mock-folder': {
-		defaultOrder: CustomSortOrder.alphabeticalReverse,
+		defaultSorting: { order: CustomSortOrder.alphabeticalReverse, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -2430,7 +2463,7 @@ target-folder: AA
 
 const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: CustomSortSpec } = {
 	'A': {
-		defaultOrder: CustomSortOrder.byModifiedTimeAdvanced,
+		defaultSorting: { order: CustomSortOrder.byModifiedTimeAdvanced, },
 		groups: [{
 			type: CustomSortGroupType.Outsiders
 		}],
@@ -2438,7 +2471,7 @@ const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: Cust
 		targetFoldersPaths: ['A']
 	},
 	'B': {
-		defaultOrder: CustomSortOrder.byModifiedTimeReverseAdvanced,
+		defaultSorting: { order: CustomSortOrder.byModifiedTimeReverseAdvanced, },
 		groups: [{
 				type: CustomSortGroupType.Outsiders
 		}],
@@ -2446,7 +2479,7 @@ const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: Cust
 		targetFoldersPaths: ['B']
 	},
 	'C': {
-		defaultOrder: CustomSortOrder.byCreatedTimeAdvanced,
+		defaultSorting: { order: CustomSortOrder.byCreatedTimeAdvanced, },
 		groups: [{
 				type: CustomSortGroupType.Outsiders
 		}],
@@ -2454,7 +2487,7 @@ const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: Cust
 		targetFoldersPaths: ['C']
 	},
 	'D': {
-		defaultOrder: CustomSortOrder.byCreatedTimeReverseAdvanced,
+		defaultSorting: { order: CustomSortOrder.byCreatedTimeReverseAdvanced, },
 		groups: [{
 				type: CustomSortGroupType.Outsiders
 		}],
@@ -2464,41 +2497,41 @@ const expectedSortSpecForAdvancedFolderDateSortingMethods: { [key: string]: Cust
 	'AA': {
 		groups: [{
 				foldersOnly: true,
-				order: CustomSortOrder.byModifiedTimeAdvanced,
+				sorting: { order: CustomSortOrder.byModifiedTimeAdvanced, },
 				type: CustomSortGroupType.Outsiders
 		}, {
 				filesOnly: true,
-				order: CustomSortOrder.byModifiedTimeReverseAdvanced,
+				sorting: { order: CustomSortOrder.byModifiedTimeReverseAdvanced, },
 				type: CustomSortGroupType.Outsiders
 		}, {
 				exactPrefix: 'Archive',
 				foldersOnly: true,
-				order: CustomSortOrder.byCreatedTimeAdvanced,
+				sorting: { order: CustomSortOrder.byCreatedTimeAdvanced, },
 				type: CustomSortGroupType.ExactPrefix
 		}, {
 				exactPrefix: 'Archive',
 				filesOnly: true,
-				order: CustomSortOrder.byCreatedTimeReverseAdvanced,
+				sorting: { order: CustomSortOrder.byCreatedTimeReverseAdvanced, },
 				type: CustomSortGroupType.ExactPrefix
 		}, {
 				exactPrefix: 'Deep1',
 				foldersOnly: true,
-				order: CustomSortOrder.byCreatedTimeAdvancedRecursive,
+				sorting: { order: CustomSortOrder.byCreatedTimeAdvancedRecursive, },
 				type: CustomSortGroupType.ExactPrefix
 		}, {
 				exactPrefix: 'Deep2',
 				filesOnly: true,
-				order: CustomSortOrder.byCreatedTimeReverseAdvancedRecursive,
+				sorting: { order: CustomSortOrder.byCreatedTimeReverseAdvancedRecursive, },
 				type: CustomSortGroupType.ExactPrefix
 		}, {
 				exactPrefix: 'Deep3',
 				foldersOnly: true,
-				order: CustomSortOrder.byModifiedTimeAdvancedRecursive,
+				sorting: { order: CustomSortOrder.byModifiedTimeAdvancedRecursive, },
 				type: CustomSortGroupType.ExactPrefix
 		}, {
 				exactPrefix: 'Deep4',
 				filesOnly: true,
-				order: CustomSortOrder.byModifiedTimeReverseAdvancedRecursive,
+				sorting: { order: CustomSortOrder.byModifiedTimeReverseAdvancedRecursive, },
 				type: CustomSortGroupType.ExactPrefix
 		}],
 		outsidersFilesGroupIdx: 1,

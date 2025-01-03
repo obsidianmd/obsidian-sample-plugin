@@ -29,7 +29,7 @@ describe('determineFolderDatesIfNeeded', () => {
             targetFoldersPaths: ['/'],
             groups: [{
                 type: CustomSortGroupType.Outsiders,
-                order: CustomSortOrder.alphabetical
+                sorting: { order: CustomSortOrder.alphabetical }
             }],
             outsidersGroupIdx: OUTSIDERS_GROUP_IDX
         }
@@ -58,10 +58,10 @@ describe('determineFolderDatesIfNeeded', () => {
         const OUTSIDERS_GROUP_IDX = 0
         const sortSpec: CustomSortSpec = {
             targetFoldersPaths: ['/'],
-            defaultOrder: folderOrder,
+            defaultSorting: folderOrder ? { order: folderOrder } : undefined,
             groups: [{
                 type: CustomSortGroupType.Outsiders,
-                order: order
+                sorting: { order: order }
             }],
             outsidersGroupIdx: OUTSIDERS_GROUP_IDX
         }
@@ -90,10 +90,10 @@ describe('determineFolderDatesIfNeeded', () => {
         const OUTSIDERS_GROUP_IDX = 0
         const sortSpec: CustomSortSpec = {
             targetFoldersPaths: ['/'],
-            defaultOrder: folderOrder,
+            defaultSorting: folderOrder ? { order: folderOrder} : undefined,
             groups: [{
                 type: CustomSortGroupType.Outsiders,
-                order: order
+                sorting: { order: order }
             }],
             outsidersGroupIdx: OUTSIDERS_GROUP_IDX
         }

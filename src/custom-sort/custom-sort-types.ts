@@ -49,21 +49,23 @@ export enum CustomSortOrder {
 	default = alphabeticalWithFilesPreferred
 }
 
-export interface RecognizedOrderValue {
-	order: CustomSortOrder
-	applyToMetadataField?: string
-	metadataValueExtractor?: MDataExtractor
-	secondaryOrder?: CustomSortOrder
-	secondaryApplyToMetadataField?: string
-	secondaryMetadataValueExtractor?: MDataExtractor
-}
-
 export type NormalizerFn = (s: string) => string | null
 export const IdentityNormalizerFn: NormalizerFn = (s: string) => s
 
 export interface RegExpSpec {
 	regex: RegExp
 	normalizerFn?: NormalizerFn
+}
+
+export interface CustomSort {
+	order: CustomSortOrder    // mandatory
+	byMetadata?: string
+	metadataValueExtractor?: MDataExtractor
+}
+
+export interface RecognizedSorting {
+	primary?: CustomSort
+	secondary?: CustomSort
 }
 
 export interface CustomSortGroup {
@@ -73,12 +75,8 @@ export interface CustomSortGroup {
 	regexPrefix?: RegExpSpec
 	exactSuffix?: string
 	regexSuffix?: RegExpSpec
-	order?: CustomSortOrder
-	byMetadataField?: string                       // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
-	metadataFieldValueExtractor?: MDataExtractor   //    and its sorting value extractor
-	secondaryOrder?: CustomSortOrder
-	byMetadataFieldSecondary?: string     // for 'by-metadata:' sorting if the order is by metadata alphabetical or reverse
-	metadataFieldSecondaryValueExtractor?: MDataExtractor
+	sorting?: CustomSort
+	secondarySorting?: CustomSort
 	filesOnly?: boolean
 	matchFilenameWithExt?: boolean
 	foldersOnly?: boolean
@@ -91,12 +89,8 @@ export interface CustomSortGroup {
 export interface CustomSortSpec {
 		// plays only informative role about the original parsed 'target-folder:' values
 	targetFoldersPaths: Array<string>   // For root use '/'
-	defaultOrder?: CustomSortOrder
-	defaultSecondaryOrder?: CustomSortOrder
-	byMetadataField?: string                 // for 'by-metadata:' if the defaultOrder is by metadata
-	metadataFieldValueExtractor?: MDataExtractor  //       and its sorting value extractor
-	byMetadataFieldSecondary?: string
-	metadataFieldSecondaryValueExtractor?: MDataExtractor
+	defaultSorting?: CustomSort
+	defaultSecondarySorting?: CustomSort
 	groups: Array<CustomSortGroup>
 	groupsShadow?: Array<CustomSortGroup>   // A shallow copy of groups, used at applying sorting for items in a folder.
 	                                        // Stores folder-specific values (e.g. macros expanded with folder-specific values)

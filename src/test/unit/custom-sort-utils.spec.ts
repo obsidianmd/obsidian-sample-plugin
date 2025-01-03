@@ -61,7 +61,7 @@ describe('hasOnlyByBookmarkOrStandardObsidian and collectSortingAndGroupingTypes
     })
     it('should detect not matching default order', () => {
         const spec: Partial<CustomSortSpec>|undefined = {
-            defaultOrder: CustomSortOrder.default,
+            defaultSorting: { order: CustomSortOrder.default },
             groups: [
                 {
                     type: CustomSortGroupType.ExactName,
@@ -79,8 +79,8 @@ describe('hasOnlyByBookmarkOrStandardObsidian and collectSortingAndGroupingTypes
     })
     it('should detect not matching default secondary order', () => {
         const spec: Partial<CustomSortSpec>|undefined = {
-            defaultOrder: CustomSortOrder.byBookmarkOrder,
-            defaultSecondaryOrder: CustomSortOrder.default,
+            defaultSorting: { order: CustomSortOrder.byBookmarkOrder },
+            defaultSecondarySorting: { order: CustomSortOrder.default },
             groups: [
                 {
                     type: CustomSortGroupType.BookmarkedOnly,
@@ -98,12 +98,12 @@ describe('hasOnlyByBookmarkOrStandardObsidian and collectSortingAndGroupingTypes
     })
     it('should detect not matching order in group', () => {
         const spec: Partial<CustomSortSpec>|undefined = {
-            defaultOrder: CustomSortOrder.byBookmarkOrder,
-            defaultSecondaryOrder: CustomSortOrder.standardObsidian,
+            defaultSorting: { order: CustomSortOrder.byBookmarkOrder },
+            defaultSecondarySorting: { order: CustomSortOrder.standardObsidian },
             groups: [
                 {
                     type: CustomSortGroupType.ExactName,
-                    order: CustomSortOrder.byCreatedTimeReverse
+                    sorting: { order: CustomSortOrder.byCreatedTimeReverse }
                 },
                 {
                     type: CustomSortGroupType.Outsiders,
@@ -118,18 +118,18 @@ describe('hasOnlyByBookmarkOrStandardObsidian and collectSortingAndGroupingTypes
     })
     it('should detect not matching secondary order in group', () => {
         const spec: Partial<CustomSortSpec>|undefined = {
-            defaultOrder: CustomSortOrder.byBookmarkOrder,
-            defaultSecondaryOrder: CustomSortOrder.standardObsidian,
+            defaultSorting: { order: CustomSortOrder.byBookmarkOrder },
+            defaultSecondarySorting: { order: CustomSortOrder.standardObsidian },
             groups: [
                 {
                     type: CustomSortGroupType.ExactName,
-                    order: CustomSortOrder.byBookmarkOrderReverse,
-                    secondaryOrder: CustomSortOrder.standardObsidian
+                    sorting: { order: CustomSortOrder.byBookmarkOrderReverse },
+                    secondarySorting: { order: CustomSortOrder.standardObsidian }
                 },
                 {
                     type: CustomSortGroupType.Outsiders,
-                    order: CustomSortOrder.byBookmarkOrder,
-                    secondaryOrder: CustomSortOrder.alphabetical
+                    sorting: { order: CustomSortOrder.byBookmarkOrder },
+                    secondarySorting: { order: CustomSortOrder.alphabetical }
                 }
             ]
         }
@@ -141,18 +141,18 @@ describe('hasOnlyByBookmarkOrStandardObsidian and collectSortingAndGroupingTypes
     })
     it('should detect matching orders at all levels', () => {
         const spec: Partial<CustomSortSpec>|undefined = {
-            defaultOrder: CustomSortOrder.byBookmarkOrder,
-            defaultSecondaryOrder: CustomSortOrder.standardObsidian,
+            defaultSorting: { order: CustomSortOrder.byBookmarkOrder },
+            defaultSecondarySorting: { order: CustomSortOrder.standardObsidian },
             groups: [
                 {
                     type: CustomSortGroupType.BookmarkedOnly,
-                    order: CustomSortOrder.byBookmarkOrderReverse,
-                    secondaryOrder: CustomSortOrder.standardObsidian
+                    sorting: { order: CustomSortOrder.byBookmarkOrderReverse },
+                    secondarySorting: { order: CustomSortOrder.standardObsidian }
                 },
                 {
                     type: CustomSortGroupType.Outsiders,
-                    order: CustomSortOrder.byBookmarkOrder,
-                    secondaryOrder: CustomSortOrder.byBookmarkOrderReverse
+                    sorting: { order: CustomSortOrder.byBookmarkOrder },
+                    secondarySorting: { order: CustomSortOrder.byBookmarkOrderReverse }
                 }
             ]
         }

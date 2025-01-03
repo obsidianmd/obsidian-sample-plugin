@@ -57,12 +57,12 @@ export const collectSortingAndGroupingTypes = (sortSpec?: CustomSortSpec|null): 
         }
     }
     if (!sortSpec) return has
-    doCheck(has, sortSpec.defaultOrder)
-    doCheck(has, sortSpec.defaultSecondaryOrder)
+    doCheck(has, sortSpec.defaultSorting?.order)
+    doCheck(has, sortSpec.defaultSecondarySorting?.order)
     if (sortSpec.groups) {
         for (let group of sortSpec.groups) {
-            doCheck(has, group.order, group.type)
-            doCheck(has, group.secondaryOrder)
+            doCheck(has, group.sorting?.order, group.type)
+            doCheck(has, group.secondarySorting?.order)
         }
     }
     return has
