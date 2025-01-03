@@ -23,7 +23,7 @@ export default class EffortPersistenceAdapter implements EffortRepository {
 
 	private serializeData(effort: Effort) {
 		let result = "";
-		result += "---\n"; // frontmatter start
+		result += "---\n";
 		result += "tags:\n";
 		result += " - EMS/Effort\n";
 		result += "uid: " + effort.id + "\n";
@@ -35,14 +35,21 @@ export default class EffortPersistenceAdapter implements EffortRepository {
 			result += "ended: " + effort.ended + "\n";
 		}
 		if (effort.area) {
-			result += "area: \"" + this.getLinkToArea(effort.area) + "\"\n";
+			result += "area: \'" + this.getLinkToArea(effort.area) + "\'\n";
 		}
-		result += "---\n"; // frontmatter end
+		if (effort.parent) {
+			result += "e-parent: \'" + this.getLinkToEffort(effort.parent) + "\'\n";
+		}
+		result += "---\n";
 		result += effort.body;
 		return result;
 	}
 
 	private getLinkToArea(area: Area): string {
 		return `[[${area.name}]]`;
+	}
+
+	private getLinkToEffort(parent: Effort): string {
+		return `[[${parent.title}]]`;
 	}
 }

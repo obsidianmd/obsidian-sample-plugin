@@ -4,6 +4,8 @@ import {KOC} from "../../../core/src/domain/KOC";
 import AppUtils from "./AppUtils";
 import Area from "../../../core/src/domain/Area";
 import {UUID} from "node:crypto";
+import Effort from "../../../core/src/domain/effort/Effort";
+import {EffortStatus} from "../../../core/src/domain/effort/EffortStatus";
 
 export default class KObjectCreator {
 	constructor(private appUtils: AppUtils) {
@@ -16,11 +18,13 @@ export default class KObjectCreator {
 		return new KObject(id, koc);
 	}
 
-	createFromTFileTyped(file: TFile) {
+	async createFromTFileTyped(file: TFile) {
 		const koc = this.getFileKoc(file);
 		switch (koc) {
 			case KOC.EMS_AREA:
 				return this.createArea(file);
+			case KOC.EMS_EFFORT:
+				return await this.createEffort(file);
 			default:
 				throw new Error("Not implemented createFromTFileTyped")
 		}
@@ -34,12 +38,37 @@ export default class KObjectCreator {
 		let parentArea: Area | null = null;
 		const parentStr: string = koProperties["a-parent"];
 		if (parentStr) {
-			const parentFileName = parentStr.replace("[[", "").replace("]]", "");
-			const parentAreaFile: TFile = this.appUtils.getFileByName(parentFileName + ".md");
-			parentArea = this.createArea(parentAreaFile);
+			const file = this.appUtils.getTFileFromStrLink(parentStr);
+			parentArea = this.createArea(file);
 		}
 
 		return new Area(id, file.name.replace(".md", ""), parentArea)
+	}
+
+	async createEffort(file: TFile): Promise<Effort> {
+		const koProperties = this.appUtils.getFrontmatterOrThrow(file);
+
+		const id: UUID = koProperties["uid"] as UUID;
+		const status: EffortStatus = koProperties["e-status"] as EffortStatus;
+		const started: Date | null = koProperties["started"] ? koProperties["started"] as Date : null;
+		const ended: Date | null = koProperties["ended"] ? koProperties["ended"] as Date : null;
+
+		let area: Area | null = null;
+		const areaStr: string = koProperties["area"];
+		if (areaStr) {
+			const file = this.appUtils.getTFileFromStrLink(areaStr);
+			area = this.createArea(file);
+		}
+
+		let parent: Effort | null = null;
+		const parentStr: string = koProperties["e-parent"];
+		if (parentStr) {
+			const file = this.appUtils.getTFileFromStrLink(areaStr);
+			parent = await this.createEffort(file);
+		}
+
+		const body: string = await this.appUtils.getFileBody(file);
+		return new Effort(id, file.name.replace(".md", ""), status, started, ended, area, parent, body);
 	}
 
 	getFileKoc(file: TFile): KOC {

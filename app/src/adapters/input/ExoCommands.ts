@@ -6,7 +6,7 @@ import GetActiveFileTagsExoCommand from "./GetActiveFileTagsExoCommand";
 import GetCurrentKOCExoCommand from "./GetCurrentKOCExoCommand";
 import OpenCurrentDailyNoteExoCommand from "./OpenCurrentDailyNoteExoCommand";
 import ExoContext from "../../../../common/ExoContext";
-import CreateEffortUnderAreaExoCommand from "./CreateEffortUnderAreaExoCommand";
+import CreateEffortExoCommand from "./CreateEffortExoCommand";
 
 export default class ExoCommands {
 	static all(ctx: ExoContext): ExoCommand[] {
@@ -17,7 +17,7 @@ export default class ExoCommands {
 			new GetActiveFileTagsExoCommand(ctx),
 			new GetCurrentKOCExoCommand(ctx),
 			new OpenCurrentDailyNoteExoCommand(ctx, ctx.getCurrentDNUseCase),
-			new CreateEffortUnderAreaExoCommand(ctx)
+			new CreateEffortExoCommand(ctx)
 		];
 	}
 

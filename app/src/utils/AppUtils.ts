@@ -54,6 +54,16 @@ export default class AppUtils {
 		return this.app.workspace.getActiveFile();
 	}
 
+	getTFileFromStrLink(strLink: string): TFile {
+		if (strLink.contains("/")) {
+			const areaFileName = strLink.replace("[[", "").replace("]]", "");
+			return this.getFileByPathOrThrow(areaFileName + ".md");
+		} else {
+			const areaFileName = strLink.replace("[[", "").replace("]]", "");
+			return this.getFileByName(areaFileName + ".md");
+		}
+	}
+
 	getFrontmatterOrNull(file: TFile): FrontMatterCache | null {
 		try {
 			return this.getFrontmatterOrThrow(file)
@@ -88,9 +98,17 @@ export default class AppUtils {
 		return [];
 	}
 
-
+	// TODO rename and add `orThrow`
 	getFileByName(parentFileName: string): TFile {
 		return this.app.vault.getMarkdownFiles().filter(f => f.name == parentFileName)[0];
+	}
+
+	getFileByPathOrThrow(filePath: string): TFile {
+		let file = this.app.vault.getFileByPath(filePath);
+		if (!file) {
+			throw new Error("File not found by path " + filePath);
+		}
+		return file;
 	}
 
 	getAllMdFiles() {
@@ -124,5 +142,9 @@ export default class AppUtils {
 			return id === ko.id;
 		});
 		return a[0];
+	}
+
+	getFileBody(file: TFile) {
+		return this.app.vault.read(file);
 	}
 }

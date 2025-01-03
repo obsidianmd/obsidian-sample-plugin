@@ -19,4 +19,14 @@ export default class CreateEffortService implements CreateEffortUseCase {
 		return effort;
 	}
 
+	async taskUnderEffort(parentEffort: Effort): Promise<Effort> {
+		const title = crypto.randomUUID();
+		const id = crypto.randomUUID() as UUID;
+		const effort = new Effort(id, title, EffortStatus.DRAFT, null, null, null, parentEffort, "Body");
+
+		await this.effortRepository.save(effort);
+
+		return effort;
+	}
+
 }
