@@ -1,7 +1,7 @@
 import {
 	CachedMetadata,
 	MetadataCache,
-	Pos,
+	Pos, TAbstractFile,
 	TFile,
 	TFolder,
 	Vault
@@ -36,9 +36,8 @@ import {
 	CompoundDotRomanNumberNormalizerFn
 } from "../../custom-sort/sorting-spec-processor";
 import {
-	findStarredFile_pathParam,
-	Starred_PluginInstance
-} from "../../utils/StarredPluginSignature";
+	BookmarksPluginInterface
+} from "../../utils/BookmarksCorePluginSignature";
 import {
 	ObsidianIconFolder_PluginInstance,
 	ObsidianIconFolderPlugin_Data
@@ -937,25 +936,25 @@ describe('determineSortingGroup', () => {
 			} as FolderItemForSorting);
 		})
 	})
-	describe('CustomSortGroupType.StarredOnly', () => {
-		it('should not match not starred file', () => {
+	describe('CustomSortGroupType.BookmarkedOnly', () => {
+		it('should not match not bookmarked file', () => {
 			// given
 			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.StarredOnly
+					type: CustomSortGroupType.BookmarkedOnly
 				}]
 			}
-			const starredPluginInstance: Partial<Starred_PluginInstance> = {
-				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
-					return null
+			const bookmarksPluginInstance: Partial<BookmarksPluginInterface> = {
+				determineBookmarkOrder: jest.fn( function(path: string): number | undefined {
+					return undefined
 				})
 			}
 
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
-				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
+				bookmarksPluginInstance: bookmarksPluginInstance as BookmarksPluginInterface
 			} as ProcessingContext)
 
 			// then
@@ -968,30 +967,32 @@ describe('determineSortingGroup', () => {
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
-			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(1)
+			expect(bookmarksPluginInstance.determineBookmarkOrder).toHaveBeenCalledTimes(1)
 		})
-		it('should match starred file', () => {
+		it('should match bookmarked file', () => {
 			// given
 			const file: TFile = mockTFile('References', 'md', 111, MOCK_TIMESTAMP + 222, MOCK_TIMESTAMP + 333);
 			const sortSpec: CustomSortSpec = {
 				targetFoldersPaths: ['/'],
 				groups: [{
-					type: CustomSortGroupType.StarredOnly
+					type: CustomSortGroupType.BookmarkedOnly
 				}]
 			}
-			const starredPluginInstance: Partial<Starred_PluginInstance> = {
-				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
-					return filePath.path === 'Some parent folder/References.md' ? file : null
+			const BOOKMARK_ORDER = 123
+			const bookmarksPluginInstance: Partial<BookmarksPluginInterface> = {
+				determineBookmarkOrder: jest.fn( function(path: string): number | undefined {
+					return path === 'Some parent folder/References.md' ? BOOKMARK_ORDER : undefined
 				})
 			}
 
 			// when
 			const result = determineSortingGroup(file, sortSpec, {
-				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
+				bookmarksPluginInstance: bookmarksPluginInstance as BookmarksPluginInterface
 			} as ProcessingContext)
 
 			// then
 			expect(result).toEqual({
+				bookmarkedIdx: BOOKMARK_ORDER,
 				groupIdx: 0,
 				isFolder: false,
 				sortString: "References",
@@ -1000,131 +1001,7 @@ describe('determineSortingGroup', () => {
 				mtime: MOCK_TIMESTAMP + 333,
 				path: 'Some parent folder/References.md'
 			});
-			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(1)
-		})
-		it('should not match empty folder', () => {
-			// given
-			const folder: TFolder = mockTFolder('TestEmptyFolder');
-			const sortSpec: CustomSortSpec = {
-				targetFoldersPaths: ['/'],
-				groups: [{
-					type: CustomSortGroupType.StarredOnly
-				}]
-			}
-			const starredPluginInstance: Partial<Starred_PluginInstance> = {
-				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
-					return filePath.path === 'Some parent folder/References.md' ? {} as TFile : null
-				})
-			}
-
-			// when
-			const result = determineSortingGroup(folder, sortSpec, {
-				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			} as ProcessingContext)
-
-			// then
-			expect(result).toEqual({
-				groupIdx: 1,  // The lastIdx+1, group not determined
-				isFolder: true,
-				sortString: "TestEmptyFolder",
-				sortStringWithExt: "TestEmptyFolder",
-
-				ctime: 0,
-				mtime: 0,
-				path: 'TestEmptyFolder',
-				folder: {
-					children: [],
-					isRoot: expect.any(Function),
-					name: "TestEmptyFolder",
-					parent: {},
-					path: "TestEmptyFolder",
-					vault: {}
-				}
-			});
-			expect(starredPluginInstance.findStarredFile).not.toHaveBeenCalled()
-		})
-		it('should not match folder w/o starred items', () => {
-			// given
-			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
-			const sortSpec: CustomSortSpec = {
-				targetFoldersPaths: ['/'],
-				groups: [{
-					type: CustomSortGroupType.StarredOnly
-				}]
-			}
-			const starredPluginInstance: Partial<Starred_PluginInstance> = {
-				findStarredFile: jest.fn( function(filePath: findStarredFile_pathParam): TFile | null {
-					return filePath.path === 'Some parent folder/References.md' ? {} as TFile : null
-				})
-			}
-
-			// when
-			const result = determineSortingGroup(folder, sortSpec, {
-				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			} as ProcessingContext)
-
-			// then
-			expect(result).toEqual({
-				groupIdx: 1,  // The lastIdx+1, group not determined
-				isFolder: true,
-				sortString: "TestEmptyFolder",
-				sortStringWithExt: "TestEmptyFolder",
-
-				ctime: 0,
-				mtime: 0,
-				path: 'TestEmptyFolder',
-				folder: {
-					children: expect.any(Array),
-					isRoot: expect.any(Function),
-					name: "TestEmptyFolder",
-					parent: {},
-					path: "TestEmptyFolder",
-					vault: {}
-				}
-			});
-			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(folder.children.filter(f => (f as any).isRoot === undefined).length)
-		})
-		it('should match folder with one starred item', () => {
-			// given
-			const folder: TFolder = mockTFolderWithChildren('TestEmptyFolder');
-			const sortSpec: CustomSortSpec = {
-				targetFoldersPaths: ['/'],
-				groups: [{
-					type: CustomSortGroupType.StarredOnly
-				}]
-			}
-			const starredPluginInstance: Partial<Starred_PluginInstance> = {
-				findStarredFile: jest.fn(function (filePath: findStarredFile_pathParam): TFile | null {
-					return filePath.path === 'Some parent folder/Child file 2 created as newest, not modified at all.md' ? {} as TFile : null
-				})
-			}
-
-			// when
-			const result = determineSortingGroup(folder, sortSpec, {
-				starredPluginInstance: starredPluginInstance as Starred_PluginInstance
-			} as ProcessingContext)
-
-			// then
-			expect(result).toEqual({
-				groupIdx: 0,
-				isFolder: true,
-				sortString: "TestEmptyFolder",
-				sortStringWithExt: "TestEmptyFolder",
-
-				ctime: 0,
-				mtime: 0,
-				path: 'TestEmptyFolder',
-				folder: {
-					children: expect.any(Array),
-					isRoot: expect.any(Function),
-					name: "TestEmptyFolder",
-					parent: {},
-					path: "TestEmptyFolder",
-					vault: {}
-				}
-			});
-				// assume optimized checking of starred items -> first match ends the check
-			expect(starredPluginInstance.findStarredFile).toHaveBeenCalledTimes(2)
+			expect(bookmarksPluginInstance.determineBookmarkOrder).toHaveBeenCalledTimes(1)
 		})
 	})
 	describe('CustomSortGroupType.HasIcon', () => {
