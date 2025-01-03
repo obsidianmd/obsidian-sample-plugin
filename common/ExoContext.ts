@@ -38,7 +38,7 @@ export default class ExoContext {
 	public readonly effortPathRulesHelper: EffortPathRulesHelper;
 
 	constructor(public app: App) {
-		this.utils = new Utils(this.app);
+		this.utils = new Utils();
 		this.appUtils = new AppUtils(this.app);
 		this.layoutFactory = new LayoutFactory(this);
 
@@ -53,7 +53,7 @@ export default class ExoContext {
 		this.countNotesUseCase = new CountNotesService(this.appUtils);
 		this.getCurrentDNUseCase = new GetCurrentDailyNoteService(this.dailyNoteRepository);
 		this.effortRepository = new EffortPersistenceAdapter(this);
-		this.createEffortUseCase = new CreateEffortService(this.effortRepository);
+		this.createEffortUseCase = new CreateEffortService(this);
 		this.effortPathRulesHelper = new EffortPathRulesHelper(this);
 	}
 }

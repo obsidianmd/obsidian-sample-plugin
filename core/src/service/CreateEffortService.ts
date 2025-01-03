@@ -1,30 +1,29 @@
 import CreateEffortUseCase from "../ports/input/CreateEffortUseCase";
 import Area from "../domain/Area";
 import {EffortStatus} from "../domain/effort/EffortStatus";
-import EffortRepository from "../ports/output/EffortRepository";
-import {UUID} from "node:crypto";
 import Effort from "../domain/effort/Effort";
+import ExoContext from "../../../common/ExoContext";
 
 export default class CreateEffortService implements CreateEffortUseCase {
-	constructor(private effortRepository: EffortRepository) {
+	constructor(private ctx: ExoContext) {
 	}
 
 	async taskUnderArea(area: Area): Promise<Effort> {
-		const title = crypto.randomUUID();
-		const id = crypto.randomUUID() as UUID;
+		const title = this.ctx.utils.generateUid();
+		const id = this.ctx.utils.generateUid();
 		const effort = new Effort(id, title, EffortStatus.DRAFT, null, null, area, null, "Body");
 
-		await this.effortRepository.save(effort);
+		await this.ctx.effortRepository.save(effort);
 
 		return effort;
 	}
 
 	async taskUnderEffort(parentEffort: Effort): Promise<Effort> {
-		const title = crypto.randomUUID();
-		const id = crypto.randomUUID() as UUID;
+		const title = this.ctx.utils.generateUid();
+		const id = this.ctx.utils.generateUid();
 		const effort = new Effort(id, title, EffortStatus.DRAFT, null, null, null, parentEffort, "Body");
 
-		await this.effortRepository.save(effort);
+		await this.ctx.effortRepository.save(effort);
 
 		return effort;
 	}

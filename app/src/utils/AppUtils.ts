@@ -118,10 +118,6 @@ export default class AppUtils {
 		return this.app.vault.getMarkdownFiles();
 	}
 
-	getFileCache(file: TFile): CachedMetadata | null {
-		return this.app.metadataCache.getFileCache(file);
-	}
-
 	findMdWith(filter: (f: TFile) => boolean) {
 		return this.getAllMdFiles().filter(filter);
 	}

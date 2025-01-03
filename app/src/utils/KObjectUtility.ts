@@ -25,7 +25,7 @@ export default class KObjectUtility {
 
 		for (let f of withoutId) {
 			await this.ctx.app.fileManager.processFrontMatter(f, (frontmatter) => {
-				frontmatter['uid'] = crypto.randomUUID();
+				frontmatter['uid'] = this.ctx.utils.generateUid();
 			});
 		}
 	}

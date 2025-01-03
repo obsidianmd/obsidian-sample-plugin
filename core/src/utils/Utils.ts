@@ -1,12 +1,7 @@
-import {App} from "obsidian";
+import {UUID} from "node:crypto";
 
 export default class Utils {
-
-	constructor(private app: App) {
-	}
-
-
-	generateUid(): string {
-		return crypto.randomUUID();
+	generateUid(): UUID {
+		return crypto.randomUUID() as UUID;
 	}
 }

@@ -20,8 +20,4 @@ export default class ExoCommands {
 			new CreateEffortExoCommand(ctx)
 		];
 	}
-
-	static bySlug(ctx: ExoContext, slug: string): ExoCommand | undefined {
-		return ExoCommands.all(ctx).find(c => c.slug === slug);
-	}
 }

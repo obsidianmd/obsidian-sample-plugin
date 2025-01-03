@@ -3,7 +3,7 @@ import {UUID} from "node:crypto";
 import ExoContext from "../../../../common/ExoContext";
 
 export default abstract class AbstractCreator<KO> {
-	constructor(protected ctx: ExoContext) {
+	protected constructor(protected ctx: ExoContext) {
 	}
 
 	async create(file: TFile): Promise<KO> {
