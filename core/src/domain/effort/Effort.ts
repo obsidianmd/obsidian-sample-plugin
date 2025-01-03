@@ -25,4 +25,12 @@ export default class Effort extends KObject {
 		this.ended = new Date();
 		this.status = EffortStatus.ENDED;
 	}
+
+	isResolved(): boolean {
+		return this.status === EffortStatus.ENDED || this.status === EffortStatus.TRASHED;
+	}
+
+	isUnresolved(): boolean {
+		return !this.isResolved();
+	}
 }

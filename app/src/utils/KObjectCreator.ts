@@ -6,6 +6,7 @@ import Area from "../../../core/src/domain/Area";
 import {UUID} from "node:crypto";
 import Effort from "../../../core/src/domain/effort/Effort";
 import {EffortStatus} from "../../../core/src/domain/effort/EffortStatus";
+import KOCFactory from "./KOCFactory";
 
 export default class KObjectCreator {
 	constructor(private appUtils: AppUtils) {
@@ -45,6 +46,9 @@ export default class KObjectCreator {
 		return new Area(id, file.name.replace(".md", ""), parentArea)
 	}
 
+	/**
+	 * @deprecated
+	 */
 	async createEffort(file: TFile): Promise<Effort> {
 		const koProperties = this.appUtils.getFrontmatterOrThrow(file);
 
@@ -63,7 +67,7 @@ export default class KObjectCreator {
 		let parent: Effort | null = null;
 		const parentStr: string = koProperties["e-parent"];
 		if (parentStr) {
-			const file = this.appUtils.getTFileFromStrLink(areaStr);
+			const file = this.appUtils.getTFileFromStrLink(parentStr);
 			parent = await this.createEffort(file);
 		}
 
@@ -73,17 +77,6 @@ export default class KObjectCreator {
 
 	getFileKoc(file: TFile): KOC {
 		const tags = this.appUtils.getTagsFromFile(file);
-
-		if (tags.includes("IMS/MOC")) {
-			return KOC.IMS_MOC
-		} else if (tags.includes("EMS/Area")) {
-			return KOC.EMS_AREA;
-		} else if (tags.includes("EMS/Effort")) {
-			return KOC.EMS_EFFORT;
-		} else if (tags.includes("TMS/DailyNote")) {
-			return KOC.TMS_DN;
-		} else {
-			return KOC.UNKNOWN;
-		}
+		return KOCFactory.create(tags);
 	}
 }

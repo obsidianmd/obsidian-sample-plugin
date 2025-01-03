@@ -1,4 +1,4 @@
-import ExoContext from "../../../../common/ExoContext";
+import ExoContext from "../../../../../common/ExoContext";
 
 export default interface ExoCommand {
 	name: string;

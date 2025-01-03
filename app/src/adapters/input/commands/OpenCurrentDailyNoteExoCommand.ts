@@ -1,6 +1,6 @@
 import ExoCommand from "./ExoCommand";
-import ExoContext from "../../../../common/ExoContext";
-import GetCurrentDailyNoteUseCase from "../../../../core/src/ports/input/GetCurrentDailyNoteUseCase";
+import ExoContext from "../../../../../common/ExoContext";
+import GetCurrentDailyNoteUseCase from "../../../../../core/src/ports/input/GetCurrentDailyNoteUseCase";
 
 export default class OpenCurrentDailyNoteExoCommand implements ExoCommand {
 	name = "Open Current Daily Note";

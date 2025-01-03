@@ -1,7 +1,7 @@
 import ExoCommand from "./ExoCommand";
-import ExoContext from "../../../../common/ExoContext";
-import Area from "../../../../core/src/domain/Area";
-import Effort from "../../../../core/src/domain/effort/Effort";
+import ExoContext from "../../../../../common/ExoContext";
+import Area from "../../../../../core/src/domain/Area";
+import Effort from "../../../../../core/src/domain/effort/Effort";
 
 export default class CreateEffortExoCommand implements ExoCommand {
 	name = "Create Effort";

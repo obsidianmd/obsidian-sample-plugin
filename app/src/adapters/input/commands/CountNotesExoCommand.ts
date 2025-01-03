@@ -1,6 +1,6 @@
 import ExoCommand from "./ExoCommand";
 import {Notice} from "obsidian";
-import CountNotesUseCase from "../../../../core/src/ports/input/CountNotesUseCase";
+import CountNotesUseCase from "../../../../../core/src/ports/input/CountNotesUseCase";
 
 export default class CountNotesExoCommand implements ExoCommand {
 	name = "Notes Count";

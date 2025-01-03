@@ -5,7 +5,7 @@ import CreateEmptyNoteWithinInboxExoCommand from "./CreateEmptyNoteWithinInboxEx
 import GetActiveFileTagsExoCommand from "./GetActiveFileTagsExoCommand";
 import GetCurrentKOCExoCommand from "./GetCurrentKOCExoCommand";
 import OpenCurrentDailyNoteExoCommand from "./OpenCurrentDailyNoteExoCommand";
-import ExoContext from "../../../../common/ExoContext";
+import ExoContext from "../../../../../common/ExoContext";
 import CreateEffortExoCommand from "./CreateEffortExoCommand";
 
 export default class ExoCommands {

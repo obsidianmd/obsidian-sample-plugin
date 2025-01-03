@@ -15,15 +15,21 @@ import EffortRepository from "../core/src/ports/output/EffortRepository";
 import EffortPersistenceAdapter from "../app/src/adapters/output/EffortPersistenceAdapter";
 import KObjectUtility from "../app/src/utils/KObjectUtility";
 import EffortPathRulesHelper from "../app/src/helpers/EffortPathRulesHelper";
+import EffortCreator from "../app/src/utils/EffortCreator";
+import AreaCreator from "../app/src/utils/AreaCreator";
+import LayoutFactory from "../app/src/adapters/input/layouts/LayoutFactory";
 
 export default class ExoContext {
 	public readonly utils: Utils;
 	public readonly kObjectCreator: KObjectCreator
 	public readonly dailyNoteCreator: DailyNoteCreator;
+	public readonly areaCreator: AreaCreator;
+	public readonly effortCreator: EffortCreator;
 	public readonly dailyNoteRepository: DailyNoteRepository;
 	public readonly kObjectUtility: KObjectUtility;
 
 	public readonly appUtils: AppUtils;
+	public readonly layoutFactory: LayoutFactory;
 
 	public readonly countNotesUseCase: CountNotesUseCase;
 	public readonly getCurrentDNUseCase: GetCurrentDailyNoteUseCase;
@@ -34,8 +40,13 @@ export default class ExoContext {
 	constructor(public app: App) {
 		this.utils = new Utils(this.app);
 		this.appUtils = new AppUtils(this.app);
+		this.layoutFactory = new LayoutFactory(this);
+
 		this.kObjectCreator = new KObjectCreator(this.appUtils);
 		this.dailyNoteCreator = new DailyNoteCreator(this.appUtils);
+		this.areaCreator = new AreaCreator(this.appUtils);
+		this.effortCreator = new EffortCreator(this.appUtils, this.areaCreator);
+
 		this.dailyNoteRepository = new DailyNotePersistenceAdapter(this.appUtils, this.dailyNoteCreator);
 		this.kObjectUtility = new KObjectUtility(this);
 

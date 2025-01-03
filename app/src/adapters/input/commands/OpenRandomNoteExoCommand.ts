@@ -1,6 +1,6 @@
 import ExoCommand from "./ExoCommand";
 import {Notice} from "obsidian";
-import ExoContext from "../../../../common/ExoContext";
+import ExoContext from "../../../../../common/ExoContext";
 
 export default class OpenRandomNoteExoCommand implements ExoCommand {
 	name = "Рандомная заметка из прошлого";

@@ -1,5 +1,5 @@
 import ExoCommand from "./ExoCommand";
-import ExoContext from "../../../../common/ExoContext";
+import ExoContext from "../../../../../common/ExoContext";
 
 export default class CreateEmptyNoteWithinInboxExoCommand implements ExoCommand {
 	name = "Create Effort Within Inbox";

@@ -2,6 +2,7 @@ import EffortRepository from "../../../../core/src/ports/output/EffortRepository
 import Effort from "../../../../core/src/domain/effort/Effort";
 import ExoContext from "../../../../common/ExoContext";
 import Area from "../../../../core/src/domain/Area";
+import {TFile} from "obsidian";
 
 export default class EffortPersistenceAdapter implements EffortRepository {
 	constructor(private ctx: ExoContext) {
@@ -19,6 +20,20 @@ export default class EffortPersistenceAdapter implements EffortRepository {
 		const file = this.ctx.appUtils.getObjectFileOrThrow(effort);
 		const data = this.serializeData(effort);
 		await this.ctx.appUtils.updateFile(file, data);
+	}
+
+	async find(filter: (e: Effort) => boolean): Promise<Effort[]> {
+		let all = await this.findAll();
+		return all.filter(filter);
+	}
+
+	async findAll(): Promise<Effort[]> {
+		const rawEfforts: TFile[] = this.ctx.appUtils.findMdWith((f: TFile) => {
+			return this.ctx.appUtils.getTagsFromFile(f).includes("EMS/Effort");
+		});
+
+		let promises = rawEfforts.map(async f => await this.ctx.kObjectCreator.createFromTFileTyped(f) as Effort);
+		return await Promise.all(promises);
 	}
 
 	private serializeData(effort: Effort) {
