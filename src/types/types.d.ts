@@ -50,7 +50,6 @@ declare module 'obsidian' {
 	}
 
 	export interface FileExplorerView extends View {
-		createFolderDom(folder: TFolder): FileExplorerFolder;
 		getSortedFolderItems(sortedFolder: TFolder): any[];
 
 		requestSort(): void;

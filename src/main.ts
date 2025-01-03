@@ -1,19 +1,12 @@
 import {
-	apiVersion,
-	App,
 	FileExplorerView,
     Menu,
     MenuItem,
 	MetadataCache,
-	normalizePath,
 	Notice,
 	Platform,
 	Plugin,
-	PluginSettingTab,
-    requireApiVersion,
-	sanitizeHTMLToDom,
 	setIcon,
-	Setting,
 	TAbstractFile,
 	TFile,
 	TFolder,
@@ -21,8 +14,7 @@ import {
 } from 'obsidian';
 import {around} from 'monkey-around';
 import {
-	folderSort_vUpTo_1_6_0,
-	getSortedFolderItems_vFrom_1_6_0,
+	getSortedFolderItems,
 	ObsidianStandardDefaultSortingName,
 	ProcessingContext,
 	sortFolderItemsForBookmarking
@@ -44,7 +36,6 @@ import {
 	ICON_SORT_SUSPENDED_GENERAL_ERROR,
 	ICON_SORT_SUSPENDED_SYNTAX_ERROR
 } from "./custom-sort/icons";
-import {getStarredPlugin} from "./utils/StarredPluginSignature";
 import {
 	BookmarksPluginInterface,
 	getBookmarksPlugin,
@@ -124,7 +115,7 @@ export default class CustomSortPlugin
 			if (failed) return
 			if (file instanceof TFile) {
 				const aFile: TFile = file as TFile
-				const parent: TFolder = aFile.parent
+				const parent: TFolder = aFile.parent!
 				// Read sorting spec from three sources of equal priority:
 				// - files with designated predefined name
 				// - files with the same name as parent folders (aka folder notes), e.g.: References/References.md
@@ -179,15 +170,8 @@ export default class CustomSortPlugin
 	checkFileExplorerIsAvailableAndPatchable(logWarning: boolean = true): FileExplorerView | undefined {
 		let fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
 		if (fileExplorerView && typeof fileExplorerView.requestSort === 'function') {
-			// The plugin integration points changed with Obsidian 1.6.0 hence the patchability-check should also be Obsidian version aware
-			if (requireApiVersion && requireApiVersion("1.6.0")) {
-				if (typeof fileExplorerView.getSortedFolderItems === 'function') {
-					return fileExplorerView
-				}
-			} else { // Obsidian versions prior to 1.6.0
-				if (typeof fileExplorerView.createFolderDom === 'function') {
-					return fileExplorerView
-				}
+			if (typeof fileExplorerView.getSortedFolderItems === 'function') {
+				return fileExplorerView
 			}
 		}
 		// Various scenarios when File Explorer was turned off (e.g. by some other plugin)
@@ -396,7 +380,7 @@ export default class CustomSortPlugin
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
-						const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent, bookmarksPlugin)
+						const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent!, bookmarksPlugin)
 						bookmarksPlugin.bookmarkSiblings(orderedChildren)
 						bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 					}
@@ -409,7 +393,7 @@ export default class CustomSortPlugin
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
-						const orderedChildren: Array<TAbstractFile> = file.parent.children.map((entry: TFile | TFolder) => entry)
+						const orderedChildren: Array<TAbstractFile> = file.parent!.children.map((entry: TFile | TFolder) => entry)
 						bookmarksPlugin.unbookmarkSiblings(orderedChildren)
 						bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 					}
@@ -486,44 +470,42 @@ export default class CustomSortPlugin
 			})
 		)
 
-		if (requireApiVersion('1.4.11')) {
-			this.registerEvent(
-				// "files-menu" event was exposed in 1.4.11
-				// @ts-ignore
-				this.app.workspace.on("files-menu", (menu: Menu, files: TAbstractFile[], source: string, leaf?: WorkspaceLeaf) => {
-					if (!this.settings.customSortContextSubmenu) return;  // Don't show the context menus at all
+		this.registerEvent(
+			// "files-menu" event was exposed in 1.4.11
+			// @ts-ignore
+			this.app.workspace.on("files-menu", (menu: Menu, files: TAbstractFile[], source: string, leaf?: WorkspaceLeaf) => {
+				if (!this.settings.customSortContextSubmenu) return;  // Don't show the context menus at all
 
-					const customSortMenuItem = (item?: MenuItem) => {
-						// if parameter is empty it means mobile invocation, where submenus are not supported.
-						// In that case flatten the menu.
-						let submenu: Menu|undefined
-						if (item) {
-							item.setTitle('Custom sort:');
-							item.setIcon('hashtag');
-							submenu = item.setSubmenu()
-						}
-						if (!submenu) menu.addSeparator();
-						(submenu ?? menu).addItem(applyCustomSortMenuItem)
-						if (submenu) submenu.addSeparator();
-
-						if (this.settings.bookmarksContextMenus) {
-							const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
-							if (bookmarksPlugin) {
-								(submenu ?? menu).addItem(getBookmarkSelectedMenuItemForFiles(files));
-								(submenu ?? menu).addItem(getUnbookmarkSelectedMenuItemForFiles(files));
-							}
-						}
-						(submenu ?? menu).addItem(suspendCustomSortMenuItem);
-					};
-
-					if (m) {
-						customSortMenuItem(undefined)
-					} else {
-						menu.addItem(customSortMenuItem)
+				const customSortMenuItem = (item?: MenuItem) => {
+					// if parameter is empty it means mobile invocation, where submenus are not supported.
+					// In that case flatten the menu.
+					let submenu: Menu|undefined
+					if (item) {
+						item.setTitle('Custom sort:');
+						item.setIcon('hashtag');
+						submenu = item.setSubmenu()
 					}
-				})
-			)
-		}
+					if (!submenu) menu.addSeparator();
+					(submenu ?? menu).addItem(applyCustomSortMenuItem)
+					if (submenu) submenu.addSeparator();
+
+					if (this.settings.bookmarksContextMenus) {
+						const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
+						if (bookmarksPlugin) {
+							(submenu ?? menu).addItem(getBookmarkSelectedMenuItemForFiles(files));
+							(submenu ?? menu).addItem(getUnbookmarkSelectedMenuItemForFiles(files));
+						}
+					}
+					(submenu ?? menu).addItem(suspendCustomSortMenuItem);
+				};
+
+				if (m) {
+					customSortMenuItem(undefined)
+				} else {
+					menu.addItem(customSortMenuItem)
+				}
+			})
+		)
 
 		this.registerEvent(
 			this.app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
@@ -583,7 +565,6 @@ export default class CustomSortPlugin
 	createProcessingContextForSorting(has: HasSortingOrGrouping): ProcessingContext {
 		const ctx: ProcessingContext = {
 			_mCache: this.app.metadataCache,
-			starredPluginInstance: has.grouping.byStarred ? getStarredPlugin(this.app) : undefined,
 			bookmarksPluginInstance: has.grouping.byBookmarks || has.sorting.byBookmarks ?  getBookmarksPlugin(this.app, this.settings.bookmarksGroupToConsumeAsOrderingReference, false, true) : undefined,
 			iconFolderPluginInstance: has.grouping.byIcon ? getIconFolderPlugin(this.app) : undefined,
 			plugin: this
@@ -635,60 +616,29 @@ export default class CustomSortPlugin
 		// That's why not showing and not logging error message here
 		patchableFileExplorer = patchableFileExplorer ?? this.checkFileExplorerIsAvailableAndPatchable(false)
 		if (patchableFileExplorer) {
-			if (requireApiVersion && requireApiVersion("1.6.0")) {
-				// Starting from Obsidian 1.6.0 the sorting mechanics has been significantly refactored internally in Obsidian
-				const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(patchableFileExplorer.constructor.prototype, {
-					getSortedFolderItems(old: any) {
-                        return function (...args: any[]) {
-                            // quick check for plugin status
-                            if (plugin.settings.suspended) {
-                                return old.call(this, ...args);
-                            }
+			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(patchableFileExplorer.constructor.prototype, {
+				getSortedFolderItems(old: any) {
+					return function (...args: any[]) {
+						// quick check for plugin status
+						if (plugin.settings.suspended) {
+							return old.call(this, ...args);
+						}
 
-                            plugin.resetIconInaccurateStateToEnabled()
+						plugin.resetIconInaccurateStateToEnabled()
 
-							const folder = args[0]
-							const sortingData = plugin.determineAndPrepareSortingDataForFolder(folder)
+						const folder = args[0]
+						const sortingData = plugin.determineAndPrepareSortingDataForFolder(folder)
 
-                            if (sortingData.sortSpec) {
-                                return getSortedFolderItems_vFrom_1_6_0.call(this, folder, sortingData.sortSpec, plugin.createProcessingContextForSorting(sortingData.sortingAndGroupingStats))
-							} else {
-								return old.call(this, ...args);
-							}
-						};
-					}
-				})
-				this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
-				return true
-			} else {
-				// Up to Obsidian 1.6.0
-				// @ts-ignore
-				let tmpFolder = new TFolder(Vault, "");
-				let Folder = patchableFileExplorer.createFolderDom(tmpFolder).constructor;
-				const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(Folder.prototype, {
-					sort(old: any) {
-						return function (...args: any[]) {
-							// quick check for plugin status
-							if (plugin.settings.suspended) {
-								return old.call(this, ...args);
-							}
-
-							plugin.resetIconInaccurateStateToEnabled()
-
-							const folder: TFolder = this.file
-							const sortingData = plugin.determineAndPrepareSortingDataForFolder(folder)
-
-							if (sortingData.sortSpec) {
-								return folderSort_vUpTo_1_6_0.call(this, sortingData.sortSpec, plugin.createProcessingContextForSorting(sortingData.sortingAndGroupingStats));
-							} else {
-								return old.call(this, ...args);
-							}
-						};
-					}
-				})
-				this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
-				return true
-			}
+						if (sortingData.sortSpec) {
+							return getSortedFolderItems.call(this, folder, sortingData.sortSpec, plugin.createProcessingContextForSorting(sortingData.sortingAndGroupingStats))
+						} else {
+							return old.call(this, ...args);
+						}
+					};
+				}
+			})
+			this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
+			return true
 		} else {
 			return false
 		}
@@ -732,7 +682,7 @@ export default class CustomSortPlugin
 		const data: any = await this.loadData() || {}
 		const isFreshInstall: boolean = Object.keys(data).length === 0
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
-		if (requireApiVersion('1.2.0') && isFreshInstall) {
+		if (isFreshInstall) {
 			this.settings = Object.assign(this.settings, DEFAULT_SETTING_FOR_1_2_0_UP)
 		}
 	}

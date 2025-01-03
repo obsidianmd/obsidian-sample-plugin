@@ -18,7 +18,6 @@ const getHas = (gTotal?: NM, gBkmrk?: NM, gStar?: NM, gIcon?: NM, sTot?: NM, sBk
         grouping: {
             total: gTotal ||0,
             byBookmarks: gBkmrk ||0,
-            byStarred: gStar ||0,
             byIcon: gIcon ||0
         },
         sorting: {
