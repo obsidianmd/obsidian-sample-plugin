@@ -9,10 +9,6 @@ import {
 	Vault
 } from 'obsidian';
 import {
-	determineStarredStatusOf,
-	Starred_PluginInstance
-} from '../utils/StarredPluginSignature';
-import {
 	determineIconOf,
 	ObsidianIconFolder_PluginInstance
 } from '../utils/ObsidianIconFolderPluginSignature'
@@ -40,7 +36,6 @@ export interface ProcessingContext {
 	// For internal transient use
 	plugin?: CustomSortPluginAPI                     // to hand over the access to App instance to the sorting engine
 	_mCache?: MetadataCache
-	starredPluginInstance?: Starred_PluginInstance
 	bookmarksPluginInstance?: BookmarksPluginInterface,
 	iconFolderPluginInstance?: ObsidianIconFolder_PluginInstance
 }
@@ -492,14 +487,6 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 						if (hasMetadata) {
 							determined = true
 						}
-					}
-				}
-				break
-			case CustomSortGroupType.StarredOnly:
-				if (ctx?.starredPluginInstance) {
-					const starred: boolean = determineStarredStatusOf(entry, aFile, ctx.starredPluginInstance)
-					if (starred) {
-						determined = true
 					}
 				}
 				break

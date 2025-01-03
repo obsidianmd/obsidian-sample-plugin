@@ -44,7 +44,6 @@ import {
 	ICON_SORT_SUSPENDED_GENERAL_ERROR,
 	ICON_SORT_SUSPENDED_SYNTAX_ERROR
 } from "./custom-sort/icons";
-import {getStarredPlugin} from "./utils/StarredPluginSignature";
 import {
 	BookmarksPluginInterface,
 	getBookmarksPlugin,
@@ -583,7 +582,6 @@ export default class CustomSortPlugin
 	createProcessingContextForSorting(has: HasSortingOrGrouping): ProcessingContext {
 		const ctx: ProcessingContext = {
 			_mCache: this.app.metadataCache,
-			starredPluginInstance: has.grouping.byStarred ? getStarredPlugin(this.app) : undefined,
 			bookmarksPluginInstance: has.grouping.byBookmarks || has.sorting.byBookmarks ?  getBookmarksPlugin(this.app, this.settings.bookmarksGroupToConsumeAsOrderingReference, false, true) : undefined,
 			iconFolderPluginInstance: has.grouping.byIcon ? getIconFolderPlugin(this.app) : undefined,
 			plugin: this
