@@ -29,6 +29,7 @@ import {
 	BookmarksPluginInterface
 } from "../utils/BookmarksCorePluginSignature";
 import {CustomSortPluginAPI} from "../custom-sort-plugin";
+import {MDataExtractor} from "./mdata-extractors";
 
 export interface ProcessingContext {
 	// For internal transient use
@@ -365,13 +366,14 @@ export const matchGroupRegex = (theRegex: RegExpSpec, nameForMatching: string): 
 	return [false, undefined, undefined]
 }
 
-const mdataValueFromFMCaches = (mdataFieldName: string, fc?: FrontMatterCache, fcPrio?: FrontMatterCache): any => {
+const mdataValueFromFMCaches = (mdataFieldName: string, mdataExtractor?: MDataExtractor, fc?: FrontMatterCache, fcPrio?: FrontMatterCache): any => {
 	let prioValue = undefined
 	if (fcPrio) {
 		prioValue = fcPrio?.[mdataFieldName]
 	}
 
-	return prioValue ?? fc?.[mdataFieldName]
+	const rawMDataValue = prioValue ?? fc?.[mdataFieldName]
+	return mdataExtractor ? mdataExtractor(rawMDataValue) : rawMDataValue
 }
 
 export const determineSortingGroup = function (entry: TFile | TFolder, spec: CustomSortSpec, ctx?: ProcessingContext): FolderItemForSorting {
@@ -568,13 +570,29 @@ export const determineSortingGroup = function (entry: TFile | TFolder, spec: Cus
 					}
 				}
 				if (isPrimaryOrderByMetadata) metadataValueToSortBy =
-					mdataValueFromFMCaches (group?.byMetadataField || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,  frontMatterCache, prioFrontMatterCache)
+					mdataValueFromFMCaches (
+						group?.byMetadataField || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						group?.metadataFieldValueExtractor,
+						frontMatterCache,
+						prioFrontMatterCache)
 				if (isSecondaryOrderByMetadata) metadataValueSecondaryToSortBy =
-					mdataValueFromFMCaches (group?.byMetadataFieldSecondary || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING, frontMatterCache, prioFrontMatterCache)
+					mdataValueFromFMCaches (
+						group?.byMetadataFieldSecondary || group?.withMetadataFieldName || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						group?.metadataFieldSecondaryValueExtractor,
+						frontMatterCache,
+						prioFrontMatterCache)
 				if (isDerivedPrimaryByMetadata) metadataValueDerivedPrimaryToSortBy =
-					mdataValueFromFMCaches (spec.byMetadataField || DEFAULT_METADATA_FIELD_FOR_SORTING, frontMatterCache, prioFrontMatterCache)
+					mdataValueFromFMCaches (
+						spec.byMetadataField || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						spec.metadataFieldValueExtractor,
+						frontMatterCache,
+						prioFrontMatterCache)
 				if (isDerivedSecondaryByMetadata) metadataValueDerivedSecondaryToSortBy =
-					mdataValueFromFMCaches (spec.byMetadataFieldSecondary || DEFAULT_METADATA_FIELD_FOR_SORTING, frontMatterCache, prioFrontMatterCache)
+					mdataValueFromFMCaches (
+						spec.byMetadataFieldSecondary || DEFAULT_METADATA_FIELD_FOR_SORTING,
+						spec.metadataFieldSecondaryValueExtractor,
+						frontMatterCache,
+						prioFrontMatterCache)
 			}
 		}
 	}
