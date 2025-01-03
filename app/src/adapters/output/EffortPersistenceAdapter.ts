@@ -18,7 +18,7 @@ export default class EffortPersistenceAdapter implements EffortRepository {
 	async update(effort: Effort): Promise<void> {
 		const file = this.ctx.appUtils.getObjectFileOrThrow(effort);
 		const data = this.serializeData(effort);
-		await this.ctx.app.vault.modify(file, data);
+		await this.ctx.appUtils.updateFile(file, data);
 	}
 
 	private serializeData(effort: Effort) {

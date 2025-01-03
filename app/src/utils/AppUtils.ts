@@ -6,7 +6,12 @@ export default class AppUtils {
 	}
 
 	async createFile(path: string, textContent: string) {
-		let file = await this.app.vault.create(path, textContent);
+		const file = await this.app.vault.create(path, textContent);
+		await this.waitCacheUpdate(file);
+	}
+
+	async updateFile(file: TFile, data: string) {
+		await this.app.vault.modify(file, data);
 		await this.waitCacheUpdate(file);
 	}
 
@@ -83,10 +88,10 @@ export default class AppUtils {
 		return [];
 	}
 
+
 	getFileByName(parentFileName: string): TFile {
 		return this.app.vault.getMarkdownFiles().filter(f => f.name == parentFileName)[0];
 	}
-
 
 	getAllMdFiles() {
 		return this.app.vault.getMarkdownFiles();
