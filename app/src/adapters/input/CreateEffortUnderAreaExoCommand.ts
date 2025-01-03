@@ -12,7 +12,6 @@ export default class CreateEffortUnderAreaExoCommand implements ExoCommand {
 	async execute() {
 		const activeFile = this.ctx.appUtils.getActiveFileOrThrow();
 		const activeKo = this.ctx.kObjectCreator.createFromTFileTyped(activeFile);
-
 		if (!(activeKo instanceof Area)) {
 			throw new Error("Active file is not an Area");
 		}

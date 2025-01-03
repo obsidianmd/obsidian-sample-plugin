@@ -16,7 +16,7 @@ export default class EffortPersistenceAdapter implements EffortRepository {
 	// TODO should be in EffortPathRulesHelper in app module
 	getPathForCreate(effort: Effort): string {
 		if (effort.area !== null) {
-			const areaFile = this.ctx.vaultAdapter.getObjectFileOrThrow(effort.area);
+			const areaFile = this.ctx.appUtils.getObjectFileOrThrow(effort.area);
 			const areaFolder = areaFile.parent;
 			if (!areaFolder) {
 				throw new Error("Area file has no parent folder");

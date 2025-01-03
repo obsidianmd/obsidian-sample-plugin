@@ -15,6 +15,7 @@ export default class CreateEffortService implements CreateEffortUseCase {
 		const effort = new Effort(id, title, EffortStatus.DRAFT, null, null, area);
 
 		this.effortRepository.save(effort);
+
 		return effort;
 	}
 

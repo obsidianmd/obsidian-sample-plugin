@@ -5,7 +5,7 @@ export default class KObjectUtility {
 	}
 
 	async addMissingId(): Promise<void> {
-		let allMdFiles = this.ctx.vaultAdapter.getAllMdFiles();
+		let allMdFiles = this.ctx.appUtils.getAllMdFiles();
 
 		const KOs = allMdFiles.filter(f => {
 			const tags = this.ctx.appUtils.getTagsFromFile(f);

@@ -7,7 +7,7 @@ export default class OpenRandomNoteExoCommand implements ExoCommand {
 	slug = "open-random-note";
 
 	async execute(ctx: ExoContext): Promise<void> {
-		const files = ctx.vaultAdapter.getAllMdFiles();
+		const files = ctx.appUtils.getAllMdFiles();
 		const today = new Date();
 		const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()).setHours(0, 0, 0, 0); // Дата месяц назад без времени
 
