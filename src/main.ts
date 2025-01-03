@@ -124,7 +124,7 @@ export default class CustomSortPlugin
 			if (failed) return
 			if (file instanceof TFile) {
 				const aFile: TFile = file as TFile
-				const parent: TFolder = aFile.parent
+				const parent: TFolder = aFile.parent!
 				// Read sorting spec from three sources of equal priority:
 				// - files with designated predefined name
 				// - files with the same name as parent folders (aka folder notes), e.g.: References/References.md
@@ -396,7 +396,7 @@ export default class CustomSortPlugin
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
-						const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent, bookmarksPlugin)
+						const orderedChildren: Array<TAbstractFile> = plugin.orderedFolderItemsForBookmarking(file.parent!, bookmarksPlugin)
 						bookmarksPlugin.bookmarkSiblings(orderedChildren)
 						bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 					}
@@ -409,7 +409,7 @@ export default class CustomSortPlugin
 				item.onClick(() => {
 					const bookmarksPlugin = getBookmarksPlugin(plugin.app, plugin.settings.bookmarksGroupToConsumeAsOrderingReference)
 					if (bookmarksPlugin) {
-						const orderedChildren: Array<TAbstractFile> = file.parent.children.map((entry: TFile | TFolder) => entry)
+						const orderedChildren: Array<TAbstractFile> = file.parent!.children.map((entry: TFile | TFolder) => entry)
 						bookmarksPlugin.unbookmarkSiblings(orderedChildren)
 						bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 					}
