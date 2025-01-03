@@ -1,6 +1,6 @@
 import DailyNote from "../../../../core/src/domain/DailyNote";
 import {TFile} from "obsidian";
-import DailyNoteCreator from "../../utils/DailyNoteCreator";
+import DailyNoteCreator from "../../utils/creators/DailyNoteCreator";
 import AppUtils from "../../utils/AppUtils";
 import DailyNoteRepository from "../../../../core/src/ports/output/DailyNoteRepository";
 
@@ -20,6 +20,6 @@ export default class DailyNotePersistenceAdapter implements DailyNoteRepository 
 			return this.appUtils.getTagsFromFile(f).includes("TMS/DailyNote");
 		});
 
-		return rawDailyNotes.map(f => this.dailyNoteCreator.createFromTFile(f));
+		return Promise.all(rawDailyNotes.map(async f => await this.dailyNoteCreator.create(f)));
 	}
 }

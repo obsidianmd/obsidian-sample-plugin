@@ -14,3 +14,7 @@ Every KO should have properties:
 
 - uid
 - tags (with class)
+
+## Abbreviations
+
+- fm - FrontMatter 

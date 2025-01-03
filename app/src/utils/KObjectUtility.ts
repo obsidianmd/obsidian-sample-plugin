@@ -4,6 +4,7 @@ export default class KObjectUtility {
 	constructor(private ctx: ExoContext) {
 	}
 
+	// noinspection JSUnusedGlobalSymbols
 	async addMissingId(): Promise<void> {
 		let allMdFiles = this.ctx.appUtils.getAllMdFiles();
 
