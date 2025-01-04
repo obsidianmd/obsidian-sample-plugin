@@ -19,12 +19,26 @@ export default class DvRenderer {
 		this.dvApi = dvApi;
 	}
 
-	async list(links: Link[], el: HTMLElement) {
-		await this.dvApi.list(
-			links,
-			el,
-			this.component,
+	// noinspection JSUnusedGlobalSymbols
+	async list(links: Link[]) {
+		const div = document.createElement("div");
+		div.addClass("dv-renderer");
+
+		await this.dvApi.list(links, div, this.component,
 			this.mdCtx.sourcePath // TODO maybe this in unnecessary
 		);
+
+		return div;
+	}
+
+	async table(headers: string[], rows: any[][]) {
+		const div = document.createElement("div");
+		div.addClass("dv-renderer");
+
+		await this.dvApi.table(headers, rows, div, this.component,
+			this.mdCtx.sourcePath // TODO maybe this in unnecessary
+		);
+
+		return div;
 	}
 }
