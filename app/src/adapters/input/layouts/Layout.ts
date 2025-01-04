@@ -1,3 +1,3 @@
 export default interface Layout<KO> {
-	render(ko: KO): Promise<HTMLElement>;
+	render(ko: KO, el: HTMLElement): Promise<void>;
 }

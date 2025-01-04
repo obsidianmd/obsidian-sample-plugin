@@ -24,7 +24,7 @@ export default class KObjectCreator {
 			case KOC.EMS_EFFORT:
 				return await this.ctx.effortCreator.create(file);
 			default:
-				throw new Error("Not implemented createFromTFileTyped")
+				throw new Error(`KOC '${koc}' not supported`);
 		}
 	}
 

@@ -3,6 +3,7 @@ import {ExoMainModal} from "./app/src/ExoMainModal";
 import "localforage";
 import ExoApi from "./core/src/ExoApi";
 import ExoContext from "./common/ExoContext";
+import DvRenderer from "./app/src/utils/dv/DvRenderer";
 
 export default class ExoPlugin extends Plugin {
 	private api: ExoApi;
@@ -22,16 +23,17 @@ export default class ExoPlugin extends Plugin {
 			}
 
 			if (el.classList.contains("mod-ui")) {
+				const renderer = new DvRenderer(this.ctx, ctx, this);
+
 				const file: TFile = this.ctx.appUtils.getFileByPathOrThrow(ctx.sourcePath);
-				console.log(file)
 				const ko = await this.ctx.kObjectCreator.createFromTFileTyped(file);
-				const layout = this.ctx.layoutFactory.create(ko);
-				if (!layout) {
+
+				const layout = this.ctx.layoutFactory.create(ko, renderer);
+				if (layout === null) {
 					return;
 				}
 
-				const renderText = await layout.render(ko);
-				el.prepend(renderText);
+				await layout.render(ko, el);
 			}
 		});
 	}
