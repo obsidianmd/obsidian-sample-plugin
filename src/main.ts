@@ -164,7 +164,7 @@ export default class CustomSortPlugin
 			if (anySortingSpecFound) {
 				this.showNotice(`Parsing custom sorting specification SUCCEEDED!`)
 			} else {
-				this.showNotice(`Implicit custom sorting specification consumed.`)
+				this.showNotice(`No custom sorting spec, will go with implicit sorting (bookmarks-based).`)
 			}
 		} else {
 			if (anySortingSpecFound) {
