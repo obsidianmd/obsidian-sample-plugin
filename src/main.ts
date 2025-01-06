@@ -1,4 +1,5 @@
 import {
+	FileExplorerLeaf,
 	FileExplorerView,
     Menu,
     MenuItem,
@@ -10,7 +11,8 @@ import {
 	TAbstractFile,
 	TFile,
 	TFolder,
-	Vault, WorkspaceLeaf
+	Vault,
+	WorkspaceLeaf
 } from 'obsidian';
 import {around} from 'monkey-around';
 import {
@@ -26,7 +28,6 @@ import {
 import {
 	CustomSortSpec
 } from './custom-sort/custom-sort-types';
-
 import {
 	addIcons,
 	ICON_SORT_ENABLED_ACTIVE,
@@ -46,7 +47,8 @@ import {
 } from "./utils/ObsidianIconFolderPluginSignature";
 import {
 	extractBasename,
-	lastPathComponent
+	lastPathComponent,
+	ValueOrError,
 } from "./utils/utils";
 import {
 	collectSortingAndGroupingTypes,
@@ -72,6 +74,13 @@ type MonkeyAroundUninstaller = () => void
 
 type ContextMenuProvider = (item: MenuItem) => void
 
+enum FileExplorerStateError {
+	DoesNotExist,
+	DeferredView
+}
+
+type FileExplorerLeafOrError = ValueOrError<FileExplorerLeaf,FileExplorerStateError>
+
 export default class CustomSortPlugin
 	extends Plugin
 	implements CustomSortPluginAPI
@@ -79,12 +88,10 @@ export default class CustomSortPlugin
 	settings: CustomSortPluginSettings
 	statusBarItemEl: HTMLElement
 	ribbonIconEl: HTMLElement     // On small-screen mobile devices this is useless (ribbon is re-created on-the-fly)
-	ribbonIconStateInaccurate: boolean                                             // each time when displayed
 
 	sortSpecCache?: SortSpecsCollection | null
 	initialAutoOrManualSortingTriggered: boolean
-
-	fileExplorerFolderPatched: boolean
+	customSortAppliedAtLeastOnce: boolean = false
 
 	showNotice(message: string, timeout?: number) {
 		if (this.settings.notificationsEnabled || (Platform.isMobile && this.settings.mobileNotificationsEnabled)) {
@@ -134,7 +141,7 @@ export default class CustomSortPlugin
 					aFile.basename === this.settings.indexNoteNameForFolderNotes ||   // when user configured as index
 					aFile.name === this.settings.indexNoteNameForFolderNotes          // when user configured as index.md
 				) {
-					const sortingSpecTxt: string = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
+					const sortingSpecTxt: string|undefined = mCache.getCache(aFile.path)?.frontmatter?.[SORTINGSPEC_YAML_KEY]
 					// Warning: newer Obsidian versions can return objects as well, hence the explicit check for string value
 					if (typeof sortingSpecTxt === 'string') {
 						anySortingSpecFound = true
@@ -154,7 +161,11 @@ export default class CustomSortPlugin
 		})
 
 		if (this.sortSpecCache) {
-			this.showNotice(`Parsing custom sorting specification SUCCEEDED!`)
+			if (anySortingSpecFound) {
+				this.showNotice(`Parsing custom sorting specification SUCCEEDED!`)
+			} else {
+				this.showNotice(`Implicit custom sorting specification consumed.`)
+			}
 		} else {
 			if (anySortingSpecFound) {
 				errorMessage = errorMessage ? errorMessage : `No valid '${SORTINGSPEC_YAML_KEY}:' key(s) in YAML front matter or multiline YAML indentation error or general YAML syntax error`
@@ -167,18 +178,98 @@ export default class CustomSortPlugin
 		}
 	}
 
-	checkFileExplorerIsAvailableAndPatchable(logWarning: boolean = true): FileExplorerView | undefined {
-		let fileExplorerView: FileExplorerView | undefined = this.getFileExplorer()
-		if (fileExplorerView && typeof fileExplorerView.requestSort === 'function') {
-			if (typeof fileExplorerView.getSortedFolderItems === 'function') {
-				return fileExplorerView
+	// Credits go to https://github.com/nothingislost/obsidian-bartender
+	getFileExplorer(): FileExplorerLeafOrError {
+		let fileExplorer: FileExplorerLeaf | undefined = this.app.workspace.getLeavesOfType("file-explorer")?.first() as FileExplorerLeaf;
+		const fileExplorerOrError: FileExplorerLeafOrError = new ValueOrError()
+
+		if (fileExplorer) {
+			if (fileExplorer.isDeferred) {
+				return fileExplorerOrError.setError(FileExplorerStateError.DeferredView)
+			} else {
+				return fileExplorerOrError.setValue(fileExplorer)
+			}
+		} else {
+			return fileExplorerOrError.setError(FileExplorerStateError.DoesNotExist)
+		}
+	}
+
+	checkFileExplorerIsAvailableAndPatchable(logWarning: boolean = true): FileExplorerLeafOrError {
+		let fileExplorerOrError = this.getFileExplorer()
+		if (fileExplorerOrError.e === FileExplorerStateError.DeferredView) {
+			if (logWarning) {
+				this.logWarningFileExplorerDeferred()
+			}
+			return fileExplorerOrError
+		}
+		if (fileExplorerOrError.v && fileExplorerOrError.v.view && typeof fileExplorerOrError.v.view.requestSort === 'function') {
+			if (typeof fileExplorerOrError.v.view.getSortedFolderItems === 'function') {
+				return fileExplorerOrError
 			}
 		}
+
 		// Various scenarios when File Explorer was turned off (e.g. by some other plugin)
 		if (logWarning) {
 			this.logWarningFileExplorerNotAvailable()
 		}
-		return undefined
+		return fileExplorerOrError
+	}
+
+	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
+	patchFileExplorer(patchableFileExplorer: FileExplorerLeaf): FileExplorerLeaf|undefined {
+		let plugin = this;
+		const requestStandardObsidianSortAfter = (patchUninstaller: MonkeyAroundUninstaller|undefined) => {
+			return () => {
+				if (patchUninstaller) patchUninstaller()
+
+				const fileExplorerOrError= this.checkFileExplorerIsAvailableAndPatchable()
+				if (fileExplorerOrError.v && fileExplorerOrError.v.view) {
+					fileExplorerOrError.v.view.requestSort?.()
+				}
+			}
+		}
+
+		// patching file explorer might fail here because of various non-error reasons.
+		// That's why not showing and not logging error message here
+		if (patchableFileExplorer) {
+			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(patchableFileExplorer.view.constructor.prototype, {
+				getSortedFolderItems(old: any) {
+					return function (...args: any[]) {
+						// quick check for plugin status
+						if (plugin.settings.suspended) {
+							return old.call(this, ...args);
+						}
+
+						const folder = args[0]
+						const sortingData = plugin.determineAndPrepareSortingDataForFolder(folder)
+
+						if (sortingData.sortSpec) {
+							if (!plugin.customSortAppliedAtLeastOnce) {
+								plugin.customSortAppliedAtLeastOnce = true
+								setTimeout(() => {
+									plugin.setRibbonIconToEnabled.apply(plugin)
+									plugin.showNotice('Custom sort APPLIED.');
+									plugin.updateStatusBar()
+								})
+							}
+							return getSortedFolderItems.call(this, folder, sortingData.sortSpec, plugin.createProcessingContextForSorting(sortingData.sortingAndGroupingStats))
+						} else {
+							return old.call(this, ...args);
+						}
+					};
+				}
+			})
+			this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
+			return patchableFileExplorer
+		} else {
+			return undefined
+		}
+	}
+
+	logWarningFileExplorerDeferred() {
+		const msg = `custom-sort v${this.manifest.version}: failed to get active File Explorer view.\n`
+			+ `Until the File Explorer is visible, the custom-sort plugin cannot apply the custom order.\n`
+		console.warn(msg)
 	}
 
 	logWarningFileExplorerNotAvailable() {
@@ -190,36 +281,35 @@ export default class CustomSortPlugin
 	}
 
 	// Safe to suspend when suspended and re-enable when enabled
-	switchPluginStateTo(enabled: boolean, updateRibbonBtnIcon: boolean = true) {
-		let fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable()
-		if (fileExplorerView && !this.fileExplorerFolderPatched) {
-			this.fileExplorerFolderPatched = this.patchFileExplorerFolder(fileExplorerView);
-
-			if (!this.fileExplorerFolderPatched) {
-				fileExplorerView = undefined
-			}
-		}
+	switchPluginStateTo(enabled: boolean) {
 		this.settings.suspended = !enabled;
 		this.saveSettings()
-		let iconToSet: string
+
+		let fileExplorerOrError: FileExplorerLeafOrError = this.checkFileExplorerIsAvailableAndPatchable(!this.settings.suspended)
+		const fileExplorer = fileExplorerOrError.v ? this.patchFileExplorer(fileExplorerOrError.v) : undefined
+
 		if (this.settings.suspended) {
 			this.showNotice('Custom sort OFF');
 			this.sortSpecCache = null
-			iconToSet = ICON_SORT_SUSPENDED
+			setIcon(this.ribbonIconEl, ICON_SORT_SUSPENDED)
+			if (fileExplorer) {
+				fileExplorer.view.requestSort();
+			}
 		} else {
 			this.readAndParseSortingSpec();
 			if (this.sortSpecCache) {
-				if (fileExplorerView) {
-					this.showNotice('Custom sort ON');
-					iconToSet = ICON_SORT_ENABLED_ACTIVE
+				if (fileExplorer) {
+					this.initialAutoOrManualSortingTriggered = true
+					this.customSortAppliedAtLeastOnce = false
+					fileExplorer.view.requestSort();
 				} else {
-					this.showNotice('Custom sort GENERAL PROBLEM. See console for detailed message.');
-					iconToSet = ICON_SORT_SUSPENDED_GENERAL_ERROR
+					this.showNotice('Custom sort File Explorer view problem. See console for detailed message.');
+					setIcon(this.ribbonIconEl, ICON_SORT_SUSPENDED_GENERAL_ERROR)
 					this.settings.suspended = true
 					this.saveSettings()
 				}
 			} else {
-				iconToSet = ICON_SORT_SUSPENDED_SYNTAX_ERROR
+				setIcon(this.ribbonIconEl, ICON_SORT_SUSPENDED_SYNTAX_ERROR)
 				this.settings.suspended = true
 				this.saveSettings()
 			}
@@ -229,27 +319,6 @@ export default class CustomSortPlugin
 		const ForceFlushCache = true
 		if (!this.settings.suspended) {
 			getBookmarksPlugin(this.app, this.settings.bookmarksGroupToConsumeAsOrderingReference, ForceFlushCache)
-		}
-
-		if (fileExplorerView) {
-			if (this.fileExplorerFolderPatched) {
-				fileExplorerView.requestSort();
-				this.initialAutoOrManualSortingTriggered = true
-			}
-		} else {
-			if (iconToSet === ICON_SORT_ENABLED_ACTIVE) {
-				iconToSet = ICON_SORT_ENABLED_NOT_APPLIED
-
-				if (updateRibbonBtnIcon) {
-					this.ribbonIconStateInaccurate = true
-				}
-			}
-		}
-
-		if (updateRibbonBtnIcon) {
-			// REMARK: on small-screen mobile devices this is void, the handle to ribbon <div> Element is useless,
-			        // as the ribbon (and its icons) get re-created each time when re-displayed (expanded)
-			setIcon(this.ribbonIconEl, iconToSet)
 		}
 
 		this.updateStatusBar();
@@ -273,7 +342,7 @@ export default class CustomSortPlugin
 		//           in result, the handle to the ribbon <div> Element is useless
 		this.ribbonIconEl = this.addRibbonIcon(
 			Platform.isDesktop ?
-				(this.settings.suspended ? ICON_SORT_SUSPENDED : ICON_SORT_ENABLED_NOT_APPLIED)
+				ICON_SORT_SUSPENDED
 				:
 				ICON_SORT_MOBILE_INITIAL // REMARK: on small-screen mobile devices this icon stays permanent
 			,
@@ -281,10 +350,6 @@ export default class CustomSortPlugin
 				// Clicking the icon toggles between the states of custom sort plugin
 				this.switchPluginStateTo(this.settings.suspended)
 			});
-
-		if (!this.settings.suspended) {
-			this.ribbonIconStateInaccurate = true
-		}
 
 		this.addSettingTab(new CustomSortSettingTab(this.app, this));
 
@@ -299,54 +364,17 @@ export default class CustomSortPlugin
 		const plugin: CustomSortPlugin = this
 		const m: boolean = Platform.isMobile
 
-		this.registerEvent(
-			// Keep in mind: this event is triggered once after app starts and then after each modification of _any_ metadata
-			plugin.app.metadataCache.on("resolved", () => {
-				if (!this.settings.suspended) {
-					if (!this.initialAutoOrManualSortingTriggered) {
-						this.readAndParseSortingSpec()
-						if (this.sortSpecCache) { // successful read of sorting specifications?
-							this.showNotice('Custom sort ON')
-							let fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable(false)
-							if (fileExplorerView && !this.fileExplorerFolderPatched) {
-								this.fileExplorerFolderPatched = this.patchFileExplorerFolder(fileExplorerView);
-
-								if (!this.fileExplorerFolderPatched) {
-									fileExplorerView = undefined
-								}
-							}
-							if (fileExplorerView) {
-								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
-								fileExplorerView.requestSort()
-								this.initialAutoOrManualSortingTriggered = true
-							} else {
-								// Remark: in this case the File Explorer will render later on with standard Obsidian sort
-								// and a different event will be responsible for patching it and applying the custom sort
-								setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_NOT_APPLIED)
-								plugin.ribbonIconStateInaccurate = true
-							}
-							this.updateStatusBar()
-						} else {
-							this.settings.suspended = true
-							setIcon(this.ribbonIconEl, ICON_SORT_SUSPENDED_SYNTAX_ERROR)
-							this.saveSettings()
-						}
-					}
-				}
-			})
-		);
-
 		const applyCustomSortMenuItem = (item: MenuItem) => {
 			item.setTitle(m ? 'Custom sort: apply custom sorting' : 'Apply custom sorting');
 			item.onClick(() => {
-				plugin.switchPluginStateTo(true, true)
+				plugin.switchPluginStateTo(true)
 			})
 		};
 
 		const suspendCustomSortMenuItem = (item: MenuItem) => {
 			item.setTitle(m ? 'Custom sort: suspend custom sorting' : 'Suspend custom sorting');
 			item.onClick(() => {
-				plugin.switchPluginStateTo(false, true)
+				plugin.switchPluginStateTo(false)
 			})
 		};
 
@@ -532,28 +560,32 @@ export default class CustomSortPlugin
 			id: 'enable-custom-sorting',
 			name: 'Enable and apply the custom sorting, (re)parsing the sorting configuration first. Sort-on.',
 			callback: () => {
-				plugin.switchPluginStateTo(true, true)
+				plugin.switchPluginStateTo(true)
 			}
 		});
 		this.addCommand({
 			id: 'suspend-custom-sorting',
 			name: 'Suspend the custom sorting. Sort-off.',
 			callback: () => {
-				plugin.switchPluginStateTo(false, true)
+				plugin.switchPluginStateTo(false)
 			}
 		});
 	}
 
 	initialize() {
+		const plugin = this
 		this.app.workspace.onLayoutReady(() => {
-			this.fileExplorerFolderPatched = this.patchFileExplorerFolder();
+			setTimeout(() => {
+				plugin.initialDelayedApplicationOfCustomSorting.apply(this)
+			},
+			plugin.settings.delayForInitialApplication)
 		})
 	}
 
 	determineSortSpecForFolder(folderPath: string, folderName?: string): CustomSortSpec|null|undefined {
-		folderName = folderName ?? lastPathComponent(folderPath)
+		folderName ??= lastPathComponent(folderPath)
 		let sortSpec: CustomSortSpec | null | undefined = this.sortSpecCache?.sortSpecByPath?.[folderPath]
-		sortSpec = sortSpec ?? this.sortSpecCache?.sortSpecByName?.[folderName]
+		sortSpec ??= this.sortSpecCache?.sortSpecByName?.[folderName]
 
 		if (!sortSpec && this.sortSpecCache?.sortSpecByWildcard) {
 			// when no sorting spec found directly by folder path, check for wildcard-based match
@@ -570,13 +602,6 @@ export default class CustomSortPlugin
 			plugin: this
 		}
 		return ctx
-	}
-
-	resetIconInaccurateStateToEnabled() {
-		if (this.ribbonIconStateInaccurate && this.ribbonIconEl) {
-			this.ribbonIconStateInaccurate = false
-			setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
-		}
 	}
 
 	determineAndPrepareSortingDataForFolder(folder: TFolder) {
@@ -598,58 +623,12 @@ export default class CustomSortPlugin
 		}
 	}
 
-	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
-	patchFileExplorerFolder(patchableFileExplorer?: FileExplorerView): boolean {
-		let plugin = this;
-		const requestStandardObsidianSortAfter = (patchUninstaller: MonkeyAroundUninstaller|undefined) => {
-			return () => {
-				if (patchUninstaller) patchUninstaller()
-
-				const fileExplorerView: FileExplorerView | undefined = this.checkFileExplorerIsAvailableAndPatchable(false)
-				if (fileExplorerView) {
-					fileExplorerView.requestSort()
-				}
-			}
-		}
-
-		// patching file explorer might fail here because of various non-error reasons.
-		// That's why not showing and not logging error message here
-		patchableFileExplorer = patchableFileExplorer ?? this.checkFileExplorerIsAvailableAndPatchable(false)
-		if (patchableFileExplorer) {
-			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(patchableFileExplorer.constructor.prototype, {
-				getSortedFolderItems(old: any) {
-					return function (...args: any[]) {
-						// quick check for plugin status
-						if (plugin.settings.suspended) {
-							return old.call(this, ...args);
-						}
-
-						plugin.resetIconInaccurateStateToEnabled()
-
-						const folder = args[0]
-						const sortingData = plugin.determineAndPrepareSortingDataForFolder(folder)
-
-						if (sortingData.sortSpec) {
-							return getSortedFolderItems.call(this, folder, sortingData.sortSpec, plugin.createProcessingContextForSorting(sortingData.sortingAndGroupingStats))
-						} else {
-							return old.call(this, ...args);
-						}
-					};
-				}
-			})
-			this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
-			return true
-		} else {
-			return false
-		}
-	}
-
 	orderedFolderItemsForBookmarking(folder: TFolder, bookmarksPlugin: BookmarksPluginInterface): Array<TAbstractFile> {
 		let sortSpec: CustomSortSpec | null | undefined = undefined
 		if (!this.settings.suspended) {
 			sortSpec = this.determineSortSpecForFolder(folder.path, folder.name)
 		}
-		let uiSortOrder: string = this.getFileExplorer()?.sortOrder || ObsidianStandardDefaultSortingName
+		let uiSortOrder: string = this.getFileExplorer().v?.view?.sortOrder || ObsidianStandardDefaultSortingName
 
 		const has: HasSortingOrGrouping = collectSortingAndGroupingTypes(sortSpec)
 
@@ -662,19 +641,16 @@ export default class CustomSortPlugin
 		)
 	}
 
-	// Credits go to https://github.com/nothingislost/obsidian-bartender
-	getFileExplorer(): FileExplorerView | undefined {
-		let fileExplorer: FileExplorerView | undefined = this.app.workspace.getLeavesOfType("file-explorer")?.first()
-			?.view as unknown as FileExplorerView;
-		return fileExplorer;
+	onunload() {
 	}
 
-	onunload() {
+	onUserEnable() {
 	}
 
 	updateStatusBar() {
 		if (this.statusBarItemEl) {
-			this.statusBarItemEl.setText(`Custom sort:${this.settings.suspended ? 'OFF' : 'ON'}`)
+			let status = (!this.settings.suspended && this.customSortAppliedAtLeastOnce) ? 'ON' : 'OFF'
+			this.statusBarItemEl.setText(`Custom sort:${status}`)
 		}
 	}
 
@@ -691,6 +667,25 @@ export default class CustomSortPlugin
 		await this.saveData(this.settings);
 	}
 
+	initialDelayedApplicationOfCustomSorting() {
+		if (!this) {
+			return  // sanity check - plugin removed from the system?
+		}
+
+		// should be applied? yes (based on settings)
+		const shouldSortingBeApplied = !this.settings.suspended
+
+		if (!shouldSortingBeApplied || this.customSortAppliedAtLeastOnce) {
+			return
+		}
+
+		this.switchPluginStateTo(true)
+	}
+
+	setRibbonIconToEnabled() {
+		setIcon(this.ribbonIconEl, ICON_SORT_ENABLED_ACTIVE)
+	}
+
 	// API
 	derivedIndexNoteNameForFolderNotes: string | undefined
 	indexNoteNameForFolderNotesDerivedFrom: any
@@ -703,3 +698,4 @@ export default class CustomSortPlugin
 		return this.derivedIndexNoteNameForFolderNotes
 	}
 }
+

@@ -24,3 +24,25 @@ export function extractBasename (configEntry: string | undefined): string | unde
 		return configEntry
 	}
 }
+
+export class ValueOrError<V,E> {
+	constructor(private value?: V, private error?: E) {
+		if (value) this.error = undefined
+	}
+	public setValue(value: V): ValueOrError<V,E> {
+		this.value = value
+		this.error = undefined
+		return this
+	}
+	public setError(error: E): ValueOrError<V,E> {
+		this.value = undefined
+		this.error = error
+		return this
+	}
+	public get v() {
+		return this.value
+	}
+	public get e() {
+		return this.error
+	}
+}

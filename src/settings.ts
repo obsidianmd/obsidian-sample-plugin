@@ -13,7 +13,14 @@ export interface CustomSortPluginSettings {
     customSortContextSubmenu: boolean
     bookmarksContextMenus: boolean
     bookmarksGroupToConsumeAsOrderingReference: string
+    delayForInitialApplication: number // miliseconds
 }
+
+const MILIS = 1000
+const DEFAULT_DELAY_SECONDS = 1
+const DELAY_MIN_SECONDS = 1
+const DELAY_MAX_SECONDS = 30
+const DEFAULT_DELAY = DEFAULT_DELAY_SECONDS * MILIS
 
 export const DEFAULT_SETTINGS: CustomSortPluginSettings = {
     additionalSortspecFile: '',
@@ -25,7 +32,8 @@ export const DEFAULT_SETTINGS: CustomSortPluginSettings = {
     customSortContextSubmenu: true,
     automaticBookmarksIntegration: false,
     bookmarksContextMenus: false,
-    bookmarksGroupToConsumeAsOrderingReference: 'sortspec'
+    bookmarksGroupToConsumeAsOrderingReference: 'sortspec',
+    delayForInitialApplication: DEFAULT_DELAY
 }
 
 // On API 1.2.x+ enable the bookmarks integration by default
@@ -51,7 +59,24 @@ export class CustomSortSettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        // containerEl.createEl('h2', {text: 'Settings for Custom File Explorer Sorting Plugin'});
+        const delayDescr: DocumentFragment = sanitizeHTMLToDom(
+            'Seconds to wait before applying custom ordering on plugin / app start.'
+            + '<br>'
+            + 'For large vaults or on mobile the value might need to be increased if plugin constantly fails to auto-apply'
+            + ' custom ordering on start.'
+        )
+
+        new Setting(containerEl)
+            .setName('Delay for initial automatic application of custom ordering')
+            .setDesc(delayDescr)
+            .addText(text => text
+                .setValue(`${this.plugin.settings.delayForInitialApplication/MILIS}`)
+                .onChange(async (value) => {
+                    let delayS = parseInt(value, 10)
+                    delayS = Number.isNaN(delayS) ? DEFAULT_DELAY_SECONDS : (delayS < DELAY_MIN_SECONDS ? DELAY_MIN_SECONDS :(delayS > DELAY_MAX_SECONDS ? DELAY_MIN_SECONDS : delayS))
+                    this.plugin.settings.delayForInitialApplication = delayS * MILIS
+                    await this.plugin.saveSettings()
+                }))
 
         const additionalSortspecFileDescr: DocumentFragment = sanitizeHTMLToDom(
             'A note name or note path to scan (YAML frontmatter) for sorting specification in addition to the `sortspec` notes and Folder Notes.'
