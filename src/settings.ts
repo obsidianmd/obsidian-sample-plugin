@@ -64,6 +64,8 @@ export class CustomSortSettingTab extends PluginSettingTab {
             + '<br>'
             + 'For large vaults or on mobile the value might need to be increased if plugin constantly fails to auto-apply'
             + ' custom ordering on start.'
+            + '<br>'
+            + `Min: ${DELAY_MIN_SECONDS} sec., max. ${DELAY_MAX_SECONDS} sec.`
         )
 
         new Setting(containerEl)
@@ -73,7 +75,8 @@ export class CustomSortSettingTab extends PluginSettingTab {
                 .setValue(`${this.plugin.settings.delayForInitialApplication/MILIS}`)
                 .onChange(async (value) => {
                     let delayS = parseInt(value, 10)
-                    delayS = Number.isNaN(delayS) ? DEFAULT_DELAY_SECONDS : (delayS < DELAY_MIN_SECONDS ? DELAY_MIN_SECONDS :(delayS > DELAY_MAX_SECONDS ? DELAY_MIN_SECONDS : delayS))
+                    delayS = Number.isNaN(delayS) ? DEFAULT_DELAY_SECONDS : (delayS < DELAY_MIN_SECONDS ? DELAY_MIN_SECONDS :(delayS > DELAY_MAX_SECONDS ? DELAY_MAX_SECONDS : delayS))
+                    delayS = Math.round(delayS)
                     this.plugin.settings.delayForInitialApplication = delayS * MILIS
                     await this.plugin.saveSettings()
                 }))
