@@ -1,8 +1,10 @@
 import {
+	App,
+	CommunityPlugin,
 	FileExplorerLeaf,
 	FileExplorerView,
-    Menu,
-    MenuItem,
+	Menu,
+	MenuItem,
 	MetadataCache,
 	Notice,
 	Platform,
@@ -43,7 +45,7 @@ import {
 	groupNameForPath
 } from "./utils/BookmarksCorePluginSignature";
 import {
-	getIconFolderPlugin
+	getIconFolderPlugin, ObsidianIconFolder_PluginInstance, ObsidianIconFolderPlugin_getData_methodName
 } from "./utils/ObsidianIconFolderPluginSignature";
 import {
 	extractBasename,
@@ -63,6 +65,8 @@ import {
 	DEFAULT_SETTINGS
 } from "./settings";
 import {CustomSortPluginAPI} from "./custom-sort-plugin";
+
+const PLUGIN_ID = 'custom-sort' // same as in manifest.json
 
 const SORTSPEC_FILE_NAME: string = 'sortspec.md'
 const SORTINGSPEC_YAML_KEY: string = 'sorting-spec'
@@ -266,13 +270,13 @@ export default class CustomSortPlugin
 	}
 
 	logWarningFileExplorerDeferred() {
-		const msg = `custom-sort v${this.manifest.version}: failed to get active File Explorer view.\n`
+		const msg = `${PLUGIN_ID} v${this.manifest.version}: failed to get active File Explorer view.\n`
 			+ `Until the File Explorer is visible, the custom-sort plugin cannot apply the custom order.\n`
 		console.warn(msg)
 	}
 
 	logWarningFileExplorerNotAvailable() {
-		const msg = `custom-sort v${this.manifest.version}: failed to locate File Explorer. The 'Files' core plugin can be disabled.\n`
+		const msg = `${PLUGIN_ID} v${this.manifest.version}: failed to locate File Explorer. The 'Files' core plugin can be disabled.\n`
 			+ `Some community plugins can also disable it.\n`
 			+ `See the example of MAKE.md plugin: https://github.com/Make-md/makemd/issues/25\n`
 			+ `You can find there instructions on how to re-enable the File Explorer in MAKE.md plugin`
@@ -323,7 +327,7 @@ export default class CustomSortPlugin
 	}
 
 	async onload() {
-		console.log(`loading custom-sort v${this.manifest.version}`);
+		console.log(`loading ${PLUGIN_ID} v${this.manifest.version}`);
 
 		await this.loadSettings();
 
@@ -665,9 +669,18 @@ export default class CustomSortPlugin
 		await this.saveData(this.settings);
 	}
 
+	isThePluginStillInstalledAndEnabled(): boolean {
+		const thisPlugin: CommunityPlugin | undefined = this?.app?.plugins?.plugins?.[PLUGIN_ID]
+		if (thisPlugin && thisPlugin._loaded && this?.app?.plugins?.enabledPlugins?.has(PLUGIN_ID)) {
+			return true
+		}
+		return false
+	}
+
 	initialDelayedApplicationOfCustomSorting() {
-		if (!this) {
-			return  // sanity check - plugin removed from the system?
+		if (!this?.isThePluginStillInstalledAndEnabled()) {
+			console.log(`${PLUGIN_ID} v${this.manifest.version} - delayed handler skipped, plugin no longer active.`)
+			return
 		}
 
 		// should be applied? yes (based on settings)
