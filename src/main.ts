@@ -90,7 +90,6 @@ export default class CustomSortPlugin
 	ribbonIconEl: HTMLElement     // On small-screen mobile devices this is useless (ribbon is re-created on-the-fly)
 
 	sortSpecCache?: SortSpecsCollection | null
-	initialAutoOrManualSortingTriggered: boolean
 	customSortAppliedAtLeastOnce: boolean = false
 
 	showNotice(message: string, timeout?: number) {
@@ -299,7 +298,6 @@ export default class CustomSortPlugin
 			this.readAndParseSortingSpec();
 			if (this.sortSpecCache) {
 				if (fileExplorer) {
-					this.initialAutoOrManualSortingTriggered = true
 					this.customSortAppliedAtLeastOnce = false
 					fileExplorer.view.requestSort();
 				} else {
