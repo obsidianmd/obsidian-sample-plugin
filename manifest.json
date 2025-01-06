@@ -1,8 +1,8 @@
 {
 	"id": "custom-sort",
 	"name": "Custom File Explorer sorting",
-	"version": "3.0.1",
-	"minAppVersion": "0.16.2",
+	"version": "3.1.0",
+	"minAppVersion": "1.7.2",
 	"description": "Allows for manual and automatic, config-driven reordering and sorting of files and folders in File Explorer",
 	"author": "SebastianMC",
 	"authorUrl": "https://github.com/SebastianMC",
