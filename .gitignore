@@ -21,3 +21,5 @@ data.json
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
 /yarn.lock
+/.run/test.run.xml
+/.run/build.run.xml

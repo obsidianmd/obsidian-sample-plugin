@@ -1,6 +1,6 @@
 import {PluginInstance, TFolder, WorkspaceLeaf} from "obsidian";
 
-// Needed to support monkey-patching of the folder sort() function
+// Needed to support monkey-patching functions of FileExplorerLeaf or FileExplorerView
 
 declare module 'obsidian' {
 	export interface ViewRegistry {
@@ -46,15 +46,17 @@ declare module 'obsidian' {
 		getPluginById(id: string): InstalledPlugin;
 	}
 
-	interface FileExplorerFolder {
-	}
-
 	export interface FileExplorerView extends View {
 		getSortedFolderItems(sortedFolder: TFolder): any[];
 
 		requestSort(): void;
 
 		sortOrder: string
+	}
+
+	export interface FileExplorerLeaf extends WorkspaceLeaf {
+		view: FileExplorerView
+		get isDeferred(): boolean  // since Obsidian 1.7.2
 	}
 
 	interface MenuItem {

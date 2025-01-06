@@ -673,7 +673,7 @@ export interface SortSpecsCollection {
 }
 
 const ensureCollectionHasSortSpecByPath = (collection?: SortSpecsCollection | null) => {
-	collection = collection ?? {}
+	collection ??= {}
 	if (!collection.sortSpecByPath) {
 		collection.sortSpecByPath = {}
 	}
@@ -681,7 +681,7 @@ const ensureCollectionHasSortSpecByPath = (collection?: SortSpecsCollection | nu
 }
 
 const ensureCollectionHasSortSpecByName = (collection?: SortSpecsCollection | null) => {
-	collection = collection ?? {}
+	collection ??= {}
 	if (!collection.sortSpecByName) {
 		collection.sortSpecByName = {}
 	}
@@ -689,7 +689,7 @@ const ensureCollectionHasSortSpecByName = (collection?: SortSpecsCollection | nu
 }
 
 const ensureCollectionHasSortSpecByWildcard = (collection?: SortSpecsCollection | null) => {
-	collection = collection ?? {}
+	collection ??= {}
 	if (!collection.sortSpecByWildcard) {
 		collection.sortSpecByWildcard = new FolderWildcardMatching<CustomSortSpec>((spec: CustomSortSpec) => !!spec.implicit)
 	}
