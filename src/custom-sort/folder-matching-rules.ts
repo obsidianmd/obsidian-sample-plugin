@@ -161,7 +161,7 @@ export class FolderWildcardMatching<SortingSpec> {
 					}
 				}
 
-				rule = rule ?? inheritedRule
+				rule ??= inheritedRule
 			}
 
 			if (rule) {
