@@ -1,94 +1,157 @@
-# Obsidian Sample Plugin
+# Obsidian Notion 同步插件
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+一个用于将 Obsidian 笔记同步到 Notion 数据库的插件。
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## 功能特点
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- 一键同步笔记到 Notion
+- 支持多种 Markdown 元素
+- 右键菜单集成
+- 命令面板支持
+- 安全的令牌存储
+- 可配置的同步设置
 
-## First time developing plugins?
+## 设置指南
 
-Quick starting guide for new plugin devs:
+### 1. 创建 Notion Integration
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. 访问 [Notion Integrations](https://www.notion.so/my-integrations)
+2. 点击"New integration"
+3. 输入集成名称（如"Obsidian Sync"）
+4. 选择数据库所在的工作区
+5. 设置权限（至少需要读写内容权限）
+6. 保存并复制 Integration Token
 
-## Releasing new releases
+### 2. 准备 Notion Database
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+1. 在 Notion 中创建新数据库（或使用现有数据库）
+2. 数据库必须包含"Name"属性（title 类型）
+3. 获取 Database ID：
+   - 以全页面视图打开数据库
+   - URL 格式如：`https://notion.so/workspace/1234...abcd`
+   - 复制最后一部分（32个字符）- 这就是 Database ID
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### 3. 连接 Database 与 Integration
 
-## Adding your plugin to the community plugin list
+1. 在 Notion 中打开数据库
+2. 点击右上角的"..."
+3. 进入"Connections"
+4. 找到并添加你的 integration
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### 4. 配置插件
 
-## How to use
+1. 打开 Obsidian 设置
+2. 进入"第三方插件" → "Notion 同步"
+3. 输入 Integration Token
+4. 输入 Database ID
+5. 根据需要配置其他设置
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## 使用方法
 
-## Manually installing the plugin
+### 基本同步
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+1. 打开要同步的笔记
+2. 使用以下方法之一：
+   - 在文件菜单中点击"同步到 Notion"（右键）
+   - 使用命令面板（Ctrl/Cmd + P）搜索"同步到 Notion"
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+### 支持的元素
 
-## Funding URL
+- 标题（H1-H3）
+- 段落
+- 无序列表（支持多级）
+- 有序列表
+- 基本文本格式
 
-You can include funding URLs where people who use your plugin can financially support it.
+### 多级列表处理
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+插件支持三种方式处理多级列表：
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
+1. **保持原有层级**（默认）
+   ```markdown
+   - 一级项目
+     - 二级项目
+       - 三级项目
+   ```
+   同步到 Notion 后保持原有的层级结构：
+   ```
+   ? 一级项目
+     ? 二级项目
+       ? 三级项目
+   ```
 
-If you have multiple URLs, you can also do:
+2. **转为平级结构**
+   ```markdown
+   - 一级项目
+     - 二级项目
+       - 三级项目
+   ```
+   同步到 Notion 后转换为：
+   ```
+   ? 一级项目
+   ? 二级项目
+   ? 三级项目
+   ```
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+3. **忽略子级内容**
+   ```markdown
+   - 一级项目
+     - 二级项目（会被忽略）
+       - 三级项目（会被忽略）
+   - 另一个一级项目
+   ```
+   同步到 Notion 后只保留顶级项目：
+   ```
+   ? 一级项目
+   ? 另一个一级项目
+   ```
 
-## API Documentation
+选择合适的处理方式：
+- 如果你的 Notion 数据库需要保持文档的完整层级结构，选择"保持原有层级"
+- 如果你希望简化列表结构便于在 Notion 中查看，选择"转为平级结构"
+- 如果你只关注顶层信息，选择"忽略子级内容"
 
-See https://github.com/obsidianmd/obsidian-api
+### 设置说明
+
+- **Integration Token**：Notion 集成令牌（安全加密存储）
+- **Database ID**：目标 Notion 数据库标识符
+- **列表处理方式**：控制多级列表的同步行为
+  - 保持原有层级：完整保留列表的层级关系
+  - 转为平级结构：将多级列表转换为同级项目
+  - 忽略子级内容：仅同步顶层列表项
+
+## 故障排除
+
+### 常见问题
+
+1. **认证失败**
+   - 验证 Integration Token 是否正确
+   - 检查 Token 是否具有适当权限
+
+2. **找不到数据库**
+   - 验证 Database ID 是否正确
+   - 确保 Integration 已被授权访问数据库
+
+3. **同步失败**
+   - 检查网络连接
+   - 确认文件大小在限制内（500KB）
+   - 确保内容格式受支持
+
+## 安全性
+
+- Integration Token 采用加密存储
+- 不向第三方发送数据
+- 所有通信直接与 Notion API 进行
+
+## 许可证
+
+MIT 许可证 - 详见 [LICENSE](LICENSE)
+
+## 支持
+
+- [报告问题](https://github.com/e6g2cyvryi/obsidian-notion-sync/issues)
+- [功能建议](https://github.com/e6g2cyvryi/obsidian-notion-sync/issues)
+
+## 技术支持
+
+基于 [Obsidian Plugin API](https://github.com/obsidianmd/obsidian-api) 和 [Notion API](https://developers.notion.com/) 构建 
