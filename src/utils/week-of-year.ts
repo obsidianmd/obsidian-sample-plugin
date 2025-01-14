@@ -2,8 +2,10 @@
 // Cache of start of years and number of days in the 1st week
 interface MondayCache {
     year: number   // full year, e.g. 2015
-    mondayDateOf1stWeekUS: number // U.S. standard, can be in Dec of previous year
+    mondayDateOf1stWeekUS: number // U.S. standard, the 1st of Jan determines the first week, monday can be in Dec of previous year
+    sundayDateOf1stWeekUS: number
     mondayDateOf1stWeekISO: number // ISO standard, when the first Thursday of the year determines week numbering
+    sundayDateOf1stWeekISO: number
 }
 
 type YEAR = number
@@ -35,20 +37,25 @@ const calculateMondayDateIn1stWeekOfYear = (year: number): MondayCache => {
     return {
         year: year,
         mondayDateOf1stWeekUS: new Date(firstSecondOfYear).setDate(firstSecondOfYear.getDate() - daysToPrevMonday),
+        sundayDateOf1stWeekUS: new Date(firstSecondOfYear).setDate(firstSecondOfYear.getDate() - daysToPrevMonday + DAYS_IN_WEEK - 1),
         mondayDateOf1stWeekISO: new Date(firstSecondOfYear).setDate(firstSecondOfYear.getDate() - daysToPrevMonday + useISOoffset),
+        sundayDateOf1stWeekISO: new Date(firstSecondOfYear).setDate(firstSecondOfYear.getDate() - daysToPrevMonday + useISOoffset + DAYS_IN_WEEK - 1),
     }
 }
 
 // Week number = 1 to 54, U.S. standard by default, can also work in ISO (parameter driven)
-export const getDateForWeekOfYear = (year: number, weekNumber: number, useISO?: boolean): Date => {
+export const getDateForWeekOfYear = (year: number, weekNumber: number, useISO?: boolean, sunday?: boolean): Date => {
     const WEEK_OF_MILIS = DAYS_IN_WEEK * DAY_OF_MILIS
     const dataOfMondayIn1stWeekOfYear = (MondaysCache[year] ??= calculateMondayDateIn1stWeekOfYear(year))
-    const mondayOfTheRequestedWeek = new Date(
+    const mondayOfTheRequestedWeek =
         (useISO ? dataOfMondayIn1stWeekOfYear.mondayDateOf1stWeekISO : dataOfMondayIn1stWeekOfYear.mondayDateOf1stWeekUS)
         + (weekNumber-1)*WEEK_OF_MILIS
-    )
 
-    return mondayOfTheRequestedWeek
+    const sundayOfTheRequestedWeek =
+        (useISO ? dataOfMondayIn1stWeekOfYear.sundayDateOf1stWeekISO : dataOfMondayIn1stWeekOfYear.sundayDateOf1stWeekUS)
+        + (weekNumber-1)*WEEK_OF_MILIS
+
+    return new Date(sunday ? sundayOfTheRequestedWeek : mondayOfTheRequestedWeek)
 }
 
 export const _unitTests = {

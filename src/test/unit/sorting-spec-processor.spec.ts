@@ -458,13 +458,13 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 		}, {
 			type: CustomSortGroupType.ExactName,
 			regexPrefix: {
-				regex: /^Week number interpreted in ISO standard  *(\d{4}-W[0-5]*[0-9])$/i,
+				regex: /^Week number interpreted in ISO standard  *(\d{4}-W[0-5]*[0-9][-+]?)$/i,
 				normalizerFn: Date_yyyy_WwwISO_NormalizerFn
 			}
 		}, {
 			type: CustomSortGroupType.ExactName,
 			regexPrefix: {
-				regex: /^Week number interpreted in U\.S\. standard  *(\d{4}-W[0-5]*[0-9])$/i,
+				regex: /^Week number interpreted in U\.S\. standard  *(\d{4}-W[0-5]*[0-9][-+]?)$/i,
 				normalizerFn: Date_yyyy_Www_NormalizerFn
 			}
 		}, {

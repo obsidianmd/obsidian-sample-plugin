@@ -43,9 +43,13 @@ describe('getDateForWeekOfYear', () => {
         expect(getDateForWeekOfYear(year, 10)).toStrictEqual(dateUS)
         expect(getDateForWeekOfYear(year, 10, true)).toStrictEqual(dateISO)
     })
-    it('should correctly handle edge case - a year spanning 54 weeks (leap year staring on Sun)', () => {
+    it('should correctly handle edge case - a year spanning 54 weeks (leap year starting on Sun)', () => {
+        const USstandard = false
+        const SUNDAY = true
         // This works in U.S. standard only, where 1st week can start on Sunday
         expect(getDateForWeekOfYear(2012,1)).toStrictEqual(new Date('2011-12-26T00:00:00.000Z'))
+        expect(getDateForWeekOfYear(2012,1, USstandard, SUNDAY)).toStrictEqual(new Date('2012-01-01T00:00:00.000Z'))
         expect(getDateForWeekOfYear(2012,54)).toStrictEqual(new Date('2012-12-31T00:00:00.000Z'))
+        expect(getDateForWeekOfYear(2012,54, USstandard, SUNDAY)).toStrictEqual(new Date('2013-01-06T00:00:00.000Z'))
     })
 })

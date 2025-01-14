@@ -17,14 +17,18 @@ export const Date_dd_Mmm_yyyy_RegexStr: string = ' *([0-3]*[0-9]-(?:Jan|Feb|Mar|
 export const Date_Mmm_dd_yyyy_RegexStr: string = ' *((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-3]*[0-9]-\\d{4})'; // Date like Jan-01-2020
 
 export const Date_yyyy_Www_mm_dd_RegexStr: string = ' *(\\d{4}-W[0-5]*[0-9] \\([0-3]*[0-9]-[0-3]*[0-9]\\))'
-export const Date_yyyy_WwwISO_RegexStr: string = ' *(\\d{4}-W[0-5]*[0-9])'
+export const Date_yyyy_WwwISO_RegexStr: string = ' *(\\d{4}-W[0-5]*[0-9][-+]?)'
 export const Date_yyyy_Www_RegexStr: string = Date_yyyy_WwwISO_RegexStr
 
-export const DOT_SEPARATOR = '.'
+export const DOT_SEPARATOR = '.' // ASCII 46
 export const DASH_SEPARATOR = '-'
 
-const SLASH_SEPARATOR = '/' // ASCII 47
+const SLASH_SEPARATOR = '/' // ASCII 47, right before ASCII 48 = '0'
+const COLON_SEPARATOR = ':' // ASCII 58, first non-digit character
 const PIPE_SEPARATOR = '|'  // ASCII 124
+
+const EARLIER_THAN_SLASH_SEPARATOR = DOT_SEPARATOR
+const LATER_THAN_SLASH_SEPARATOR = COLON_SEPARATOR
 
 export const DEFAULT_NORMALIZATION_PLACES = 8;  // Fixed width of a normalized number (with leading zeros)
 
@@ -62,9 +66,9 @@ export function getNormalizedNumber(s: string = '', separator?: string, places?:
 	// guarantees correct order (/ = ASCII 47, | = ASCII 124)
 	if (separator) {
 		const components: Array<string> = s.split(separator).filter(s => s)
-		return `${components.map((c) => prependWithZeros(c, places ?? DEFAULT_NORMALIZATION_PLACES)).join(PIPE_SEPARATOR)}//`
+		return `${components.map((c) => prependWithZeros(c, places ?? DEFAULT_NORMALIZATION_PLACES)).join(PIPE_SEPARATOR)}${SLASH_SEPARATOR}${SLASH_SEPARATOR}`
 	} else {
-		return `${prependWithZeros(s, places ?? DEFAULT_NORMALIZATION_PLACES)}//`
+		return `${prependWithZeros(s, places ?? DEFAULT_NORMALIZATION_PLACES)}${SLASH_SEPARATOR}${SLASH_SEPARATOR}`
 	}
 }
 
@@ -108,9 +112,9 @@ export function getNormalizedRomanNumber(s: string, separator?: string, places?:
 	// guarantees correct order (/ = ASCII 47, | = ASCII 124)
 	if (separator) {
 		const components: Array<string> = s.split(separator).filter(s => s)
-		return `${components.map((c) => prependWithZeros(romanToIntStr(c), places ?? DEFAULT_NORMALIZATION_PLACES)).join(PIPE_SEPARATOR)}//`
+		return `${components.map((c) => prependWithZeros(romanToIntStr(c), places ?? DEFAULT_NORMALIZATION_PLACES)).join(PIPE_SEPARATOR)}${SLASH_SEPARATOR}${SLASH_SEPARATOR}`
 	} else {
-		return `${prependWithZeros(romanToIntStr(s), places ?? DEFAULT_NORMALIZATION_PLACES)}//`
+		return `${prependWithZeros(romanToIntStr(s), places ?? DEFAULT_NORMALIZATION_PLACES)}${SLASH_SEPARATOR}${SLASH_SEPARATOR}`
 	}
 }
 
@@ -128,7 +132,7 @@ export function getNormalizedDate_NormalizerFn_for(separator: string, dayIdx: nu
 		const monthValue = months ? `${1 + MONTHS.indexOf(components[monthIdx])}` : components[monthIdx]
 		const month = prependWithZeros(monthValue, MONTH_POSITIONS)
 		const year = prependWithZeros(components[yearIdx], YEAR_POSITIONS)
-		return `${year}-${month}-${day}//`
+		return `${year}-${month}-${day}${SLASH_SEPARATOR}${SLASH_SEPARATOR}`
 	}
 }
 
@@ -137,14 +141,18 @@ export const getNormalizedDate_yyyy_dd_mm_NormalizerFn = getNormalizedDate_Norma
 export const getNormalizedDate_dd_Mmm_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 0, 1, 2, MONTHS)
 export const getNormalizedDate_Mmm_dd_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 1, 0, 2, MONTHS)
 
+const DateExtractor_orderModifier_earlier_than = '-'
+const DateExtractor_orderModifier_later_than = '+'
+
 const DateExtractor_yyyy_Www_mm_dd_Regex = /(\d{4})-W(\d{1,2}) \((\d{2})-(\d{2})\)/
-const DateExtractor_yyyy_Www_Regex = /(\d{4})-W(\d{1,2})/
+const DateExtractor_yyyy_Www_Regex = /(\d{4})-W(\d{1,2})([-+]?)/
 
 // Matching groups
 const YEAR_IDX = 1
 const WEEK_IDX = 2
 const MONTH_IDX = 3
 const DAY_IDX = 4
+const RELATIVE_ORDER_IDX = 3  // For the yyyy-Www only: yyyy-Www> or yyyy-Www<
 
 const DECEMBER = 12
 const JANUARY = 1
@@ -157,10 +165,19 @@ export function getNormalizedDate_NormalizerFn_yyyy_Www_mm_dd(consumeWeek: boole
 		let yearNumber = Number.parseInt(yearStr,10)
 		let monthNumber: number
 		let dayNumber: number
+		let separator = SLASH_SEPARATOR // different values enforce relative > < order of same dates
+		let useLastDayOfWeek: boolean = false
 		if (consumeWeek) {
 			const weekNumberStr = matches![WEEK_IDX]
 			const weekNumber = Number.parseInt(weekNumberStr, 10)
-			const dateForWeek = getDateForWeekOfYear(yearNumber, weekNumber, weeksISO)
+			const orderModifier: string|undefined = matches![RELATIVE_ORDER_IDX]
+			if (orderModifier === DateExtractor_orderModifier_earlier_than) {
+				separator = EARLIER_THAN_SLASH_SEPARATOR
+			} else if (orderModifier === DateExtractor_orderModifier_later_than) {
+				separator = LATER_THAN_SLASH_SEPARATOR // Will also need to adjust the date to the last day of the week
+				useLastDayOfWeek = true
+			}
+			const dateForWeek = getDateForWeekOfYear(yearNumber, weekNumber, weeksISO, useLastDayOfWeek)
 			monthNumber = dateForWeek.getMonth()+1 // 1 - 12
 			dayNumber = dateForWeek.getDate() // 1 - 31
 			// Be careful with edge dates, which can belong to previous or next year
@@ -178,7 +195,10 @@ export function getNormalizedDate_NormalizerFn_yyyy_Www_mm_dd(consumeWeek: boole
 			monthNumber = Number.parseInt(matches![MONTH_IDX],10)
 			dayNumber = Number.parseInt(matches![DAY_IDX], 10)
 		}
-		return `${prependWithZeros(`${yearNumber}`, YEAR_POSITIONS)}-${prependWithZeros(`${monthNumber}`, MONTH_POSITIONS)}-${prependWithZeros(`${dayNumber}`, DAY_POSITIONS)}//`
+		return `${prependWithZeros(`${yearNumber}`, YEAR_POSITIONS)}` +
+			`-${prependWithZeros(`${monthNumber}`, MONTH_POSITIONS)}` +
+			`-${prependWithZeros(`${dayNumber}`, DAY_POSITIONS)}` +
+			`${separator}${SLASH_SEPARATOR}`
 	}
 }
 

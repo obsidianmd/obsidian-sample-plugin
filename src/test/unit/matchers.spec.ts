@@ -458,3 +458,19 @@ describe('getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn', () => {
 		expect(getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn(s)).toBe(out)
 	})
 })
+
+describe('getNormalizedDate_yyyy_Www_NormalizerFn', () => {
+	/* ORDER for week numbers vs. dates of 1st day / last day of the week:
+       W1  - exactly on the first day of 1st week - the actual title then decides about relative order
+       W1- - before the first day of 1st week, yet after the last day of prev week)
+       W1+ - after the last day of 1st week, yet before the first day of next week)
+    */
+	const params = [
+		['2012-W1',  '2011-12-26//'],
+		['2012-W1+', '2012-01-01:/'],
+		['2012-W1-', '2011-12-26./'],
+	];
+	it.each(params)('>%s< should become %s', (s: string, out: string) => {
+		expect(getNormalizedDate_yyyy_Www_NormalizerFn(s)).toBe(out)
+	})
+})
