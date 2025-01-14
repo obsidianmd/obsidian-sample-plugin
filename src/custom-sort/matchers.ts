@@ -10,11 +10,15 @@ export const NumberRegexStr: string = ' *(\\d+)';  // Plain number
 export const CompoundNumberDotRegexStr: string = ' *(\\d+(?:\\.\\d+)*)'; // Compound number with dot as separator
 export const CompoundNumberDashRegexStr: string = ' *(\\d+(?:-\\d+)*)'; // Compound number with dash as separator
 
+export const Date_yyyy_mm_dd_RegexStr: string = ' *(\\d{4}-\\d{2}-\\d{2})'
+export const Date_yyyy_dd_mm_RegexStr: string = Date_yyyy_mm_dd_RegexStr
+
 export const Date_dd_Mmm_yyyy_RegexStr: string = ' *([0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4})'; // Date like 01-Jan-2020
 export const Date_Mmm_dd_yyyy_RegexStr: string = ' *((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-3]*[0-9]-\\d{4})'; // Date like Jan-01-2020
 
 export const Date_yyyy_Www_mm_dd_RegexStr: string = ' *(\\d{4}-W\\d{1,2} \\(\\d{2}-\\d{2}\\))'
-export const Date_yyyy_Www_RegexStr: string = ' *(\\d{4}-W\\d{1,2})'
+export const Date_yyyy_WwwISO_RegexStr: string = ' *(\\d{4}-W\\d{1,2})'
+export const Date_yyyy_Www_RegexStr: string = Date_yyyy_WwwISO_RegexStr
 
 export const DOT_SEPARATOR = '.'
 export const DASH_SEPARATOR = '-'
@@ -128,6 +132,8 @@ export function getNormalizedDate_NormalizerFn_for(separator: string, dayIdx: nu
 	}
 }
 
+export const getNormalizedDate_yyyy_mm_dd_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 2, 1, 0)
+export const getNormalizedDate_yyyy_dd_mm_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 1, 2, 0)
 export const getNormalizedDate_dd_Mmm_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 0, 1, 2, MONTHS)
 export const getNormalizedDate_Mmm_dd_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 1, 0, 2, MONTHS)
 
