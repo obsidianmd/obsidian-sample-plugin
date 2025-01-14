@@ -19,22 +19,25 @@ import {
 	DASH_SEPARATOR,
 	Date_dd_Mmm_yyyy_RegexStr,
 	Date_Mmm_dd_yyyy_RegexStr,
+	Date_yyyy_dd_mm_RegexStr,
+	Date_yyyy_mm_dd_RegexStr,
 	Date_yyyy_Www_mm_dd_RegexStr,
 	Date_yyyy_Www_RegexStr,
+	Date_yyyy_WwwISO_RegexStr,
 	DOT_SEPARATOR,
 	getNormalizedDate_dd_Mmm_yyyy_NormalizerFn,
 	getNormalizedDate_Mmm_dd_yyyy_NormalizerFn,
-	getNormalizedDate_yyyy_mm_dd_NormalizerFn,
 	getNormalizedDate_yyyy_dd_mm_NormalizerFn,
+	getNormalizedDate_yyyy_mm_dd_NormalizerFn,
 	getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn,
-	getNormalizedDate_yyyy_WwwISO_NormalizerFn,
 	getNormalizedDate_yyyy_Www_NormalizerFn,
+	getNormalizedDate_yyyy_WwwISO_NormalizerFn,
 	getNormalizedNumber,
 	getNormalizedRomanNumber,
 	NumberRegexStr,
 	RomanNumberRegexStr,
 	WordInAnyLanguageRegexStr,
-	WordInASCIIRegexStr, Date_yyyy_WwwISO_RegexStr, Date_yyyy_mm_dd_RegexStr, Date_yyyy_dd_mm_RegexStr
+	WordInASCIIRegexStr
 } from "./matchers";
 import {
 	FolderWildcardMatching,
@@ -43,10 +46,7 @@ import {
 	MATCH_CHILDREN_2_SUFFIX,
 	NO_PRIORITY
 } from "./folder-matching-rules"
-import {
-	MDataExtractor,
-	tryParseAsMDataExtractorSpec
-} from "./mdata-extractors";
+import {MDataExtractor, tryParseAsMDataExtractorSpec} from "./mdata-extractors";
 
 interface ProcessingContext {
 	folderPath: string
