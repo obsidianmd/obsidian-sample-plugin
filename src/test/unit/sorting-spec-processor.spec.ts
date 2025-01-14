@@ -7,6 +7,8 @@ import {
 	convertPlainStringToRegex,
 	Date_dd_Mmm_yyyy_NormalizerFn,
 	Date_Mmm_dd_yyyy_NormalizerFn,
+	Date_yyyy_dd_mm_NormalizerFn,
+	Date_yyyy_mm_dd_NormalizerFn,
 	Date_yyyy_Www_mm_dd_NormalizerFn,
 	Date_yyyy_Www_NormalizerFn,
 	Date_yyyy_WwwISO_NormalizerFn,
@@ -383,6 +385,8 @@ Here goes ASCII word \\a+
 \\[yyyy-Www (mm-dd)] Week number ignored
 Week number interpreted in ISO standard \\[yyyy-WwwISO]
 Week number interpreted in U.S. standard \\[yyyy-Www]
+\\[yyyy-mm-dd] plain spec 1
+\\[yyyy-dd-mm] plain spec 2
 `
 
 const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } = {
@@ -448,26 +452,38 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 		}, {
 			type: CustomSortGroupType.ExactName,
 			regexPrefix: {
-				regex: /^ *(\d{4}-W\d{1,2} \(\d{2}-\d{2}\)) Week number ignored$/i,
+				regex: /^ *(\d{4}-W[0-5]*[0-9] \([0-3]*[0-9]-[0-3]*[0-9]\)) Week number ignored$/i,
 				normalizerFn: Date_yyyy_Www_mm_dd_NormalizerFn
 			}
 		}, {
 			type: CustomSortGroupType.ExactName,
 			regexPrefix: {
-				regex: /^Week number interpreted in ISO standard  *(\d{4}-W\d{1,2})$/i,
+				regex: /^Week number interpreted in ISO standard  *(\d{4}-W[0-5]*[0-9])$/i,
 				normalizerFn: Date_yyyy_WwwISO_NormalizerFn
 			}
 		}, {
 			type: CustomSortGroupType.ExactName,
 			regexPrefix: {
-				regex: /^Week number interpreted in U\.S\. standard  *(\d{4}-W\d{1,2})$/i,
+				regex: /^Week number interpreted in U\.S\. standard  *(\d{4}-W[0-5]*[0-9])$/i,
 				normalizerFn: Date_yyyy_Www_NormalizerFn
+			}
+		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *(\d{4}-[0-3]*[0-9]-[0-3]*[0-9]) plain spec 1$/i,
+				normalizerFn: Date_yyyy_mm_dd_NormalizerFn
+			}
+		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *(\d{4}-[0-3]*[0-9]-[0-3]*[0-9]) plain spec 2$/i,
+				normalizerFn: Date_yyyy_dd_mm_NormalizerFn
 			}
 		}, {
 			type: CustomSortGroupType.Outsiders
 		}],
 		targetFoldersPaths: ['mock-folder'],
-		outsidersGroupIdx: 12
+		outsidersGroupIdx: 14
 	}
 }
 
