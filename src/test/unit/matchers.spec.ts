@@ -467,7 +467,7 @@ describe('getNormalizedDate_yyyy_Www_NormalizerFn', () => {
     */
 	const params = [
 		['2012-W1',  '2011-12-26//'],
-		['2012-W1+', '2012-01-01:/'],
+		['2012-W1+', '2012-01-01>/'],
 		['2012-W1-', '2011-12-26./'],
 	];
 	it.each(params)('>%s< should become %s', (s: string, out: string) => {

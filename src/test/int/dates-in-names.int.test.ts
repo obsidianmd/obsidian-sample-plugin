@@ -236,6 +236,53 @@ describe('sortFolderItems', () => {
             "------.md"
         ])
     })
+    it('should correctly order the week number with specifiers', () => {
+        // given
+        const processor: SortingSpecProcessor = new SortingSpecProcessor()
+        const sortSpecTxt =
+            `
+   /+ \\[yyyy-Www]
+   /+ \\[yyyy-mm-dd]
+     > a-z
+`
+        const PARENT_PATH = 'parent/folder/path'
+        const sortSpecsCollection = processor.parseSortSpecFromText(
+            sortSpecTxt.split('\n'),
+            PARENT_PATH,
+            'file name with the sorting, irrelevant here'
+        )
+
+        const folder: TFolder = mockTFolder(PARENT_PATH,[
+            // ISO and U.S. standard for 2025 give the same week numbers (remark for clarity)
+            mockTFile('2025-03-09', 'md'),   // sunday of W10
+            mockTFile('2025-W11-', 'md'),  // earlier than monday of W11
+            mockTFile('2025-03-10', 'md'),  // monday W11
+            mockTFile('2025-W11', 'md'),  // monday of W11
+            mockTFile('2025-03-16', 'md'), // sunday W11
+            mockTFile('2025-W11+', 'md'), // later than sunday W11  // expected
+            mockTFile('2025-03-17', 'md'), // monday of W12
+        ])
+
+        const sortSpec: CustomSortSpec = sortSpecsCollection?.sortSpecByPath![PARENT_PATH]!
+
+        const ctx: ProcessingContext = {}
+
+        // when
+        const result: Array<TAbstractFile> = sortFolderItems(folder, folder.children, sortSpec, ctx, OS_alphabetical)
+
+        // then
+        // U.S. standard of weeks  numbering
+        const orderedNames = result.map(f => f.name)
+        expect(orderedNames).toEqual([
+            "2025-03-17.md",
+            '2025-W11+.md',
+            "2025-03-16.md",
+            '2025-W11.md',
+            "2025-03-10.md",
+            "2025-W11-.md",
+            "2025-03-09.md",
+        ])
+    })
 })
 
 

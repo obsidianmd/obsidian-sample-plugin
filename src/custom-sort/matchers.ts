@@ -24,11 +24,11 @@ export const DOT_SEPARATOR = '.' // ASCII 46
 export const DASH_SEPARATOR = '-'
 
 const SLASH_SEPARATOR = '/' // ASCII 47, right before ASCII 48 = '0'
-const COLON_SEPARATOR = ':' // ASCII 58, first non-digit character
+const GT_SEPARATOR = '>' // ASCII 62, alphabetical sorting in Collator puts it after /
 const PIPE_SEPARATOR = '|'  // ASCII 124
 
 const EARLIER_THAN_SLASH_SEPARATOR = DOT_SEPARATOR
-const LATER_THAN_SLASH_SEPARATOR = COLON_SEPARATOR
+const LATER_THAN_SLASH_SEPARATOR = GT_SEPARATOR
 
 export const DEFAULT_NORMALIZATION_PLACES = 8;  // Fixed width of a normalized number (with leading zeros)
 
@@ -152,7 +152,7 @@ const YEAR_IDX = 1
 const WEEK_IDX = 2
 const MONTH_IDX = 3
 const DAY_IDX = 4
-const RELATIVE_ORDER_IDX = 3  // For the yyyy-Www only: yyyy-Www> or yyyy-Www<
+const RELATIVE_ORDER_IDX = 3  // For the yyyy-Www only: yyyy-Www- or yyyy-Www+
 
 const DECEMBER = 12
 const JANUARY = 1
