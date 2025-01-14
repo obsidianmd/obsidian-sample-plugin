@@ -7,6 +7,11 @@ import {
 	convertPlainStringToRegex,
 	Date_dd_Mmm_yyyy_NormalizerFn,
 	Date_Mmm_dd_yyyy_NormalizerFn,
+	Date_yyyy_dd_mm_NormalizerFn,
+	Date_yyyy_mm_dd_NormalizerFn,
+	Date_yyyy_Www_mm_dd_NormalizerFn,
+	Date_yyyy_Www_NormalizerFn,
+	Date_yyyy_WwwISO_NormalizerFn,
 	detectSortingSymbols,
 	escapeRegexUnsafeCharacters,
 	extractSortingSymbol,
@@ -367,6 +372,23 @@ const expectedSortSpecsExampleA: { [key: string]: CustomSortSpec } = {
 	}
 }
 
+const txtInputExampleSortingSymbols: string = `
+/folders Chapter \\.d+ ...  
+/:files ...section \\-r+.
+% Appendix \\-d+ (attachments)
+Plain syntax\\R+ ... works?
+And this kind of... \\D+plain syntax???
+Here goes ASCII word \\a+
+\\A+. is for any modern language word
+\\[dd-Mmm-yyyy] for the specific date format of 12-Apr-2024
+\\[Mmm-dd-yyyy] for the specific date format of Apr-01-2024
+\\[yyyy-Www (mm-dd)] Week number ignored
+Week number interpreted in ISO standard \\[yyyy-WwwISO]
+Week number interpreted in U.S. standard \\[yyyy-Www]
+\\[yyyy-mm-dd] plain spec 1
+\\[yyyy-dd-mm] plain spec 2
+`
+
 const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } = {
 	"mock-folder": {
 		groups: [{
@@ -428,24 +450,42 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 				normalizerFn: Date_Mmm_dd_yyyy_NormalizerFn
 			}
 		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *(\d{4}-W[0-5]*[0-9] \([0-3]*[0-9]-[0-3]*[0-9]\)) Week number ignored$/i,
+				normalizerFn: Date_yyyy_Www_mm_dd_NormalizerFn
+			}
+		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^Week number interpreted in ISO standard  *(\d{4}-W[0-5]*[0-9][-+]?)$/i,
+				normalizerFn: Date_yyyy_WwwISO_NormalizerFn
+			}
+		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^Week number interpreted in U\.S\. standard  *(\d{4}-W[0-5]*[0-9][-+]?)$/i,
+				normalizerFn: Date_yyyy_Www_NormalizerFn
+			}
+		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *(\d{4}-[0-3]*[0-9]-[0-3]*[0-9]) plain spec 1$/i,
+				normalizerFn: Date_yyyy_mm_dd_NormalizerFn
+			}
+		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *(\d{4}-[0-3]*[0-9]-[0-3]*[0-9]) plain spec 2$/i,
+				normalizerFn: Date_yyyy_dd_mm_NormalizerFn
+			}
+		}, {
 			type: CustomSortGroupType.Outsiders
 		}],
 		targetFoldersPaths: ['mock-folder'],
-		outsidersGroupIdx: 9
+		outsidersGroupIdx: 14
 	}
 }
-
-const txtInputExampleSortingSymbols: string = `
-/folders Chapter \\.d+ ...  
-/:files ...section \\-r+.
-% Appendix \\-d+ (attachments)
-Plain syntax\\R+ ... works?
-And this kind of... \\D+plain syntax???
-Here goes ASCII word \\a+
-\\A+. is for any modern language word
-\\[dd-Mmm-yyyy] for the specific date format of 12-Apr-2024
-\\[Mmm-dd-yyyy] for the specific date format of Apr-01-2024
-`
 
 // Tricky elements captured:
 // - Order a-z. for by metadata is transformed to a-z (there is no notion of 'file extension' in metadata values)
@@ -519,8 +559,6 @@ const expectedSortSpecsExampleMDataExtractors2: { [key: string]: CustomSortSpec 
 		outsidersGroupIdx: 1
 	}
 }
-
-
 
 describe('SortingSpecProcessor', () => {
 	let processor: SortingSpecProcessor;

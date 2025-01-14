@@ -19,9 +19,19 @@ import {
 	DASH_SEPARATOR,
 	Date_dd_Mmm_yyyy_RegexStr,
 	Date_Mmm_dd_yyyy_RegexStr,
+	Date_yyyy_dd_mm_RegexStr,
+	Date_yyyy_mm_dd_RegexStr,
+	Date_yyyy_Www_mm_dd_RegexStr,
+	Date_yyyy_Www_RegexStr,
+	Date_yyyy_WwwISO_RegexStr,
 	DOT_SEPARATOR,
 	getNormalizedDate_dd_Mmm_yyyy_NormalizerFn,
 	getNormalizedDate_Mmm_dd_yyyy_NormalizerFn,
+	getNormalizedDate_yyyy_dd_mm_NormalizerFn,
+	getNormalizedDate_yyyy_mm_dd_NormalizerFn,
+	getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn,
+	getNormalizedDate_yyyy_Www_NormalizerFn,
+	getNormalizedDate_yyyy_WwwISO_NormalizerFn,
 	getNormalizedNumber,
 	getNormalizedRomanNumber,
 	NumberRegexStr,
@@ -36,10 +46,7 @@ import {
 	MATCH_CHILDREN_2_SUFFIX,
 	NO_PRIORITY
 } from "./folder-matching-rules"
-import {
-	MDataExtractor,
-	tryParseAsMDataExtractorSpec
-} from "./mdata-extractors";
+import {MDataExtractor, tryParseAsMDataExtractorSpec} from "./mdata-extractors";
 
 interface ProcessingContext {
 	folderPath: string
@@ -352,8 +359,13 @@ const InlineRegexSymbol_Digit1: string = '\\d'
 const InlineRegexSymbol_Digit2: string = '\\[0-9]'
 const InlineRegexSymbol_0_to_3: string = '\\[0-3]'
 
+const Date_yyyy_mm_dd_RegexSymbol: string = '\\[yyyy-mm-dd]'
+const Date_yyyy_dd_mm_RegexSymbol: string = '\\[yyyy-dd-mm]'
 const Date_dd_Mmm_yyyy_RegexSymbol: string = '\\[dd-Mmm-yyyy]'
 const Date_Mmm_dd_yyyy_RegexSymbol: string = '\\[Mmm-dd-yyyy]'
+const Date_yyyy_Www_mm_dd_RegexSymbol: string = '\\[yyyy-Www (mm-dd)]'
+const Date_yyyy_Www_RegexSymbol: string = '\\[yyyy-Www]'
+const Date_yyyy_WwwISO_RegexSymbol: string = '\\[yyyy-WwwISO]'
 
 const InlineRegexSymbol_CapitalLetter: string = '\\C'
 const InlineRegexSymbol_LowercaseLetter: string = '\\l'
@@ -373,8 +385,13 @@ const sortingSymbolsArr: Array<string> = [
 	escapeRegexUnsafeCharacters(CompoundRomanNumberDashRegexSymbol),
 	escapeRegexUnsafeCharacters(WordInASCIIRegexSymbol),
 	escapeRegexUnsafeCharacters(WordInAnyLanguageRegexSymbol),
+	escapeRegexUnsafeCharacters(Date_yyyy_mm_dd_RegexSymbol),
+	escapeRegexUnsafeCharacters(Date_yyyy_dd_mm_RegexSymbol),
 	escapeRegexUnsafeCharacters(Date_dd_Mmm_yyyy_RegexSymbol),
-	escapeRegexUnsafeCharacters(Date_Mmm_dd_yyyy_RegexSymbol)
+	escapeRegexUnsafeCharacters(Date_Mmm_dd_yyyy_RegexSymbol),
+	escapeRegexUnsafeCharacters(Date_yyyy_Www_mm_dd_RegexSymbol),
+	escapeRegexUnsafeCharacters(Date_yyyy_WwwISO_RegexSymbol),
+	escapeRegexUnsafeCharacters(Date_yyyy_Www_RegexSymbol),
 ]
 
 const sortingSymbolsRegex = new RegExp(sortingSymbolsArr.join('|'), 'gi')
@@ -442,8 +459,13 @@ export const CompoundDashRomanNumberNormalizerFn: NormalizerFn = (s: string) => 
 export const NumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s)
 export const CompoundDotNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DOT_SEPARATOR)
 export const CompoundDashNumberNormalizerFn: NormalizerFn = (s: string) => getNormalizedNumber(s, DASH_SEPARATOR)
+export const Date_yyyy_mm_dd_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_yyyy_mm_dd_NormalizerFn(s)
+export const Date_yyyy_dd_mm_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_yyyy_dd_mm_NormalizerFn(s)
 export const Date_dd_Mmm_yyyy_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_dd_Mmm_yyyy_NormalizerFn(s)
 export const Date_Mmm_dd_yyyy_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_Mmm_dd_yyyy_NormalizerFn(s)
+export const Date_yyyy_Www_mm_dd_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn(s)
+export const Date_yyyy_WwwISO_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_yyyy_WwwISO_NormalizerFn(s)
+export const Date_yyyy_Www_NormalizerFn: NormalizerFn = (s: string) => getNormalizedDate_yyyy_Www_NormalizerFn(s)
 
 export enum AdvancedRegexType {
 	None, // to allow if (advancedRegex)
@@ -455,8 +477,13 @@ export enum AdvancedRegexType {
 	CompoundDashRomanNumber,
 	WordInASCII,
 	WordInAnyLanguage,
+	Date_yyyy_mm_dd,
+	Date_yyyy_dd_mm,
 	Date_dd_Mmm_yyyy,
-	Date_Mmm_dd_yyyy
+	Date_Mmm_dd_yyyy,
+	Date_yyyy_Www_mm_dd_yyyy,
+	Date_yyyy_WwwISO,
+	Date_yyyy_Www
 }
 
 const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
@@ -501,6 +528,16 @@ const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 		advancedRegexType: AdvancedRegexType.WordInAnyLanguage,
 		unicodeRegex: true
 	},
+	[Date_yyyy_mm_dd_RegexSymbol]: { // Intentionally retain character case
+		regexpStr: Date_yyyy_mm_dd_RegexStr,
+		normalizerFn: Date_yyyy_mm_dd_NormalizerFn,
+		advancedRegexType: AdvancedRegexType.Date_yyyy_mm_dd
+	},
+	[Date_yyyy_dd_mm_RegexSymbol]: { // Intentionally retain character case
+		regexpStr: Date_yyyy_dd_mm_RegexStr,
+		normalizerFn: Date_yyyy_dd_mm_NormalizerFn,
+		advancedRegexType: AdvancedRegexType.Date_yyyy_dd_mm
+	},
 	[Date_dd_Mmm_yyyy_RegexSymbol]: { // Intentionally retain character case
 		regexpStr: Date_dd_Mmm_yyyy_RegexStr,
 		normalizerFn: Date_dd_Mmm_yyyy_NormalizerFn,
@@ -510,6 +547,21 @@ const sortingSymbolToRegexpStr: { [key: string]: RegExpSpecStr } = {
 		regexpStr: Date_Mmm_dd_yyyy_RegexStr,
 		normalizerFn: Date_Mmm_dd_yyyy_NormalizerFn,
 		advancedRegexType: AdvancedRegexType.Date_Mmm_dd_yyyy
+	},
+	[Date_yyyy_Www_mm_dd_RegexSymbol]: { // Intentionally retain character case
+		regexpStr: Date_yyyy_Www_mm_dd_RegexStr,
+		normalizerFn: Date_yyyy_Www_mm_dd_NormalizerFn,
+		advancedRegexType: AdvancedRegexType.Date_yyyy_Www_mm_dd_yyyy
+	},
+	[Date_yyyy_WwwISO_RegexSymbol]: { // Intentionally retain character case
+		regexpStr: Date_yyyy_WwwISO_RegexStr,
+		normalizerFn: Date_yyyy_WwwISO_NormalizerFn,
+		advancedRegexType: AdvancedRegexType.Date_yyyy_WwwISO
+	},
+	[Date_yyyy_Www_RegexSymbol]: { // Intentionally retain character case
+		regexpStr: Date_yyyy_Www_RegexStr,
+		normalizerFn: Date_yyyy_Www_NormalizerFn,
+		advancedRegexType: AdvancedRegexType.Date_yyyy_Www
 	}
 }
 

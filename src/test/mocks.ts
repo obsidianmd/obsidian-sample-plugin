@@ -65,3 +65,33 @@ export const mockTFolderWithDateNamedChildren = (name: string): TFolder => {
 
     return mockTFolder(name, [child1, child2, child3, child4])
 }
+
+export const mockTFolderWithDateWeekNamedChildren = (name: string): TFolder => {
+    // Assume ISO week numbers
+    const child0: TFile = mockTFile('------', 'md')
+    const child1: TFolder = mockTFolder('ABC 2021-W13 (03-29)')
+    const child2: TFile = mockTFile('DEF 2021-W9 (03-01)', 'md')
+    const child3: TFolder = mockTFolder('GHI 2021-W1 (01-04)')
+    const child4: TFile = mockTFile('JKL 2021-W52 (12-27)', 'md')
+    const child5: TFile = mockTFile('MNO 2021-W45 (11-08)', 'md')
+
+    return mockTFolder(name, [child0, child1, child2, child3, child4, child5])
+}
+
+export const mockTFolderWithDateWeekNamedChildrenForISOvsUSweekNumberingTest = (name: string): TFolder => {
+    // Tricky to test handling of both ISO and U.S. weeks numbering.
+    // Sample year with different week numbers in ISO vs. U.S. is 2021 with 1st Jan on Fri, ISO != U.S.
+    // Plain files and folder names to match both week-only and week+date syntax
+    // Their relative ordering depends on week numbering
+    const child0: TFile = mockTFile('------', 'md')
+    const child1: TFile = mockTFile('A 2021-W10 (03-05)', 'md') // Tue date, (ISO) week number invalid, ignored
+    const child2: TFolder = mockTFolder('B ISO:2021-03-08 US:2021-03-01 2021-W10')
+    const child3: TFile = mockTFile('C 2021-W51 (12-17)', 'md') // Tue date, (ISO) week number invalid, ignored
+    const child4: TFile = mockTFile('D ISO:2021-12-20 US:2021-12-13 2021-W51', 'md')
+    const child5: TFolder = mockTFolder('E 2021-W1 (01-01)') // Tue date, to (ISO) week number invalid, ignored
+    const child6: TFolder = mockTFolder('F ISO:2021-01-04 US:2020-12-28 2021-W1')
+    const child7: TFile = mockTFile('FFF2 ISO:2021-12-27 US:2021-12-20 2021-W52', 'md')
+    const child8: TFile = mockTFile('FFF1 ISO:2022-01-03 US:2021-12-27 2021-W53', 'md') // Invalid week, should fall to next year
+
+    return mockTFolder(name, [child0, child1, child2, child3, child4, child5, child6, child7, child8])
+}

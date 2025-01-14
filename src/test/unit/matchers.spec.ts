@@ -10,7 +10,12 @@ import {
 	CompoundRomanNumberDotRegexStr,
 	CompoundRomanNumberDashRegexStr,
 	WordInASCIIRegexStr,
-	WordInAnyLanguageRegexStr, getNormalizedDate_dd_Mmm_yyyy_NormalizerFn
+	WordInAnyLanguageRegexStr,
+	getNormalizedDate_dd_Mmm_yyyy_NormalizerFn,
+	getNormalizedDate_yyyy_Www_NormalizerFn,
+	getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn,
+	getNormalizedDate_yyyy_dd_mm_NormalizerFn,
+	getNormalizedDate_yyyy_mm_dd_NormalizerFn
 } from "../../custom-sort/matchers";
 
 describe('Plain numbers regexp', () => {
@@ -429,5 +434,43 @@ describe('getNormalizedDate_dd_Mmm_yyyy_NormalizerFn', () => {
 	];
 	it.each(params)('>%s< should become %s', (s: string, out: string) => {
 		expect(getNormalizedDate_dd_Mmm_yyyy_NormalizerFn(s)).toBe(out)
+	})
+})
+
+describe('getNormalizedDate_yyyy_dd_mm_NormalizerFn', () => {
+	const params = [
+		['2012-13-01', '2012-01-13//', '2012-13-01//'],
+		['0001-03-02', '0001-02-03//', '0001-03-02//'],
+		['7777-09-1234', '7777-1234-09//', '7777-09-1234//'],
+	];
+	it.each(params)('>%s< should become %s', (s: string, outForDDMM: string, outForMMDD: string) => {
+		expect(getNormalizedDate_yyyy_dd_mm_NormalizerFn(s)).toBe(outForDDMM)
+		expect(getNormalizedDate_yyyy_mm_dd_NormalizerFn(s)).toBe(outForMMDD)
+	})
+})
+
+describe('getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn', () => {
+	const params = [
+		['2012-W0 (01-13)', '2012-01-13//'],
+		['0002-W12 (02-03)', '0002-02-03//'],
+	];
+	it.each(params)('>%s< should become %s', (s: string, out: string) => {
+		expect(getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn(s)).toBe(out)
+	})
+})
+
+describe('getNormalizedDate_yyyy_Www_NormalizerFn', () => {
+	/* ORDER for week numbers vs. dates of 1st day / last day of the week:
+       W1  - exactly on the first day of 1st week - the actual title then decides about relative order
+       W1- - before the first day of 1st week, yet after the last day of prev week)
+       W1+ - after the last day of 1st week, yet before the first day of next week)
+    */
+	const params = [
+		['2012-W1',  '2011-12-26//'],
+		['2012-W1+', '2012-01-01>/'],
+		['2012-W1-', '2011-12-26./'],
+	];
+	it.each(params)('>%s< should become %s', (s: string, out: string) => {
+		expect(getNormalizedDate_yyyy_Www_NormalizerFn(s)).toBe(out)
 	})
 })
