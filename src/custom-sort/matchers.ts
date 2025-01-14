@@ -1,3 +1,7 @@
+import {
+	getDateForWeekOfYear
+} from "../utils/week-of-year";
+
 export const RomanNumberRegexStr: string = ' *([MDCLXVI]+)'; // Roman number
 export const CompoundRomanNumberDotRegexStr: string = ' *([MDCLXVI]+(?:\\.[MDCLXVI]+)*)';// Compound Roman number with dot as separator
 export const CompoundRomanNumberDashRegexStr: string = ' *([MDCLXVI]+(?:-[MDCLXVI]+)*)'; // Compound Roman number with dash as separator
@@ -8,6 +12,9 @@ export const CompoundNumberDashRegexStr: string = ' *(\\d+(?:-\\d+)*)'; // Compo
 
 export const Date_dd_Mmm_yyyy_RegexStr: string = ' *([0-3]*[0-9]-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4})'; // Date like 01-Jan-2020
 export const Date_Mmm_dd_yyyy_RegexStr: string = ' *((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-3]*[0-9]-\\d{4})'; // Date like Jan-01-2020
+
+export const Date_yyyy_Www_mm_dd_RegexStr: string = ' *(\\d{4}-W\\d{1,2} \\(\\d{2}-\\d{2}\\))'
+export const Date_yyyy_Www_RegexStr: string = ' *(\\d{4}-W\\d{1,2})'
 
 export const DOT_SEPARATOR = '.'
 export const DASH_SEPARATOR = '-'
@@ -123,3 +130,52 @@ export function getNormalizedDate_NormalizerFn_for(separator: string, dayIdx: nu
 
 export const getNormalizedDate_dd_Mmm_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 0, 1, 2, MONTHS)
 export const getNormalizedDate_Mmm_dd_yyyy_NormalizerFn = getNormalizedDate_NormalizerFn_for('-', 1, 0, 2, MONTHS)
+
+const DateExtractor_yyyy_Www_mm_dd_Regex = /(\d{4})-W(\d{1,2}) \((\d{2})-(\d{2})\)/
+const DateExtractor_yyyy_Www_Regex = /(\d{4})-W(\d{1,2})/
+
+// Matching groups
+const YEAR_IDX = 1
+const WEEK_IDX = 2
+const MONTH_IDX = 3
+const DAY_IDX = 4
+
+const DECEMBER = 12
+const JANUARY = 1
+
+export function getNormalizedDate_NormalizerFn_yyyy_Www_mm_dd(consumeWeek: boolean, weeksISO?: boolean) {
+	return (s: string): string | null => {
+		// Assumption - the regex date matched against input s, no extensive defensive coding needed
+		const matches = consumeWeek ? DateExtractor_yyyy_Www_Regex.exec(s) : DateExtractor_yyyy_Www_mm_dd_Regex.exec(s)
+		const yearStr = matches![YEAR_IDX]
+		let yearNumber = Number.parseInt(yearStr,10)
+		let monthNumber: number
+		let dayNumber: number
+		if (consumeWeek) {
+			const weekNumberStr = matches![WEEK_IDX]
+			const weekNumber = Number.parseInt(weekNumberStr, 10)
+			const dateForWeek = getDateForWeekOfYear(yearNumber, weekNumber, weeksISO)
+			monthNumber = dateForWeek.getMonth()+1 // 1 - 12
+			dayNumber = dateForWeek.getDate() // 1 - 31
+			// Be careful with edge dates, which can belong to previous or next year
+			if (weekNumber === 1) {
+				if (monthNumber === DECEMBER) {
+					yearNumber--
+				}
+			}
+			if (weekNumber >= 50) {
+				if (monthNumber === JANUARY) {
+					yearNumber++
+				}
+			}
+		} else { // ignore week
+			monthNumber = Number.parseInt(matches![MONTH_IDX],10)
+			dayNumber = Number.parseInt(matches![DAY_IDX], 10)
+		}
+		return `${prependWithZeros(`${yearNumber}`, YEAR_POSITIONS)}-${prependWithZeros(`${monthNumber}`, MONTH_POSITIONS)}-${prependWithZeros(`${dayNumber}`, DAY_POSITIONS)}//`
+	}
+}
+
+export const getNormalizedDate_yyyy_Www_mm_dd_NormalizerFn = getNormalizedDate_NormalizerFn_yyyy_Www_mm_dd(false)
+export const getNormalizedDate_yyyy_WwwISO_NormalizerFn = getNormalizedDate_NormalizerFn_yyyy_Www_mm_dd(true, true)
+export const getNormalizedDate_yyyy_Www_NormalizerFn = getNormalizedDate_NormalizerFn_yyyy_Www_mm_dd(true, false)
