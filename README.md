@@ -157,7 +157,7 @@ The list of automatic sorting orders includes:
 
 > Remarks:
 > In the above list the `-asc` stems from `Ascending` and `-desc` stems from `Descending`.
-> The `order-desc:` and `order-asc:` can be replaced with more concise `<` and `>` varians, for example `< a-z` instead of `order-asc: a-z`
+> The `order-desc:` and `order-asc:` can be replaced with more concise `<` and `>` variants, for example `< a-z` instead of `order-asc: a-z`
 
 ...and additional orders and modifiers:
 - `standard`, `ui selected` - apply whatever order is selected in Obsidian UI of File Explorer
