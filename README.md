@@ -15,8 +15,8 @@
 ## Freely arrange notes and folders in File Explorer (https://obsidian.md plugin)
 
 Take full control of the order of your notes and folders by:
-- **drag and drop** via boookmarks integration, and
-- **config-driven** sorting, allowing the fullest range of finegrained ordering
+- **config-driven** sorting with wide variety of options, allowing the fullest range of fine-grained ordering, or
+- **drag and drop** via bookmarks integration.
 
 The simplest usage scenario is to sort items via drag and drop:
 
@@ -32,8 +32,10 @@ More advanced capabilities available through config-driven sorting:
 - treat folders and files equally or distinctively, you decide
 - fine-grained folder-level or even notes-group-level specification
 - support for fully manual order
-  - list notes and folders names explicitly, or use prefixes or suffixes only
+  - list notes and folders names explicitly in desired order
+  - use prefixes or suffixes notation only for more flexibility
   - wildcard names matching supported
+  - extract numbers and dates from titles and sort by them
 - group and sort notes and folders by notes custom metadata
 - support for automatic sorting by standard and non-standard rules
 - mixing manual and automatic ordering also supported
@@ -42,8 +44,8 @@ More advanced capabilities available through config-driven sorting:
 - grouping by prefix or suffix or prefix and suffix
   - different sorting rules per group even inside the same folder
 - simple to use yet versatile configuration options
-- order configuration stored directly in your note(s) front matter
-  - use a dedicated `sorting-spec:` key in YAML
+- configuration stored directly in your note(s) front matter
+  - use a dedicated `sorting-spec:` key in note properties (aka _metadata_ aka  _frontmatter_ aka _YAML_)
 - folders not set up for the custom order remain on the standard Obsidian sorting
 - support for imposing inheritance of order specifications with flexible exclusion and overriding logic
 
@@ -81,7 +83,7 @@ An illustrative image which shows the reverse alphabetical order applied to the 
 >   - the behavior depends on what files and subfolders you have in your folder
 > - changing the sorting order via the standard Obsidian UI button won't affect your folder, unless...
 >   - ...unless you deactivate the custom sorting via clicking the ribbon button to make it ![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png)
-> - for clarity: the underlying file of the note `sortspec` is obviously `sortspec.md`
+> - for clarity: the underlying file name of the note `sortspec` is obviously `sortspec.md`
 > - in case of troubles refer to the [TL;DR section of advanced README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md#tldr-usage)
 > - feel free to experiment! The plugin works in a non-destructive fashion, and it doesn't modify the content of your vault.
 >   It only changes the order in which the files and folders are displayed in File Explorer
@@ -119,7 +121,7 @@ There are short videos here [How to create or edit a multi‐line property in Ob
 ---
 ## Basic automatic sorting methods
 
-The list of basic automatic sorting orders includes:
+The list of automatic sorting orders includes:
 - `  order-asc: a-z` - **alphabetical order**, aka natural
   - 'a' goes before 'z' and numbers are treated specifically and 2 goes before 11
 - `  order-desc: a-z` - **reverse alphabetical order**, aka reverse natural, aka descending alphabetical
@@ -153,12 +155,32 @@ The list of basic automatic sorting orders includes:
   - for sub-folders the modification date of the most recently modified contained note is taken as folder's modification date
   - sub-folders not containing any notes are pushed to the bottom, alphabetically
 
-> Remark:
-> In the above list the `-asc` stems from `Ascending` and `-desc` stems from `Descending`
+> Remarks:
+> In the above list the `-asc` stems from `Ascending` and `-desc` stems from `Descending`.
+> The `order-desc:` and `order-asc:` can be replaced with more concise `<` and `>` varians, for example `< a-z` instead of `order-asc: a-z`
+
+...and additional orders and modifiers:
+- `standard`, `ui selected` - apply whatever order is selected in Obsidian UI of File Explorer
+- `by-bookmarks-order` - reflect the order of selected group of items in Bookmarks
+- `files-first` or `folders-first` - self explaining
+- `vsc-unicode` or `unicode-charcode` - tricky for geeks
+- `by-metadata:` modifier to use specific metadata for sorting
+- `,` separator to specify two levels of sorting. When combining folder-level and group-level sorting this allows for up to 4 sorting levels
+- `advanced recursive modified` or `advanced recursive created` - a more verbose names for `advanced modified` and `advanced created`
+
+## Patterns to extract numbers or dates from file and folder titles
+
+- `\R+`, `\.R+` or `\-R+` for Roman numbers
+- `\d+`, `\.d+` or `\-d+` for plain numbers or compound plain numbers
+- `\a+` to extract the last word from title
+- `\[yyyy-mm-dd]`, `\[yyyy-dd-mm]`, `\[dd-Mmm-yyyy]`, `\[Mmm-dd-yyyy]`, `\[yyyy-Www (mm-dd)]`, `\[yyyy-Www]` or `\[yyyy-WwwISO]`
+
 
 ## Manual sorting
 
-The **manual ordering of notes and folders** is also done via the sorting configuration.
+The **manual ordering of notes and folders** can have two meanings:
+- by drag & drop, and this is done via Bookmarks integration, enabled by default, or
+- by explicitly listing files and folders in the desired order. This is done via the sorting configuration.
 Refer to the [TL;DR section of advanced README.md](https://github.com/SebastianMC/obsidian-custom-sort/blob/master/docs/advanced-README.md#tldr-usage) for examples and instructions
 
 ## Ribbon icon
@@ -167,11 +189,10 @@ Click the ribbon icon to toggle the plugin between enabled and suspended states.
 
 States of the ribbon icon on large-screen devices (desktops, laptops and tablets like iPad):
 
-- ![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png) Plugin suspended. Custom sorting NOT applied.
+- ![Inactive](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-inactive.png) Custom sorting NOT applied. Plugin suspended or enabled, but the custom sorting was not (yet) applied.
 - ![Active](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-active.png) Plugin active, custom sorting applied.
 - ![Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-error.png) Syntax error in custom sorting configuration.
-- ![General Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-general-error.png) Plugin suspended. General error.
-- ![Sorting not applied](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-not-applied.png) Plugin enabled, but the custom sorting was not applied.
+- ![General Error](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-general-error.png) Plugin suspended. Critical error like File Explorer view not available.
 - ![Static icon](https://raw.githubusercontent.com/SebastianMC/obsidian-custom-sort/master/docs/icons/icon-mobile-initial.png) (Only on large-screen mobile devices like iPad). 
   Plugin enabled. but the custom sorting was not applied.
 
