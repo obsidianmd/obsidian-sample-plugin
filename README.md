@@ -165,6 +165,7 @@ The list of automatic sorting orders includes:
 - `files-first` or `folders-first` - self explaining
 - `vsc-unicode` or `unicode-charcode` - tricky for geeks
 - `by-metadata:` modifier to use specific metadata for sorting
+- `using-extractor:` in connection with `by-metadata:` to use only part of metadata value, for example a date in specified format
 - `,` separator to specify two levels of sorting. When combining folder-level and group-level sorting this allows for up to 4 sorting levels
 - `advanced recursive modified` or `advanced recursive created` - a more verbose names for `advanced modified` and `advanced created`
 
@@ -173,8 +174,13 @@ The list of automatic sorting orders includes:
 - `\R+`, `\.R+` or `\-R+` for Roman numbers
 - `\d+`, `\.d+` or `\-d+` for plain numbers or compound plain numbers
 - `\a+` to extract the last word from title
-- `\[yyyy-mm-dd]`, `\[yyyy-dd-mm]`, `\[dd-Mmm-yyyy]`, `\[Mmm-dd-yyyy]`, `\[yyyy-Www (mm-dd)]`, `\[yyyy-Www]` or `\[yyyy-WwwISO]`
+- `\[yyyy-mm-dd]`, `\[yyyy-dd-mm]`, `\[dd-Mmm-yyyy]`, `\[Mmm-dd-yyyy]`, `\[yyyy-Www (mm-dd)]`, `\[yyyy-Www]` or `\[yyyy-WwwISO]` to extract dates in various formats
 
+## Sorting by note name and note name with file extension
+
+If a folder contains files of various types, e.g. images and .md notes you can extend
+the sorting rules onto file name extensions and, for example, push JPG files before PNG.
+Use the `a-z.` or `true a-z.` syntax to enable that behavior for alphabetical or true alphabetical order.
 
 ## Manual sorting
 
