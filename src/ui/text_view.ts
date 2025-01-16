@@ -7,6 +7,7 @@ import {
 	createSettingsStore,
 	parseSettingsString,
 	toSettingsString,
+	ScopeOption,
 	type SettingValues,
 } from "./settings/settings_store";
 import { get, type Readable, type Writable } from "svelte/store";
@@ -41,10 +42,10 @@ export class KanbanView extends TextFileView {
 		this.settingsStore = createSettingsStore();
 		this.destroySettingsStore = this.settingsStore.subscribe((settings) => {
 			switch (settings.scope) {
-				case "everywhere":
+				case ScopeOption.Everywhere:
 					this.filenameFilter = null;
 					break;
-				case "folder":
+				case ScopeOption.Folder:
 					this.filenameFilter = this.file?.parent?.path ?? null;
 					break;
 				default:

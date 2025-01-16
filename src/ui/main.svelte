@@ -10,7 +10,7 @@
 	import IconButton from "./components/icon_button.svelte";
 	import type { Writable, Readable } from "svelte/store";
 	import type { TaskActions } from "./tasks/actions";
-	import type { SettingValues } from "./settings/settings_store";
+	import { type SettingValues, VisibilityOption } from "./settings/settings_store";
 
 	export let tasksStore: Writable<Task[]>;
 	export let taskActions: TaskActions;
@@ -77,17 +77,17 @@
 	$: ({ 
 		showFilepath = true, 
 		consolidateTags = false, 
-		uncategorizedVisibility = "auto",
-		doneVisibility = "always"
+		uncategorizedVisibility = VisibilityOption.Auto,
+		doneVisibility = VisibilityOption.AlwaysShow
 	} = $settingsStore);
 
 	$: showUncategorizedColumn =
-		uncategorizedVisibility === "always" ||
-		(uncategorizedVisibility === "auto" && tasksByColumn["uncategorised"]?.length > 0);
+		uncategorizedVisibility === VisibilityOption.AlwaysShow ||
+		(uncategorizedVisibility === VisibilityOption.Auto && tasksByColumn["uncategorised"]?.length > 0);
 
 	$: showDoneColumn =
-		doneVisibility === "always" ||
-		(doneVisibility === "auto" && tasksByColumn["done"]?.length > 0);
+		doneVisibility === VisibilityOption.AlwaysShow ||
+		(doneVisibility === VisibilityOption.Auto && tasksByColumn["done"]?.length > 0);
 		
 	async function handleOpenSettings() {
 		openSettings();
