@@ -1,5 +1,3 @@
-//
-
 import { App, Modal, Setting } from "obsidian";
 import type { SettingValues } from "./settings_store";
 
@@ -46,6 +44,16 @@ export class SettingsModal extends Modal {
 				toggle.setValue(this.settings.showFilepath ?? true);
 				toggle.onChange((value) => {
 					this.settings.showFilepath = value;
+				});
+			});
+
+		new Setting(this.contentEl)
+			.setName("Hide uncategorized column")
+			.setDesc("Hide the column for tasks that don't have a column tag assigned")
+			.addToggle((toggle) => {
+				toggle.setValue(this.settings.preventUncategorized ?? false);
+				toggle.onChange((value) => {
+					this.settings.preventUncategorized = value;
 				});
 			});
 

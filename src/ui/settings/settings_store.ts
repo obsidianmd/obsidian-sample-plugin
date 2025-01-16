@@ -1,5 +1,3 @@
-//
-
 import { writable } from "svelte/store";
 import { z } from "zod";
 
@@ -8,6 +6,7 @@ const settingsObject = z.object({
 	scope: z.union([z.literal("everywhere"), z.literal("folder")]),
 	showFilepath: z.boolean().default(true).optional(),
 	consolidateTags: z.boolean().default(false).optional(),
+	preventUncategorized: z.boolean().default(false).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;
@@ -17,6 +16,7 @@ const defaultSettings: SettingValues = {
 	scope: "folder",
 	showFilepath: true,
 	consolidateTags: false,
+	preventUncategorized: false,
 };
 
 export const createSettingsStore = () =>

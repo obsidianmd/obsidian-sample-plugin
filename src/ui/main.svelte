@@ -74,7 +74,7 @@
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
-	$: ({ showFilepath = true, consolidateTags = false } = $settingsStore);
+	$: ({ showFilepath = true, consolidateTags = false, preventUncategorized = false } = $settingsStore);
 
 	async function handleOpenSettings() {
 		openSettings();
@@ -100,6 +100,7 @@
 
 	<div class="columns">
 		<div>
+			{#if !preventUncategorized}
 			<Column
 				column={"uncategorised"}
 				hideOnEmpty={true}
@@ -109,6 +110,7 @@
 				{showFilepath}
 				{consolidateTags}
 			/>
+			{/if}
 			{#each columns as column}
 				<Column
 					{column}
