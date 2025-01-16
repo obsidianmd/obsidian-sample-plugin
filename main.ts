@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
+// Не забудьте переименовать эти классы и интерфейсы!
 
 interface MyPluginSettings {
 	mySetting: string;
@@ -15,20 +15,21 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
+		new Notice('This is a notice!');
+		// Создает иконку в левой боковой панели.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
+			// Вызывается при клике на иконку.
+			this.findTagsInNote();
 			new Notice('This is a notice!');
 		});
-		// Perform additional things with the ribbon
+		// Добавляет дополнительные стили к иконке.
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		// Добавляет элемент в статус-бар внизу приложения. Не работает в мобильных приложениях.
+		// const statusBarItemEl = this.addStatusBarItem();
+		// statusBarItemEl.setText('Status Bar Text');
 
-		// This adds a simple command that can be triggered anywhere
+		// Добавляет простую команду, которую можно вызвать откуда угодно.
 		this.addCommand({
 			id: 'open-sample-modal-simple',
 			name: 'Open sample modal (simple)',
@@ -36,7 +37,7 @@ export default class MyPlugin extends Plugin {
 				new SampleModal(this.app).open();
 			}
 		});
-		// This adds an editor command that can perform some operation on the current editor instance
+		// Добавляет команду для редактора, которая может выполнять операции с текущим экземпляром редактора.
 		this.addCommand({
 			id: 'sample-editor-command',
 			name: 'Sample editor command',
@@ -45,36 +46,36 @@ export default class MyPlugin extends Plugin {
 				editor.replaceSelection('Sample Editor Command');
 			}
 		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
+		// Добавляет сложную команду, которая проверяет, позволяет ли текущее состояние приложения выполнить команду.
 		this.addCommand({
 			id: 'open-sample-modal-complex',
 			name: 'Open sample modal (complex)',
 			checkCallback: (checking: boolean) => {
-				// Conditions to check
+				// Условия для проверки.
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
+					// Если checking равно true, мы просто проверяем, может ли команда быть выполнена.
+					// Если checking равно false, мы выполняем операцию.
 					if (!checking) {
 						new SampleModal(this.app).open();
 					}
 
-					// This command will only show up in Command Palette when the check function returns true
+					// Эта команда появится в палитре команд только если функция проверки возвращает true.
 					return true;
 				}
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
+		// Добавляет вкладку настроек, чтобы пользователь мог настроить различные аспекты плагина.
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
+		// Если плагин подключает глобальные события DOM (на частях приложения, которые не принадлежат этому плагину),
+		// использование этой функции автоматически удалит обработчик события при отключении плагина.
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
 			console.log('click', evt);
 		});
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
+		// При регистрации интервалов эта функция автоматически очистит интервал при отключении плагина.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
@@ -88,6 +89,43 @@ export default class MyPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	/**
+	 * Асинхронно находит и отображает теги в текущей активной Markdown заметке.
+	 * 
+	 * Этот метод получает активное представление типа `MarkdownView` из рабочей области Obsidian.
+	 * Если активное представление не найдено, метод завершает выполнение.
+	 * 
+	 * Затем он получает содержимое активного представления и выводит его в консоль.
+	 * 
+	 * Метод продолжает получать файл, связанный с активным представлением. Если файл не найден, метод завершает выполнение.
+	 * 
+	 * Используя файл, он извлекает кэш файла из метаданных Obsidian. Он извлекает теги как из frontmatter, так и из тела заметки.
+	 * Теги очищаются путем удаления ведущего символа '#'.
+	 * 
+	 * Наконец, метод выводит найденные теги в консоль и отображает уведомление с найденными тегами.
+	 * 
+	 * @returns {Promise<void>} Обещание, которое разрешается, когда теги найдены и отображены.
+	 */
+	async findTagsInNote() {
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!activeView) return;
+
+		const content = activeView.getViewData();
+		console.log('CONTENT', content);
+
+		const file = activeView.file;
+		if (!file) return;
+
+		const fileCache = this.app.metadataCache.getFileCache(file);
+		const tags = [
+			...(fileCache?.frontmatter?.tags.map(tag => tag.replace('#', '')) || []),
+			...(fileCache?.tags?.map(tag => tag.tag.replace('#', '')) || [])
+		];
+
+		console.log('TAGS', tags);
+		new Notice(`Found tags: ${tags.join(', ')}`);
 	}
 }
 
