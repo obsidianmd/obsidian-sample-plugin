@@ -48,13 +48,17 @@ export class SettingsModal extends Modal {
 			});
 
 		new Setting(this.contentEl)
-			.setName("Hide uncategorized column")
-			.setDesc("Hide the column for tasks that don't have a column tag assigned")
-			.addToggle((toggle) => {
-				toggle.setValue(this.settings.preventUncategorized ?? false);
-				toggle.onChange((value) => {
-					this.settings.preventUncategorized = value;
-				});
+			.setName("Uncategorized column visibility")
+			.setDesc("When to show the Uncategorized column")
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption("auto", "Hide when empty")
+					.addOption("never", "Never show")
+					.addOption("always", "Always show")
+					.setValue(this.settings.uncategorizedVisibility ?? "auto")
+					.onChange((value) => {
+						this.settings.uncategorizedVisibility = value as "always" | "auto" | "never";
+					});
 			});
 
 		new Setting(this.contentEl)

@@ -6,7 +6,7 @@ const settingsObject = z.object({
 	scope: z.union([z.literal("everywhere"), z.literal("folder")]),
 	showFilepath: z.boolean().default(true).optional(),
 	consolidateTags: z.boolean().default(false).optional(),
-	preventUncategorized: z.boolean().default(false).optional(),
+	uncategorizedVisibility: z.enum(["auto", "always", "never"]).default("auto").optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;
@@ -16,7 +16,7 @@ const defaultSettings: SettingValues = {
 	scope: "folder",
 	showFilepath: true,
 	consolidateTags: false,
-	preventUncategorized: false,
+	uncategorizedVisibility: "auto",
 };
 
 export const createSettingsStore = () =>

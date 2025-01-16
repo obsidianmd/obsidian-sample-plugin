@@ -74,8 +74,12 @@
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
-	$: ({ showFilepath = true, consolidateTags = false, preventUncategorized = false } = $settingsStore);
+	$: ({ showFilepath = true, consolidateTags = false, uncategorizedVisibility = "auto" } = $settingsStore);
 
+	$: showUncategorizedColumn =
+		uncategorizedVisibility === "always" ||
+		(uncategorizedVisibility === "auto" && tasksByColumn["uncategorised"]?.length > 0);
+		
 	async function handleOpenSettings() {
 		openSettings();
 	}
@@ -100,10 +104,10 @@
 
 	<div class="columns">
 		<div>
-			{#if !preventUncategorized}
+			{#if showUncategorizedColumn}
 			<Column
 				column={"uncategorised"}
-				hideOnEmpty={true}
+				hideOnEmpty={false}
 				tasks={tasksByColumn["uncategorised"]}
 				{taskActions}
 				{columnTagTableStore}
