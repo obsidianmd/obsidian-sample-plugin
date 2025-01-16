@@ -1,5 +1,9 @@
 import { App, Modal, Setting } from "obsidian";
 import type { SettingValues } from "./settings_store";
+import { VisibilityOption, defaultSettings } from "../settings/settings_store";
+import { z } from "zod";
+
+const VisibilityOptionSchema = z.nativeEnum(VisibilityOption);
 
 export class SettingsModal extends Modal {
 	constructor(
@@ -57,7 +61,12 @@ export class SettingsModal extends Modal {
 					.addOption("always", "Always show")
 					.setValue(this.settings.uncategorizedVisibility ?? "auto")
 					.onChange((value) => {
-						this.settings.uncategorizedVisibility = value as "always" | "auto" | "never";
+						const validatedValue =
+							VisibilityOptionSchema.safeParse(value);
+						this.settings.uncategorizedVisibility =
+							validatedValue.success
+								? validatedValue.data
+								: defaultSettings.uncategorizedVisibility;
 					});
 			});
 
@@ -71,7 +80,11 @@ export class SettingsModal extends Modal {
 					.addOption("never", "Never show")
 					.setValue(this.settings.doneVisibility ?? "always")
 					.onChange((value) => {
-						this.settings.doneVisibility = value as "always" | "auto" | "never";
+						const validatedValue =
+							VisibilityOptionSchema.safeParse(value);
+						this.settings.doneVisibility = validatedValue.success
+							? validatedValue.data
+							: defaultSettings.doneVisibility;
 					});
 			});
 
