@@ -62,6 +62,20 @@ export class SettingsModal extends Modal {
 			});
 
 		new Setting(this.contentEl)
+			.setName("Done column visibility")
+			.setDesc("When to show the Done column")
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption("always", "Always show")
+					.addOption("auto", "Hide when empty")
+					.addOption("never", "Never show")
+					.setValue(this.settings.doneVisibility ?? "always")
+					.onChange((value) => {
+						this.settings.doneVisibility = value as "always" | "auto" | "never";
+					});
+			});
+
+		new Setting(this.contentEl)
 			.setName("Consolidate tags")
 			.setDesc(
 				"Consolidate the tags on each task in Kanban into the footer?"

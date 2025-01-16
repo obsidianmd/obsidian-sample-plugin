@@ -7,6 +7,7 @@ const settingsObject = z.object({
 	showFilepath: z.boolean().default(true).optional(),
 	consolidateTags: z.boolean().default(false).optional(),
 	uncategorizedVisibility: z.enum(["auto", "always", "never"]).default("auto").optional(),
+	doneVisibility: z.enum(["auto", "always", "never"]).default("always").optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;
@@ -17,6 +18,7 @@ const defaultSettings: SettingValues = {
 	showFilepath: true,
 	consolidateTags: false,
 	uncategorizedVisibility: "auto",
+	doneVisibility: "always",
 };
 
 export const createSettingsStore = () =>

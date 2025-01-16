@@ -74,11 +74,20 @@
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
-	$: ({ showFilepath = true, consolidateTags = false, uncategorizedVisibility = "auto" } = $settingsStore);
+	$: ({ 
+		showFilepath = true, 
+		consolidateTags = false, 
+		uncategorizedVisibility = "auto",
+		doneVisibility = "always"
+	} = $settingsStore);
 
 	$: showUncategorizedColumn =
 		uncategorizedVisibility === "always" ||
 		(uncategorizedVisibility === "auto" && tasksByColumn["uncategorised"]?.length > 0);
+
+	$: showDoneColumn =
+		doneVisibility === "always" ||
+		(doneVisibility === "auto" && tasksByColumn["done"]?.length > 0);
 		
 	async function handleOpenSettings() {
 		openSettings();
@@ -125,14 +134,17 @@
 					{consolidateTags}
 				/>
 			{/each}
+			{#if showDoneColumn}
 			<Column
 				column="done"
+				hideOnEmpty={false}
 				tasks={tasksByColumn["done"] ?? []}
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
 				{consolidateTags}
 			/>
+			{/if}
 		</div>
 	</div>
 </div>
