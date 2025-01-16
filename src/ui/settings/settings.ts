@@ -38,8 +38,8 @@ export class SettingsModal extends Modal {
 			.setName("Folder scope")
 			.setDesc("Where should we try to find tasks for this Kanban?")
 			.addDropdown((dropdown) => {
-				dropdown.addOption("folder", "This folder");
-				dropdown.addOption("everywhere", "Every folder");
+				dropdown.addOption(ScopeOption.Folder, "This folder");
+				dropdown.addOption(ScopeOption.Everywhere, "Every folder");
 				dropdown.setValue(this.settings.scope);
 				dropdown.onChange((value) => {
 					const validatedValue = ScopeOptionSchema.safeParse(value);
@@ -64,10 +64,13 @@ export class SettingsModal extends Modal {
 			.setDesc("When to show the Uncategorized column")
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOption("auto", "Hide when empty")
-					.addOption("never", "Never show")
-					.addOption("always", "Always show")
-					.setValue(this.settings.uncategorizedVisibility ?? "auto")
+					.addOption(VisibilityOption.Auto, "Hide when empty")
+					.addOption(VisibilityOption.NeverShow, "Never show")
+					.addOption(VisibilityOption.AlwaysShow, "Always show")
+					.setValue(
+						this.settings.uncategorizedVisibility ??
+							VisibilityOption.Auto
+					)
 					.onChange((value) => {
 						const validatedValue =
 							VisibilityOptionSchema.safeParse(value);
@@ -83,10 +86,12 @@ export class SettingsModal extends Modal {
 			.setDesc("When to show the Done column")
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOption("always", "Always show")
-					.addOption("auto", "Hide when empty")
-					.addOption("never", "Never show")
-					.setValue(this.settings.doneVisibility ?? "always")
+					.addOption(VisibilityOption.AlwaysShow, "Always show")
+					.addOption(VisibilityOption.Auto, "Hide when empty")
+					.addOption(VisibilityOption.NeverShow, "Never show")
+					.setValue(
+						this.settings.doneVisibility ?? VisibilityOption.Auto
+					)
 					.onChange((value) => {
 						const validatedValue =
 							VisibilityOptionSchema.safeParse(value);
