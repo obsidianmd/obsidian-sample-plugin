@@ -18,6 +18,7 @@ export class SettingsModal extends Modal {
 	) {
 		super(app);
 	}
+
 	onOpen() {
 		this.contentEl.createEl("h1", { text: "Settings" });
 
@@ -64,9 +65,9 @@ export class SettingsModal extends Modal {
 			.setDesc("When to show the Uncategorized column")
 			.addDropdown((dropdown) => {
 				dropdown
+					.addOption(VisibilityOption.AlwaysShow, "Always show")
 					.addOption(VisibilityOption.Auto, "Hide when empty")
 					.addOption(VisibilityOption.NeverShow, "Never show")
-					.addOption(VisibilityOption.AlwaysShow, "Always show")
 					.setValue(
 						this.settings.uncategorizedVisibility ??
 							VisibilityOption.Auto
