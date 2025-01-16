@@ -1,9 +1,14 @@
 import { App, Modal, Setting } from "obsidian";
 import type { SettingValues } from "./settings_store";
-import { VisibilityOption, defaultSettings } from "../settings/settings_store";
+import {
+	VisibilityOption,
+	ScopeOption,
+	defaultSettings,
+} from "../settings/settings_store";
 import { z } from "zod";
 
 const VisibilityOptionSchema = z.nativeEnum(VisibilityOption);
+const ScopeOptionSchema = z.nativeEnum(ScopeOption);
 
 export class SettingsModal extends Modal {
 	constructor(
@@ -37,7 +42,10 @@ export class SettingsModal extends Modal {
 				dropdown.addOption("everywhere", "Every folder");
 				dropdown.setValue(this.settings.scope);
 				dropdown.onChange((value) => {
-					this.settings.scope = value as "folder" | "everywhere";
+					const validatedValue = ScopeOptionSchema.safeParse(value);
+					this.settings.scope = validatedValue.success
+						? validatedValue.data
+						: defaultSettings.scope;
 				});
 			});
 

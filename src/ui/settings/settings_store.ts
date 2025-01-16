@@ -7,9 +7,14 @@ export enum VisibilityOption {
 	AlwaysShow = "always",
 }
 
+export enum ScopeOption {
+	Folder = "folder",
+	Everywhere = "everywhere",
+}
+
 const settingsObject = z.object({
 	columns: z.array(z.string()),
-	scope: z.union([z.literal("everywhere"), z.literal("folder")]),
+	scope: z.nativeEnum(ScopeOption).default(ScopeOption.Folder),
 	showFilepath: z.boolean().default(true).optional(),
 	consolidateTags: z.boolean().default(false).optional(),
 	uncategorizedVisibility: z
@@ -26,7 +31,7 @@ export type SettingValues = z.infer<typeof settingsObject>;
 
 export const defaultSettings: SettingValues = {
 	columns: ["Later", "Soonish", "Next week", "This week", "Today", "Pending"],
-	scope: "folder",
+	scope: ScopeOption.Folder,
 	showFilepath: true,
 	consolidateTags: false,
 	uncategorizedVisibility: VisibilityOption.Auto,
