@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, Tasks, TFile } from 'obsidian';
 
 // Не забудьте переименовать эти классы и интерфейсы!
 
@@ -19,8 +19,13 @@ export default class MyPlugin extends Plugin {
 		// Создает иконку в левой боковой панели.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
 			// Вызывается при клике на иконку.
-			this.findTagsInNote();
-			new Notice('This is a notice!');
+			this.findTagsInNote().then(tags => {
+				if (tags) {
+					new Notice('Tags: ' + tags.join(', '));
+				} else {
+					new Notice('No tags found.');
+				}
+			});
 		});
 		// Добавляет дополнительные стили к иконке.
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -29,40 +34,22 @@ export default class MyPlugin extends Plugin {
 		// const statusBarItemEl = this.addStatusBarItem();
 		// statusBarItemEl.setText('Status Bar Text');
 
-		// Добавляет простую команду, которую можно вызвать откуда угодно.
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
 		// Добавляет команду для редактора, которая может выполнять операции с текущим экземпляром редактора.
 		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// Добавляет сложную команду, которая проверяет, позволяет ли текущее состояние приложения выполнить команду.
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Условия для проверки.
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// Если checking равно true, мы просто проверяем, может ли команда быть выполнена.
-					// Если checking равно false, мы выполняем операцию.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// Эта команда появится в палитре команд только если функция проверки возвращает true.
-					return true;
-				}
+			id: 'scan-root-folder',
+			name: 'Scan notes in root folder',
+			callback: async () => {
+				const fileList = await this.scanFolder();
+				fileList.forEach((file) => {
+					const tagsForScan = ['art', '🍆']
+					const tags = this.findTagsInNote(file);
+					tags.then((tags)=>{
+						if (tagsForScan.every(tag => (tags ?? []).includes(tag))) {
+							console.log('FOUND', file.name);
+							this.moveFileToFolder(file, 'temp')
+						}
+					})
+				});
 			}
 		});
 
@@ -72,7 +59,7 @@ export default class MyPlugin extends Plugin {
 		// Если плагин подключает глобальные события DOM (на частях приложения, которые не принадлежат этому плагину),
 		// использование этой функции автоматически удалит обработчик события при отключении плагина.
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
+			// console.log('click', evt);
 		});
 
 		// При регистрации интервалов эта функция автоматически очистит интервал при отключении плагина.
@@ -108,25 +95,72 @@ export default class MyPlugin extends Plugin {
 	 * 
 	 * @returns {Promise<void>} Обещание, которое разрешается, когда теги найдены и отображены.
 	 */
-	async findTagsInNote() {
-		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!activeView) return;
+	async findTagsInNote(file?: TFile) {
+		let activeFile = file;
 
-		const content = activeView.getViewData();
-		console.log('CONTENT', content);
+		if (!activeFile) {
+			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (!activeView) {
+				return;
+			}
+			if (activeView.file) {
+				activeFile = activeView.file;
+			}
+		}
 
-		const file = activeView.file;
-		if (!file) return;
+		if (!activeFile) {
+			return;
+		}
 
-		const fileCache = this.app.metadataCache.getFileCache(file);
-		const tags = [
-			...(fileCache?.frontmatter?.tags.map(tag => tag.replace('#', '')) || []),
-			...(fileCache?.tags?.map(tag => tag.tag.replace('#', '')) || [])
-		];
+		const content = await this.app.vault.read(activeFile);
+		// console.log('CONTENT \n', content);
 
-		console.log('TAGS', tags);
-		new Notice(`Found tags: ${tags.join(', ')}`);
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		// console.log('FILECACHE', fileCache);
+
+		const frontmatterTags = (fileCache?.frontmatter?.tag || []).map((tag) => {
+			return tag ? tag.replace(/#/g, '') : '';
+		});
+
+		const fileCacheTags = (fileCache?.tags || []).map((tag) => {
+			return tag.tag ? tag.tag.replace(/#/g, '') : '';
+		});
+
+		let tags = [...new Set([...frontmatterTags, ...fileCacheTags])];
+		// console.log('frontmatterTags', frontmatterTags);
+		// console.log('fileCacheTags', fileCacheTags);
+		// console.log('TAGS', tags);
+		// new Notice(`Found tags: ${tags.join(', ')}`);
+		return tags;
 	}
+
+	async scanFolder(path?: string, recursive: boolean = true) {
+		recursive = false;
+		if (!path || path === '/') {
+			path = '';
+		}
+		const files = this.app.vault.getMarkdownFiles();
+		const filteredFiles = files.filter((file) => {
+			if (recursive) {
+				return file.path.startsWith(path);
+			} else {
+				return file.path.startsWith(path) && file.path.split('/').length === path.split('/').length;
+			}
+		})
+		return filteredFiles;
+	}
+
+	async moveFileToFolder(file: TFile, targetFolder: string) {
+		try {
+			const newPath = `${targetFolder}/${file.name}`;
+			await this.app.vault.rename(file, newPath);
+			console.log(`Moved ${file.name} to ${newPath}`);
+		}
+		catch (e) {
+			console.error(`Failed to move file ${file.name} to ${targetFolder}` ,e);
+		}
+	}
+	
 }
 
 class SampleModal extends Modal {

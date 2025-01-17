@@ -1,6 +1,6 @@
 {
-	"id": "ZZZ-sample-plugin",
-	"name": "ZZSample Plugin",
+	"id": "AAA-sample-plugin",
+	"name": "AA Sample Plugin",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Demonstrates some of the capabilities of the Obsidian API.",
