@@ -78,3 +78,25 @@ To add a tag to a task, add the text, '#[tag name]' to anywhere within your task
 
 **Filtering tasks within the kanban view**
 To filter tasks when in the kanban view, type the tag name into the filter bar at the top of the kanban. You can select as many tags as you like.Your kanban will now only display tasks that include that tag.
+
+## Development instructions
+
+TODO
+
+### Deployment
+
+When you are ready to make a new deployment, following the following steps.
+
+1. Update the version number (using semver) in the following locations:
+   - package.json
+   - manifest.json
+   - versions.json
+2. Commit this change.
+3. Create a new tag for the target version number by:
+	1. `$: git tag -a 1.0.1 -m "1.0.1"` (replace `1.0.1` in all places with the actual target version)
+	2. `$: git push origin 1.0.1`
+4. Push everything to GitHub.
+5. Wait while a github action creates a new Release.
+6. Go to `https://github.com/chrskerr/task-list-kanban/releases`
+7. Edit the new Draft release which has been created to add release notes, and the click Publish.
+
