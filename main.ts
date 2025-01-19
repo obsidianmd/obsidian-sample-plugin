@@ -1,38 +1,59 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, Tasks, TFile } from 'obsidian';
+import { App, MarkdownView, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 
-// Не забудьте переименовать эти классы и интерфейсы!
-
-interface MyPluginSettings {
+interface PluginConfiguration {
 	mySetting: string;
+	rules?: any; // Add the rules property
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: PluginConfiguration = {
 	mySetting: 'default'
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class MoveNotePlugin extends Plugin {
+	settings: PluginConfiguration;
 
+	/**
+	 * Этот метод вызывается при загрузке плагина.
+	 * Он выполняет следующие действия:
+	 * - Загружает настройки плагина.
+	 * - Отображает уведомление для пользователя.
+	 * - Создает иконку в левой панели, при клике на которую извлекаются и отображаются теги из текущей заметки.
+	 * - Добавляет команду в редактор для сканирования заметок в корневой папке и перемещения файлов с определенными тегами в временную папку.
+	 * - Добавляет вкладку настроек для плагина.
+	 * - Регистрирует интервал, который выводит сообщение в консоль каждые 5 минут.
+	 * 
+	 * @returns {Promise<void>} Обещание, которое разрешается при завершении процесса загрузки.
+	 */
 	async onload() {
 		await this.loadSettings();
-		new Notice('This is a notice!');
+		const rules = this.settings.rules;
 		// Создает иконку в левой боковой панели.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
+		const ribbonIconEl = this.addRibbonIcon('dice', 'Move File', (evt: MouseEvent) => {
 			// Вызывается при клике на иконку.
-			this.findTagsInNote().then(tags => {
-				if (tags) {
-					new Notice('Tags: ' + tags.join(', '));
-				} else {
-					new Notice('No tags found.');
-				}
+			rules.forEach((rule: any) => {
+				const includeTags = rule?.include?.tags||[];
+				const excludeTags = rule?.exclude?.tags||[]; 
+
+				this.getTagsFromNote().then(tags => {
+					if (tags) {
+						const activeFile = this.app.workspace.getActiveFile();
+						if (activeFile) {
+							//вставить сюда код 
+							if (includeTags.every((tag) => tags.includes(tag)) && !excludeTags.some((tag) => tags.includes(tag))) {//проверяем наличие всех тегов из списка в тегах файла
+								new Notice(`Удовлетворяет правилу ${rule.name}`);
+								this.moveFileToFolder(activeFile, rule.targetFolder);
+							}
+						} else {
+							new Notice('Не выбран активный файл.');
+						}
+					} else {
+						new Notice('Не удовлетворяет правилам для переноса');
+					}
+				});
 			});
-		});
+	});
 		// Добавляет дополнительные стили к иконке.
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// Добавляет элемент в статус-бар внизу приложения. Не работает в мобильных приложениях.
-		// const statusBarItemEl = this.addStatusBarItem();
-		// statusBarItemEl.setText('Status Bar Text');
 
 		// Добавляет команду для редактора, которая может выполнять операции с текущим экземпляром редактора.
 		this.addCommand({
@@ -41,26 +62,23 @@ export default class MyPlugin extends Plugin {
 			callback: async () => {
 				const fileList = await this.scanFolder();
 				fileList.forEach((file) => {
-					const tagsForScan = ['art', '🍆']
-					const tags = this.findTagsInNote(file);
-					tags.then((tags)=>{
-						if (tagsForScan.every(tag => (tags ?? []).includes(tag))) {
-							console.log('FOUND', file.name);
-							this.moveFileToFolder(file, 'temp')
-						}
+					this.settings.rules.forEach((rule: any) => {
+						const includeTags = rule?.include?.tags||[];
+						const excludeTags = rule?.exclude?.tags||[]; 
+						const tags = this.getTagsFromNote(file);
+						tags.then((tags)=>{//получаем теги из файла
+							if (includeTags.every((tag) => tags.includes(tag)) && !excludeTags.some((tag) => tags.includes(tag))) {//проверяем наличие всех тегов из списка в тегах файла
+								this.moveFileToFolder(file, rule.targetFolder)//перемещаем файл в папку
+								new Notice(` ${file.name} удовлетворяет правилу ${rule.name}`);
+							}
+						})
 					})
 				});
 			}
 		});
 
 		// Добавляет вкладку настроек, чтобы пользователь мог настроить различные аспекты плагина.
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// Если плагин подключает глобальные события DOM (на частях приложения, которые не принадлежат этому плагину),
-		// использование этой функции автоматически удалит обработчик события при отключении плагина.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			// console.log('click', evt);
-		});
+		this.addSettingTab(new MoveNoteSettingTab(this.app, this));
 
 		// При регистрации интервалов эта функция автоматически очистит интервал при отключении плагина.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
@@ -79,23 +97,12 @@ export default class MyPlugin extends Plugin {
 	}
 
 	/**
-	 * Асинхронно находит и отображает теги в текущей активной Markdown заметке.
+	 * Извлекает теги из указанного файла заметки или из текущего активного файла заметки.
 	 * 
-	 * Этот метод получает активное представление типа `MarkdownView` из рабочей области Obsidian.
-	 * Если активное представление не найдено, метод завершает выполнение.
-	 * 
-	 * Затем он получает содержимое активного представления и выводит его в консоль.
-	 * 
-	 * Метод продолжает получать файл, связанный с активным представлением. Если файл не найден, метод завершает выполнение.
-	 * 
-	 * Используя файл, он извлекает кэш файла из метаданных Obsidian. Он извлекает теги как из frontmatter, так и из тела заметки.
-	 * Теги очищаются путем удаления ведущего символа '#'.
-	 * 
-	 * Наконец, метод выводит найденные теги в консоль и отображает уведомление с найденными тегами.
-	 * 
-	 * @returns {Promise<void>} Обещание, которое разрешается, когда теги найдены и отображены.
+	 * @param {TFile} [file] - Файл заметки, из которого нужно извлечь теги. Если не указан, будет использован текущий активный файл заметки.
+	 * @returns {Promise<string[] | undefined>} Обещание, которое разрешается массивом уникальных тегов, найденных в файле заметки, или undefined, если файл не указан или не активен.
 	 */
-	async findTagsInNote(file?: TFile) {
+	async getTagsFromNote(file?: TFile) {
 		let activeFile = file;
 
 		if (!activeFile) {
@@ -112,29 +119,29 @@ export default class MyPlugin extends Plugin {
 			return;
 		}
 
-		const content = await this.app.vault.read(activeFile);
-		// console.log('CONTENT \n', content);
-
-		const fileCache = this.app.metadataCache.getFileCache(activeFile);
-		// console.log('FILECACHE', fileCache);
-
-		const frontmatterTags = (fileCache?.frontmatter?.tag || []).map((tag) => {
-			return tag ? tag.replace(/#/g, '') : '';
+		
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);// Получает кэш-файл для указанного файла.
+		const frontmatterTags = (fileCache?.frontmatter?.tags || fileCache?.frontmatter?.tag || []).map((tag:string) => { // Извлекает теги из метаданных файла.
+			return tag ? tag.replace(/#/g, '') : ''; // Удаляет символ # из тега.
 		});
 
-		const fileCacheTags = (fileCache?.tags || []).map((tag) => {
-			return tag.tag ? tag.tag.replace(/#/g, '') : '';
+		const fileCacheTags = (fileCache?.tags || []).map((tag) => { // Извлекает теги из кэш-файла.
+			return tag.tag ? tag.tag.replace(/#/g, '') : ''; // Удаляет символ # из тега.
 		});
 
-		let tags = [...new Set([...frontmatterTags, ...fileCacheTags])];
-		// console.log('frontmatterTags', frontmatterTags);
-		// console.log('fileCacheTags', fileCacheTags);
-		// console.log('TAGS', tags);
-		// new Notice(`Found tags: ${tags.join(', ')}`);
+
+		let tags = [...new Set([...frontmatterTags, ...fileCacheTags])]; // Объединяет теги из метаданных и кэш-файла, удаляя дубликаты.
 		return tags;
 	}
 
-	async scanFolder(path?: string, recursive: boolean = true) {
+	/**
+	 * Сканирует папку и возвращает список файлов Markdown.
+	 * 
+	 * @param {string} [path] - Путь к папке, которую нужно сканировать. Если не указан, сканируется корневая папка.
+	 * @param {boolean} [recursive=true] - Флаг, указывающий, нужно ли сканировать папку рекурсивно.
+	 * @returns {Promise<TFile[]>} Обещание, которое разрешается массивом файлов Markdown, найденных в указанной папке.
+	 */
+	async scanFolder(path?: string, recursive: boolean = true): Promise<TFile[]> {
 		recursive = false;
 		if (!path || path === '/') {
 			path = '';
@@ -146,43 +153,37 @@ export default class MyPlugin extends Plugin {
 			} else {
 				return file.path.startsWith(path) && file.path.split('/').length === path.split('/').length;
 			}
-		})
+		});
 		return filteredFiles;
 	}
 
+	/**
+	 * Перемещает файл в указанную целевую папку в хранилище.
+	 *
+	 * @param file - Файл, который нужно переместить.
+	 * @param targetFolder - Путь к целевой папке, куда нужно переместить файл.
+	 * @returns Обещание, которое разрешается, когда файл успешно перемещен.
+	 * @throws Выбрасывает ошибку, если файл не может быть перемещен.
+	 */
 	async moveFileToFolder(file: TFile, targetFolder: string) {
 		try {
+			// Переименовываем файл, чтобы переместить его в целевую
 			const newPath = `${targetFolder}/${file.name}`;
 			await this.app.vault.rename(file, newPath);
-			console.log(`Moved ${file.name} to ${newPath}`);
-		}
-		catch (e) {
-			console.error(`Failed to move file ${file.name} to ${targetFolder}` ,e);
+			new Notice(`Файл перемещен ${file.name} to ${newPath}`);
+		} catch (e) {
+			new Notice(`⚠️Failed to move file ${file.name} to ${targetFolder}`);
+			console.error(e);
 		}
 	}
+
 	
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+class MoveNoteSettingTab extends PluginSettingTab {
+	plugin: MoveNotePlugin;
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: MoveNotePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

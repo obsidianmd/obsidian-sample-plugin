@@ -1,10 +1,10 @@
 {
-	"id": "AAA-sample-plugin",
-	"name": "AA Sample Plugin",
-	"version": "1.0.0",
+	"id": "AAA-move-note-plugin",
+	"name": "AA Move Note Plugin",
+	"version": "0.0.1a",
 	"minAppVersion": "0.15.0",
 	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
+	"author": "NoRFoLK",
 	"authorUrl": "https://obsidian.md",
 	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
