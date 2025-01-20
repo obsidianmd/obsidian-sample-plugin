@@ -167,7 +167,8 @@ The list of automatic sorting orders includes:
 - `by-metadata:` modifier to use specific metadata for sorting
 - `using-extractor:` in connection with `by-metadata:` to use only part of metadata value, for example a date in specified format
 - `,` separator to specify two levels of sorting. When combining folder-level and group-level sorting this allows for up to 4 sorting levels
-- `advanced recursive modified` or `advanced recursive created` - a more verbose names for `advanced modified` and `advanced created`
+- `advanced recursive modified` or `advanced recursive created` - advanced variants of `advanced modified` and `advanced created`. 
+  Use with care on larger vaults because the deep scanning of folder descendants can have impact on performance on mobile devices
 
 ## Patterns to extract numbers or dates from file and folder titles
 
