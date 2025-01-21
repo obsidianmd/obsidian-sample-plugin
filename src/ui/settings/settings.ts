@@ -1,7 +1,14 @@
-//
-
 import { App, Modal, Setting } from "obsidian";
 import type { SettingValues } from "./settings_store";
+import {
+	VisibilityOption,
+	ScopeOption,
+	defaultSettings,
+} from "../settings/settings_store";
+import { z } from "zod";
+
+const VisibilityOptionSchema = z.nativeEnum(VisibilityOption);
+const ScopeOptionSchema = z.nativeEnum(ScopeOption);
 
 export class SettingsModal extends Modal {
 	constructor(
@@ -11,6 +18,7 @@ export class SettingsModal extends Modal {
 	) {
 		super(app);
 	}
+
 	onOpen() {
 		this.contentEl.createEl("h1", { text: "Settings" });
 
@@ -31,11 +39,14 @@ export class SettingsModal extends Modal {
 			.setName("Folder scope")
 			.setDesc("Where should we try to find tasks for this Kanban?")
 			.addDropdown((dropdown) => {
-				dropdown.addOption("folder", "This folder");
-				dropdown.addOption("everywhere", "Every folder");
+				dropdown.addOption(ScopeOption.Folder, "This folder");
+				dropdown.addOption(ScopeOption.Everywhere, "Every folder");
 				dropdown.setValue(this.settings.scope);
 				dropdown.onChange((value) => {
-					this.settings.scope = value as "folder" | "everywhere";
+					const validatedValue = ScopeOptionSchema.safeParse(value);
+					this.settings.scope = validatedValue.success
+						? validatedValue.data
+						: defaultSettings.scope;
 				});
 			});
 
@@ -47,6 +58,48 @@ export class SettingsModal extends Modal {
 				toggle.onChange((value) => {
 					this.settings.showFilepath = value;
 				});
+			});
+
+		new Setting(this.contentEl)
+			.setName("Uncategorized column visibility")
+			.setDesc("When to show the Uncategorized column")
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption(VisibilityOption.AlwaysShow, "Always show")
+					.addOption(VisibilityOption.Auto, "Hide when empty")
+					.addOption(VisibilityOption.NeverShow, "Never show")
+					.setValue(
+						this.settings.uncategorizedVisibility ??
+							VisibilityOption.Auto
+					)
+					.onChange((value) => {
+						const validatedValue =
+							VisibilityOptionSchema.safeParse(value);
+						this.settings.uncategorizedVisibility =
+							validatedValue.success
+								? validatedValue.data
+								: defaultSettings.uncategorizedVisibility;
+					});
+			});
+
+		new Setting(this.contentEl)
+			.setName("Done column visibility")
+			.setDesc("When to show the Done column")
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption(VisibilityOption.AlwaysShow, "Always show")
+					.addOption(VisibilityOption.Auto, "Hide when empty")
+					.addOption(VisibilityOption.NeverShow, "Never show")
+					.setValue(
+						this.settings.doneVisibility ?? VisibilityOption.Auto
+					)
+					.onChange((value) => {
+						const validatedValue =
+							VisibilityOptionSchema.safeParse(value);
+						this.settings.doneVisibility = validatedValue.success
+							? validatedValue.data
+							: defaultSettings.doneVisibility;
+					});
 			});
 
 		new Setting(this.contentEl)

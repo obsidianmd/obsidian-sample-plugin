@@ -10,7 +10,7 @@
 	import IconButton from "./components/icon_button.svelte";
 	import type { Writable, Readable } from "svelte/store";
 	import type { TaskActions } from "./tasks/actions";
-	import type { SettingValues } from "./settings/settings_store";
+	import { type SettingValues, VisibilityOption } from "./settings/settings_store";
 
 	export let tasksStore: Writable<Task[]>;
 	export let taskActions: TaskActions;
@@ -74,8 +74,21 @@
 
 	$: tasksByColumn = groupByColumnTag(filteredByTag);
 
-	$: ({ showFilepath = true, consolidateTags = false } = $settingsStore);
+	$: ({ 
+		showFilepath = true, 
+		consolidateTags = false, 
+		uncategorizedVisibility = VisibilityOption.Auto,
+		doneVisibility = VisibilityOption.AlwaysShow
+	} = $settingsStore);
 
+	$: showUncategorizedColumn =
+		uncategorizedVisibility === VisibilityOption.AlwaysShow ||
+		(uncategorizedVisibility === VisibilityOption.Auto && tasksByColumn["uncategorised"]?.length > 0);
+
+	$: showDoneColumn =
+		doneVisibility === VisibilityOption.AlwaysShow ||
+		(doneVisibility === VisibilityOption.Auto && tasksByColumn["done"]?.length > 0);
+		
 	async function handleOpenSettings() {
 		openSettings();
 	}
@@ -100,15 +113,17 @@
 
 	<div class="columns">
 		<div>
+			{#if showUncategorizedColumn}
 			<Column
 				column={"uncategorised"}
-				hideOnEmpty={true}
+				hideOnEmpty={false}
 				tasks={tasksByColumn["uncategorised"]}
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
 				{consolidateTags}
 			/>
+			{/if}
 			{#each columns as column}
 				<Column
 					{column}
@@ -119,14 +134,17 @@
 					{consolidateTags}
 				/>
 			{/each}
+			{#if showDoneColumn}
 			<Column
 				column="done"
+				hideOnEmpty={false}
 				tasks={tasksByColumn["done"] ?? []}
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
 				{consolidateTags}
 			/>
+			{/if}
 		</div>
 	</div>
 </div>
