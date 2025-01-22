@@ -485,11 +485,19 @@ const ClipperCatalog: React.FC<ClipperCatalogProps> = ({ app, plugin }) => {
                     >
                       <path d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <ArticleTitle 
-                      file={app.vault.getAbstractFileByPath(article.path) as TFile}
-                      content={article.content || ''}
-                      title={article.title}
-                    />
+                    {(() => {
+                      const abstractFile = app.vault.getAbstractFileByPath(article.path);
+                      if (abstractFile instanceof TFile) {
+                        return (
+                          <ArticleTitle 
+                            file={abstractFile}
+                            content={article.content || ''}
+                            title={article.title}
+                          />
+                        );
+                      }
+                      return <span>{article.title}</span>;
+                    })()}
                   </span>
                 </td>
                 <td className="cc-px-4 cc-py-2 clipper-catalog-muted">
@@ -540,114 +548,6 @@ const ClipperCatalog: React.FC<ClipperCatalogProps> = ({ app, plugin }) => {
           </div>
         </div>
       )}
-
-      <style>{`
-        /* Container styles */
-        .clipper-catalog-advanced {
-          background-color: var(--background-secondary);
-          border: 1px solid var(--background-modifier-border);
-        }
-
-        .clipper-catalog-search {
-          background-color: var(--background-secondary);
-          border: 1px solid var(--background-modifier-border);
-        }
-
-        /* Button styles */
-        .clipper-catalog-button {
-          background-color: var(--interactive-accent) !important;
-          color: var(--text-on-accent) !important;
-          transition: opacity 0.2s ease;
-        }
-
-        .clipper-catalog-button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .clipper-catalog-button:hover:not(:disabled) {
-          opacity: 0.9;
-        }
-
-        /* Directory chip styles */
-        .cc-bg-chip {
-          background-color: var(--background-modifier-form-field);
-        }
-
-        .cc-bg-chip-hover {
-          background-color: var(--background-secondary-alt);
-        }
-
-        .cc-text-close-icon {
-          color: var(--background-secondary);
-        }
-        
-        /* For dark theme support */
-        .theme-dark .cc-text-close-icon {
-          color: var(--background-primary);
-        }
-
-        /* Table styles */
-        .clipper-catalog-header-row {
-          border-bottom: 1px solid var(--background-modifier-border);
-        }
-
-        .clipper-catalog-header-cell {
-          color: var(--text-normal);
-        }
-
-        .clipper-catalog-header-cell:hover {
-          background-color: var(--background-modifier-hover);
-        }
-
-        .clipper-catalog-row {
-          border-bottom: 1px solid var(--background-modifier-border);
-        }
-
-        .clipper-catalog-row:hover {
-          background-color: var(--background-modifier-hover);
-        }
-
-        /* Text and icon styles */
-        .clipper-catalog-input {
-          color: var(--text-normal);
-        }
-
-        .clipper-catalog-icon,
-        .clipper-catalog-clear-btn,
-        .clipper-catalog-refresh,
-        .clipper-catalog-muted {
-          color: var(--text-muted);
-        }
-
-        .clipper-catalog-title {
-          color: var(--text-normal);
-        }
-
-        /* Tag styles */
-        .clipper-catalog-tag {
-          background-color: var(--interactive-accent);
-          color: var(--text-on-accent);
-          transition: opacity 0.2s ease;
-        }
-
-        .clipper-catalog-tag:hover {
-          opacity: 0.8;
-        }
-
-        /* Link styles */
-        .clipper-catalog-link {
-          color: var(--text-accent);
-          font-size: 0.75rem;
-          padding: 0.25rem 0;
-          transition: opacity 0.2s ease;
-        }
-
-        .clipper-catalog-link:hover {
-          opacity: 0.8;
-          text-decoration: underline;
-        }
-      `}</style>
     </div>
   );
 };

@@ -48,8 +48,8 @@ export default class ObsidianClipperCatalog extends Plugin {
 
 
     this.addCommand({
-      id: 'open-clipper-catalog',
-      name: 'Open Clipper Catalog',
+      id: 'show-all-clippings',
+      name: 'Show All Clippings',
       callback: () => {
         // Get active leaf or create new one in center
         const leaf = this.app.workspace.getLeaf('tab');
@@ -108,10 +108,6 @@ class ClipperCatalogSettingTab extends PluginSettingTab {
       cls: 'advanced-settings-name'
     });
 
-    // Add some styling to the heading element
-    settingsHeader.style.padding = '10px 0';
-    settingsHeader.style.fontWeight = 'bold';
-
     new Setting(containerEl)
     .setName('Property Name')
     .setDesc('Specify which frontmatter property contains your clipped URLs (e.g., "source", "url", "link").')
@@ -121,14 +117,5 @@ class ClipperCatalogSettingTab extends PluginSettingTab {
         this.plugin.settings.sourcePropertyName = value;
         await this.plugin.saveSettings();
       }));
-
-    // Add CSS
-    containerEl.createEl('style', {
-      text: `
-          .text-sm{
-            font-size:.75rem;
-          }
-        `
-    });
   }
 }
