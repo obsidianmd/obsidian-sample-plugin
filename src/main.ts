@@ -305,7 +305,12 @@ export default class CustomSortPlugin
 					this.customSortAppliedAtLeastOnce = false
 					fileExplorer.view.requestSort();
 				} else {
-					this.showNotice('Custom sort File Explorer view problem. See console for detailed message.');
+					if (Platform.isDesktop) {
+						this.showNotice('Custom sort File Explorer view problem. See console for detailed message.')
+					} else { // No console access on mobile
+						this.showNotice(`Custom sort File Explorer view problem - is it visible?`
+						+ ` Can't apply custom sorting when the File Explorer was not displayed at least once.`)
+					}
 					setIcon(this.ribbonIconEl, ICON_SORT_SUSPENDED_GENERAL_ERROR)
 					this.settings.suspended = true
 					this.saveSettings()
