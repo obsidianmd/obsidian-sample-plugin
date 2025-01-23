@@ -5,7 +5,9 @@ import {
 	ConsumedFolderMatchingRegexp,
 	consumeFolderByRegexpExpression,
 	convertPlainStringToRegex,
+	Date_dd_mm_yyyy_NormalizerFn,
 	Date_dd_Mmm_yyyy_NormalizerFn,
+	Date_mm_dd_yyyy_NormalizerFn,
 	Date_Mmm_dd_yyyy_NormalizerFn,
 	Date_yyyy_dd_mm_NormalizerFn,
 	Date_yyyy_mm_dd_NormalizerFn,
@@ -387,6 +389,8 @@ Week number interpreted in ISO standard \\[yyyy-WwwISO]
 Week number interpreted in U.S. standard \\[yyyy-Www]
 \\[yyyy-mm-dd] plain spec 1
 \\[yyyy-dd-mm] plain spec 2
+\\[dd-mm-yyyy] plain spec 3
+\\[mm-dd-yyyy] plain spec 4
 `
 
 const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } = {
@@ -480,10 +484,22 @@ const expectedSortSpecsExampleSortingSymbols: { [key: string]: CustomSortSpec } 
 				normalizerFn: Date_yyyy_dd_mm_NormalizerFn
 			}
 		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *([0-3]*[0-9]-[0-3]*[0-9]-\d{4}) plain spec 3$/i,
+				normalizerFn: Date_dd_mm_yyyy_NormalizerFn
+			}
+		}, {
+			type: CustomSortGroupType.ExactName,
+			regexPrefix: {
+				regex: /^ *([0-3]*[0-9]-[0-3]*[0-9]-\d{4}) plain spec 4$/i,
+				normalizerFn: Date_mm_dd_yyyy_NormalizerFn
+			}
+		}, {
 			type: CustomSortGroupType.Outsiders
 		}],
 		targetFoldersPaths: ['mock-folder'],
-		outsidersGroupIdx: 14
+		outsidersGroupIdx: 16
 	}
 }
 

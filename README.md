@@ -175,7 +175,7 @@ The list of automatic sorting orders includes:
 - `\R+`, `\.R+` or `\-R+` for Roman numbers
 - `\d+`, `\.d+` or `\-d+` for plain numbers or compound plain numbers
 - `\a+` to extract the last word from title
-- `\[yyyy-mm-dd]`, `\[yyyy-dd-mm]`, `\[dd-Mmm-yyyy]`, `\[Mmm-dd-yyyy]`, `\[yyyy-Www (mm-dd)]`, `\[yyyy-Www]` or `\[yyyy-WwwISO]` to extract dates in various formats
+- `\[yyyy-mm-dd]`, `\[yyyy-dd-mm]`, `\[dd-Mmm-yyyy]`, `\[mm-dd-yyyy]`, `\[dd-mm-yyyy]`, `\[Mmm-dd-yyyy]`, `\[yyyy-Www (mm-dd)]`, `\[yyyy-Www]` or `\[yyyy-WwwISO]` to extract dates in various formats
 
 ## Sorting by note name and note name with file extension
 
