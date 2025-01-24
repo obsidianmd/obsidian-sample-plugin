@@ -5,13 +5,17 @@ import { ClipperCatalogView, VIEW_TYPE_CLIPPER_CATALOG } from './ClipperCatalogV
 
 interface ObsidianClipperCatalogSettings {
   sourcePropertyName: string;
+  ignoredDirectories: string[];
+  isAdvancedSettingsExpanded: boolean;
 }
 
 // Add this before the ObsidianClipperCatalog class definition
 export const ICON_NAME = 'clipper-catalog';
 
 const DEFAULT_SETTINGS: ObsidianClipperCatalogSettings = {
-  sourcePropertyName: 'source'
+  sourcePropertyName: 'source',
+  ignoredDirectories: [],
+  isAdvancedSettingsExpanded: false
 }
 
 export default class ObsidianClipperCatalog extends Plugin {

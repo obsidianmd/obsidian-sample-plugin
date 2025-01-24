@@ -51,21 +51,20 @@ const ClipperCatalog: React.FC<ClipperCatalogProps> = ({ app, plugin }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettings>(() => {
-    // Try to load saved settings from localStorage
-    const savedSettings = localStorage.getItem('clipper-catalog-advanced-settings');
-    return savedSettings ? JSON.parse(savedSettings) : {
-      ignoredDirectories: [],
-      isExpanded: false
-    };
+  const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettings>({
+    ignoredDirectories: plugin.settings.ignoredDirectories,
+    isExpanded: plugin.settings.isAdvancedSettingsExpanded
   });
   const [newDirectory, setNewDirectory] = useState('');
 
 
   // Save advanced settings to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('clipper-catalog-advanced-settings', JSON.stringify(advancedSettings));
-  }, [advancedSettings]);
+    // Update plugin settings when advanced settings change
+    plugin.settings.ignoredDirectories = advancedSettings.ignoredDirectories;
+    plugin.settings.isAdvancedSettingsExpanded = advancedSettings.isExpanded;
+    plugin.saveSettings();
+  }, [advancedSettings, plugin]);
 
   // Helper function to check if a path should be ignored
   const isPathIgnored = (filePath: string): boolean => {
