@@ -1,12 +1,15 @@
 import { App, MarkdownView, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import * as path from 'path';
 
 interface PluginConfiguration {
 	mySetting: string;
 	rules?: any; // Add the rules property
+	previousFile: TFile | null; // Add the previousFile property
 }
 
 const DEFAULT_SETTINGS: PluginConfiguration = {
-	mySetting: 'default'
+	mySetting: 'default',
+	previousFile: null
 }
 
 export default class MoveNotePlugin extends Plugin {
@@ -28,30 +31,16 @@ export default class MoveNotePlugin extends Plugin {
 		await this.loadSettings();
 		const rules = this.settings.rules;
 		// Создает иконку в левой боковой панели.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Move File', (evt: MouseEvent) => {
-			// Вызывается при клике на иконку.
-			rules.forEach((rule: any) => {
-				const includeTags = rule?.include?.tags||[];
-				const excludeTags = rule?.exclude?.tags||[]; 
+        const ribbonIconEl = this.addRibbonIcon('dice', 'Move File', (evt: MouseEvent) => {
+            const activeFile = this.app.workspace.getActiveFile();
+            if (activeFile) {
+                this.applyRulesToFile(activeFile, rules);
+            } else {
+                new Notice('Не выбран активный файл.');
+            }
+        });
 
-				this.getTagsFromNote().then(tags => {
-					if (tags) {
-						const activeFile = this.app.workspace.getActiveFile();
-						if (activeFile) {
-							//вставить сюда код 
-							if (includeTags.every((tag) => tags.includes(tag)) && !excludeTags.some((tag) => tags.includes(tag))) {//проверяем наличие всех тегов из списка в тегах файла
-								new Notice(`Удовлетворяет правилу ${rule.name}`);
-								this.moveFileToFolder(activeFile, rule.targetFolder);
-							}
-						} else {
-							new Notice('Не выбран активный файл.');
-						}
-					} else {
-						new Notice('Не удовлетворяет правилам для переноса');
-					}
-				});
-			});
-	});
+
 		// Добавляет дополнительные стили к иконке.
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
@@ -62,17 +51,7 @@ export default class MoveNotePlugin extends Plugin {
 			callback: async () => {
 				const fileList = await this.scanFolder();
 				fileList.forEach((file) => {
-					this.settings.rules.forEach((rule: any) => {
-						const includeTags = rule?.include?.tags||[];
-						const excludeTags = rule?.exclude?.tags||[]; 
-						const tags = this.getTagsFromNote(file);
-						tags.then((tags)=>{//получаем теги из файла
-							if (includeTags.every((tag) => tags.includes(tag)) && !excludeTags.some((tag) => tags.includes(tag))) {//проверяем наличие всех тегов из списка в тегах файла
-								this.moveFileToFolder(file, rule.targetFolder)//перемещаем файл в папку
-								new Notice(` ${file.name} удовлетворяет правилу ${rule.name}`);
-							}
-						})
-					})
+					this.applyRulesToFile(file, rules);
 				});
 			}
 		});
@@ -82,6 +61,14 @@ export default class MoveNotePlugin extends Plugin {
 
 		// При регистрации интервалов эта функция автоматически очистит интервал при отключении плагина.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+
+		// Добавляем обработчик события для выполнения действия при открытии другого файла 
+		this.app.workspace.on('file-open', (file: TFile|null) => {
+			if (this.settings.previousFile && this.settings.previousFile !== file) {
+				this.applyRulesToFile(this.settings.previousFile, rules);
+			}
+			this.settings.previousFile = file;
+		});
 	}
 
 	onunload() {
@@ -177,7 +164,27 @@ export default class MoveNotePlugin extends Plugin {
 		}
 	}
 
-	
+	async applyRulesToFile(file: TFile, rules: any) {
+
+        rules.forEach((rule: any) => {
+            const includeTags = rule?.include?.tags || [];
+            const excludeTags = rule?.exclude?.tags || [];
+			const newPath = path.normalize(`${rule.targetFolder}/${file.name}`);
+			if (path.normalize(file.path) === newPath) {
+				return false}
+            this.getTagsFromNote(file).then(tags => {
+                if (tags) {
+					if (includeTags.every((tag) => tags.includes(tag)) && !excludeTags.some((tag) => tags.includes(tag))) {
+						new Notice(`Удовлетворяет правилу ${rule.name}`);
+						new Notice(`Перемещаем файл ${file.name} в папку ${rule.targetFolder}`);
+						this.moveFileToFolder(file, rule.targetFolder);
+						return true;
+					} else { return false; }
+                }
+            });
+        });
+    }
+
 }
 
 class MoveNoteSettingTab extends PluginSettingTab {
