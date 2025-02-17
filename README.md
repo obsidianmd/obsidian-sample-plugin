@@ -1,11 +1,4 @@
-> | :exclamation:  Breaking changes in Obsidian - always use the newest version of the plugin|
-> |----------------------------------------------|
-> | - Obsidian 1.7.2 - update the plugin to 3.1.0 or newer --> [More details](README.notice.for.Obsidian.1.7.2.md)|
-> | - Obsidian 1.6.3 - update the plugin to 2.1.11 or newer --> [More details](README.notice.for.Obsidian.1.6.3.md)| 
-> | - Obsidian 1.6.0 - update the plugin to 2.1.9 or newer --> [More details](README.notice.for.Obsidian.1.6.0.md)| 
-> | - Obsidian 1.5.4 - update the plugin to 2.1.7 or newer --> [More details](README.notice.for.Obsidian.1.5.4.md)|
-
----
+Obsidian versions compatibility info: [here](README-obsidian-versions-compatibility.md)
 
 > > This is a simple version of README which highlights the **basic scenario and most commonly used feature**
 >
