@@ -7,6 +7,7 @@
 > | - Obsidian 1.6.0 - update the plugin to 2.1.9 or newer --> More details in a dedicated section below.|
 > | - Obsidian 1.5.4 - update the plugin to 2.1.7 or newer --> More details in a dedicated section below.|
 
+---
 > | :exclamation:  Breaking changes in Obsidian 1.7.2 - update the plugin to 3.1.0 or newer|
 > |----------------------------------------------|
 >
@@ -43,6 +44,7 @@
 > - [#169: Not working on mobile](https://github.com/SebastianMC/obsidian-custom-sort/issues/169)
 >
 
+---
 > | :exclamation:  Breaking changes in Obsidian 1.6.3 causing a minor issue - update the plugin to 2.1.11 or newer|
 > |----------------------------------------------|
 >
@@ -53,6 +55,7 @@
 >
 > For more details of the observed misbehavior (of not updated plugin) you can go to [#147](https://github.com/SebastianMC/obsidian-custom-sort/issues/147)
 
+---
 > | :exclamation:  Breaking changes in Obsidian 1.6.0 (and newer) - update the plugin to 2.1.9 or newer|
 > |----------------------------------------------|
 >
@@ -63,6 +66,7 @@
 >
 > For more details of the observed misbehavior (of not updated plugin) you can go to [#145](https://github.com/SebastianMC/obsidian-custom-sort/issues/145)
 
+---
 > | :exclamation:  Breaking changes in Obsidian 1.5.4 (and newer) - update the plugin to 2.1.7 or newer|
 > |----------------------------------------------|
 >
