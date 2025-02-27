@@ -12,6 +12,11 @@ This **GitHub Sync Plugin** allows you to synchronize your Obsidian notes with a
 
 ## 📥 Installation
 
+### **From Obsidian Community Plugins**
+1. Open **Obsidian** and go to **Settings → Community Plugins**.
+2. Click **Browse**, search for **GitHub Sync**, and click **Install**.
+3. Enable the plugin from the **Installed Plugins** list.
+
 ### **Manual Installation**
 1. Download the latest release from [GitHub Releases](#).
 2. Copy these files to your Obsidian plugin directory:
@@ -70,7 +75,7 @@ This is a security feature to prevent accidental exposure of your GitHub token.
 Yes! Set the **Folder Path** in settings to the specific subfolder you want to sync.
 
 ### *How do I update the plugin?*
-Download the latest version and replace the existing files in your Obsidian plugin folder.
+Download the latest version and replace the existing files in your Obsidian plugin folder, or update via the **Obsidian Community Plugins** tab.
 
 ---
 🚀 **Enjoy seamless GitHub sync in Obsidian!**
