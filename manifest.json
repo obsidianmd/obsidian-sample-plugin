@@ -1,11 +1,8 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+    "id": "github-sync",
+    "name": "GitHub Sync",
+    "author": "Pallab Mukherjee",
+    "description": "Sync your notes with GitHub using API-based commits and pulls.",
+    "version": "1.0.0",
+    "minAppVersion": "1.0.0"
 }
