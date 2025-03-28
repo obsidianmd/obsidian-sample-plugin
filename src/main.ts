@@ -201,7 +201,7 @@ export default class CustomSortPlugin
 		let fileExplorerOrError = this.getFileExplorer()
 		if (fileExplorerOrError.e === FileExplorerStateError.DeferredView) {
 			if (logWarning) {
-				this.logWarningFileExplorerDeferred()
+				this.logDeferredFileExplorerInfo()
 			}
 			return fileExplorerOrError
 		}
@@ -269,9 +269,14 @@ export default class CustomSortPlugin
 		}
 	}
 
-	logWarningFileExplorerDeferred() {
-		const msg = `${PLUGIN_ID} v${this.manifest.version}: failed to get active File Explorer view.\n`
+	logDeferredFileExplorerInfo() {
+		const msg = `${PLUGIN_ID} v${this.manifest.version}: File Explorer is not displayed yet (Obsidian deferred view detected).\n`
 			+ `Until the File Explorer is visible, the custom-sort plugin cannot apply the custom order.\n`
+		console.warn(msg)
+	}
+
+	logDeferredFileExplorerWatcherSetupInfo() {
+		const msg = `${PLUGIN_ID} v${this.manifest.version}: Set up a watcher to apply custom sort automatically when the File Explorer is displayed.\n`
 		console.warn(msg)
 	}
 
@@ -583,7 +588,7 @@ export default class CustomSortPlugin
 		const plugin = this
 		this.app.workspace.onLayoutReady(() => {
 			setTimeout(() => {
-				plugin.initialDelayedApplicationOfCustomSorting.apply(this)
+				plugin.delayedApplicationOfCustomSorting.apply(this)
 			},
 			plugin.settings.delayForInitialApplication)
 		})
@@ -682,7 +687,30 @@ export default class CustomSortPlugin
 		return false
 	}
 
-	initialDelayedApplicationOfCustomSorting() {
+	setWatcherForDelayedFileExplorerView() {
+		const self = this
+		const fullyFledgedFileExplorerElementSelector = () => document.querySelector('[data-type="file-explorer"] .nav-files-container');
+
+		const mutationObserver = new MutationObserver((_, observerInstance) => {
+			const fullyFledgedFileExplorerElement = fullyFledgedFileExplorerElementSelector();
+			if (fullyFledgedFileExplorerElement) {
+				observerInstance.disconnect();
+				self.delayedApplicationOfCustomSorting(true)
+			}
+		});
+		const workspaceElement = document.querySelector(".workspace");
+		if (workspaceElement) {
+			mutationObserver.observe(workspaceElement, {
+				childList: true,
+				subtree: true
+			});
+		}
+	}
+
+	// Entering this method for the first time after initial delay after plugin loaded (via setTimeout()),
+	// and if first attempt is unsuccessful, then entering this method again from DOM watcher, when
+	// the File Explorer view gets transformed from delayed view into fully-fledged active view
+	delayedApplicationOfCustomSorting(fromDOMwatcher?: boolean) {
 		if (!this?.isThePluginStillInstalledAndEnabled()) {
 			console.log(`${PLUGIN_ID} v${this.manifest.version} - delayed handler skipped, plugin no longer active.`)
 			return
@@ -695,7 +723,20 @@ export default class CustomSortPlugin
 			return
 		}
 
-		this.switchPluginStateTo(true)
+		if (!fromDOMwatcher) {
+			// Only for the first delayed invocation:
+			// If file explorer is delayed, configure the watcher
+			// NOTE: Do not configure the watcher if the file explorer is not available
+			let fileExplorerOrError: FileExplorerLeafOrError = this.checkFileExplorerIsAvailableAndPatchable()
+			if (fileExplorerOrError.e === FileExplorerStateError.DeferredView) {
+				this.logDeferredFileExplorerWatcherSetupInfo()
+				this.setWatcherForDelayedFileExplorerView()
+			} else { // file explorer is available or does not exist
+				this.switchPluginStateTo(true)
+			}
+		} else {
+			this.switchPluginStateTo(true)
+		}
 	}
 
 	setRibbonIconToEnabled() {
