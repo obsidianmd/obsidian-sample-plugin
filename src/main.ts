@@ -78,9 +78,14 @@ type MonkeyAroundUninstaller = () => void
 
 type ContextMenuProvider = (item: MenuItem) => void
 
-enum FileExplorerStateError {
-	DoesNotExist,
+enum FileExplorerState {
+	DoesNotExist = 1,
 	DeferredView
+}
+
+interface FileExplorerStateError {
+	state: FileExplorerState
+	fileExplorerInDeferredState?: FileExplorerLeaf
 }
 
 type FileExplorerLeafOrError = ValueOrError<FileExplorerLeaf,FileExplorerStateError>
@@ -188,18 +193,23 @@ export default class CustomSortPlugin
 
 		if (fileExplorer) {
 			if (fileExplorer.isDeferred) {
-				return fileExplorerOrError.setError(FileExplorerStateError.DeferredView)
+				return fileExplorerOrError.setError({
+					state: FileExplorerState.DeferredView,
+					fileExplorerInDeferredState: fileExplorer
+				})
 			} else {
 				return fileExplorerOrError.setValue(fileExplorer)
 			}
 		} else {
-			return fileExplorerOrError.setError(FileExplorerStateError.DoesNotExist)
+			return fileExplorerOrError.setError({
+				state: FileExplorerState.DoesNotExist
+			})
 		}
 	}
 
 	checkFileExplorerIsAvailableAndPatchable(logWarning: boolean = true): FileExplorerLeafOrError {
 		let fileExplorerOrError = this.getFileExplorer()
-		if (fileExplorerOrError.e === FileExplorerStateError.DeferredView) {
+		if (fileExplorerOrError.e && fileExplorerOrError.e.state === FileExplorerState.DeferredView) {
 			if (logWarning) {
 				this.logDeferredFileExplorerInfo()
 			}
@@ -687,22 +697,30 @@ export default class CustomSortPlugin
 		return false
 	}
 
-	setWatcherForDelayedFileExplorerView() {
+	setWatcherForDelayedFileExplorerView(fileExplorerInDeferredState?: FileExplorerLeaf) {
 		const self = this
-		const fullyFledgedFileExplorerElementSelector = () => document.querySelector('[data-type="file-explorer"] .nav-files-container');
 
-		const mutationObserver = new MutationObserver((_, observerInstance) => {
-			const fullyFledgedFileExplorerElement = fullyFledgedFileExplorerElementSelector();
-			if (fullyFledgedFileExplorerElement) {
-				observerInstance.disconnect();
-				self.delayedApplicationOfCustomSorting(true)
-			}
-		});
-		const workspaceElement = document.querySelector(".workspace");
-		if (workspaceElement) {
-			mutationObserver.observe(workspaceElement, {
+		let workspaceLeafContentElementParentToObserve: HTMLElement|Element|null|undefined = fileExplorerInDeferredState?.view?.containerEl?.parentElement
+		if (!workspaceLeafContentElementParentToObserve) {
+			// Fallback for the case when DOM is not available for deferred file explorer
+			// (did not happen in practice, but just in case)
+			workspaceLeafContentElementParentToObserve = document.querySelector(".workspace");
+		}
+		if (workspaceLeafContentElementParentToObserve) {
+			const fullyFledgedFileExplorerElementSelector=
+					() => workspaceLeafContentElementParentToObserve.querySelector('[data-type="file-explorer"] .nav-files-container');
+
+			const mutationObserver = new MutationObserver((_, observerInstance) => {
+				const fullyFledgedFileExplorerElement = fullyFledgedFileExplorerElementSelector();
+				if (fullyFledgedFileExplorerElement) {
+					observerInstance.disconnect();
+					self.delayedApplicationOfCustomSorting(self.FROM_DOM_WATCHER)
+				}
+			});
+
+			mutationObserver.observe(workspaceLeafContentElementParentToObserve, {
 				childList: true,
-				subtree: true
+				subtree: false
 			});
 		}
 	}
@@ -710,6 +728,7 @@ export default class CustomSortPlugin
 	// Entering this method for the first time after initial delay after plugin loaded (via setTimeout()),
 	// and if first attempt is unsuccessful, then entering this method again from DOM watcher, when
 	// the File Explorer view gets transformed from delayed view into fully-fledged active view
+	FROM_DOM_WATCHER: boolean = true
 	delayedApplicationOfCustomSorting(fromDOMwatcher?: boolean) {
 		if (!this?.isThePluginStillInstalledAndEnabled()) {
 			console.log(`${PLUGIN_ID} v${this.manifest.version} - delayed handler skipped, plugin no longer active.`)
@@ -728,10 +747,15 @@ export default class CustomSortPlugin
 			// If file explorer is delayed, configure the watcher
 			// NOTE: Do not configure the watcher if the file explorer is not available
 			let fileExplorerOrError: FileExplorerLeafOrError = this.checkFileExplorerIsAvailableAndPatchable()
-			if (fileExplorerOrError.e === FileExplorerStateError.DeferredView) {
+			if (fileExplorerOrError.e && fileExplorerOrError.e.state === FileExplorerState.DeferredView) {
 				this.logDeferredFileExplorerWatcherSetupInfo()
-				this.setWatcherForDelayedFileExplorerView()
-			} else { // file explorer is available or does not exist
+				this.setWatcherForDelayedFileExplorerView(fileExplorerOrError.e.fileExplorerInDeferredState)
+			} else if (fileExplorerOrError.e) {
+				// file explorer other error - does not exist
+				// force the plugin switch state to report error and show the error icon
+				this.switchPluginStateTo(true)
+			}
+			else { // file explorer is available
 				this.switchPluginStateTo(true)
 			}
 		} else {
