@@ -276,7 +276,7 @@ export default class CustomSortPlugin
 	}
 
 	logDeferredFileExplorerWatcherSetupInfo() {
-		const msg = `${PLUGIN_ID} v${this.manifest.version}: Set up a watcher to apply custom sort automatically when the File Explorer is displayed.\n`
+		const msg = `${PLUGIN_ID} v${this.manifest.version}: A watcher was set up to apply custom sort automatically when the File Explorer is displayed.\n`
 		console.warn(msg)
 	}
 
