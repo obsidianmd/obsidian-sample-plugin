@@ -1,134 +1,109 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin, TFile } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
+export default class SummarizeThisPlugin extends Plugin {
+  async onload() {
+    this.addCommand({
+      id: 'summarize-this-note',
+      name: 'Summarize This Note',
+      callback: () => this.summarizeNote()
+    });
+  }
 
-interface MyPluginSettings {
-	mySetting: string;
-}
+  async summarizeNote() {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) {
+      console.warn("No active file.");
+      return;
+    }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+    const content = await this.app.vault.read(file);
+    
+    // Start streaming the summary directly to the note
+    await this.streamSummaryToNote(content, file);
+  }
+  
+  async streamSummaryToNote(content: string, file: TFile): Promise<void> {
+    try {
+      // Prepare the summary section
+      const summaryMarker = "\n\n## Summary\n";
+      const updatedContent = content + summaryMarker;
+      
+      // Add the summary section to the note
+      await this.app.vault.modify(file, updatedContent);
+      
+      // Set up streaming request to Ollama
+      const response = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3.2:latest',
+          prompt: `You are a helpful assistant that summarizes notes. Think step by step to identify the main themes and key information before drafting the summary. Create an overview, key information, and a conclusion.\n\nContext:\n${content}`,
+          stream: true
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      // Process the stream
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Failed to get stream reader");
+      }
+      
+      let fullText = '';
+      const decoder = new TextDecoder();
+      
+      let streaming = true;
+      while (streaming) {
+        const { done, value } = await reader.read();
+        if (done) {
+          streaming = false;
+          break;
+        }
+        
+        // Decode the chunk
+        const chunk = decoder.decode(value, { stream: true });
+        
+        // Parse JSON response (each line is a JSON object)
+        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+        
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            if (data.response) {
+              fullText += data.response;
+              // Update the note with the latest content
+              await this.app.vault.modify(file, content + summaryMarker + fullText);
+            }
+          } catch (e) {
+            console.warn("Error parsing JSON from stream:", e);
+          }
+        }
+      }
+      
+      console.log("Streaming completed");
+    } catch (error) {
+      console.error("Error streaming summary:", error);
+      // If there was an error, update the note with an error message
+      await this.app.vault.modify(file, content + "\n\n## Summary\n[Error generating summary: " + (error.message || "Unknown error") + "]");
+    }
+  }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+  // Kept for compatibility or non-streaming use if needed
+  async queryOllama(noteContent: string): Promise<string> {
+    const response = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama3.2:latest',
+        prompt: `You are a helpful assistant that summarizes notes. Think step by step to identify the main themes and key information before drafting the summary. Create an overview, key information, and a conclusion.\n\nContext:\n${noteContent}`,
+        stream: false
+      })
+    });
 
-	async onload() {
-		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+    const data = await response.json();
+    return data.response ?? '[No summary returned]';
+  }
 }
