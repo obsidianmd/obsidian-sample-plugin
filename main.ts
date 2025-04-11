@@ -1,12 +1,32 @@
-import { Plugin, TFile } from 'obsidian';
+import { Plugin, TFile, PluginSettingTab, Setting } from 'obsidian';
+
+interface SummarizeThisPluginSettings {
+	serverUrl: string;
+}
+
+const DEFAULT_SETTINGS: SummarizeThisPluginSettings = {
+	serverUrl: 'http://localhost:11434'
+};
 
 export default class SummarizeThisPlugin extends Plugin {
+  settings: SummarizeThisPluginSettings;
+
   async onload() {
+    await this.loadSettings();
     this.addCommand({
       id: 'summarize-this-note',
       name: 'Summarize This Note',
       callback: () => this.summarizeNote()
     });
+    this.addSettingTab(new SummarizeThisPluginSettingTab(this.app, this));
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
   }
 
   async summarizeNote() {
@@ -32,7 +52,7 @@ export default class SummarizeThisPlugin extends Plugin {
       await this.app.vault.modify(file, updatedContent);
       
       // Set up streaming request to Ollama
-      const response = await fetch('http://localhost:11434/api/generate', {
+      const response = await fetch(`${this.settings.serverUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +113,7 @@ export default class SummarizeThisPlugin extends Plugin {
 
   // Kept for compatibility or non-streaming use if needed
   async queryOllama(noteContent: string): Promise<string> {
-    const response = await fetch('http://localhost:11434/api/generate', {
+    const response = await fetch(`${this.settings.serverUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -105,5 +125,31 @@ export default class SummarizeThisPlugin extends Plugin {
 
     const data = await response.json();
     return data.response ?? '[No summary returned]';
+  }
+}
+
+/// A new settings tab to let the user configure the server URL
+class SummarizeThisPluginSettingTab extends PluginSettingTab {
+  plugin: SummarizeThisPlugin;
+
+  constructor(app: any, plugin: SummarizeThisPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    new Setting(containerEl)
+      .setName('Local Server URL')
+      .setDesc('The URL of your local Ollama server')
+      .addText(text => text
+        .setPlaceholder('http://localhost:11434')
+        .setValue(this.plugin.settings.serverUrl)
+        .onChange(async (value) => {
+          this.plugin.settings.serverUrl = value.trim();
+          await this.plugin.saveSettings();
+        }));
   }
 }
