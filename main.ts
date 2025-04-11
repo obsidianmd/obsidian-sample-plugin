@@ -1,4 +1,4 @@
-import { Plugin, TFile, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin, TFile, PluginSettingTab, Setting, Modal, Notice } from 'obsidian';
 
 interface SummarizeThisPluginSettings {
 	serverUrl: string;
@@ -7,6 +7,110 @@ interface SummarizeThisPluginSettings {
 const DEFAULT_SETTINGS: SummarizeThisPluginSettings = {
 	serverUrl: 'http://localhost:11434'
 };
+
+const DEFAULT_PROMPT = `You are a helpful assistant that summarizes notes. Think step by step to identify the main themes and key information before drafting the summary. Create an overview, key information, and a conclusion.`;
+
+class PromptModal extends Modal {
+  private plugin: SummarizeThisPlugin;
+  private promptText: string;
+  private content: string;
+  private file: TFile;
+  
+  constructor(plugin: SummarizeThisPlugin, content: string, file: TFile) {
+    super(plugin.app);
+    this.plugin = plugin;
+    this.promptText = DEFAULT_PROMPT;
+    this.content = content;
+    this.file = file;
+  }
+  
+  onOpen() {
+    const {contentEl} = this;
+    
+    contentEl.createEl('h2', {text: 'Customize Summary Prompt'});
+    
+    contentEl.createEl('p', {
+      text: 'Edit the prompt below that will be sent to the model. This prompt will COMPLETELY REPLACE the default prompt - not combine with it.'
+    });
+    
+    // Add preset buttons for common use cases
+    const presetContainer = contentEl.createEl('div', {
+      attr: {
+        style: 'display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;'
+      }
+    });
+    
+    const createPresetButton = (text: string, prompt: string) => {
+      const btn = presetContainer.createEl('button', {text: text});
+      btn.addEventListener('click', () => {
+        promptTextArea.value = prompt;
+        this.promptText = prompt;
+      });
+      return btn;
+    };
+    
+    createPresetButton('Default Summary', DEFAULT_PROMPT);
+    createPresetButton('Extract Tasks', 'You are a task extraction tool. Your ONLY job is to identify and list all tasks, todos, and action items from the provided text. Format each task as a bullet point. Do NOT include any explanations, summaries, or non-task content.');
+    createPresetButton('Key Points', 'Extract only the key points and important facts from the text. Present them as a bulleted list with no additional commentary.');
+    createPresetButton('Simplify', 'Simplify this text to make it easy to understand. Use plain language and short sentences.');
+    
+    // Example prompts section
+    contentEl.createEl('p', {
+      text: 'Examples of effective prompts:',
+      attr: {style: 'margin-bottom: 5px; font-weight: bold;'}
+    });
+    
+    const examplesList = contentEl.createEl('ul');
+    [
+      "Extract and list ONLY the tasks mentioned in this note. Format as bullet points.",
+      "Identify the main topics and provide a 3-sentence summary for each.",
+      "Create a timeline of events mentioned in this document."
+    ].forEach(example => {
+      examplesList.createEl('li', {text: example});
+    });
+    
+    const promptTextArea = contentEl.createEl('textarea', {
+      attr: {
+        style: 'width: 100%; height: 200px; font-family: monospace;'
+      }
+    });
+    promptTextArea.value = this.promptText;
+    promptTextArea.addEventListener('input', () => {
+      this.promptText = promptTextArea.value;
+    });
+    
+    const buttonContainer = contentEl.createEl('div', {
+      attr: {
+        style: 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;'
+      }
+    });
+    
+    // Cancel button
+    const cancelButton = buttonContainer.createEl('button', {text: 'Cancel'});
+    cancelButton.addEventListener('click', () => {
+      this.close();
+    });
+    
+    // Submit button
+    const submitButton = buttonContainer.createEl('button', {
+      text: 'Generate Summary',
+      cls: 'mod-cta'
+    });
+    submitButton.addEventListener('click', () => {
+      this.plugin.streamSummaryToNote(
+        this.content, 
+        this.file,
+        this.promptText
+      );
+      this.close();
+    });
+  }
+  
+  onClose() {
+    const {contentEl} = this;
+    contentEl.empty();
+  }
+}
 
 export default class SummarizeThisPlugin extends Plugin {
   settings: SummarizeThisPluginSettings;
@@ -32,17 +136,26 @@ export default class SummarizeThisPlugin extends Plugin {
   async summarizeNote() {
     const file = this.app.workspace.getActiveFile();
     if (!file) {
+      new Notice("No active file to summarize");
       console.warn("No active file.");
       return;
     }
 
     const content = await this.app.vault.read(file);
     
-    // Start streaming the summary directly to the note
-    await this.streamSummaryToNote(content, file);
+    try {
+      // Show a notice that we're opening the modal
+      new Notice("Opening prompt customization modal...");
+      // Open modal to customize prompt
+      const modal = new PromptModal(this, content, file);
+      modal.open();
+    } catch (error) {
+      console.error("Error opening modal:", error);
+      new Notice("Error opening modal. Check console for details.");
+    }
   }
   
-  async streamSummaryToNote(content: string, file: TFile): Promise<void> {
+  async streamSummaryToNote(content: string, file: TFile, customPrompt?: string): Promise<void> {
     try {
       // Prepare the summary section
       const summaryMarker = "\n\n## Summary\n";
@@ -51,13 +164,19 @@ export default class SummarizeThisPlugin extends Plugin {
       // Add the summary section to the note
       await this.app.vault.modify(file, updatedContent);
       
+      // Use either custom prompt or default prompt
+      const promptToUse = customPrompt || DEFAULT_PROMPT;
+      
+      // For clarity, log what prompt is being used
+      console.log("Using prompt:", promptToUse);
+      
       // Set up streaming request to Ollama
       const response = await fetch(`${this.settings.serverUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'llama3.2:latest',
-          prompt: `You are a helpful assistant that summarizes notes. Think step by step to identify the main themes and key information before drafting the summary. Create an overview, key information, and a conclusion.\n\nContext:\n${content}`,
+          prompt: `${promptToUse}\n\nContext:\n${content}`,
           stream: true
         })
       });
@@ -111,14 +230,15 @@ export default class SummarizeThisPlugin extends Plugin {
     }
   }
 
-  // Kept for compatibility or non-streaming use if needed
-  async queryOllama(noteContent: string): Promise<string> {
+  async queryOllama(noteContent: string, customPrompt?: string): Promise<string> {
+    const promptToUse = customPrompt || DEFAULT_PROMPT;
+    
     const response = await fetch(`${this.settings.serverUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama3.2:latest',
-        prompt: `You are a helpful assistant that summarizes notes. Think step by step to identify the main themes and key information before drafting the summary. Create an overview, key information, and a conclusion.\n\nContext:\n${noteContent}`,
+        prompt: `${promptToUse}\n\nContext:\n${noteContent}`,
         stream: false
       })
     });
@@ -128,7 +248,6 @@ export default class SummarizeThisPlugin extends Plugin {
   }
 }
 
-/// A new settings tab to let the user configure the server URL
 class SummarizeThisPluginSettingTab extends PluginSettingTab {
   plugin: SummarizeThisPlugin;
 
