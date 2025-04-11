@@ -1,5 +1,8 @@
 import { Plugin, TFile, PluginSettingTab, Setting, Modal, Notice } from 'obsidian';
 
+/**
+ * Settings interface for the SummarizeThis plugin
+ */
 interface SummarizeThisPluginSettings {
 	serverUrl: string;
 }
@@ -8,8 +11,14 @@ const DEFAULT_SETTINGS: SummarizeThisPluginSettings = {
 	serverUrl: 'http://localhost:11434'
 };
 
+/**
+ * Default prompt template for generating summaries
+ */
 const DEFAULT_PROMPT = `You are a helpful assistant that summarizes notes. Think step by step to identify the main themes and key information before drafting the summary. Create an overview, key information, and a conclusion.`;
 
+/**
+ * Modal for customizing the prompt before generating a summary
+ */
 class PromptModal extends Modal {
   private plugin: SummarizeThisPlugin;
   private promptText: string;
@@ -112,41 +121,55 @@ class PromptModal extends Modal {
   }
 }
 
+/**
+ * SummarizeThis plugin for Obsidian
+ * Enables users to generate summaries of their notes using Ollama LLM
+ */
 export default class SummarizeThisPlugin extends Plugin {
   settings: SummarizeThisPluginSettings;
 
   async onload() {
     await this.loadSettings();
+    
+    // Register the command to summarize the current note
     this.addCommand({
       id: 'summarize-this-note',
       name: 'Summarize This Note',
       callback: () => this.summarizeNote()
     });
+    
     this.addSettingTab(new SummarizeThisPluginSettingTab(this.app, this));
   }
 
+  /**
+   * Loads saved plugin settings or uses defaults
+   */
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
 
+  /**
+   * Saves current plugin settings
+   */
   async saveSettings() {
     await this.saveData(this.settings);
   }
 
+  /**
+   * Initiates the note summarization process
+   * Gets the active file and opens the prompt customization modal
+   */
   async summarizeNote() {
     const file = this.app.workspace.getActiveFile();
     if (!file) {
       new Notice("No active file to summarize");
-      console.warn("No active file.");
       return;
     }
 
     const content = await this.app.vault.read(file);
     
     try {
-      // Show a notice that we're opening the modal
-      new Notice("Opening prompt customization modal...");
-      // Open modal to customize prompt
+      new Notice("Opening prompt customization...");
       const modal = new PromptModal(this, content, file);
       modal.open();
     } catch (error) {
@@ -155,6 +178,13 @@ export default class SummarizeThisPlugin extends Plugin {
     }
   }
   
+  /**
+   * Streams a summary from the LLM to the note using Ollama's streaming API
+   * 
+   * @param content - The content to summarize
+   * @param file - The file to append the summary to
+   * @param customPrompt - Optional custom prompt to override default
+   */
   async streamSummaryToNote(content: string, file: TFile, customPrompt?: string): Promise<void> {
     try {
       // Prepare the summary section
@@ -164,11 +194,7 @@ export default class SummarizeThisPlugin extends Plugin {
       // Add the summary section to the note
       await this.app.vault.modify(file, updatedContent);
       
-      // Use either custom prompt or default prompt
       const promptToUse = customPrompt || DEFAULT_PROMPT;
-      
-      // For clarity, log what prompt is being used
-      console.log("Using prompt:", promptToUse);
       
       // Set up streaming request to Ollama
       const response = await fetch(`${this.settings.serverUrl}/api/generate`, {
@@ -182,7 +208,7 @@ export default class SummarizeThisPlugin extends Plugin {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`API request failed with status: ${response.status}`);
       }
       
       // Process the stream
@@ -217,37 +243,60 @@ export default class SummarizeThisPlugin extends Plugin {
               await this.app.vault.modify(file, content + summaryMarker + fullText);
             }
           } catch (e) {
-            console.warn("Error parsing JSON from stream:", e);
+            console.error("Error parsing JSON from stream:", e);
           }
         }
       }
       
-      console.log("Streaming completed");
+      new Notice("Summary complete");
     } catch (error) {
       console.error("Error streaming summary:", error);
-      // If there was an error, update the note with an error message
-      await this.app.vault.modify(file, content + "\n\n## Summary\n[Error generating summary: " + (error.message || "Unknown error") + "]");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      await this.app.vault.modify(
+        file, 
+        content + "\n\n## Summary\n[Error generating summary: " + errorMessage + "]"
+      );
+      new Notice("Failed to generate summary: " + errorMessage);
     }
   }
 
+  /**
+   * Non-streaming version of the Ollama query for simpler implementations
+   * 
+   * @param noteContent - The content to send to the LLM
+   * @param customPrompt - Optional custom prompt to override default
+   * @returns The model's response text
+   */
   async queryOllama(noteContent: string, customPrompt?: string): Promise<string> {
     const promptToUse = customPrompt || DEFAULT_PROMPT;
     
-    const response = await fetch(`${this.settings.serverUrl}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama3.2:latest',
-        prompt: `${promptToUse}\n\nContext:\n${noteContent}`,
-        stream: false
-      })
-    });
+    try {
+      const response = await fetch(`${this.settings.serverUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3.2:latest',
+          prompt: `${promptToUse}\n\nContext:\n${noteContent}`,
+          stream: false
+        })
+      });
 
-    const data = await response.json();
-    return data.response ?? '[No summary returned]';
+      if (!response.ok) {
+        throw new Error(`API request failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.response ?? '[No summary returned]';
+    } catch (error) {
+      console.error("Error querying Ollama:", error);
+      return `[Error: ${error instanceof Error ? error.message : "Unknown error"}]`;
+    }
   }
 }
 
+/**
+ * Settings tab for configuring the SummarizeThis plugin
+ */
 class SummarizeThisPluginSettingTab extends PluginSettingTab {
   plugin: SummarizeThisPlugin;
 
