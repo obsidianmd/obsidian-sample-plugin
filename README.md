@@ -92,3 +92,6 @@ If you have multiple URLs, you can also do:
 ## API Documentation
 
 See https://github.com/obsidianmd/obsidian-api
+
+## Build for Production
+Run `npm run build` to generate an optimized `main.js` that’s suitable for release.
