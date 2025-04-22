@@ -707,8 +707,10 @@ export default class CustomSortPlugin
 			workspaceLeafContentElementParentToObserve = document.querySelector(".workspace");
 		}
 		if (workspaceLeafContentElementParentToObserve) {
+			// Syntax sugar to satisfy the strict TypeScript compiler
+			const fileExplorerParentElement = workspaceLeafContentElementParentToObserve
 			const fullyFledgedFileExplorerElementSelector=
-					() => workspaceLeafContentElementParentToObserve.querySelector('[data-type="file-explorer"] .nav-files-container');
+					() => fileExplorerParentElement.querySelector('[data-type="file-explorer"] .nav-files-container');
 
 			const mutationObserver = new MutationObserver((_, observerInstance) => {
 				const fullyFledgedFileExplorerElement = fullyFledgedFileExplorerElementSelector();
