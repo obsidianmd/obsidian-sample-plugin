@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-custom-sort",
-	"version": "3.1.2",
+	"version": "3.1.3",
 	"description": "Custom Sort plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
