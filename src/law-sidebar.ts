@@ -16,7 +16,7 @@ export class ExampleView extends ItemView {
   }
 
   async onOpen() {
-    console.log(this.containerEl);
+    console.log("Example view opened");
     const container = this.containerEl.children[1];
     container.empty();
     container.createEl("h2", { text: "Gesetzesauszüge" });

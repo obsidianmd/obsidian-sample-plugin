@@ -80,7 +80,7 @@ export default class LawSuggester extends EditorSuggest<OldpSearchResponseItem> 
         if (!this.context) return;
 
         const { start, end } = this.context;
-        console.log('suggestion', suggestion);
+        //console.log('suggestion', suggestion);
 		// keep space at the end for hyper link
         const linkEl = `[${suggestion.title}](${suggestion.link}) `;
         this.context.editor.replaceRange(linkEl, start, end);

@@ -17,8 +17,6 @@ import {
     StateEffect
 } from '@codemirror/state'; 
 
-import { syntaxTree } from '@codemirror/language';
-
 const LawRefMatcher = new MatchDecorator({
   regexp: /\(\((\w+)\)\)/g,
   decoration: match => Decoration.mark({
@@ -38,13 +36,13 @@ class LawRefPluginEditorProcessor implements PluginValue {
     decorations: DecorationSet;
     constructor(view: EditorView) {
         this.decorations = LawRefMatcher.createDeco(view);
-        console.log("halloooo")
+        //console.log("halloooo")
     }
   
     update(update: ViewUpdate) {
         if (update.docChanged || update.viewportChanged) {
             this.decorations = LawRefMatcher.updateDeco(update, this.decorations);
-            console.log("elllooooo")
+            //console.log("elllooooo")
         }
     }
   
