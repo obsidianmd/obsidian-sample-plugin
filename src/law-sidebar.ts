@@ -1,14 +1,14 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 
-export const VIEW_TYPE_EXAMPLE = "example-view";
+export const VIEW_TYPE_LAWREF = "lawref-view";
 
-export class ExampleView extends ItemView {
+export class LawRefView extends ItemView {
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
   }
 
   getViewType() {
-    return VIEW_TYPE_EXAMPLE;
+    return VIEW_TYPE_LAWREF;
   }
 
   getDisplayText() {

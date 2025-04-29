@@ -1,5 +1,5 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, MarkdownPostProcessorContext, parseFrontMatterEntry, View, MarkdownView } from 'obsidian';
-import { ExampleView, VIEW_TYPE_EXAMPLE } from './law-sidebar';
+import { LawRefView, VIEW_TYPE_LAWREF } from './law-sidebar';
 import { OldpApi } from './api/opld';
 import LawSuggester from './lawSuggester';
 import {  lawRefPluginEditorProcessor, } from './law-editor-processor';
@@ -19,7 +19,7 @@ export default class LawRefPlugin extends Plugin {
 	private readonly OldpApi = new OldpApi();
 	async onload() {
 		await this.loadSettings();
-		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf))
+		this.registerView(VIEW_TYPE_LAWREF, (leaf) => new LawRefView(leaf))
 		this.registerEditorExtension(lawRefPluginEditorProcessor);
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new LawRefPluginSettingTab(this.app, this));
@@ -56,7 +56,7 @@ export default class LawRefPlugin extends Plugin {
 		new Notice('Opening view');
 	
 		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_LAWREF);
 
 		//const paragraphs = this.getFrontMatterMeta();
 		
@@ -67,7 +67,7 @@ export default class LawRefPlugin extends Plugin {
 		  // Our view could not be found in the workspace, create a new leaf
 		  // in the right sidebar for it
 		  leaf = workspace.getRightLeaf(false);
-		  await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+		  await leaf.setViewState({ type: VIEW_TYPE_LAWREF, active: true });
 
 
 		}
@@ -87,8 +87,8 @@ export default class LawRefPlugin extends Plugin {
 			if (LawRefList) {
 				console.log(LawRefList);
 			}
-			this.app.workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE).forEach((leaf) => {
-				if (leaf.view instanceof ExampleView) {
+			this.app.workspace.getLeavesOfType(VIEW_TYPE_LAWREF).forEach((leaf) => {
+				if (leaf.view instanceof LawRefView) {
 					const container = leaf.view.containerEl.children[1];
 					container.empty;
 					console.log(container)
