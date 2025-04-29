@@ -1,7 +1,7 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault, Workspace, WorkspaceLeaf, MarkdownPostProcessorContext, parseFrontMatterEntry, View, MarkdownView } from 'obsidian';
 import { LawRefView, VIEW_TYPE_LAWREF } from './law-sidebar';
-import { OldpApi } from './api/opld';
-import LawSuggester from './lawSuggester';
+//import { OldpApi } from './api/opld';
+//import LawSuggester from './lawSuggester';
 import {  lawRefPluginEditorProcessor, } from './law-editor-processor';
 
 // Remember to rename these classes and interfaces!
@@ -16,7 +16,7 @@ const DEFAULT_SETTINGS: LawRefPluginSettings = {
 
 export default class LawRefPlugin extends Plugin {
 	settings: LawRefPluginSettings;
-	private readonly OldpApi = new OldpApi();
+	//private readonly OldpApi = new OldpApi();
 	async onload() {
 		await this.loadSettings();
 		this.registerView(VIEW_TYPE_LAWREF, (leaf) => new LawRefView(leaf))
@@ -25,7 +25,17 @@ export default class LawRefPlugin extends Plugin {
 		this.addSettingTab(new LawRefPluginSettingTab(this.app, this));
 		
 		this.app.workspace.onLayoutReady(() => {this.activateView()});
+		this.app.workspace.on('file-open', (file) => {
+			const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_LAWREF);
+			if (leaves.length > 0) {
+				const view = leaves[0].view as LawRefView;
+				const LawRefList = this.getFrontMatterMeta();
+				if (LawRefList) {
+					view.parseLawRefList(LawRefList);
+				}
+			}
 
+		});
 		/** If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		 Using this function will automatically remove the event listener when this plugin is disabled.
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
@@ -43,7 +53,7 @@ export default class LawRefPlugin extends Plugin {
 
 		// register suggestor on § key
 		if (this.settings.useSuggester===true){
-			this.registerEditorSuggest(new LawSuggester(this))
+			//this.registerEditorSuggest(new LawSuggester(this))
 		}
 
 	}
@@ -76,7 +86,7 @@ export default class LawRefPlugin extends Plugin {
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		workspace.revealLeaf(leaf);
 	}
-	/**async getFrontMatterMeta(){
+	getFrontMatterMeta(){
 		const { workspace } = this.app;
 		const actFile = workspace.getActiveFile();
 		  	if (!actFile) return
@@ -84,20 +94,14 @@ export default class LawRefPlugin extends Plugin {
 			if (!actFilemetadata) return console.log("no metadata");
 			let actFileFrontmatter = actFilemetadata.frontmatter;
 			let LawRefList = parseFrontMatterEntry(actFileFrontmatter, '§');
+			console.log(typeof LawRefList);
 			if (LawRefList) {
 				console.log(LawRefList);
+				return LawRefList;
+			} else {
+				return [];
 			}
-			this.app.workspace.getLeavesOfType(VIEW_TYPE_LAWREF).forEach((leaf) => {
-				if (leaf.view instanceof LawRefView) {
-					const container = leaf.view.containerEl.children[1];
-					container.empty;
-					console.log(container)
-					LawRefList.forEach((element:string) => {
-						const elementResponse = this.OldpApi.search(element);
-						container.createEl("p", {cls: "LawRefContainer", text: element})});
-				}
-			  });
-	}**/
+	}
 
 
 	async loadSettings() {

@@ -1,3 +1,5 @@
+/**
+
 import LawRefPlugin from "./main";
 import { Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, TFile } from "obsidian";
 import { OldpApi, OldpSearchResponseItem } from "./api/opld";
@@ -86,3 +88,4 @@ export default class LawSuggester extends EditorSuggest<OldpSearchResponseItem> 
         this.context.editor.replaceRange(linkEl, start, end);
     }
 }
+ */
