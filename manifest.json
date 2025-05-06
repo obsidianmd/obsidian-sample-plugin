@@ -1,11 +1,11 @@
 {
-	"id": "hello-world",
-	"name": "Hello world",
+	"id": "auto-archive-fleeting-notes",
+	"name": "Auto Archive Fleeting Notes",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
+	"description": "Automatically moves Fleeting notes to an Archive folder after a set number of days.",
+	"author": "Your Name",
+	"authorUrl": "https://yourwebsite.com",
 	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
 }
