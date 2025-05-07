@@ -1,9 +1,9 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "grid-background",
+	"name": "Grid Background",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Adds a customizable grid background to note views.",
+	"description": "Adds a customisable grid background to note views.",
 	"author": "Nathan Nguyen",
 	"isDesktopOnly": false
 }

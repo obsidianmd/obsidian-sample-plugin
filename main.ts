@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, ColorComponent, TextComponent, SliderComponent, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface GridBackgroundSettings {
 	gridSize: number;
@@ -54,6 +54,7 @@ export default class GridBackgroundPlugin extends Plugin {
 
 class GridBackgroundSettingTab extends PluginSettingTab {
 	plugin: GridBackgroundPlugin;
+	sliderGridSize: SliderComponent;
 
 	constructor(app: App, plugin: GridBackgroundPlugin) {
 		super(app, plugin);
@@ -65,17 +66,44 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl('h2', { text: 'Grid Background Settings' });
 
-    new Setting(containerEl)
+    const gridSizeSetting = new Setting(containerEl)
       .setName('Grid Size')
-      .setDesc('Spacing between grid lines (in px)')
-      .addText(text =>
-        text
-          .setPlaceholder('e.g. 20')
-          .setValue(this.plugin.settings.gridSize.toString())
-          .onChange(async (value) => {
-            this.plugin.settings.gridSize = parseInt(value) || 20;
-            await this.plugin.saveSettings();
-          }));
+      .setDesc('Spacing between grid lines (in px)');
+
+    const gridSizeSlider = gridSizeSetting.addSlider(sliderValue =>
+      sliderValue
+        .setInstant(true)
+        .setValue(this.plugin.settings.gridSize)
+        .setLimits(20, 100, 1)
+        .onChange(async (value) => {
+          this.plugin.settings.gridSize = value || 20;
+          (gridSizeText.components[0] as TextComponent).setValue(value.toString());
+          await this.plugin.saveSettings();
+        })
+    );
+
+    const gridSizeText = gridSizeSetting.addText(text =>
+      text
+        .setPlaceholder('e.g. 20')
+        .setValue(this.plugin.settings.gridSize.toString())
+        .onChange(async (value) => {
+          this.plugin.settings.gridSize = parseInt(value) || 20;
+          (gridSizeText.components[0] as TextComponent).setValue(value.toString());
+          await this.plugin.saveSettings();
+        })
+    );
+
+    gridSizeSetting.addButton(button =>
+      button
+        .setButtonText('Reset')
+        .setCta()
+        .onClick(async () => {
+          this.plugin.settings.gridSize = DEFAULT_SETTINGS.gridSize;
+          (gridSizeText.components[0] as TextComponent).setValue(this.plugin.settings.gridSize.toString());
+          (gridSizeSlider.components[0] as SliderComponent).setValue(this.plugin.settings.gridSize);
+          await this.plugin.saveSettings();
+        })
+    );
 
     new Setting(containerEl)
       .setName('Grid Colour')
