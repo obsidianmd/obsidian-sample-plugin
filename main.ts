@@ -68,42 +68,34 @@ class GridBackgroundSettingTab extends PluginSettingTab {
 
     const gridSizeSetting = new Setting(containerEl)
       .setName('Grid Size')
-      .setDesc('Spacing between grid lines (in px)');
-
-    const gridSizeSlider = gridSizeSetting.addSlider(sliderValue =>
-      sliderValue
-        .setInstant(true)
-        .setValue(this.plugin.settings.gridSize)
-        .setLimits(20, 100, 1)
-        .onChange(async (value) => {
-          this.plugin.settings.gridSize = value || 20;
-          (gridSizeText.components[0] as TextComponent).setValue(value.toString());
-          await this.plugin.saveSettings();
-        })
-    );
-
-    const gridSizeText = gridSizeSetting.addText(text =>
-      text
-        .setPlaceholder('e.g. 20')
-        .setValue(this.plugin.settings.gridSize.toString())
-        .onChange(async (value) => {
-          this.plugin.settings.gridSize = parseInt(value) || 20;
-          (gridSizeText.components[0] as TextComponent).setValue(value.toString());
-          await this.plugin.saveSettings();
-        })
-    );
-
-    gridSizeSetting.addButton(button =>
-      button
-        .setButtonText('Reset')
-        .setCta()
-        .onClick(async () => {
-          this.plugin.settings.gridSize = DEFAULT_SETTINGS.gridSize;
-          (gridSizeText.components[0] as TextComponent).setValue(this.plugin.settings.gridSize.toString());
-          (gridSizeSlider.components[0] as SliderComponent).setValue(this.plugin.settings.gridSize);
-          await this.plugin.saveSettings();
-        })
-    );
+      .setDesc('Spacing between grid lines (in px)')
+      .addSlider(sliderValue =>
+        sliderValue
+          .setInstant(true)
+          .setValue(this.plugin.settings.gridSize)
+          .setLimits(20, 100, 1)
+          .onChange(async (value) => {
+            this.plugin.settings.gridSize = value || 20;
+            await this.plugin.saveSettings();
+          }))
+      .addText(text =>
+        text
+          .setPlaceholder('e.g. 20')
+          .setValue(this.plugin.settings.gridSize.toString())
+          .onChange(async (value) => {
+            this.plugin.settings.gridSize = parseInt(value) || 20;
+            await this.plugin.saveSettings();
+          })
+      )
+      .addButton(button =>
+        button
+          .setButtonText('Reset')
+          .setCta()
+          .onClick(async () => {
+            this.plugin.settings.gridSize = DEFAULT_SETTINGS.gridSize;
+            await this.plugin.saveSettings();
+          })
+      );
 
     new Setting(containerEl)
       .setName('Grid Colour')
