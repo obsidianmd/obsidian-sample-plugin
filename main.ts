@@ -50,6 +50,12 @@ export default class GridBackgroundPlugin extends Plugin {
     this.onunload();
     this.injectGridCSS();
   }
+
+  public updateGridColourAlpha(alpha: number): void {
+    const match = this.settings.gridColour.match(/\d+/g);
+    const [r, g, b] = match ? match.slice(0, 3) : [255, 255, 255]; // Default to white if RGB values are missing
+    this.settings.gridColour = `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
+  }
 }
 
 class GridBackgroundSettingTab extends PluginSettingTab {
@@ -68,6 +74,7 @@ class GridBackgroundSettingTab extends PluginSettingTab {
 
     let sliderComponent: SliderComponent;
     let textComponent: TextComponent;
+    let gridColour: ColorComponent;
 
     const gridSizeSetting = new Setting(containerEl)
       .setName('Grid Size')
@@ -105,12 +112,13 @@ class GridBackgroundSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
             sliderComponent.setValue(parsedValue); // Update the slider when text changes
           })
+          .inputEl.style.width = '40px'
         }
       )
-      .addButton(button =>
+      .addExtraButton(button =>
         button
-          .setButtonText('Reset')
-          .setCta()
+          .setIcon('rotate-ccw')
+          .setTooltip('Restore default')
           .onClick(async () => {
             this.plugin.settings.gridSize = DEFAULT_SETTINGS.gridSize;
             await this.plugin.saveSettings();
@@ -119,14 +127,66 @@ class GridBackgroundSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Grid Colour')
-      .setDesc('Colour of the grid lines (rgba or hex)')
-      .addText(text =>
-        text
-          .setPlaceholder('e.g. rgba(0,0,0,0.05)')
+      .setDesc('Colour of the grid lines')
+      .addColorPicker(colour => {
+        gridColour = colour;
+        colour
           .setValue(this.plugin.settings.gridColour)
           .onChange(async (value) => {
             this.plugin.settings.gridColour = value;
             await this.plugin.saveSettings();
-          }));
+          })
+      });
+
+    // BUG: This transparency setting has some bugs -> sometimes it reads a previous colour value which overrides
+    // the intended colour. And sometimes the slider is off with the transparency values -> potentially a race
+    // condition?
+
+    new Setting(containerEl)
+      .setName('Grid Transparency')
+      .setDesc('Transparency of the grid lines')
+      .addSlider(sliderValue => {
+        sliderComponent = sliderValue;
+        sliderValue
+          .setInstant(true)
+          .setValue((() => {
+            const match = this.plugin.settings.gridColour.match(/\d+/g);
+            if (match && match.length === 4) {
+              return parseFloat(match[3]) * 100; // Extract alpha value and convert to percentage
+            }
+            return 5; // Default to 5% transparency if gridColour is not properly formatted
+          })())
+          .setLimits(0, 100, 1)
+          .onChange(async (value) => {
+            const alpha = (value / 100).toFixed(2); // Convert percentage back to alpha value
+            this.plugin.updateGridColourAlpha(Number(alpha));
+            await this.plugin.saveSettings();
+          });
+      })
+      // TODO: Style this to reflect the current transparency value
+      // .addText(text => {
+      //   textComponent = text;
+      //   text
+      //     .setPlaceholder('e.g. 20')
+      //     .setValue(this.plugin.settings.gridSize.toString())
+      //     .onChange(async (value) => {
+      //       let parsedValue = parseInt(value) || 20;
+
+      //       if (parsedValue < 20) {
+      //         parsedValue = 20
+              
+      //       } else if (parsedValue > 100) {
+      //         parsedValue = 100
+      //       } 
+
+      //       textComponent.setValue(value.toString());
+
+      //       this.plugin.settings.gridSize = parsedValue;
+      //       await this.plugin.saveSettings();
+      //       sliderComponent.setValue(parsedValue); // Update the slider when text changes
+      //     })
+      //     .inputEl.style.width = '40px'
+      //   }
+      // )
   }
 }
