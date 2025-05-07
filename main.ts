@@ -66,10 +66,14 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl('h2', { text: 'Grid Background Settings' });
 
+    let sliderComponent: SliderComponent;
+    let textComponent: TextComponent;
+
     const gridSizeSetting = new Setting(containerEl)
       .setName('Grid Size')
-      .setDesc('Spacing between grid lines (in px)')
-      .addSlider(sliderValue =>
+      .setDesc('Spacing between grid lines (in px) - min value is 20px, max is 100px')
+      .addSlider(sliderValue => {
+        sliderComponent = sliderValue;
         sliderValue
           .setInstant(true)
           .setValue(this.plugin.settings.gridSize)
@@ -77,15 +81,31 @@ class GridBackgroundSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.gridSize = value || 20;
             await this.plugin.saveSettings();
-          }))
-      .addText(text =>
+            textComponent.setValue(value.toString()); // Update the text field when slider changes
+          });
+      })
+      .addText(text => {
+        textComponent = text;
         text
           .setPlaceholder('e.g. 20')
           .setValue(this.plugin.settings.gridSize.toString())
           .onChange(async (value) => {
-            this.plugin.settings.gridSize = parseInt(value) || 20;
+            let parsedValue = parseInt(value) || 20;
+
+            if (parsedValue < 20) {
+              parsedValue = 20
+              
+            } else if (parsedValue > 100) {
+              parsedValue = 100
+            } 
+
+            textComponent.setValue(value.toString());
+
+            this.plugin.settings.gridSize = parsedValue;
             await this.plugin.saveSettings();
+            sliderComponent.setValue(parsedValue); // Update the slider when text changes
           })
+        }
       )
       .addButton(button =>
         button
