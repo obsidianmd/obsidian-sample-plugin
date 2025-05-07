@@ -101,6 +101,8 @@ export default class CustomSortPlugin
 	sortSpecCache?: SortSpecsCollection | null
 	customSortAppliedAtLeastOnce: boolean = false
 
+	uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller|undefined = undefined
+
 	showNotice(message: string, timeout?: number) {
 		if (this.settings.notificationsEnabled || (Platform.isMobile && this.settings.mobileNotificationsEnabled)) {
 			new Notice(message, timeout)
@@ -231,21 +233,12 @@ export default class CustomSortPlugin
 	// For the idea of monkey-patching credits go to https://github.com/nothingislost/obsidian-bartender
 	patchFileExplorer(patchableFileExplorer: FileExplorerLeaf): FileExplorerLeaf|undefined {
 		let plugin = this;
-		const requestStandardObsidianSortAfter = (patchUninstaller: MonkeyAroundUninstaller|undefined) => {
-			return () => {
-				if (patchUninstaller) patchUninstaller()
-
-				const fileExplorerOrError= this.checkFileExplorerIsAvailableAndPatchable()
-				if (fileExplorerOrError.v && fileExplorerOrError.v.view) {
-					fileExplorerOrError.v.view.requestSort?.()
-				}
-			}
-		}
 
 		// patching file explorer might fail here because of various non-error reasons.
 		// That's why not showing and not logging error message here
 		if (patchableFileExplorer) {
-			const uninstallerOfFolderSortFunctionWrapper: MonkeyAroundUninstaller = around(patchableFileExplorer.view.constructor.prototype, {
+			this.uninstallFileExplorerPatchIfInstalled()
+			this.uninstallerOfFolderSortFunctionWrapper = around(patchableFileExplorer.view.constructor.prototype, {
 				getSortedFolderItems(old: any) {
 					return function (...args: any[]) {
 						// quick check for plugin status
@@ -272,7 +265,6 @@ export default class CustomSortPlugin
 					};
 				}
 			})
-			this.register(requestStandardObsidianSortAfter(uninstallerOfFolderSortFunctionWrapper))
 			return patchableFileExplorer
 		} else {
 			return undefined
@@ -378,6 +370,8 @@ export default class CustomSortPlugin
 		this.registerEventHandlers()
 
 		this.registerCommands()
+
+		this.registerUninstallerHandler()
 
 		this.initialize();
 	}
@@ -574,6 +568,33 @@ export default class CustomSortPlugin
 				bookmarksPlugin.saveDataAndUpdateBookmarkViews(true)
 			}
 		})
+	}
+
+	uninstallFileExplorerPatchIfInstalled() {
+		if (this.uninstallerOfFolderSortFunctionWrapper) {
+			try {
+				this.uninstallerOfFolderSortFunctionWrapper()
+			} catch {
+
+			}
+			this.uninstallerOfFolderSortFunctionWrapper = undefined
+		}
+	}
+
+	registerUninstallerHandler() {
+		let plugin = this;
+		const requestStandardObsidianSortAfterFileExplorerPatchUninstaller = () => {
+			return () => {
+ 				plugin.uninstallFileExplorerPatchIfInstalled()
+
+				const fileExplorerOrError= this.checkFileExplorerIsAvailableAndPatchable()
+				if (fileExplorerOrError.v && fileExplorerOrError.v.view) {
+					fileExplorerOrError.v.view.requestSort?.()
+				}
+			}
+		}
+
+		this.register(requestStandardObsidianSortAfterFileExplorerPatchUninstaller())
 	}
 
 	registerCommands() {
