@@ -1,9 +1,9 @@
 {
-	"id": "grid-background",
-	"name": "Grid Background",
+	"id": "bookify",
+	"name": "Bookify",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Adds a customisable grid background to note views.",
+	"description": "Adds notebook styling to your editor.",
 	"author": "Nathan Nguyen",
 	"isDesktopOnly": false
 }
