@@ -3,12 +3,14 @@ import { App, Editor, MarkdownView, Modal, Notice, ColorComponent, TextComponent
 interface GridBackgroundSettings {
 	gridSize: number;
 	gridColour: string;
+	gridTransparency: number;
 }
 
 const DEFAULT_SETTINGS: GridBackgroundSettings = {
   gridSize: 50,
-  gridColour: 'rgba(255, 255, 255, 0.05)'
-}
+  gridColour: 'rgba(255, 255, 255, 1)',
+  gridTransparency: 0.05
+};
 
 export default class GridBackgroundPlugin extends Plugin {
 	settings: GridBackgroundSettings;
@@ -33,8 +35,8 @@ export default class GridBackgroundPlugin extends Plugin {
       .markdown-source-view,
       .markdown-preview-view {
         background-image: 
-          linear-gradient(to right, ${this.settings.gridColour} 1px, transparent 1px),
-          linear-gradient(to bottom, ${this.settings.gridColour} 1px, transparent 1px);
+          linear-gradient(to right, rgba(${this.settings.gridColour.match(/\d+, \d+, \d+/)?.[0]}, ${this.settings.gridTransparency}) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(${this.settings.gridColour.match(/\d+, \d+, \d+/)?.[0]}, ${this.settings.gridTransparency}) 1px, transparent 1px);
         background-size: ${this.settings.gridSize}px ${this.settings.gridSize}px;
       }
     `;
@@ -133,14 +135,15 @@ class GridBackgroundSettingTab extends PluginSettingTab {
         colour
           .setValue(this.plugin.settings.gridColour)
           .onChange(async (value) => {
-            this.plugin.settings.gridColour = value;
+            let rgbValue: { r: number; g: number; b: number } = colour.getValueRgb();
+
+            const colourValue = `rgba(${rgbValue.r}, ${rgbValue.g}, ${rgbValue.b}, ${this.plugin.settings.gridTransparency})`;
+            console.log(colourValue)
+            this.plugin.settings.gridColour = colourValue;
+
             await this.plugin.saveSettings();
           })
       });
-
-    // BUG: This transparency setting has some bugs -> sometimes it reads a previous colour value which overrides
-    // the intended colour. And sometimes the slider is off with the transparency values -> potentially a race
-    // condition?
 
     new Setting(containerEl)
       .setName('Grid Transparency')
@@ -149,44 +152,12 @@ class GridBackgroundSettingTab extends PluginSettingTab {
         sliderComponent = sliderValue;
         sliderValue
           .setInstant(true)
-          .setValue((() => {
-            const match = this.plugin.settings.gridColour.match(/\d+/g);
-            if (match && match.length === 4) {
-              return parseFloat(match[3]) * 100; // Extract alpha value and convert to percentage
-            }
-            return 5; // Default to 5% transparency if gridColour is not properly formatted
-          })())
+          .setValue(this.plugin.settings.gridTransparency * 100)
           .setLimits(0, 100, 1)
           .onChange(async (value) => {
-            const alpha = (value / 100).toFixed(2); // Convert percentage back to alpha value
-            this.plugin.updateGridColourAlpha(Number(alpha));
+            this.plugin.settings.gridTransparency = value / 100;
             await this.plugin.saveSettings();
           });
-      })
-      // TODO: Style this to reflect the current transparency value
-      // .addText(text => {
-      //   textComponent = text;
-      //   text
-      //     .setPlaceholder('e.g. 20')
-      //     .setValue(this.plugin.settings.gridSize.toString())
-      //     .onChange(async (value) => {
-      //       let parsedValue = parseInt(value) || 20;
-
-      //       if (parsedValue < 20) {
-      //         parsedValue = 20
-              
-      //       } else if (parsedValue > 100) {
-      //         parsedValue = 100
-      //       } 
-
-      //       textComponent.setValue(value.toString());
-
-      //       this.plugin.settings.gridSize = parsedValue;
-      //       await this.plugin.saveSettings();
-      //       sliderComponent.setValue(parsedValue); // Update the slider when text changes
-      //     })
-      //     .inputEl.style.width = '40px'
-      //   }
-      // )
+      });
   }
 }
