@@ -1,45 +1,110 @@
 import { App, Editor, MarkdownView, Modal, Notice, ColorComponent, TextComponent, SliderComponent, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-interface GridBackgroundSettings {
-	gridSize: number;
-	gridColour: string;
-	gridTransparency: number;
+interface PaperSettings {
+  paperType: 'grid' | 'lined' | 'bullet';
+  transparency: number;
+  colour: string; // Universal colour setting
 }
 
-const DEFAULT_SETTINGS: GridBackgroundSettings = {
-  gridSize: 50,
-  gridColour: 'rgba(255, 255, 255, 1)',
-  gridTransparency: 0.05
+interface GridSettings {
+  gridSize: number;
+  gridColour: string;
+}
+
+interface LinedSettings {
+  lineHeight: number;
+  lineColour: string;
+}
+
+interface BulletSettings {
+  dotSize: number;
+  dotSpacing: number;
+  dotColour: string;
+}
+
+interface PluginSettings {
+  paper: PaperSettings;
+  grid: GridSettings;
+  lined: LinedSettings;
+  bullet: BulletSettings;
+}
+
+const DEFAULT_SETTINGS: PluginSettings = {
+  paper: {
+    paperType: 'grid',
+    transparency: 0.05,
+    colour: 'rgba(255, 255, 255, 1)',
+  },
+  grid: {
+    gridSize: 50,
+    gridColour: 'rgba(255, 255, 255, 1)',
+  },
+  lined: {
+    lineHeight: 20,
+    lineColour: 'rgba(255, 255, 255, 1)',
+  },
+  bullet: {
+    dotSize: 5,
+    dotSpacing: 20,
+    dotColour: 'rgba(255, 255, 255, 1)',
+  },
 };
 
 export default class GridBackgroundPlugin extends Plugin {
-	settings: GridBackgroundSettings;
+  settings: PluginSettings;
 
-	async onload() {
-		await this.loadSettings();
-
-    this.injectGridCSS();
+  async onload() {
+    await this.loadSettings();
+    this.injectCSS();
     this.addSettingTab(new GridBackgroundSettingTab(this.app, this));
+  }
 
-	}
-
-	onunload() {
-    const style = document.getElementById('grid-background-style');
+  onunload() {
+    const style = document.getElementById('paper-background-style');
     style?.remove();
-	}
+  }
 
-  injectGridCSS() {
+  injectCSS() {
     const style = document.createElement('style');
-    style.id = 'grid-background-style';
-    style.textContent = `
-      .markdown-source-view,
-      .markdown-preview-view {
-        background-image: 
-          linear-gradient(to right, rgba(${this.settings.gridColour.match(/\d+, \d+, \d+/)?.[0]}, ${this.settings.gridTransparency}) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(${this.settings.gridColour.match(/\d+, \d+, \d+/)?.[0]}, ${this.settings.gridTransparency}) 1px, transparent 1px);
-        background-size: ${this.settings.gridSize}px ${this.settings.gridSize}px;
-      }
-    `;
+    style.id = 'paper-background-style';
+
+    let cssContent = '';
+    const { paperType, transparency, colour } = this.settings.paper;
+
+    // Ensure colour is valid and fallback to default if undefined or invalid
+    const validColour = colour && colour.match(/\d+, \d+, \d+/) ? colour : 'rgba(255, 255, 255, 1)';
+
+    if (paperType === 'grid') {
+      const { gridSize } = this.settings.grid;
+      cssContent = `
+        .markdown-source-view,
+        .markdown-preview-view {
+          background-image: 
+            linear-gradient(to right, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px, transparent 1px);
+          background-size: ${gridSize}px ${gridSize}px;
+        }
+      `;
+    } else if (paperType === 'lined') {
+      const { lineHeight } = this.settings.lined;
+      cssContent = `
+        .markdown-source-view,
+        .markdown-preview-view {
+          background-image: linear-gradient(to bottom, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px, transparent ${lineHeight - 1}px);
+        }
+      `;
+    } else if (paperType === 'bullet') {
+      const { dotSize, dotSpacing } = this.settings.bullet;
+      cssContent = `
+        .markdown-source-view,
+        .markdown-preview-view {
+          background-image: radial-gradient(circle, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) ${dotSize}px, transparent ${dotSize}px);
+          background-size: ${dotSpacing}px ${dotSpacing}px;
+        }
+      `;
+    }
+
+    style.textContent = cssContent;
     document.head.appendChild(style);
   }
 
@@ -50,7 +115,7 @@ export default class GridBackgroundPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
     this.onunload();
-    this.injectGridCSS();
+    this.injectCSS();
   }
 }
 
@@ -66,141 +131,105 @@ class GridBackgroundSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl('h2', { text: 'Grid Background Settings' });
+    containerEl.createEl('h2', { text: 'Paper Background Settings' });
 
-    let gridSizeSliderComponent: SliderComponent;
-    let gridSizeTextComponent: TextComponent;
-
-    let gridTransparencySliderComponent: SliderComponent;
-    let gridTransparencyTextComponent: TextComponent;
-
-    let gridColour: ColorComponent;
-
-    const gridSizeSetting = new Setting(containerEl)
-      .setName('Grid Size')
-      .setDesc('Spacing between grid lines (in px) - min value is 20px, max is 100px')
-      .addSlider(sliderValue => {
-        gridSizeSliderComponent = sliderValue;
-        sliderValue
-          .setInstant(true)
-          .setValue(this.plugin.settings.gridSize)
-          .setLimits(20, 100, 1)
-          .onChange(async (value) => {
-            this.plugin.settings.gridSize = value || 20;
-            gridSizeTextComponent.setValue(value.toString()); // Update the text field when slider changes
-            await this.plugin.saveSettings();
-          });
-      })
-      .addText(text => {
-        gridSizeTextComponent = text;
-        text
-          .setPlaceholder('e.g. 20')
-          .setValue(this.plugin.settings.gridSize.toString())
-          .onChange(async (value) => {
-            let parsedValue = parseInt(value) || 20;
-
-            if (parsedValue < 20) {
-              parsedValue = 20
-              
-            } else if (parsedValue > 100) {
-              parsedValue = 100
-            } 
-
-            this.plugin.settings.gridSize = parsedValue;
-            
-            gridSizeTextComponent.setValue(parsedValue.toString());
-            gridSizeSliderComponent.setValue(parsedValue); // Update the slider when text changes
-            await this.plugin.saveSettings();
-          })
-          .inputEl.style.width = '50px'
-        }
-      )
-      .addExtraButton(button =>
-        button
-          .setIcon('rotate-ccw')
-          .setTooltip('Restore default')
-          .onClick(async () => {
-            this.plugin.settings.gridSize = DEFAULT_SETTINGS.gridSize;
-            gridSizeSliderComponent.setValue(50);
-            gridSizeTextComponent.setValue('50');
-            await this.plugin.saveSettings();
-          })
-      );
-
-    // TODO: Need to add a reset thing here
+    // Paper Type Selection
     new Setting(containerEl)
-      .setName('Grid Colour')
-      .setDesc('Colour of the grid lines')
-      .addColorPicker(colour => {
-        gridColour = colour;
-        colour
-          .setValue(this.plugin.settings.gridColour)
+      .setName('Paper Type')
+      .setDesc('Select the type of paper background')
+      .addDropdown(dropdown => {
+        dropdown
+          .addOption('grid', 'Grid')
+          .addOption('lined', 'Lined')
+          .addOption('bullet', 'Bullet Journal')
+          .setValue(this.plugin.settings.paper.paperType)
           .onChange(async (value) => {
-            let rgbValue: { r: number; g: number; b: number } = colour.getValueRgb();
-
-            const colourValue = `rgba(${rgbValue.r}, ${rgbValue.g}, ${rgbValue.b}, ${this.plugin.settings.gridTransparency})`;
-            console.log(colourValue)
-            this.plugin.settings.gridColour = colourValue;
-
+            this.plugin.settings.paper.paperType = value as 'grid' | 'lined' | 'bullet';
             await this.plugin.saveSettings();
-          })
+            this.display(); // Refresh settings UI
+          });
       });
 
+    // Universal Transparency Setting
     new Setting(containerEl)
-      .setName('Grid Transparency')
-      .setDesc('Transparency of the grid lines on a scale of 0 (transparent) to 1 (opaque)')
-      .addSlider(sliderValue => {
-        gridTransparencySliderComponent = sliderValue;
-        sliderValue
-          .setInstant(true)
-          .setValue(this.plugin.settings.gridTransparency * 100)
-          .setLimits(0, 100, 1)
+      .setName('Transparency')
+      .setDesc('Set the transparency level (0 to 1)')
+      .addSlider(slider => {
+        slider
+          .setLimits(0, 1, 0.01)
+          .setValue(this.plugin.settings.paper.transparency)
           .onChange(async (value) => {
-            const realValue = value / 100;
-
-            this.plugin.settings.gridTransparency = realValue;
-            gridTransparencyTextComponent.setValue(realValue.toString());
-            gridTransparencySliderComponent.setValue(value);
-
+            this.plugin.settings.paper.transparency = value;
             await this.plugin.saveSettings();
           });
-      })
+      });
+
+    // Universal Colour Setting
+    new Setting(containerEl)
+      .setName('Universal Colour')
+      .setDesc('Set the colour for the paper background (RGBA)')
       .addText(text => {
-        gridTransparencyTextComponent = text;
         text
-          .setPlaceholder('e.g. 0.05')
-          .setValue(this.plugin.settings.gridTransparency.toString())
+          .setValue(this.plugin.settings.paper.colour)
           .onChange(async (value) => {
-            let parsedValue = parseInt(value) || 0.05;
-
-            if (parsedValue < 0) {
-              parsedValue = 0
-              
-            } else if (parsedValue > 1) {
-              parsedValue = 1
-            } 
-
-            this.plugin.settings.gridTransparency = parsedValue;
-
-            gridTransparencyTextComponent.setValue(parsedValue.toString());
-            gridTransparencySliderComponent.setValue(parsedValue);
+            this.plugin.settings.paper.colour = value;
             await this.plugin.saveSettings();
-          })
-          .inputEl.style.width = '50px'
-        }
-      )
-      .addExtraButton(button =>
-        button
-          .setIcon('rotate-ccw')
-          .setTooltip('Restore default')
-          .onClick(async () => {
+          });
+      });
 
-            this.plugin.settings.gridTransparency = DEFAULT_SETTINGS.gridTransparency;
-            gridTransparencyTextComponent.setValue('0.05');
-            gridTransparencySliderComponent.setValue(5);
+    // Specific Settings Based on Paper Type
+    if (this.plugin.settings.paper.paperType === 'grid') {
+      new Setting(containerEl)
+        .setName('Grid Size')
+        .setDesc('Set the size of the grid (in px)')
+        .addSlider(slider => {
+          slider
+            .setLimits(20, 100, 1)
+            .setValue(this.plugin.settings.grid.gridSize)
+            .onChange(async (value) => {
+              this.plugin.settings.grid.gridSize = value;
+              await this.plugin.saveSettings();
+            });
+        });
+    } else if (this.plugin.settings.paper.paperType === 'lined') {
+      new Setting(containerEl)
+        .setName('Line Height')
+        .setDesc('Set the height between lines (in px)')
+        .addSlider(slider => {
+          slider
+            .setLimits(10, 50, 1)
+            .setValue(this.plugin.settings.lined.lineHeight)
+            .onChange(async (value) => {
+              this.plugin.settings.lined.lineHeight = value;
+              await this.plugin.saveSettings();
+            });
+        });
+    } else if (this.plugin.settings.paper.paperType === 'bullet') {
+      new Setting(containerEl)
+        .setName('Dot Size')
+        .setDesc('Set the size of the dots (in px)')
+        .addSlider(slider => {
+          slider
+            .setLimits(2, 10, 1)
+            .setValue(this.plugin.settings.bullet.dotSize)
+            .onChange(async (value) => {
+              this.plugin.settings.bullet.dotSize = value;
+              await this.plugin.saveSettings();
+            });
+        });
 
-            await this.plugin.saveSettings();
-          })
-      );
+      new Setting(containerEl)
+        .setName('Dot Spacing')
+        .setDesc('Set the spacing between dots (in px)')
+        .addSlider(slider => {
+          slider
+            .setLimits(10, 50, 1)
+            .setValue(this.plugin.settings.bullet.dotSpacing)
+            .onChange(async (value) => {
+              this.plugin.settings.bullet.dotSpacing = value;
+              await this.plugin.saveSettings();
+            });
+        });
+    }
   }
 }
