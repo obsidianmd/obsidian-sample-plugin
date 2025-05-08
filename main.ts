@@ -8,18 +8,15 @@ interface PaperSettings {
 
 interface GridSettings {
   gridSize: number;
-  gridColour: string;
 }
 
 interface LinedSettings {
   lineHeight: number;
-  lineColour: string;
 }
 
 interface BulletSettings {
   dotSize: number;
   dotSpacing: number;
-  dotColour: string;
 }
 
 interface PluginSettings {
@@ -36,17 +33,14 @@ const DEFAULT_SETTINGS: PluginSettings = {
     colour: 'rgba(255, 255, 255, 1)',
   },
   grid: {
-    gridSize: 50,
-    gridColour: 'rgba(255, 255, 255, 1)',
+    gridSize: 50,  
   },
   lined: {
     lineHeight: 20,
-    lineColour: 'rgba(255, 255, 255, 1)',
   },
   bullet: {
     dotSize: 5,
     dotSpacing: 20,
-    dotColour: 'rgba(255, 255, 255, 1)',
   },
 };
 
@@ -80,8 +74,8 @@ export default class GridBackgroundPlugin extends Plugin {
         .markdown-source-view,
         .markdown-preview-view {
           background-image: 
-            linear-gradient(to right, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px, transparent 1px);
+            linear-gradient(to right, transparent ${gridSize - 1}px, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px),
+            linear-gradient(to bottom, transparent ${gridSize - 1}px, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px);
           background-size: ${gridSize}px ${gridSize}px;
         }
       `;
@@ -90,7 +84,13 @@ export default class GridBackgroundPlugin extends Plugin {
       cssContent = `
         .markdown-source-view,
         .markdown-preview-view {
-          background-image: linear-gradient(to bottom, rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px, transparent ${lineHeight - 1}px);
+          background-image: repeating-linear-gradient(
+            to bottom,
+            rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 0px,
+            rgba(${validColour.match(/\d+, \d+, \d+/)?.[0]}, ${transparency}) 1px,
+            transparent 1px,
+            transparent ${lineHeight}px
+          );
         }
       `;
     } else if (paperType === 'bullet') {
@@ -123,6 +123,7 @@ class GridBackgroundSettingTab extends PluginSettingTab {
 	plugin: GridBackgroundPlugin;
 	sliderGridSize: SliderComponent;
 
+
 	constructor(app: App, plugin: GridBackgroundPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
@@ -132,6 +133,8 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl('h2', { text: 'Paper Background Settings' });
+
+    let pageColour: ColorComponent;
 
     // Paper Type Selection
     new Setting(containerEl)
@@ -146,7 +149,7 @@ class GridBackgroundSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.paper.paperType = value as 'grid' | 'lined' | 'bullet';
             await this.plugin.saveSettings();
-            this.display(); // Refresh settings UI
+            this.display();
           });
       });
 
@@ -167,14 +170,20 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     // Universal Colour Setting
     new Setting(containerEl)
       .setName('Universal Colour')
-      .setDesc('Set the colour for the paper background (RGBA)')
-      .addText(text => {
-        text
+      .setDesc('Set the colour for the lines/dots/grids)')
+      .addColorPicker(colour => {
+        pageColour = colour;
+        colour
           .setValue(this.plugin.settings.paper.colour)
           .onChange(async (value) => {
-            this.plugin.settings.paper.colour = value;
+            let rgbValue: { r: number; g: number; b: number } = colour.getValueRgb();
+
+            const colourValue = `rgba(${rgbValue.r}, ${rgbValue.g}, ${rgbValue.b}, ${this.plugin.settings.paper.transparency})`;
+            console.log(colourValue)
+            this.plugin.settings.paper.colour = colourValue;
+
             await this.plugin.saveSettings();
-          });
+          })
       });
 
     // Specific Settings Based on Paper Type
