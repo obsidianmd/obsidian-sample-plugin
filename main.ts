@@ -52,12 +52,6 @@ export default class GridBackgroundPlugin extends Plugin {
     this.onunload();
     this.injectGridCSS();
   }
-
-  public updateGridColourAlpha(alpha: number): void {
-    const match = this.settings.gridColour.match(/\d+/g);
-    const [r, g, b] = match ? match.slice(0, 3) : [255, 255, 255]; // Default to white if RGB values are missing
-    this.settings.gridColour = `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
-  }
 }
 
 class GridBackgroundSettingTab extends PluginSettingTab {
@@ -74,27 +68,31 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl('h2', { text: 'Grid Background Settings' });
 
-    let sliderComponent: SliderComponent;
-    let textComponent: TextComponent;
+    let gridSizeSliderComponent: SliderComponent;
+    let gridSizeTextComponent: TextComponent;
+
+    let gridTransparencySliderComponent: SliderComponent;
+    let gridTransparencyTextComponent: TextComponent;
+
     let gridColour: ColorComponent;
 
     const gridSizeSetting = new Setting(containerEl)
       .setName('Grid Size')
       .setDesc('Spacing between grid lines (in px) - min value is 20px, max is 100px')
       .addSlider(sliderValue => {
-        sliderComponent = sliderValue;
+        gridSizeSliderComponent = sliderValue;
         sliderValue
           .setInstant(true)
           .setValue(this.plugin.settings.gridSize)
           .setLimits(20, 100, 1)
           .onChange(async (value) => {
             this.plugin.settings.gridSize = value || 20;
+            gridSizeTextComponent.setValue(value.toString()); // Update the text field when slider changes
             await this.plugin.saveSettings();
-            textComponent.setValue(value.toString()); // Update the text field when slider changes
           });
       })
       .addText(text => {
-        textComponent = text;
+        gridSizeTextComponent = text;
         text
           .setPlaceholder('e.g. 20')
           .setValue(this.plugin.settings.gridSize.toString())
@@ -108,13 +106,13 @@ class GridBackgroundSettingTab extends PluginSettingTab {
               parsedValue = 100
             } 
 
-            textComponent.setValue(value.toString());
-
             this.plugin.settings.gridSize = parsedValue;
+            
+            gridSizeTextComponent.setValue(parsedValue.toString());
+            gridSizeSliderComponent.setValue(parsedValue); // Update the slider when text changes
             await this.plugin.saveSettings();
-            sliderComponent.setValue(parsedValue); // Update the slider when text changes
           })
-          .inputEl.style.width = '40px'
+          .inputEl.style.width = '50px'
         }
       )
       .addExtraButton(button =>
@@ -123,10 +121,13 @@ class GridBackgroundSettingTab extends PluginSettingTab {
           .setTooltip('Restore default')
           .onClick(async () => {
             this.plugin.settings.gridSize = DEFAULT_SETTINGS.gridSize;
+            gridSizeSliderComponent.setValue(50);
+            gridSizeTextComponent.setValue('50');
             await this.plugin.saveSettings();
           })
       );
 
+    // TODO: Need to add a reset thing here
     new Setting(containerEl)
       .setName('Grid Colour')
       .setDesc('Colour of the grid lines')
@@ -147,17 +148,59 @@ class GridBackgroundSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Grid Transparency')
-      .setDesc('Transparency of the grid lines')
+      .setDesc('Transparency of the grid lines on a scale of 0 (transparent) to 1 (opaque)')
       .addSlider(sliderValue => {
-        sliderComponent = sliderValue;
+        gridTransparencySliderComponent = sliderValue;
         sliderValue
           .setInstant(true)
           .setValue(this.plugin.settings.gridTransparency * 100)
           .setLimits(0, 100, 1)
           .onChange(async (value) => {
-            this.plugin.settings.gridTransparency = value / 100;
+            const realValue = value / 100;
+
+            this.plugin.settings.gridTransparency = realValue;
+            gridTransparencyTextComponent.setValue(realValue.toString());
+            gridTransparencySliderComponent.setValue(value);
+
             await this.plugin.saveSettings();
           });
-      });
+      })
+      .addText(text => {
+        gridTransparencyTextComponent = text;
+        text
+          .setPlaceholder('e.g. 0.05')
+          .setValue(this.plugin.settings.gridTransparency.toString())
+          .onChange(async (value) => {
+            let parsedValue = parseInt(value) || 0.05;
+
+            if (parsedValue < 0) {
+              parsedValue = 0
+              
+            } else if (parsedValue > 1) {
+              parsedValue = 1
+            } 
+
+            this.plugin.settings.gridTransparency = parsedValue;
+
+            gridTransparencyTextComponent.setValue(parsedValue.toString());
+            gridTransparencySliderComponent.setValue(parsedValue);
+            await this.plugin.saveSettings();
+          })
+          .inputEl.style.width = '50px'
+        }
+      )
+      .addExtraButton(button =>
+        button
+          .setIcon('rotate-ccw')
+          .setTooltip('Restore default')
+          .onClick(async () => {
+
+            this.plugin.settings.gridTransparency = DEFAULT_SETTINGS.gridTransparency;
+            gridTransparencyTextComponent.setValue('0.05');
+            gridTransparencySliderComponent.setValue(5);
+
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }
