@@ -132,9 +132,23 @@ class GridBackgroundSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl('h2', { text: 'Paper Background Settings' });
+    containerEl.createEl('h2', { text: 'Bookify Settings' });
 
     let pageColour: ColorComponent;
+    let transparencySliderComponent: SliderComponent;
+    let transparencyTextComponent: TextComponent;
+
+    let gridSizeSliderComponent: SliderComponent;
+    let gridSizeTextComponent: TextComponent;
+
+    let lineHeightSliderComponent: SliderComponent;
+    let lineHeightTextComponent: TextComponent;
+
+    let dotSizeSliderComponent: SliderComponent;
+    let dotSizeTextComponent: TextComponent;
+
+    let dotSpacingSliderComponent: SliderComponent;
+    let dotSpacingTextComponent: TextComponent;
 
     // Paper Type Selection
     new Setting(containerEl)
@@ -153,24 +167,10 @@ class GridBackgroundSettingTab extends PluginSettingTab {
           });
       });
 
-    // Universal Transparency Setting
-    new Setting(containerEl)
-      .setName('Transparency')
-      .setDesc('Set the transparency level (0 to 1)')
-      .addSlider(slider => {
-        slider
-          .setLimits(0, 1, 0.01)
-          .setValue(this.plugin.settings.paper.transparency)
-          .onChange(async (value) => {
-            this.plugin.settings.paper.transparency = value;
-            await this.plugin.saveSettings();
-          });
-      });
-
     // Universal Colour Setting
     new Setting(containerEl)
       .setName('Universal Colour')
-      .setDesc('Set the colour for the lines/dots/grids)')
+      .setDesc('Set the colour for the lines/dots/grids')
       .addColorPicker(colour => {
         pageColour = colour;
         colour
@@ -186,59 +186,254 @@ class GridBackgroundSettingTab extends PluginSettingTab {
           })
       });
 
+    // Universal Transparency Setting
+    new Setting(containerEl)
+      .setName('Universal Transparency')
+      .setDesc('Set the transparency level on a scale of 0 (transparent) to 1 (opaque)')
+      .addSlider(slider => {
+        transparencySliderComponent = slider;
+        slider
+          .setInstant(true)
+          .setLimits(0, 1, 0.01)
+          .setValue(this.plugin.settings.paper.transparency)
+          .onChange(async (value) => {
+            this.plugin.settings.paper.transparency = value;
+            transparencySliderComponent.setValue(value);
+            transparencyTextComponent.setValue(value.toString());
+
+            await this.plugin.saveSettings();
+          });
+      })
+      .addText(text => {
+        transparencyTextComponent = text;
+        text
+          .setPlaceholder('e.g. 0.05')
+          .setValue(this.plugin.settings.paper.transparency.toString())
+          .onChange(async (value) => {
+            let parsedValue = parseInt(value) || 0.05;
+
+            if (parsedValue < 0) {
+              parsedValue = 0
+              
+            } else if (parsedValue > 1) {
+              parsedValue = 1
+            } 
+
+            this.plugin.settings.paper.transparency = parsedValue;
+
+            transparencyTextComponent.setValue(parsedValue.toString());
+            transparencySliderComponent.setValue(parsedValue);
+            await this.plugin.saveSettings();
+          })
+          .inputEl.style.width = '50px'
+        }
+      )
+      .addExtraButton(button =>
+        button
+          .setIcon('rotate-ccw')
+          .setTooltip('Restore default')
+          .onClick(async () => {
+
+            this.plugin.settings.paper.transparency = DEFAULT_SETTINGS.paper.transparency;
+            transparencyTextComponent.setValue('0.05');
+            transparencySliderComponent.setValue(0.05);
+
+            await this.plugin.saveSettings();
+          })
+      );
+
     // Specific Settings Based on Paper Type
     if (this.plugin.settings.paper.paperType === 'grid') {
       new Setting(containerEl)
         .setName('Grid Size')
         .setDesc('Set the size of the grid (in px)')
         .addSlider(slider => {
+          gridSizeSliderComponent = slider;
           slider
+            .setInstant(true)
             .setLimits(20, 100, 1)
             .setValue(this.plugin.settings.grid.gridSize)
             .onChange(async (value) => {
-              this.plugin.settings.grid.gridSize = value;
+              this.plugin.settings.grid.gridSize = value || 20;
+              gridSizeTextComponent.setValue(value.toString());
               await this.plugin.saveSettings();
             });
-        });
+        })
+        .addText(text => {
+          gridSizeTextComponent = text;
+          text
+            .setPlaceholder('e.g. 20')
+            .setValue(this.plugin.settings.grid.gridSize.toString())
+            .onChange(async (value) => {
+              let parsedValue = parseInt(value) || 20;
+  
+              if (parsedValue < 20) {
+                parsedValue = 20
+                
+              } else if (parsedValue > 100) {
+                parsedValue = 100
+              } 
+  
+              this.plugin.settings.grid.gridSize = parsedValue;
+              
+              gridSizeTextComponent.setValue(parsedValue.toString());
+              gridSizeSliderComponent.setValue(parsedValue); // Update the slider when text changes
+              await this.plugin.saveSettings();
+            })
+            .inputEl.style.width = '50px'
+          }
+        )
+        .addExtraButton(button =>
+          button
+            .setIcon('rotate-ccw')
+            .setTooltip('Restore default')
+            .onClick(async () => {
+              this.plugin.settings.grid.gridSize = DEFAULT_SETTINGS.grid.gridSize;
+              gridSizeSliderComponent.setValue(50);
+              gridSizeTextComponent.setValue('50');
+              await this.plugin.saveSettings();
+            })
+        );
+
     } else if (this.plugin.settings.paper.paperType === 'lined') {
       new Setting(containerEl)
         .setName('Line Height')
         .setDesc('Set the height between lines (in px)')
         .addSlider(slider => {
+          lineHeightSliderComponent = slider;
           slider
-            .setLimits(10, 50, 1)
+            .setInstant(true)
+            .setLimits(20, 100, 1)
             .setValue(this.plugin.settings.lined.lineHeight)
             .onChange(async (value) => {
               this.plugin.settings.lined.lineHeight = value;
+              lineHeightSliderComponent.setValue(value);
+              lineHeightTextComponent.setValue(value.toString());
               await this.plugin.saveSettings();
             });
-        });
+        })
+        .addText(text => {
+        lineHeightTextComponent = text;
+        text
+          .setPlaceholder('e.g. 20')
+          .setValue(this.plugin.settings.lined.lineHeight.toString())
+          .onChange(async (value) => {
+            let parsedValue = parseInt(value) || 20;
+
+            this.plugin.settings.lined.lineHeight = parsedValue;
+
+            lineHeightTextComponent.setValue(parsedValue.toString());
+            lineHeightSliderComponent.setValue(parsedValue);
+            await this.plugin.saveSettings();
+          })
+          .inputEl.style.width = '50px'
+        }
+      )
+      .addExtraButton(button =>
+        button
+          .setIcon('rotate-ccw')
+          .setTooltip('Restore default')
+          .onClick(async () => {
+
+            this.plugin.settings.lined.lineHeight = DEFAULT_SETTINGS.lined.lineHeight;
+            lineHeightTextComponent.setValue('20');
+            lineHeightSliderComponent.setValue(20);
+
+            await this.plugin.saveSettings();
+          })
+      );
+
     } else if (this.plugin.settings.paper.paperType === 'bullet') {
       new Setting(containerEl)
         .setName('Dot Size')
         .setDesc('Set the size of the dots (in px)')
         .addSlider(slider => {
+          dotSizeSliderComponent = slider;
           slider
-            .setLimits(2, 10, 1)
+            .setInstant(true)
+            .setLimits(1, 5, 0.5)
             .setValue(this.plugin.settings.bullet.dotSize)
             .onChange(async (value) => {
               this.plugin.settings.bullet.dotSize = value;
+              dotSizeSliderComponent.setValue(value);
+              dotSizeTextComponent.setValue(value.toString());
               await this.plugin.saveSettings();
             });
-        });
+        })
+        .addText(text => {
+          dotSizeTextComponent = text;
+          text
+            .setPlaceholder('e.g. 5')
+            .setValue(this.plugin.settings.bullet.dotSize.toString())
+            .onChange(async (value) => {
+              let parsedValue = parseInt(value);
+  
+              this.plugin.settings.grid.gridSize = parsedValue;
+              
+              dotSizeTextComponent.setValue(parsedValue.toString());
+              dotSizeSliderComponent.setValue(parsedValue);
+              await this.plugin.saveSettings();
+            })
+            .inputEl.style.width = '50px'
+          }
+        )
+        .addExtraButton(button =>
+          button
+            .setIcon('rotate-ccw')
+            .setTooltip('Restore default')
+            .onClick(async () => {
+              this.plugin.settings.grid.gridSize = DEFAULT_SETTINGS.bullet.dotSize;
+              dotSizeSliderComponent.setValue(5);
+              dotSizeTextComponent.setValue('5');
+              await this.plugin.saveSettings();
+            })
+        );
 
       new Setting(containerEl)
         .setName('Dot Spacing')
         .setDesc('Set the spacing between dots (in px)')
         .addSlider(slider => {
+          dotSpacingSliderComponent = slider;
           slider
+            .setInstant(true)
             .setLimits(10, 50, 1)
             .setValue(this.plugin.settings.bullet.dotSpacing)
             .onChange(async (value) => {
               this.plugin.settings.bullet.dotSpacing = value;
+
+              dotSpacingSliderComponent.setValue(value);
+              dotSpacingTextComponent.setValue(value.toString());
               await this.plugin.saveSettings();
             });
-        });
+        })
+        .addText(text => {
+          dotSpacingTextComponent = text;
+          text
+            .setPlaceholder('e.g. 5')
+            .setValue(this.plugin.settings.bullet.dotSize.toString())
+            .onChange(async (value) => {
+              let parsedValue = parseInt(value);
+  
+              this.plugin.settings.bullet.dotSpacing = parsedValue;
+              
+              dotSpacingTextComponent.setValue(parsedValue.toString());
+              dotSpacingSliderComponent.setValue(parsedValue);
+              await this.plugin.saveSettings();
+            })
+            .inputEl.style.width = '50px'
+          }
+        )
+        .addExtraButton(button =>
+          button
+            .setIcon('rotate-ccw')
+            .setTooltip('Restore default')
+            .onClick(async () => {
+              this.plugin.settings.bullet.dotSpacing = DEFAULT_SETTINGS.bullet.dotSpacing;
+              dotSpacingSliderComponent.setValue(20);
+              dotSpacingTextComponent.setValue('20');
+              await this.plugin.saveSettings();
+            })
+        );
     }
   }
 }
