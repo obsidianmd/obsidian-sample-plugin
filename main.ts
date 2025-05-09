@@ -246,7 +246,7 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     if (this.plugin.settings.paper.paperType === 'grid') {
       new Setting(containerEl)
         .setName('Grid Size')
-        .setDesc('Set the size of the grid (in px)')
+        .setDesc('Set the size of the grid (in px) - min value is 20px, max is 100px')
         .addSlider(slider => {
           gridSizeSliderComponent = slider;
           slider
@@ -298,7 +298,7 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     } else if (this.plugin.settings.paper.paperType === 'lined') {
       new Setting(containerEl)
         .setName('Line Height')
-        .setDesc('Set the height between lines (in px)')
+        .setDesc('Set the height between lines (in px) - min value is 20px, max is 100')
         .addSlider(slider => {
           lineHeightSliderComponent = slider;
           slider
@@ -319,6 +319,14 @@ class GridBackgroundSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.lined.lineHeight.toString())
           .onChange(async (value) => {
             let parsedValue = parseInt(value) || 20;
+
+
+            if (parsedValue < 0) {
+              parsedValue = 20
+              
+            } else if (parsedValue > 100) {
+              parsedValue = 100
+            } 
 
             this.plugin.settings.lined.lineHeight = parsedValue;
 
@@ -346,15 +354,18 @@ class GridBackgroundSettingTab extends PluginSettingTab {
     } else if (this.plugin.settings.paper.paperType === 'bullet') {
       new Setting(containerEl)
         .setName('Dot Size')
-        .setDesc('Set the size of the dots (in px)')
+        .setDesc('Set the size of the dots (in px) - min value is 1px, max is 10px. ' +
+          'Additionally, set to a whole number for cirle dots, and a number ending in 0.5 for square dots'
+        )
         .addSlider(slider => {
           dotSizeSliderComponent = slider;
           slider
             .setInstant(true)
-            .setLimits(1, 5, 0.5)
+            .setLimits(1, 10, 0.5)
             .setValue(this.plugin.settings.bullet.dotSize)
             .onChange(async (value) => {
-              this.plugin.settings.bullet.dotSize = value;
+              this.plugin.settings.bullet.dotSize = value || 5;
+
               dotSizeSliderComponent.setValue(value);
               dotSizeTextComponent.setValue(value.toString());
               await this.plugin.saveSettings();
@@ -368,6 +379,13 @@ class GridBackgroundSettingTab extends PluginSettingTab {
             .onChange(async (value) => {
               let parsedValue = parseInt(value);
   
+              if (parsedValue < 1) {
+                parsedValue = 1
+                
+              } else if (parsedValue > 10) {
+                parsedValue = 10
+              } 
+
               this.plugin.settings.grid.gridSize = parsedValue;
               
               dotSizeTextComponent.setValue(parsedValue.toString());
@@ -391,7 +409,8 @@ class GridBackgroundSettingTab extends PluginSettingTab {
 
       new Setting(containerEl)
         .setName('Dot Spacing')
-        .setDesc('Set the spacing between dots (in px)')
+        .setDesc(
+          'Set the spacing between dots (in px) - min value is 10px, max is 50px.')
         .addSlider(slider => {
           dotSpacingSliderComponent = slider;
           slider
@@ -399,7 +418,7 @@ class GridBackgroundSettingTab extends PluginSettingTab {
             .setLimits(10, 50, 1)
             .setValue(this.plugin.settings.bullet.dotSpacing)
             .onChange(async (value) => {
-              this.plugin.settings.bullet.dotSpacing = value;
+              this.plugin.settings.bullet.dotSpacing = value || 20;
 
               dotSpacingSliderComponent.setValue(value);
               dotSpacingTextComponent.setValue(value.toString());
@@ -412,7 +431,14 @@ class GridBackgroundSettingTab extends PluginSettingTab {
             .setPlaceholder('e.g. 5')
             .setValue(this.plugin.settings.bullet.dotSize.toString())
             .onChange(async (value) => {
-              let parsedValue = parseInt(value);
+              let parsedValue = parseInt(value) || 20;
+
+              if (parsedValue < 20) {
+                parsedValue = 20
+                
+              } else if (parsedValue > 50) {
+                parsedValue = 50
+              } 
   
               this.plugin.settings.bullet.dotSpacing = parsedValue;
               
