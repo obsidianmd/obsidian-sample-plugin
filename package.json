@@ -8,7 +8,6 @@
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"lint": "eslint --ext .js,.ts,.json src && stylelint styles.css && npx npm-package-json-lint .",
-		"link": "npm link eslint-plugin-obsidian",
 		"test": "npm run link && npm run lint"
 	},
 	"keywords": [],
@@ -36,7 +35,7 @@
 		"posthog-node": "4.3.2"
 	},
 	"dependencies": {
-		"eslint-plugin-obsidian": "file:../eslint-plugin",
+		"eslint-plugin-obsidianmd": "0.0.2",
 		"obsidian": "latest"
 	}
 }

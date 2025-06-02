@@ -1,7 +1,7 @@
 module.exports = {
 	"root": true,
 	"extends": [
-		"plugin:obsidian/recommended"
+		"plugin:obsidianmd/recommended"
 	],
 	"parser": "@typescript-eslint/parser",
 	"parserOptions": {
@@ -14,7 +14,7 @@ module.exports = {
 		"node": false
 	},
 	"plugins": [
-		"obsidian"
+		"obsidianmd"
 	],
 	"rules": {
 
