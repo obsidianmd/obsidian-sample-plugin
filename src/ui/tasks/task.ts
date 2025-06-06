@@ -24,7 +24,7 @@ export class Task {
 			);
 		}
 
-		const [, status, content] = match;
+		const [, indentation, status, content] = match;
 		if (!content) {
 			throw new Error("Content not found in raw content");
 		}
@@ -35,6 +35,7 @@ export class Task {
 		this.content = content;
 		this._done = status === "x";
 		this._path = fileHandle.path;
+		this._indentation = indentation || "";
 
 		for (const tag of tags) {
 			if (tag in columnTagTable || tag === "done") {
@@ -84,6 +85,11 @@ export class Task {
 		return this._path;
 	}
 
+	private readonly _indentation: string;
+	get indentation() {
+		return this._indentation;
+	}
+
 	private _column: ColumnTag | "archived" | undefined;
 	get column(): ColumnTag | "archived" | undefined {
 		return this._column;
@@ -102,6 +108,7 @@ export class Task {
 		}
 
 		return [
+			this.indentation,
 			`- [${this.done ? "x" : " "}] `,
 			this.content.trim(),
 			this.consolidateTags && this.tags.size > 0
@@ -138,5 +145,5 @@ export function isTaskString(input: string): input is TaskString {
 // begins with 0 or more whitespace chars
 // then follows the pattern "- [ ]" OR "- [x]"
 // then contains an additional whitespace before any trailing content
-const taskStringRegex = /^\s*-\s\[([xX\s])\]\s(.+)/;
+const taskStringRegex = /^(\s*)-\s\[([xX\s])\]\s(.+)/;
 const blockLinkRegexp = /\s\^([a-zA-Z0-9-]+)$/;
