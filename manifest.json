@@ -1,6 +1,6 @@
 {
 	"id": "processor-processor",
-	"name": "Procesor Processor",
+	"name": "Processor Processor",
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
 	"description": "Searches for subprocessor information for data processors.",

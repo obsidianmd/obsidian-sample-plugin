@@ -1,0 +1,105 @@
+[
+  {
+    "name": "Verify Subprocessor List URL",
+    "description": "Checks if a URL points to a current and valid subprocessor list for a specific company.",
+    "system_prompt": "You are an expert in data privacy and compliance documentation analysis.",
+    "user_prompt": "Goal: Your primary goal is to determine if the provided text from {url_content} is a subprocessor list that belongs to the {expected_processor_name} and is the current, active version.\n\nContext: Subprocessor lists disclose third-party data processors. Companies often leave historical/archived versions online. Your goal is to identify the currently effective list for the correct company. For date context: Today is approximately June 9, 2025.\n\nInput Parameters:\n\n{url_content}: The text content retrieved from a URL.\n\n{expected_processor_name}: The name of the company for whom you are trying to find the subprocessor list.\n\nProcessing Steps: Your decision process must follow these steps in order:\n\n1. Is it a Subprocessor List?\n- Scan for explicit titles (e.g., \"Subprocessor List,\" \"Our Sub-Processors\").\n- Look for a structured list/table of multiple distinct company names.\n- If it is not a subprocessor list, stop. The other checks are irrelevant.\n\n2. Is it for the Correct Company?\n- Only if it is a subprocessor list, analyze the page content (title, headings, legal text) to identify which company it belongs to.\n- Compare the identified company with the {expected_processor_name}. You must account for variations like abbreviations (e.g., \"AWS\" for \"Amazon Web Services\") and legal names (e.g., \"Google LLC\" for \"Google\").\n- If the list does not clearly belong to the {expected_processor_name}, stop. The currency check is irrelevant.\n\n3. Is the List Current?\n- Only if it is a subprocessor list for the correct company, determine if it's the current version using the following evidence, in order of priority:\n- A. Explicit Archival (Strongly indicates NOT CURRENT): Look for \"archived,\" \"historical,\" \"superseded by,\" or an effective end date clearly before June 2025.\n- B. Explicit Currency (Strongly indicates CURRENT): Look for \"current list,\" an effective date after June 2025, or a \"Last Updated\" date within the last year with no archival notices.\n- C. Old Dates (Suggests NOT CURRENT): An effective or updated date from 2-3+ years ago with no other confirmation.\n- D. No Negative Indicators (Weakly suggests CURRENT): If it's a list for the correct company with no date information and no archival notices, you may infer it's current.\n",
+    "llm_model_id": "0195a35e-a71c-7c9d-f1fa-28d0b6667f2d",
+    "output_format": {
+      "isSubprocessorList": { "type": "boolean", "description": "True if the content appears to be a list of subprocessors." },
+      "isCorrectProcessor": { "type": "boolean", "description": "True if the page content belongs to the 'expected_processor_name'." },
+      "isCurrentVersion": { "type": "boolean", "description": "True if the list appears to be the current, active version." },
+      "reasoning": { "type": "string", "description": "Briefly state the key evidence for your decision." },
+      "page_content": { "type": "string", "description": "The full text content fetched from the input URL." }
+    },
+    "input_processors": [
+      { "param_name": "url_content", "input_processor": "url_fetcher", "config": { "extract_text": true } }
+    ],
+    "enabled": true
+  },
+  {
+    "name": "Extract Entities From Page Content",
+    "description": "Extracts and categorizes subprocessor and internal affiliate details from text content.",
+    "system_prompt": "You are an expert data extraction specialist, skilled at identifying and categorizing entities from unstructured text. Focus on accurately discerning third-party subprocessors from internal entities, extracting key details and organizing the information into a structured JSON format.",
+    "user_prompt": "Goal: Extract detailed information about third-party subprocessors and internal entities from a company's subprocessor information page.\n\nContext: Subprocessor information pages typically list external companies (third-party subprocessors) that process data on behalf of the main company, as well as internal entities or affiliates. This information is often structured in sections with headings and may be formatted as tables using Markdown or HTML elements.\n\nInput Parameters:\n{page_text} - The text content from a company's subprocessor information page.\n\nProcessing Steps:\n1. Analyze the provided text.\n2. Identify sections for third-party subprocessors (e.g., \"Third Party Sub-processors\") and internal entities (e.g., \"Our Group Companies\").\n3. For each third-party subprocessor, extract: name, processing function, and location.\n4. For each internal entity, extract: name, role/function, and location.\n5. Organize the extracted information into the required JSON structure.\n\nOutput Guidance:\nReturn a JSON object with two top-level keys: 'third_party_subprocessors' and 'own_entities', each a list of objects containing 'name', 'processing_function', and 'location'. If a category is empty, return an empty list. Use null for missing fields. If no distinction is made, classify all as 'third_party_subprocessors'.",
+    "llm_model_id": "0195a35e-a71c-7c9d-f1fa-28d0b6667f2d",
+    "output_format": {
+      "third_party_subprocessors": {
+        "type": "list", "item_type": "object",
+        "nested_structure": { "name": { "type": "string" }, "processing_function": { "type": "string" }, "location": { "type": "string" } }
+      },
+      "own_entities": {
+        "type": "list", "item_type": "object",
+        "nested_structure": { "name": { "type": "string" }, "processing_function": { "type": "string" }, "location": { "type": "string" } }
+      }
+    },
+    "input_processors": [],
+    "enabled": true
+  },
+  {
+    "name": "Deduplicate Subprocessors",
+    "description": "Identifies duplicate subprocessor pages in an Obsidian folder for merging.",
+    "system_prompt": "You are an AI assistant specialized in data organization and deduplication for Obsidian notes. Your task is to analyze a list of 'subprocessor_pages' and identify duplicates based on their name and aliases.",
+    "user_prompt": "Analyze the following list of subprocessor pages and identify any duplicates. For each set, determine a survivor and list the others to be merged.\n\nInput: {subprocessor_pages} (A list of objects, each with 'file_path', 'page_name', 'aliases').\n\nProcess:\n1. Normalize all names and aliases (lowercase, remove suffixes like 'inc', 'llc', 'corp', and generic terms like 'technologies', 'solutions').\n2. Group pages with identical or highly similar normalized identifiers.\n3. For each group, select one 'survivor' based on the most canonical name, highest alias count, or simplest file path.\n\nOutput: Return a JSON object with a 'deduplication_results' list. Each item should contain 'survivor_file_path', a 'duplicate_file_paths' list, and 'reasoning_for_survivor_choice'.",
+    "llm_model_id": "0195a35e-a71c-7c9d-f1fa-28d0b6667f2d",
+    "output_format": {
+      "deduplication_results": {
+        "type": "list", "item_type": "object",
+        "nested_structure": {
+          "survivor_file_path": { "type": "string" },
+          "duplicate_file_paths": { "type": "list", "item_type": "string" },
+          "reasoning_for_survivor_choice": { "type": "string" }
+        }
+      }
+    },
+    "input_processors": [],
+    "enabled": true
+  },
+  {
+    "name": "DDG SERP Parser",
+    "description": "Parses a DuckDuckGo search results page and returns a filtered list of relevant URLs.",
+    "system_prompt": "You are an AI assistant that functions as an expert web scraper and data extractor. Your primary goal is to analyze the provided HTML content of a search engine results page (SERP) from DuckDuckGo and extract individual organic search results.",
+    "user_prompt": "The input parameter '{search_url_to_process}' contains the full HTML content of a DuckDuckGo search results page. Your task is to meticulously parse this HTML and extract each organic search result's 'title', 'url', and 'snippet'. Return your findings as a JSON object with a key 'search_results', which holds a list of objects.",
+    "llm_model_id": "01965cb4-73f4-9ec3-6f21-bede0391e2b4",
+    "output_format": {
+      "search_results": {
+        "type": "list", "item_type": "object",
+        "nested_structure": { "title": { "type": "string" }, "url": { "type": "string" }, "snippet": { "type": "string" } }
+      }
+    },
+    "input_processors": [
+      { "param_name": "search_url_to_process", "input_processor": "url_fetcher", "config": { "extract_text": true } }
+    ],
+    "enabled": true
+  },
+  {
+    "name": "Find DPA URL",
+    "description": "Finds the canonical URL for a company's Data Processing Agreement (DPA).",
+    "system_prompt": "You are a specialized AI assistant proficient in legal document retrieval. Focus on quickly identifying and validating the official DPA URL using efficient search strategies.",
+    "user_prompt": "Your sole purpose is to find the canonical URL for the Data Processing Agreement (DPA) of the given {company_name}. Formulate precise search queries (e.g., '\"{company_name}\" data processing agreement'), prioritize links from the company's official domains, and verify the page contains the actual DPA document. Your response MUST be a single, valid JSON object with one key: 'url'. If not found, the value must be null.",
+    "llm_model_id": "01965cb4-73f4-9ec3-6f21-bede0391e2b4",
+    "output_format": { "url": "string" },
+    "input_processors": [],
+    "enabled": true
+  },
+  {
+    "name": "Find ToS URL",
+    "description": "Finds the canonical URL for a company's Terms of Service (ToS).",
+    "system_prompt": "You are a highly skilled web researcher, adept at navigating complex websites and legal documents. Focus on identifying the most relevant URL for a company's official Terms of Service.",
+    "user_prompt": "Your sole purpose is to find the canonical URL for the main customer Terms of Service (ToS) of the given {company_name}. Be aware of alternate names like 'Master Service Agreement' or 'General Terms.' Prioritize official domains and ensure the page contains the actual legal agreement, not a summary. Your response MUST be a single, valid JSON object with one key: 'url'. If not found, the value must be null.",
+    "llm_model_id": "01965cb4-73f4-9ec3-6f21-bede0391e2b4",
+    "output_format": { "url": "string" },
+    "input_processors": [],
+    "enabled": true
+  },
+  {
+    "name": "Find Security Page URL",
+    "description": "Finds the canonical URL for a company's primary Security or Trust page.",
+    "system_prompt": "You are a world-class cybersecurity researcher, skilled at finding key information. Locate the most authoritative security information source and return the URL.",
+    "user_prompt": "Find the canonical URL for the primary Security or Trust page of the given {company_name}. These pages serve as central repositories for security practices and certifications. Prioritize official domains (e.g., company.com, trust.company.com) and pages that comprehensively address security. Your response MUST be a single, valid JSON object with one key: 'url'. If not found, the value must be null.",
+    "llm_model_id": "01965cb4-73f4-9ec3-6f21-bede0391e2b4",
+    "output_format": { "url": "string" },
+    "input_processors": [],
+    "enabled": true
+  }
+]
