@@ -1177,8 +1177,7 @@ export default class ProcessorProcessorPlugin extends Plugin {
                 const markdownPrimaryAlias = primaryOriginalName.replace(/\n/g, ' ').replace(/[\[\]()|]/g, '');
                 
                 // Using the corrected Markdown link format for tables
-                const primaryLinkTarget = encodeURI(`${this.settings.processorsFolderPath}/${primaryFilePathName}.md`);
-                const primaryProcessorLink = `[${markdownPrimaryAlias}](${primaryLinkTarget})`;
+                const primaryProcessorNameAsPlainText = markdownPrimaryAlias;
 
                 const processingFunctionDisplay = (rel.ProcessingFunction || "N/A").replace(/\n/g, "<br>").replace(/\|/g, "\\|");
                 const locationDisplay = (rel.Location || "N/A").replace(/\n/g, "<br>").replace(/\|/g, "\\|");
