@@ -21,7 +21,7 @@ This plugin is deeply integrated with [RightBrain.ai](https://rightbrain.ai) to 
 
 **2. Create your RightBrain API Client**
 
-* Navigate to your RightBrain API Clients page: [https://stag.leftbrain.me/preferences?tab=api-clients](https://stag.leftbrain.me/preferences?tab=api-clients).
+* Navigate to your RightBrain API Clients page: [https://app.rightbrain.ai/preferences?tab=api-clients](https://app.rightbrain.ai/preferences?tab=api-clients).
 * Click **Create OAuth Client**.
 * Give it a descriptive name (e.g., "Obsidian Plugin").
 * For "Token Endpoint Auth Method," select **Client Secret Basic (client_credentials)**.
@@ -65,6 +65,7 @@ Please be aware that your `Client Secret` is stored in plaintext in this file. T
 * **Handle Difficult Sources:** Some subprocessor lists are buried in PDFs, hard-to-parse web pages, or not publicly available at all. The **`Manually Add Subprocessor List URL`** and **`Input Subprocessor List from Text`** features allow you to point the AI directly at a URL or simply paste the text to ensure nothing is missed.
 * **AI-Powered Verification & Extraction:** Uses RightBrain to verify if a URL is a genuine, current subprocessor list and then extracts the names of all third-party vendors and internal company affiliates.
 * **Automated Note Creation & Linking:** Creates a central, linked note for each processor and subprocessor. A processor's note lists its subprocessors; a subprocessor's note lists who it's "Used By."
+* **Visualize Your Supply Chain:** Because all notes are inter-linked, you can use Obsidian's native Graph View to get an instant, interactive map of your vendor relationships. This makes complex data supply chains easier to understand and allows you to dive in and out of particular nodes of interest.
 * **AI-Powered Deduplication:** Run a command on your processors folder to find and merge duplicate entities, combining their relationships automatically.
 * **Compliance Document Enrichment:** Right-click any processor file to automatically find and link to that company's public DPA, Terms of Service, and Security pages.
 
@@ -94,7 +95,7 @@ Please be aware that your `Client Secret` is stored in plaintext in this file. T
 
 ### 🌱 Future Development & Feedback
 
-This is the first release of Processor Processor. The "Enrich" features are just the beginning of a larger plan to build a suite of automated due diligence tools.
+This is the first release of Processor Processor. The "Enrich" features are just the beginning of a larger plan to build a suite of automated due diligence tools. I am also actively exploring enhancements to the graph visualization to make these relationship maps even more powerful.
 
 Your feedback is invaluable for guiding what comes next! If you have ideas for new features or improvements, please share them by raising an issue on the plugin's GitHub repository.
 

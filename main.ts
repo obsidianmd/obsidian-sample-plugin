@@ -18,6 +18,8 @@ interface ProcessorProcessorSettings {
     rightbrainClientSecret: string;
     rightbrainOrgId: string;
     rightbrainProjectId: string;
+    rightbrainApiUrl: string;
+    rightbrainOauth2Url: string;
     rightbrainVerifyUrlTaskId: string;
     rightbrainExtractEntitiesTaskId: string;
     rightbrainExtractInputField: string;
@@ -43,6 +45,8 @@ const DEFAULT_SETTINGS: ProcessorProcessorSettings = {
     rightbrainClientSecret: '',
     rightbrainOrgId: '',
     rightbrainProjectId: '',
+    rightbrainApiUrl: 'https://app.rightbrain.ai/api/v1',
+    rightbrainOauth2Url: 'https://oauth.rightbrain.ai',
     rightbrainVerifyUrlTaskId: '',
     rightbrainExtractEntitiesTaskId: '',
     rightbrainExtractInputField: 'page_text',
@@ -533,7 +537,7 @@ export default class ProcessorProcessorPlugin extends Plugin {
             new Notice("RightBrain Org ID or Project ID not set.");
             return null;
         }
-        const tasksUrl = `https://stag.leftbrain.me/api/v1/org/${this.settings.rightbrainOrgId}/project/${this.settings.rightbrainProjectId}/task`;
+        const tasksUrl = `${this.settings.rightbrainApiUrl}/org/${this.settings.rightbrainOrgId}/project/${this.settings.rightbrainProjectId}/task`;
         const headers = { 'Authorization': `Bearer ${rbToken}` };
     
         try {
@@ -558,7 +562,7 @@ export default class ProcessorProcessorPlugin extends Plugin {
      * @returns The created task object or null if an error occurs.
      */
     private async createRightBrainTask(rbToken: string, taskDefinition: any): Promise<any | null> {
-        const createUrl = `https://stag.leftbrain.me/api/v1/org/${this.settings.rightbrainOrgId}/project/${this.settings.rightbrainProjectId}/task`;
+        const createUrl = `${this.settings.rightbrainApiUrl}/org/${this.settings.rightbrainOrgId}/project/${this.settings.rightbrainProjectId}/task`;
         const headers = {
             'Authorization': `Bearer ${rbToken}`,
             'Content-Type': 'application/json'
@@ -1468,8 +1472,8 @@ export default class ProcessorProcessorPlugin extends Plugin {
             return (this as any)._rbToken;
         }
 
-        const tokenUrl = 'https://oauth.leftbrain.me/oauth2/token'; // Corrected based on PDF
-        
+        const tokenUrl = `${this.settings.rightbrainOauth2Url}/oauth2/token`;
+                
         const bodyParams = new URLSearchParams();
         bodyParams.append('grant_type', 'client_credentials');
 
@@ -1747,8 +1751,7 @@ export default class ProcessorProcessorPlugin extends Plugin {
             return null;
         }
     
-        const taskRunUrl = `https://stag.leftbrain.me/api/v1/org/${this.settings.rightbrainOrgId}/project/${this.settings.rightbrainProjectId}/task/${taskId}/run`;
-        const headers = {
+        const taskRunUrl = `${this.settings.rightbrainApiUrl}/org/${this.settings.rightbrainOrgId}/project/${this.settings.rightbrainProjectId}/task/${taskId}/run`;        const headers = {
             'Authorization': `Bearer ${rbToken}`,
             'Content-Type': 'application/json',
             'User-Agent': `ObsidianProcessorProcessorPlugin/${this.manifest.version}`
