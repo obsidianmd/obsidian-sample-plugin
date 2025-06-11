@@ -73,23 +73,23 @@ Please be aware that your `Client Secret` is stored in plaintext in this file. T
 
 ### How to Use: A Sample Workflow
 
-1.  **Start a Recursive Discovery:**
-    * Open the command palette (`Cmd/Ctrl+P`) and run **`Search for Subprocessors (Recursive Discover)`**.
-    * Enter a top-level vendor you use, like "Microsoft".
-    * The plugin will begin discovering Microsoft's subprocessors, and then the subprocessors of those subprocessors, creating a network of notes in your `Processors` folder.
+1.  **Start with an Initial Discovery:**
+    * Open the command palette (`Cmd/Ctrl+P`) and run **`Search for Subprocessors (Discover)`**.
+    * Enter "**OpenAI**".
+    * The plugin will find OpenAI's nicely formatted subprocessor page, extract the vendors, and create linked notes for them. You'll see it creates a new note for `Microsoft Azure`, a key subprocessor for OpenAI.
 
-2.  **Manually Add from a PDF:**
-    * During your research, you find that one of Microsoft's subprocessors, "Contoso Ltd," only lists their own subprocessors in a PDF.
-    * Open the PDF, copy the list of companies, and run the command **`Input Subprocessor List from Text`**.
-    * Enter "Contoso Ltd" as the processor name, paste the text, and the plugin will extract the entities and link them correctly.
+2.  **Enrich a Discovered Subprocessor:**
+    * Now that a note for `Microsoft Azure.md` exists, right-click on it in the file explorer.
+    * Select **`Enrich Processor Documentation`**. The plugin will find and add direct links for Microsoft's DPA, ToS, and Security pages into that note, giving you immediate access to key compliance documents.
 
-3.  **Clean Up with Deduplication:**
-    * After all the discovery, you might have notes for both "AWS" and "Amazon Web Services."
-    * Right-click on your `Processors` folder and select **`Deduplicate Subprocessor Pages`** to automatically find and merge them.
+3.  **Go Deeper with Recursive Mapping:**
+    * To see the full supply chain, right-click the original `OpenAI.md` file again and select **`Map Subprocessor Relationships`**.
+    * The plugin will now start looking for the subprocessors of each of OpenAI's subprocessors (like Microsoft Azure), building out the network map in your vault.
 
-4.  **Enrich Key Vendor Files:**
-    * Now that you have a clean list, right-click the `Microsoft.md` file in your vault.
-    * Select **`Enrich Processor Documentation`**. The plugin will find and add direct links for Microsoft's DPA, ToS, and Security pages right into the note for easy access.
+4.  **Clean Up Duplicates:**
+    * After the discovery process, you might have notes for both "AWS" and "Amazon Web Services."
+    * Right-click on your `Processors` folder and select **`Deduplicate Subprocessor Pages`** to automatically find and merge them, combining all their relationships into a single file.
+
 
 ---
 
