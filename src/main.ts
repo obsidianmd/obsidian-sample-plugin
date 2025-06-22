@@ -123,7 +123,9 @@ export default class PomodoroPlugin extends Plugin {
                 // The PomodoroView will update itself via its registered interval
             },
             () => {
-                new Notice(this.timer.getIsPomodoro() ? 'Pomodoro Complete!' : 'Break Complete!');
+                const sessionType = this.timer.getIsPomodoro() ? 'Pomodoro' : 'Break';
+                new Notice(`${sessionType} Complete!`);
+                this.handleSessionEnd(sessionType);
                 this.logSession();
                 if (this.settings.autoStartNextSession) {
                     this.startTimer();
@@ -173,6 +175,21 @@ export default class PomodoroPlugin extends Plugin {
         } else {
             const newDailyNote = await createDailyNote(now);
             await this.app.vault.append(newDailyNote, `\n${logEntry}`);
+        }
+    }
+
+    handleSessionEnd(sessionType: string) {
+        if (this.settings.enableNotifications) {
+            new Notification('Obsidian Pomodoro', {
+                body: `${sessionType} session complete!`,
+            });
+        }
+        if (this.settings.enableSound) {
+            // You would typically play a sound here.
+            // In a browser environment, this would be an Audio object.
+            // For Obsidian, you might need to use a different approach or rely on OS notification sounds.
+            // For simplicity, we'll just log for now.
+            console.log('Playing session end sound.');
         }
     }
 }
