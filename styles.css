@@ -1,8 +1,56 @@
-/*
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* Pomodoro View Container */
+.pomodoro-view-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: var(--background-primary);
+}
 
-If your plugin does not need CSS, delete this file.
+/* Timer Display */
+.pomodoro-timer-display {
+    font-size: 4em;
+    font-weight: bold;
+    color: var(--text-normal);
+    margin-bottom: 30px;
+    font-variant-numeric: tabular-nums; /* Ensures monospaced numbers */
+}
 
-*/
+/* Control Buttons */
+.pomodoro-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.pomodoro-button {
+    background-color: var(--background-modifier-form-field);
+    border: 1px solid var(--background-modifier-border);
+    color: var(--text-normal);
+    border-radius: var(--button-radius);
+    padding: 10px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    transition: background-color 0.2s ease;
+}
+
+.pomodoro-button:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.pomodoro-button svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2;
+}
+
+/* Settings Page Styling (if needed, though Obsidian handles most of it) */
+.setting-item-control input[type="number"] {
+    width: 80px; /* Adjust as needed for number inputs */
+}
