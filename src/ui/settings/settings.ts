@@ -6,6 +6,7 @@ import {
 	defaultSettings,
 } from "../settings/settings_store";
 import { z } from "zod";
+import { DEFAULT_DONE_STATUS_MARKERS, validateDoneStatusMarkers } from "../tasks/task";
 
 const VisibilityOptionSchema = z.nativeEnum(VisibilityOption);
 const ScopeOptionSchema = z.nativeEnum(ScopeOption);
@@ -111,6 +112,27 @@ export class SettingsModal extends Modal {
 				toggle.setValue(this.settings.consolidateTags ?? false);
 				toggle.onChange((value) => {
 					this.settings.consolidateTags = value;
+				});
+			});
+
+		new Setting(this.contentEl)
+			.setName("Done status markers")
+			.setDesc(
+				"Characters that mark a task as done (e.g., 'xX' for [x] and [X]). Each character should be a single Unicode character without spaces."
+			)
+			.addText((text) => {
+				text.setValue(this.settings.doneStatusMarkers ?? DEFAULT_DONE_STATUS_MARKERS);
+				text.onChange((value) => {
+					// Validate the input and provide immediate feedback
+					const errors = validateDoneStatusMarkers(value);
+					if (errors.length > 0) {
+						text.inputEl.style.borderColor = "var(--text-error)";
+						text.inputEl.title = `Invalid: ${errors.join(', ')}`;
+					} else {
+						text.inputEl.style.borderColor = "";
+						text.inputEl.title = "Valid done status markers";
+						this.settings.doneStatusMarkers = value;
+					}
 				});
 			});
 

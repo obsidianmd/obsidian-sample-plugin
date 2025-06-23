@@ -1,6 +1,6 @@
 import { TFile, Vault, type EventRef, Workspace } from "obsidian";
 import { updateMapsFromFile, type Metadata } from "./tasks";
-import { Task } from "./task";
+import { Task, DEFAULT_DONE_STATUS_MARKERS } from "./task";
 import { get, writable, type Readable, type Writable } from "svelte/store";
 import type { ColumnTagTable } from "../columns/columns";
 import { createTaskActions, type TaskActions } from "./actions";
@@ -53,7 +53,9 @@ export function createTasksStore(
 		metadataByTaskId.clear();
 		taskIdsByFileHandle.clear();
 
-		const consolidateTags = get(settingsStore).consolidateTags ?? false;
+		const settings = get(settingsStore);
+		const consolidateTags = settings.consolidateTags ?? false;
+		const doneStatusMarkers = settings.doneStatusMarkers ?? DEFAULT_DONE_STATUS_MARKERS;
 
 		for (const fileHandle of fileHandles) {
 			if (!shouldHandle(fileHandle)) {
@@ -68,6 +70,7 @@ export function createTasksStore(
 				vault,
 				columnTagTableStore,
 				consolidateTags,
+				doneStatusMarkers,
 			}).then(() => {
 				debounceSetTasks();
 			});
@@ -77,8 +80,9 @@ export function createTasksStore(
 	registerEvent(
 		vault.on("modify", (fileHandle) => {
 			if (fileHandle instanceof TFile && shouldHandle(fileHandle)) {
-				const consolidateTags =
-					get(settingsStore).consolidateTags ?? false;
+				const settings = get(settingsStore);
+				const consolidateTags = settings.consolidateTags ?? false;
+				const doneStatusMarkers = settings.doneStatusMarkers ?? DEFAULT_DONE_STATUS_MARKERS;
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,
@@ -87,6 +91,7 @@ export function createTasksStore(
 					vault,
 					columnTagTableStore,
 					consolidateTags,
+					doneStatusMarkers,
 				}).then(() => {
 					debounceSetTasks();
 				});
@@ -97,8 +102,9 @@ export function createTasksStore(
 	registerEvent(
 		vault.on("create", (fileHandle) => {
 			if (fileHandle instanceof TFile && shouldHandle(fileHandle)) {
-				const consolidateTags =
-					get(settingsStore).consolidateTags ?? false;
+				const settings = get(settingsStore);
+				const consolidateTags = settings.consolidateTags ?? false;
+				const doneStatusMarkers = settings.doneStatusMarkers ?? DEFAULT_DONE_STATUS_MARKERS;
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,
@@ -107,6 +113,7 @@ export function createTasksStore(
 					vault,
 					columnTagTableStore,
 					consolidateTags,
+					doneStatusMarkers,
 				}).then(() => {
 					debounceSetTasks();
 				});
