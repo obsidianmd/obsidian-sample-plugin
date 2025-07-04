@@ -19,6 +19,8 @@ export default class MyPlugin extends Plugin {
 			const el = document.createDiv();
 			el.style.color = 'white';
 			el.style.backgroundColor = 'red';
+
+			localStorage.setItem('test', 'hello');
 		});
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
@@ -89,6 +91,8 @@ export default class MyPlugin extends Plugin {
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 		this.settings = Object.assign(DEFAULT_SETTINGS, await this.loadData());
+
+		const result = await fetch("https://github.com");
 	}
 
 	async saveSettings() {
