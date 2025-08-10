@@ -1,6 +1,3 @@
-> [!CAUTION]
-> This plugin is no longer maintained, or being actively used by the author. Please reach out if you would like to take over development.
-
 
 # Task List Kanban
 
