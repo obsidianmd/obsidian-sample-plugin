@@ -5,7 +5,7 @@ The Task List Kanban is a free and open source Obsidian plugin that automaticall
 
 By adding tags to your tasks using '#', you can allocate tasks to specific columns in your kanban, as well as add additional tags that you can use to filter. From the kanban view, you can easily move your tasks between columns, archive tasks, apply or change filters, and even jump straight to the file where the task sits. Any change made to a task from the kanban view will also update the task in its file, and visa versa.
 
-![Image 3-6-2024 at 7 19 PM](https://github.com/chrskerr/task-list-kanban/assets/80379257/ddde01aa-3098-4cfc-8860-6af34f0ece57)
+![Image 3-6-2024 at 7 19 PM](https://github.com/ErikaRS/task-list-kanban/assets/80379257/ddde01aa-3098-4cfc-8860-6af34f0ece57)
 
 
 ## How to use the Task List Kanban
@@ -14,7 +14,7 @@ By adding tags to your tasks using '#', you can allocate tasks to specific colum
 
 Right click on the folder in which you want your Task List Kanban to appear. Choose 'New kanban'. Your new Task List Kanban file has been created!
 
-![Image 3-6-2024 at 7 21 PM](https://github.com/chrskerr/task-list-kanban/assets/80379257/fbe25c3f-824f-4feb-b1b3-5acbdf1c8901)
+![Image 3-6-2024 at 7 21 PM](https://github.com/ErikaRS/task-list-kanban/assets/80379257/fbe25c3f-824f-4feb-b1b3-5acbdf1c8901)
 
 
 ### Managing columns
@@ -114,6 +114,6 @@ When you are ready to make a new deployment, following the following steps.
 	2. `$: git push origin 1.0.1`
 4. Push everything to GitHub.
 5. Wait while a github action creates a new Release.
-6. Go to `https://github.com/chrskerr/task-list-kanban/releases`
+6. Go to `https://github.com/ErikaRS/task-list-kanban/releases`
 7. Edit the new Draft release which has been created to add release notes, and the click Publish.
 
