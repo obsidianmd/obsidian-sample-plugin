@@ -26,6 +26,9 @@ Default kanban columns will be provided for you. You can either keep using these
 
 Select the settings icon in the top right corner of your kanban file. You will see the section 'Columns', here you can add/edit/remove columns as you like. Separate the column names with a ','.
 
+**Done Status Markers**
+You can customize which characters mark tasks as completed in the settings. By default, tasks marked with 'x' or 'X' are considered done, but you can configure any combination of single character done markers (including unicode).
+
 You will be able to rename/add/remove these columns at anytime. However! Please think carefully when naming your columns, as any tasks you add to that column will be associated with the exact column name. This means that if you change a column name in the future, all the tasks associated with the old version of that column will end up in 'uncategorised'. These tasks are NOT automatically applied to the new naming of the column.
 
 
@@ -63,7 +66,7 @@ You can edit the text of your tasks, as well as add or edit any tags, from withi
 To move tasks between kanban columns, either drag and drop the task, or click the task's settings icon and select the desired column.
 
 **Archive tasks**
-You can archive any tasks by clicking the task's settings icon, and choosing archive. This will xxxxxxx
+You can archive any tasks by clicking the task's settings icon, and choosing archive. This will mark the task as completed and move it out of the active kanban view while preserving it in the original file.
 
 **Done column**
 The final column in the kanban has an additional settings menu. This allows you to quickly and easily delete/archive all tasks within this column. The idea is that if tasks have made it to this column, they have been completed, and you will likely want to delete or archive these completed tasks at some stage!
@@ -79,9 +82,24 @@ To add a tag to a task, add the text, '#[tag name]' to anywhere within your task
 **Filtering tasks within the kanban view**
 To filter tasks when in the kanban view, type the tag name into the filter bar at the top of the kanban. You can select as many tags as you like.Your kanban will now only display tasks that include that tag.
 
+**Task Formatting Preservation**
+The plugin preserves the original indentation and formatting of your tasks when moving them between the columns of the kanban view.
+
 ## Development instructions
 
-TODO
+### Prerequisites
+- Node.js and npm
+- Obsidian for testing
+
+### Setup
+1. Clone the repository
+2. Run `npm install` to install dependencies
+3. Run `npm run dev` to start development mode
+4. Copy the built plugin to your Obsidian plugins folder for testing
+
+### Testing
+- Run `npm test` to execute the test suite
+- The project includes comprehensive tests for task parsing, validation, and kanban functionality
 
 ### Deployment
 
