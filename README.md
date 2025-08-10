@@ -94,6 +94,8 @@ The plugin preserves the original indentation and formatting of your tasks when 
 3. Run `npm run dev` to start development mode
 4. Copy the built plugin to your Obsidian plugins folder for testing
 
+For detailed Obsidian plugin development guidance, see the [official plugin development guide](https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin).
+
 ### Testing
 - Run `npm test` to execute the test suite
 - The project includes comprehensive tests for task parsing, validation, and kanban functionality
