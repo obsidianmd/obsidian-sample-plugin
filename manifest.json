@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Summarizes the current note using a local Ollama model",
-	"author": "you",
-	"authorUrl": "https://your.site",
+	"author": "Kevin M. Butler",
+	"authorUrl": "https://github.com/agileresearchservices/obsidian-sample-plugin",
 	"main": "main.js"
   }

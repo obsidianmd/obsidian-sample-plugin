@@ -1,4 +1,4 @@
-import { Plugin, TFile, PluginSettingTab, Setting, Modal, Notice } from 'obsidian';
+import { Plugin, TFile, PluginSettingTab, Setting, Modal, Notice, App, MenuItem } from 'obsidian';
 
 /**
  * Settings interface for the SummarizeThis plugin
@@ -37,96 +37,433 @@ class PromptModal extends Modal {
   
   onOpen() {
     const {contentEl} = this;
+    contentEl.empty();
     
-    contentEl.createEl('h2', {text: 'Customize Summary Prompt'});
-    
-    contentEl.createEl('p', {
-      text: 'Edit the prompt below that will be sent to the model. This prompt will COMPLETELY REPLACE the default prompt - not combine with it.'
-    });
-    
-    // Add preset buttons for common use cases
-    const presetContainer = contentEl.createEl('div', {
+    // Create modal container
+    const modalContainer = contentEl.createDiv({
       attr: {
-        style: 'display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;'
+        style: 'position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;'
       }
     });
     
-    const createPresetButton = (text: string, prompt: string) => {
-      const btn = presetContainer.createEl('button', {text: text});
-      btn.addEventListener('click', () => {
-        promptTextArea.value = prompt;
-        this.promptText = prompt;
+    // Create modal card
+    const modalCard = modalContainer.createDiv({
+      attr: {
+        style: 'width: 100%; max-width: 896px; max-height: 85vh; margin: 1rem; background-color: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; display: flex; flex-direction: column;'
+      }
+    });
+    
+    // Header
+    const header = modalCard.createDiv({
+      attr: {
+        style: 'display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; border-bottom: 1px solid var(--background-modifier-border); background-color: var(--background-primary-alt);'
+      }
+    });
+    
+    const headerContent = header.createDiv({
+      attr: {
+        style: 'display: flex; align-items: center; gap: 0.75rem;'
+      }
+    });
+    
+    const iconContainer = headerContent.createDiv({
+      attr: {
+        style: 'padding: 0.5rem; border-radius: 0.5rem; background-color: var(--interactive-accent-hover);'
+      }
+    });
+    
+    // Sparkles icon (using asterisk as placeholder)
+    iconContainer.createEl('span', {
+      text: '✨',
+      attr: {
+        style: 'font-size: 1.5rem;'
+      }
+    });
+    
+    const headerText = headerContent.createDiv();
+    headerText.createEl('h2', {
+      text: 'Customize Summary Prompt',
+      attr: {
+        style: 'font-size: 1.5rem; font-weight: 900; color: var(--text-normal);'
+      }
+    });
+    
+    // Close button
+    const closeBtn = header.createEl('button', {
+      text: '✕',
+      attr: {
+        style: 'padding: 0.5rem; border-radius: 9999px; background-color: transparent; border: none; cursor: pointer; font-size: 1.25rem; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;'
+      }
+    });
+    
+    closeBtn.addEventListener('mouseenter', () => {
+      closeBtn.setAttribute('style', 'padding: 0.5rem; border-radius: 9999px; background-color: var(--background-modifier-hover); border: none; cursor: pointer; font-size: 1.25rem; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;');
+    });
+    
+    closeBtn.addEventListener('mouseleave', () => {
+      closeBtn.setAttribute('style', 'padding: 0.5rem; border-radius: 9999px; background-color: transparent; border: none; cursor: pointer; font-size: 1.25rem; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;');
+    });
+    
+    closeBtn.addEventListener('click', () => {
+      this.close();
+    });
+    
+    // Scrollable content area
+    const scrollableContent = modalCard.createDiv({
+      attr: {
+        style: 'flex: 1; overflow-y: auto; padding: 1rem;'
+      }
+    });
+    
+    // Description/info block
+    const descriptionBlock = scrollableContent.createDiv({
+      attr: {
+        style: 'margin-bottom: 15px; padding: 0.5rem 0.75rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt);'
+      }
+    });
+    descriptionBlock.createEl('p', {
+      text: 'Edit the prompt below that will be sent to the model. This prompt will COMPLETELY REPLACE the default prompt — not combine with it.',
+      attr: {
+        style: 'margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--text-normal);'
+      }
+    });
+    
+    // Preset templates section
+    const presetSection = scrollableContent.createDiv({
+      attr: {
+        style: 'margin-bottom: 15px;'
+      }
+    });
+    
+    presetSection.createEl('h3', {
+      text: 'Quick Start Templates',
+      attr: {
+        style: 'margin-bottom: 10px; font-weight: bold; font-size: 1.2em;'
+      }
+    });
+    
+    const presetContainer = presetSection.createDiv({
+      attr: {
+        style: 'display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px;'
+      }
+    });
+    
+    // Preset prompt templates with icons
+    const presetPrompts = [
+      {
+        id: "default",
+        label: "Default Summary",
+        prompt: DEFAULT_PROMPT,
+        icon: "📝"
+      },
+      {
+        id: "extract",
+        label: "Extract Tasks",
+        prompt: "You are a task extraction tool. Your ONLY job is to identify and list all tasks, todos, and action items from the provided text. Format each task as a bullet point. Do NOT include any explanations, summaries, or non-task content.",
+        icon: "✅"
+      },
+      {
+        id: "keypoints",
+        label: "Key Points",
+        prompt: "Extract only the key points and important facts from the text. Present them as a bulleted list with no additional commentary.",
+        icon: "🔑"
+      },
+      {
+        id: "simplify",
+        label: "Simplify",
+        prompt: "Simplify this text to make it easy to understand. Use plain language and short sentences.",
+        icon: "✨"
+      }
+    ];
+    
+    const createPresetButton = (preset: {id: string, label: string, prompt: string, icon: string}) => {
+      const btn = presetContainer.createEl('button', {
+        attr: {
+          style: 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.7rem; height: auto;'
+        }
       });
+      
+      // Add icon
+      btn.createEl('span', {
+        text: preset.icon,
+        attr: {
+          style: 'font-size: 1rem;'
+        }
+      });
+      
+      // Add label
+      btn.createEl('span', {
+        text: preset.label,
+        attr: {
+          style: 'font-size: 0.75rem; font-weight: 500;'
+        }
+      });
+      
+      btn.addEventListener('mouseenter', () => {
+        btn.setAttribute('style', 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--background-modifier-border-hover); border-radius: 0.5rem; background: var(--background-modifier-hover); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.7rem; height: auto; transform: scale(1.05);');
+      });
+      
+      btn.addEventListener('mouseleave', () => {
+        btn.setAttribute('style', 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.7rem; height: auto;');
+      });
+      
+      btn.addEventListener('click', () => {
+        promptTextArea.value = preset.prompt;
+        this.promptText = preset.prompt;
+        
+        // Update button styles to show selection
+        presetContainer.querySelectorAll('button').forEach(b => {
+          b.setAttribute('style', 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.7rem; height: auto;');
+        });
+        btn.setAttribute('style', 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--interactive-accent); border-radius: 0.5rem; background: var(--interactive-accent); color: white; cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.7rem; height: auto;');
+        
+        // Clear example selection if any
+        const baseExampleStyle = 'display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; transition: all 0.2s ease;';
+        examplesContainer?.querySelectorAll('[data-example-item="true"]').forEach((el) => {
+          (el as HTMLElement).setAttribute('data-selected', 'false');
+          (el as HTMLElement).setAttribute('style', baseExampleStyle);
+        });
+        
+        // Update character count
+        charCount.textContent = `${preset.prompt.length} characters`;
+      });
+      
       return btn;
     };
     
-    createPresetButton('Default Summary', DEFAULT_PROMPT);
-    createPresetButton('Extract Tasks', 'You are a task extraction tool. Your ONLY job is to identify and list all tasks, todos, and action items from the provided text. Format each task as a bullet point. Do NOT include any explanations, summaries, or non-task content.');
-    createPresetButton('Key Points', 'Extract only the key points and important facts from the text. Present them as a bulleted list with no additional commentary.');
-    createPresetButton('Simplify', 'Simplify this text to make it easy to understand. Use plain language and short sentences.');
-    
-    // Example prompts section
-    contentEl.createEl('p', {
-      text: 'Examples of effective prompts:',
-      attr: {style: 'margin-bottom: 5px; font-weight: bold;'}
+    // Create preset buttons
+    const presetButtons: Record<string, HTMLButtonElement> = {};
+    presetPrompts.forEach(preset => {
+      const btn = createPresetButton(preset);
+      presetButtons[preset.id] = btn;
     });
+    // Mark default preset as selected initially
+    const defaultBtn = presetButtons['default'];
+    if (defaultBtn) {
+      defaultBtn.setAttribute('style', 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; border: 1px solid var(--interactive-accent); border-radius: 0.5rem; background: var(--interactive-accent); color: white; cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.75rem; height: auto;');
+    }
     
-    const examplesList = contentEl.createEl('ul');
-    [
+    // Examples section
+    const examplesSection = scrollableContent.createDiv({
+      attr: {
+        style: 'margin-bottom: 15px;'
+      }
+    });
+
+    // Create header with toggle button
+    const examplesHeader = examplesSection.createDiv({
+      attr: {
+        style: 'display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;'
+      }
+    });
+
+    examplesHeader.createEl('h3', {
+      text: 'Examples of effective prompts:',
+      attr: {
+        style: 'margin: 0; font-weight: bold; font-size: 1.2em;'
+      }
+    });
+
+    const toggleButton = examplesHeader.createEl('button', {
+      text: '▼',
+      attr: {
+        style: 'background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--text-muted);'
+      }
+    });
+
+    const examplePrompts = [
       "Extract and list ONLY the tasks mentioned in this note. Format as bullet points.",
       "Identify the main topics and provide a 3-sentence summary for each.",
       "Create a timeline of events mentioned in this document."
-    ].forEach(example => {
-      examplesList.createEl('li', {text: example});
+    ];
+
+    const examplesContainer = examplesSection.createDiv({
+      attr: {
+        style: 'margin-bottom: 15px;'
+      }
+    });
+
+    // Add examples
+    examplePrompts.forEach((example, index) => {
+      const exampleItem = examplesContainer.createDiv({
+        attr: {
+          style: 'display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem; margin-bottom: 0.25rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; transition: all 0.2s ease;',
+          'data-example-item': 'true'
+        }
+      });
+
+      // Dot indicator
+      const dotIndicator = exampleItem.createDiv({
+        attr: {
+          style: 'width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: var(--interactive-accent); margin-top: 0.5rem; transition: background-color 0.2s;'
+        }
+      });
+
+      const exampleText = exampleItem.createEl('p', {
+        text: example,
+        attr: {
+          style: 'margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--text-muted); transition: color 0.2s;'
+        }
+      });
+
+      exampleItem.addEventListener('mouseenter', () => {
+        if (exampleItem.getAttribute('data-selected') === 'true') return;
+        exampleItem.setAttribute('style', 'display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem; margin-bottom: 0.25rem; border: 1px solid var(--background-modifier-border-hover); border-radius: 0.5rem; background: var(--background-modifier-hover); cursor: pointer; transition: all 0.2s ease;');
+        dotIndicator.setAttribute('style', 'width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: var(--text-normal); margin-top: 0.5rem; transition: background-color 0.2s;');
+        exampleText.setAttribute('style', 'margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--text-normal); transition: color 0.2s;');
+      });
+
+      exampleItem.addEventListener('mouseleave', () => {
+        if (exampleItem.getAttribute('data-selected') === 'true') return;
+        exampleItem.setAttribute('style', 'display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem; margin-bottom: 0.25rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; transition: all 0.2s ease;');
+        dotIndicator.setAttribute('style', 'width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: var(--interactive-accent); margin-top: 0.5rem; transition: background-color 0.2s;');
+        exampleText.setAttribute('style', 'margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--text-muted); transition: color 0.2s;');
+      });
+
+      exampleItem.addEventListener('click', () => {
+        promptTextArea.value = example;
+        this.promptText = example;
+        
+        // Update preset button styles to clear selection
+        presetContainer.querySelectorAll('button').forEach(b => {
+          b.setAttribute('style', 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.75rem; height: auto;');
+        });
+        
+        // Mark selected example and reset others
+        const baseExampleStyle = 'display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem; margin-bottom: 0.25rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; transition: all 0.2s ease;';
+        const selectedExampleStyle = 'display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem; margin-bottom: 0.25rem; border: 1px solid var(--interactive-accent); border-radius: 0.5rem; background: var(--background-modifier-hover); cursor: pointer; transition: all 0.2s ease;';
+        examplesContainer.querySelectorAll('[data-example-item="true"]').forEach((el) => {
+          (el as HTMLElement).setAttribute('data-selected', 'false');
+          (el as HTMLElement).setAttribute('style', baseExampleStyle);
+        });
+        exampleItem.setAttribute('data-selected', 'true');
+        exampleItem.setAttribute('style', selectedExampleStyle);
+        dotIndicator.setAttribute('style', 'width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: var(--text-normal); margin-top: 0.5rem; transition: background-color 0.2s;');
+        exampleText.setAttribute('style', 'margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--text-normal); transition: color 0.2s;');
+        
+        // Update character count
+        charCount.textContent = `${example.length} characters`;
+      });
+    });
+
+    // Toggle examples visibility
+    let examplesVisible = true;
+    toggleButton.addEventListener('click', () => {
+      examplesVisible = !examplesVisible;
+      examplesContainer.style.display = examplesVisible ? 'block' : 'none';
+      toggleButton.textContent = examplesVisible ? '▼' : '▶';
+      
+      // Adjust modal height when examples are toggled
+      const newMaxHeight = examplesVisible ? '85vh' : '75vh';
+      modalCard.setAttribute('style', `width: 100%; max-width: 896px; max-height: ${newMaxHeight}; margin: 1rem; background-color: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; display: flex; flex-direction: column;`);
     });
     
-    const promptTextArea = contentEl.createEl('textarea', {
+    // Custom prompt input
+    const promptSection = scrollableContent.createDiv({
       attr: {
-        style: 'width: 100%; height: 200px; font-family: monospace;'
+        style: 'margin-bottom: 15px;'
+      }
+    });
+    
+    promptSection.createEl('h3', {
+      text: 'Your Custom Prompt',
+      attr: {
+        style: 'margin-bottom: 10px; font-weight: bold; font-size: 1.2em;'
+      }
+    });
+    
+    const promptTextArea = promptSection.createEl('textarea', {
+      attr: {
+        style: 'width: 100%; height: 5rem; padding: 1rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-modifier-form-field); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; resize: none; font-size: 0.875rem; line-height: 1.5; transition: all 0.2s;',
+        placeholder: 'e.g. Summarize this document in 100 words or less, focusing on key decisions and action items.'
       }
     });
     promptTextArea.value = this.promptText;
+    promptTextArea.addEventListener('focus', () => {
+      promptTextArea.setAttribute('style', 'width: 100%; height: 5rem; padding: 1rem; border: 1px solid var(--interactive-accent); border-radius: 0.5rem; background: var(--background-modifier-form-field); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; resize: none; font-size: 0.875rem; line-height: 1.5; transition: all 0.2s; box-shadow: 0 0 0 3px var(--interactive-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--interactive-accent) 25%, transparent);');
+    });
+    promptTextArea.addEventListener('blur', () => {
+      promptTextArea.setAttribute('style', 'width: 100%; height: 5rem; padding: 1rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-modifier-form-field); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; resize: none; font-size: 0.875rem; line-height: 1.5; transition: all 0.2s;');
+    });
     promptTextArea.addEventListener('input', () => {
       this.promptText = promptTextArea.value;
+      
+      // Update preset button styles to clear selection
+      presetContainer.querySelectorAll('button').forEach(b => {
+        b.setAttribute('style', 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.75rem; height: auto;');
+      });
+      
+      // Update character count
+      charCount.textContent = `${promptTextArea.value.length} characters`;
     });
     
-    const buttonContainer = contentEl.createEl('div', {
+    // Character count
+    const charCount = promptSection.createEl('div', {
+      text: `${this.promptText.length} characters`,
       attr: {
-        style: 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;'
+        style: 'margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); display: block; text-align: right;'
+      }
+    });
+    
+    // Button container
+    const buttonContainer = modalCard.createDiv({
+      attr: {
+        style: 'display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; padding: 1.5rem; border-top: 1px solid var(--background-modifier-border); flex-shrink: 0;'
       }
     });
     
     // Cancel button
-    const cancelButton = buttonContainer.createEl('button', {text: 'Cancel'});
+    const cancelButton = buttonContainer.createEl('button', {
+      text: 'Cancel',
+      attr: {
+        style: 'padding: 0.625rem 2rem; border: 1px solid var(--background-modifier-border); border-radius: 0.375rem; background: transparent; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;'
+      }
+    });
+    cancelButton.addEventListener('mouseenter', () => {
+      cancelButton.setAttribute('style', 'padding: 0.625rem 2rem; border: 1px solid var(--background-modifier-border-hover); border-radius: 0.375rem; background: var(--background-modifier-hover); cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;');
+    });
+    cancelButton.addEventListener('mouseleave', () => {
+      cancelButton.setAttribute('style', 'padding: 0.625rem 2rem; border: 1px solid var(--background-modifier-border); border-radius: 0.375rem; background: transparent; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;');
+    });
     cancelButton.addEventListener('click', () => {
       this.close();
     });
     
     // Submit button
     const submitButton = buttonContainer.createEl('button', {
-      text: 'Generate Summary',
-      cls: 'mod-cta'
+      attr: {
+        style: 'display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 2rem; border: 1px solid var(--interactive-accent); border-radius: 0.375rem; background: var(--interactive-accent); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);'
+      }
     });
-    submitButton.addEventListener('click', () => {
-      this.plugin.streamSummaryToNote(
-        this.content, 
-        this.file,
-        this.promptText
-      );
+    
+    // Add sparkles icon to submit button
+    submitButton.createEl('span', {
+      text: '✨',
+      attr: {
+        style: 'font-size: 1rem;'
+      }
+    });
+    
+    submitButton.createEl('span', {
+      text: 'Generate Summary'
+    });
+    
+    submitButton.addEventListener('mouseenter', () => {
+      submitButton.setAttribute('style', 'display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 2rem; border: 1px solid var(--interactive-accent-hover); border-radius: 0.375rem; background: var(--interactive-accent-hover); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);');
+    });
+    
+    submitButton.addEventListener('mouseleave', () => {
+      submitButton.setAttribute('style', 'display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 2rem; border: 1px solid var(--interactive-accent); border-radius: 0.375rem; background: var(--interactive-accent); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);');
+    });
+    
+    submitButton.addEventListener('click', async () => {
+      new Notice('Generating summary...');
       this.close();
+      await this.plugin.streamSummaryToNote(this.content, this.file, this.promptText);
     });
-  }
-  
-  onClose() {
-    const {contentEl} = this;
-    contentEl.empty();
   }
 }
 
-/**
- * SummarizeThis plugin for Obsidian
- * Enables users to generate summaries of their notes using Ollama LLM
- */
 export default class SummarizeThisPlugin extends Plugin {
   settings: SummarizeThisPluginSettings;
 
@@ -143,7 +480,7 @@ export default class SummarizeThisPlugin extends Plugin {
     // Add editor context menu
     this.registerEvent(
       this.app.workspace.on('editor-menu', (menu, editor) => {
-        menu.addItem((item) => {
+        menu.addItem((item: MenuItem) => {
           item
             .setTitle('Summarize This Note')
             .setIcon('list-ordered')
@@ -401,7 +738,7 @@ class SummarizeThisPluginSettingTab extends PluginSettingTab {
   plugin: SummarizeThisPlugin;
   private modelsList: string[] = [];
 
-  constructor(app: any, plugin: SummarizeThisPlugin) {
+  constructor(app: App, plugin: SummarizeThisPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -458,7 +795,7 @@ class SummarizeThisPluginSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
         
-    const refreshButton = new Setting(containerEl)
+    new Setting(containerEl)
       .setName('Available Models')
       .setDesc('Fetch available models from your Ollama server')
       .addButton(button => button
@@ -500,7 +837,7 @@ class SummarizeThisPluginSettingTab extends PluginSettingTab {
       }
       
       const data = await response.json();
-      this.modelsList = data.models?.map((model: any) => model.name) || [];
+      this.modelsList = (data as { models?: Array<{ name: string }> }).models?.map((model) => model.name) || [];
       
       if (this.modelsList.length === 0) {
         modelsContainer.createEl('p', {text: 'No models found. Please install models through Ollama.'});
