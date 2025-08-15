@@ -10,7 +10,7 @@ interface SummarizeThisPluginSettings {
 
 const DEFAULT_SETTINGS: SummarizeThisPluginSettings = {
 	serverUrl: 'http://localhost:11434',
-	defaultModel: 'llama3.2:latest'
+	defaultModel: 'qwen3:8b'
 };
 
 /**
