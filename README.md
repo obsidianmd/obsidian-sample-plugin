@@ -23,6 +23,13 @@ Default kanban columns will be provided for you. You can either keep using these
 
 Select the settings icon in the top right corner of your kanban file. You will see the section 'Columns', here you can add/edit/remove columns as you like. Separate the column names with a ','.
 
+**Column Colors**
+You can assign colors to columns by adding a hex color code in parentheses after the column name. Supported formats include:
+- `#RRGGBB` format (e.g., `To Do(#FF5733)`)
+- `0xRRGGBB` format (e.g., `In Progress(0x3498DB)`)
+
+Both formats require exactly 6 hexadecimal digits. The color will be applied as a background to the column header.
+
 **Done Status Markers**
 You can customize which characters mark tasks as completed in the settings. By default, tasks marked with 'x' or 'X' are considered done, but you can configure any combination of single character done markers (including unicode).
 
