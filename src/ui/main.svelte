@@ -2,6 +2,7 @@
 	import {
 		type ColumnTag,
 		type ColumnTagTable,
+		type ColumnColourTable,
 		type DefaultColumns,
 	} from "./columns/columns";
 	import type { Task } from "./tasks/task";
@@ -16,6 +17,7 @@
 	export let taskActions: TaskActions;
 	export let openSettings: () => Promise<void>;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
+	export let columnColourTableStore: Readable<ColumnColourTable>;
 	export let settingsStore: Writable<SettingValues>;
 
 	$: tags = $tasksStore.reduce((acc, curr) => {
@@ -120,6 +122,7 @@
 				tasks={tasksByColumn["uncategorised"]}
 				{taskActions}
 				{columnTagTableStore}
+				{columnColourTableStore}
 				{showFilepath}
 				{consolidateTags}
 			/>
@@ -130,6 +133,7 @@
 					tasks={tasksByColumn[column] ?? []}
 					{taskActions}
 					{columnTagTableStore}
+					{columnColourTableStore}
 					{showFilepath}
 					{consolidateTags}
 				/>
@@ -141,6 +145,7 @@
 				tasks={tasksByColumn["done"] ?? []}
 				{taskActions}
 				{columnTagTableStore}
+				{columnColourTableStore}
 				{showFilepath}
 				{consolidateTags}
 			/>

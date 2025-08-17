@@ -15,8 +15,9 @@ import { createTasksStore } from "./tasks/store";
 import type { Task } from "./tasks/task";
 import type { TaskActions } from "./tasks/actions";
 import {
-	createColumnTagTableStore,
+	createColumnStores,
 	type ColumnTagTable,
+	type ColumnColourTable,
 } from "./columns/columns";
 
 export const KANBAN_VIEW_NAME = "kanban-view";
@@ -26,6 +27,7 @@ export class KanbanView extends TextFileView {
 	private readonly destroySettingsStore: () => void;
 
 	private readonly columnTagTableStore: Readable<ColumnTagTable>;
+	private readonly columnColourTableStore: Readable<ColumnColourTable>;
 
 	private filenameFilter: string | null = null;
 
@@ -54,9 +56,11 @@ export class KanbanView extends TextFileView {
 			}
 		});
 
-		this.columnTagTableStore = createColumnTagTableStore(
+		const { columnTagTable, columnColourTable } = createColumnStores(
 			this.settingsStore
 		);
+		this.columnTagTableStore = columnTagTable;
+		this.columnColourTableStore = columnColourTable;
 
 		const { tasksStore, taskActions, initialise } = createTasksStore(
 			this.app.vault,
@@ -135,6 +139,7 @@ ${parsed.body}
 				tasksStore: this.tasksStore,
 				taskActions: this.taskActions,
 				columnTagTableStore: this.columnTagTableStore,
+				columnColourTableStore: this.columnColourTableStore,
 				openSettings: () => this.openSettingsModal(),
 				settingsStore: this.settingsStore,
 			},

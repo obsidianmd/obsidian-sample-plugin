@@ -4,6 +4,7 @@
 		type ColumnTag,
 		type DefaultColumns,
 		type ColumnTagTable,
+		type ColumnColourTable,
 		isColumnTag,
 	} from "../columns/columns";
 	import type { TaskActions } from "../tasks/actions";
@@ -18,6 +19,7 @@
 	export let tasks: Task[];
 	export let taskActions: TaskActions;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
+	export let columnColourTableStore: Readable<ColumnColourTable>;
 	export let showFilepath: boolean;
 	export let consolidateTags: boolean;
 
@@ -36,6 +38,7 @@
 	}
 
 	$: columnTitle = getColumnTitle(column, $columnTagTableStore);
+	$: columnColor = isColumnTag(column, columnTagTableStore) ? $columnColourTableStore[column] : undefined;
 
 	$: sortedTasks = tasks.sort((a, b) => {
 		if (a.path === b.path) {
@@ -118,6 +121,8 @@
 		class="column"
 		class:drop-active={!!draggingData}
 		class:drop-hover={isDraggedOver}
+		style:--column-color={columnColor}
+		style={columnColor ? `background-color: ${columnColor};` : ''}
 		on:dragover={handleDragOver}
 		on:dragleave={handleDragLeave}
 		on:drop={handleDrop}
@@ -200,7 +205,7 @@
 		.divide {
 			width: calc(100% + calc(2 * var(--size-4-3)));
 			border-bottom: var(--border-width) solid
-				var(--background-modifier-border);
+				var(--column-color, var(--background-modifier-border));
 			margin: var(--size-4-3) calc(-1 * var(--size-4-3));
 		}
 

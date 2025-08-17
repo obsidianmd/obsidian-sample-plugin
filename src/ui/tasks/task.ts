@@ -2,6 +2,7 @@ import sha256 from "crypto-js/sha256";
 import type { Brand } from "src/brand";
 import type { ColumnTag, ColumnTagTable } from "../columns/columns";
 import { getTagsFromContent } from "src/parsing/tags/tags";
+import { kebab } from "src/parsing/kebab/kebab";
 
 /**
  * A string containing characters that mark tasks as completed.
@@ -162,9 +163,10 @@ export class Task {
 		this._indentation = indentation || "";
 
 		for (const tag of tags) {
-			if (tag in columnTagTable || tag === "done") {
+			const kebabTag = kebab<ColumnTag>(tag);
+			if (kebabTag in columnTagTable || tag === "done") {
 				if (!this._column) {
-					this._column = tag as ColumnTag;
+					this._column = kebabTag;
 				}
 				tags.delete(tag);
 				if (!consolidateTags) {
