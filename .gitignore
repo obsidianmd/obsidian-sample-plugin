@@ -23,3 +23,6 @@ data.json
 
 # tmp directory
 tmp/
+
+# AI agent configuration
+AGENTS.md
