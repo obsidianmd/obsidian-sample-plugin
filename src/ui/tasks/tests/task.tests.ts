@@ -403,6 +403,23 @@ describe("Task", () => {
 			});
 		});
 	});
+
+	describe("obsidian backlinks", () => {
+		it("should not identify backlink as a task", () => {
+			const backlink = "- [[x]]";
+			expect(isTaskString(backlink)).toBe(false);
+		});
+
+		it("should not identify backlink with content as a task", () => {
+			const backlink = "- [[x]] some content";
+			expect(isTaskString(backlink)).toBe(false);
+		});
+
+		it("should not identify indented backlink as a task", () => {
+			const backlink = "  - [[x]]";
+			expect(isTaskString(backlink)).toBe(false);
+		});
+	});
 });
 
 describe("Done Status Markers Validation", () => {

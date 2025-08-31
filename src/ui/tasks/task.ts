@@ -269,7 +269,8 @@ export function isTaskString(input: string): input is TaskString {
 }
 
 // begins with 0 or more whitespace chars
-// then follows the pattern "- [any_content]"
+// then follows the pattern "- [single_char_or_space]"
 // then contains an additional whitespace before any trailing content
-const taskStringRegex = /^(\s*)-\s\[(.+?)\]\s(.+)/;
+// excludes backlinks by ensuring brackets don't contain nested brackets
+const taskStringRegex = /^(\s*)-\s\[([^\[\]]*)\]\s(.+)/;
 const blockLinkRegexp = /\s\^([a-zA-Z0-9-]+)$/;
