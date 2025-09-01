@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { 
-	isTaskString, 
+	isTrackedTaskString, 
 	Task, 
 	DEFAULT_DONE_STATUS_MARKERS, 
+	DEFAULT_IGNORED_STATUS_MARKERS,
 	validateDoneStatusMarkers, 
-	createDoneStatusMarkers 
+	createDoneStatusMarkers,
+	validateIgnoredStatusMarkers,
+	createIgnoredStatusMarkers
 } from "../task";
 import { type ColumnTag, type ColumnTagTable } from "src/ui/columns/columns";
 import { kebab } from "src/parsing/kebab/kebab";
@@ -17,8 +20,8 @@ describe("Task", () => {
 	it("parses a basic task string", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag";
-		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 		}
 
 		expect(task).toBeTruthy();
@@ -29,8 +32,8 @@ describe("Task", () => {
 	it("parses a basic task string with a column", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag #column";
-		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 		}
 
 		expect(task).toBeTruthy();
@@ -41,8 +44,8 @@ describe("Task", () => {
 	it("serialises a basic task string with a column", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag #column";
-		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 		}
 
 		const output = task?.serialise();
@@ -52,8 +55,8 @@ describe("Task", () => {
 	it("serialises a basic task string with a column and consolidate tags", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag #column";
-		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags, true, "xX");
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, true, "xX", "");
 		}
 
 		const output = task?.serialise();
@@ -63,8 +66,8 @@ describe("Task", () => {
 	it("parses a task string with a block link", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag #column ^link-link";
-		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 		}
 
 		expect(task).toBeTruthy();
@@ -75,8 +78,8 @@ describe("Task", () => {
 	it("serialises a basic task string with a block link", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag ^link-link";
-		if (isTaskString(taskString)) {
-			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			task.column = "column" as ColumnTag;
 		}
 
@@ -88,8 +91,8 @@ describe("Task", () => {
 		it("parses a task string with space indentation", () => {
 			let task: Task | undefined;
 			const taskString = "  - [ ] Indented with 2 spaces #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -100,8 +103,8 @@ describe("Task", () => {
 		it("parses a task string with tab indentation", () => {
 			let task: Task | undefined;
 			const taskString = "\t- [ ] Indented with tab #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -112,8 +115,8 @@ describe("Task", () => {
 		it("parses a task string with mixed space and tab indentation", () => {
 			let task: Task | undefined;
 			const taskString = " \t - [ ] Mixed spaces and tabs #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -124,8 +127,8 @@ describe("Task", () => {
 		it("parses a completed indented task string", () => {
 			let task: Task | undefined;
 			const taskString = "  - [x] Completed indented task #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -137,8 +140,8 @@ describe("Task", () => {
 		it("parses an indented task string with a block link", () => {
 			let task: Task | undefined;
 			const taskString = "\t- [ ] Indented with block link #tag ^block123";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -150,8 +153,8 @@ describe("Task", () => {
 		it("serialises an indented task string with spaces", () => {
 			let task: Task | undefined;
 			const taskString = "    - [ ] Four spaces #tag #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			const output = task?.serialise();
@@ -161,8 +164,8 @@ describe("Task", () => {
 		it("serialises an indented task string with tabs", () => {
 			let task: Task | undefined;
 			const taskString = "\t\t- [ ] Two tabs #tag #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			const output = task?.serialise();
@@ -172,8 +175,8 @@ describe("Task", () => {
 		it("serialises an indented task string with mixed indentation", () => {
 			let task: Task | undefined;
 			const taskString = "\t  \t- [ ] Tab space tab #tag #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 			}
 
 			const output = task?.serialise();
@@ -185,8 +188,8 @@ describe("Task", () => {
 		it("recognizes custom done status markers", () => {
 			let task: Task | undefined;
 			const taskString = "- [✓] Custom done marker #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✓");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✓", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -197,8 +200,8 @@ describe("Task", () => {
 		it("does not recognize non-configured done status markers", () => {
 			let task: Task | undefined;
 			const taskString = "- [✓] Custom done marker #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, DEFAULT_DONE_STATUS_MARKERS);
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, DEFAULT_DONE_STATUS_MARKERS, "");
 			}
 
 			expect(task).toBeTruthy();
@@ -209,8 +212,8 @@ describe("Task", () => {
 		it("handles multi-codepoint unicode characters", () => {
 			let task: Task | undefined;
 			const taskString = "- [👍] Multi-codepoint emoji #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX👍");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX👍", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -221,8 +224,8 @@ describe("Task", () => {
 		it("recognizes checkmark ✅ as done status", () => {
 			let task: Task | undefined;
 			const taskString = "- [✅] Task with checkmark #tag";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✅");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✅", "");
 			}
 
 			expect(task).toBeTruthy();
@@ -234,8 +237,8 @@ describe("Task", () => {
 			it("treats multi-character status as not done", () => {
 				let task: Task | undefined;
 				const taskString = "- [abc] Task with multi-char status #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -245,8 +248,8 @@ describe("Task", () => {
 			it("treats whitespace-only status as not done", () => {
 				let task: Task | undefined;
 				const taskString = "- [  ] Task with spaces #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -256,8 +259,8 @@ describe("Task", () => {
 			it("treats tab character as not done when not configured", () => {
 				let task: Task | undefined;
 				const taskString = "- [\t] Task with tab #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -267,8 +270,8 @@ describe("Task", () => {
 			it("treats unknown character as not done", () => {
 				let task: Task | undefined;
 				const taskString = "- [z] Task with unknown char #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -278,8 +281,8 @@ describe("Task", () => {
 			it("treats number as not done", () => {
 				let task: Task | undefined;
 				const taskString = "- [1] Task with number #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -291,8 +294,8 @@ describe("Task", () => {
 			it("respects case sensitivity in done markers", () => {
 				let task: Task | undefined;
 				const taskString = "- [X] Uppercase done marker #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "x");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "x", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -302,8 +305,8 @@ describe("Task", () => {
 			it("handles lowercase done markers", () => {
 				let task: Task | undefined;
 				const taskString = "- [x] Lowercase done marker #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "x");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "x", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -315,8 +318,8 @@ describe("Task", () => {
 			it("handles regex special characters in done markers", () => {
 				let task: Task | undefined;
 				const taskString = "- [*] Asterisk done marker #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX*");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX*", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -326,8 +329,8 @@ describe("Task", () => {
 			it("handles plus character as done marker", () => {
 				let task: Task | undefined;
 				const taskString = "- [+] Plus done marker #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX+");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX+", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -337,8 +340,8 @@ describe("Task", () => {
 			it("handles question mark as done marker", () => {
 				let task: Task | undefined;
 				const taskString = "- [?] Question mark done marker #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX?");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX?", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -348,8 +351,8 @@ describe("Task", () => {
 			it("handles dot character as done marker", () => {
 				let task: Task | undefined;
 				const taskString = "- [.] Dot done marker #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX.");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX.", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -359,8 +362,8 @@ describe("Task", () => {
 			it("handles backslash character as done marker", () => {
 				let task: Task | undefined;
 				const taskString = "- [\\] Backslash done marker #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX\\");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX\\", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -372,8 +375,8 @@ describe("Task", () => {
 			it("handles combining characters correctly", () => {
 				let task: Task | undefined;
 				const taskString = "- [é] Combining accent #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xXé");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xXé", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -383,8 +386,8 @@ describe("Task", () => {
 			it("handles zero-width characters as invalid", () => {
 				let task: Task | undefined;
 				const taskString = "- [\u200B] Zero-width space #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX\u200B");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX\u200B", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -394,8 +397,8 @@ describe("Task", () => {
 			it("handles surrogate pairs correctly", () => {
 				let task: Task | undefined;
 				const taskString = "- [🚀] Rocket emoji #tag";
-				if (isTaskString(taskString)) {
-					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX🚀");
+				if (isTrackedTaskString(taskString)) {
+					task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX🚀", "");
 				}
 
 				expect(task).toBeTruthy();
@@ -407,22 +410,129 @@ describe("Task", () => {
 	describe("obsidian links", () => {
 		it("should not identify backlink as a task", () => {
 			const backlink = "- [[x]]";
-			expect(isTaskString(backlink)).toBe(false);
+			expect(isTrackedTaskString(backlink)).toBe(false);
 		});
 
 		it("should not identify backlink with content as a task", () => {
 			const backlink = "- [[x]] some content";
-			expect(isTaskString(backlink)).toBe(false);
+			expect(isTrackedTaskString(backlink)).toBe(false);
 		});
 
 		it("should not identify indented backlink as a task", () => {
 			const backlink = "  - [[x]]";
-			expect(isTaskString(backlink)).toBe(false);
+			expect(isTrackedTaskString(backlink)).toBe(false);
 		});
 
 		it("should not identify a link as a task", () => {
 			const notTask = "- [x](foo)";
-			expect(isTaskString(notTask)).toBe(false);
+			expect(isTrackedTaskString(notTask)).toBe(false);
+		});
+	});
+});
+
+describe("Ignored Status Markers", () => {
+	describe("isTrackedTaskString with ignored status markers", () => {
+		it("includes tasks with dash status by default (no ignored statuses)", () => {
+			const taskString = "- [-] Task with dash status #tag";
+			expect(isTrackedTaskString(taskString)).toBe(true);
+		});
+
+		it("excludes tasks with custom ignored status", () => {
+			const taskString = "- [~] Custom ignored task #tag";
+			expect(isTrackedTaskString(taskString, "~")).toBe(false);
+		});
+
+		it("excludes tasks when dash is configured as ignored", () => {
+			const taskString = "- [-] Cancelled task #tag";
+			expect(isTrackedTaskString(taskString, "-")).toBe(false);
+		});
+
+		it("includes tasks with non-ignored status", () => {
+			const taskString = "- [ ] Regular task #tag";
+			expect(isTrackedTaskString(taskString)).toBe(true);
+		});
+
+		it("includes tasks with done status", () => {
+			const taskString = "- [x] Done task #tag";
+			expect(isTrackedTaskString(taskString)).toBe(true);
+		});
+
+		it("excludes indented tasks with ignored status", () => {
+			const taskString = "  - [-] Indented cancelled task #tag";
+			expect(isTrackedTaskString(taskString, "-")).toBe(false);
+		});
+
+		it("excludes tasks with multiple ignored statuses", () => {
+			const taskString1 = "- [-] Cancelled with dash #tag";
+			const taskString2 = "- [~] Cancelled with tilde #tag";
+			expect(isTrackedTaskString(taskString1, "-~")).toBe(false);
+			expect(isTrackedTaskString(taskString2, "-~")).toBe(false);
+		});
+
+		it("excludes tasks with emoji ignored status", () => {
+			const taskString = "- [❌] Cancelled with emoji #tag";
+			expect(isTrackedTaskString(taskString, "❌")).toBe(false);
+		});
+	});
+});
+
+describe("Ignored Status Markers Validation", () => {
+	describe("validateIgnoredStatusMarkers", () => {
+		it("accepts valid marker strings", () => {
+			expect(validateIgnoredStatusMarkers("-~")).toEqual([]);
+			expect(validateIgnoredStatusMarkers("❌🚫")).toEqual([]);
+			expect(validateIgnoredStatusMarkers("-")).toEqual([]);
+			expect(validateIgnoredStatusMarkers("~")).toEqual([]);
+		});
+
+		it("accepts empty strings (no ignored statuses)", () => {
+			expect(validateIgnoredStatusMarkers("")).toEqual([]);
+		});
+
+		it("rejects whitespace characters", () => {
+			const errors = validateIgnoredStatusMarkers("- ");
+			expect(errors).toContain("Marker at position 2 is whitespace");
+		});
+
+		it("rejects duplicate characters", () => {
+			const errors = validateIgnoredStatusMarkers("--");
+			expect(errors).toContain("Duplicate marker '-' at position 2");
+		});
+
+		it("handles Unicode emoji correctly", () => {
+			expect(validateIgnoredStatusMarkers("❌🚫")).toEqual([]);
+		});
+	});
+
+	describe("createIgnoredStatusMarkers", () => {
+		it("creates valid markers successfully", () => {
+			const markers = createIgnoredStatusMarkers("-~");
+			expect(markers).toBe("-~");
+		});
+
+		it("creates empty markers successfully", () => {
+			const markers = createIgnoredStatusMarkers("");
+			expect(markers).toBe("");
+		});
+
+		it("throws with detailed error messages for invalid characters", () => {
+			expect(() => createIgnoredStatusMarkers("- ")).toThrow(
+				"Invalid ignored status markers: Marker at position 2 is whitespace"
+			);
+		});
+	});
+
+	describe("DEFAULT_IGNORED_STATUS_MARKERS", () => {
+		it("is valid according to validation rules", () => {
+			expect(validateIgnoredStatusMarkers(DEFAULT_IGNORED_STATUS_MARKERS)).toEqual([]);
+		});
+
+		it("is empty by default (no tasks ignored)", () => {
+			expect(DEFAULT_IGNORED_STATUS_MARKERS).toBe("");
+		});
+
+		it("can be used to create validated markers", () => {
+			expect(() => createIgnoredStatusMarkers(DEFAULT_IGNORED_STATUS_MARKERS)).not.toThrow();
 		});
 	});
 });
@@ -532,8 +642,8 @@ describe("Task archiving", () => {
 		it("retains uppercase X marker when archiving", () => {
 			let task: Task | undefined;
 			const taskString = "- [X] Already done task #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				task.archive();
 			}
 
@@ -546,8 +656,8 @@ describe("Task archiving", () => {
 		it("retains lowercase x marker when archiving", () => {
 			let task: Task | undefined;
 			const taskString = "- [x] Already done task #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				task.archive();
 			}
 
@@ -560,8 +670,8 @@ describe("Task archiving", () => {
 		it("retains custom Unicode done marker when archiving", () => {
 			let task: Task | undefined;
 			const taskString = "- [✓] Custom done marker task #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✓");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✓", "");
 				task.archive();
 			}
 
@@ -574,8 +684,8 @@ describe("Task archiving", () => {
 		it("retains emoji done marker when archiving", () => {
 			let task: Task | undefined;
 			const taskString = "- [✅] Emoji done marker task #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✅");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✅", "");
 				task.archive();
 			}
 
@@ -590,8 +700,8 @@ describe("Task archiving", () => {
 		it("uses default 'x' marker when archiving incomplete task", () => {
 			let task: Task | undefined;
 			const taskString = "- [ ] Incomplete task #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				task.archive();
 			}
 
@@ -604,8 +714,8 @@ describe("Task archiving", () => {
 		it("uses default 'x' marker when archiving task with unknown status", () => {
 			let task: Task | undefined;
 			const taskString = "- [?] Unknown status task #column";
-			if (isTaskString(taskString)) {
-				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 				task.archive();
 			}
 

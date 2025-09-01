@@ -1,5 +1,5 @@
 import type { TFile, Vault } from "obsidian";
-import { isTaskString, Task } from "./task";
+import { isTrackedTaskString, Task } from "./task";
 import type { ColumnTagTable } from "../columns/columns";
 import { get, type Readable } from "svelte/store";
 
@@ -20,6 +20,7 @@ export async function updateMapsFromFile({
 	columnTagTableStore,
 	consolidateTags,
 	doneStatusMarkers,
+	ignoredStatusMarkers,
 }: {
 	fileHandle: TFile;
 	tasksByTaskId: Map<string, Task>;
@@ -29,6 +30,7 @@ export async function updateMapsFromFile({
 	columnTagTableStore: Readable<ColumnTagTable>;
 	consolidateTags: boolean;
 	doneStatusMarkers: string;
+	ignoredStatusMarkers: string;
 }) {
 	try {
 		const previousTaskIds =
@@ -45,14 +47,15 @@ export async function updateMapsFromFile({
 				continue;
 			}
 
-			if (isTaskString(row)) {
+			if (isTrackedTaskString(row, ignoredStatusMarkers)) {
 				const task = new Task(
 					row,
 					fileHandle,
 					i,
 					columnTagTable,
 					consolidateTags,
-					doneStatusMarkers
+					doneStatusMarkers,
+					ignoredStatusMarkers
 				);
 
 				newTaskIds.add(task.id);

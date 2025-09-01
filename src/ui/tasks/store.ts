@@ -1,6 +1,6 @@
 import { TFile, Vault, type EventRef, Workspace } from "obsidian";
 import { updateMapsFromFile, type Metadata } from "./tasks";
-import { Task, DEFAULT_DONE_STATUS_MARKERS } from "./task";
+import { Task, DEFAULT_DONE_STATUS_MARKERS, DEFAULT_IGNORED_STATUS_MARKERS } from "./task";
 import { get, writable, type Readable, type Writable } from "svelte/store";
 import type { ColumnTagTable } from "../columns/columns";
 import { createTaskActions, type TaskActions } from "./actions";
@@ -56,6 +56,7 @@ export function createTasksStore(
 		const settings = get(settingsStore);
 		const consolidateTags = settings.consolidateTags ?? false;
 		const doneStatusMarkers = settings.doneStatusMarkers ?? DEFAULT_DONE_STATUS_MARKERS;
+		const ignoredStatusMarkers = settings.ignoredStatusMarkers ?? DEFAULT_IGNORED_STATUS_MARKERS;
 
 		for (const fileHandle of fileHandles) {
 			if (!shouldHandle(fileHandle)) {
@@ -71,6 +72,7 @@ export function createTasksStore(
 				columnTagTableStore,
 				consolidateTags,
 				doneStatusMarkers,
+				ignoredStatusMarkers,
 			}).then(() => {
 				debounceSetTasks();
 			});
@@ -83,6 +85,7 @@ export function createTasksStore(
 				const settings = get(settingsStore);
 				const consolidateTags = settings.consolidateTags ?? false;
 				const doneStatusMarkers = settings.doneStatusMarkers ?? DEFAULT_DONE_STATUS_MARKERS;
+				const ignoredStatusMarkers = settings.ignoredStatusMarkers ?? DEFAULT_IGNORED_STATUS_MARKERS;
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,
@@ -92,6 +95,7 @@ export function createTasksStore(
 					columnTagTableStore,
 					consolidateTags,
 					doneStatusMarkers,
+					ignoredStatusMarkers,
 				}).then(() => {
 					debounceSetTasks();
 				});
@@ -105,6 +109,7 @@ export function createTasksStore(
 				const settings = get(settingsStore);
 				const consolidateTags = settings.consolidateTags ?? false;
 				const doneStatusMarkers = settings.doneStatusMarkers ?? DEFAULT_DONE_STATUS_MARKERS;
+				const ignoredStatusMarkers = settings.ignoredStatusMarkers ?? DEFAULT_IGNORED_STATUS_MARKERS;
 				updateMapsFromFile({
 					fileHandle,
 					tasksByTaskId,
@@ -114,6 +119,7 @@ export function createTasksStore(
 					columnTagTableStore,
 					consolidateTags,
 					doneStatusMarkers,
+					ignoredStatusMarkers,
 				}).then(() => {
 					debounceSetTasks();
 				});

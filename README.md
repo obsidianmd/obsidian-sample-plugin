@@ -1,95 +1,103 @@
-
 # Task List Kanban
 
-The Task List Kanban is a free and open source Obsidian plugin that automatically imports all your 'tasks' within obsidian files into a kanban view. This plugin was created to reduce duplication of effort when managing and prioritising tasks. Any time you have a task that needs to be done, simply note it down using the 'task' format in an obsidian file, and it will automatically appear in your Task List Kanban.
+The Task List Kanban is a free and open source Obsidian plugin that automatically imports all your 'tasks' within Obsidian files into a kanban view. This plugin was created to reduce duplication of effort when managing and prioritising tasks. Simply note down tasks using the 'task' format in any Obsidian file, and they will automatically appear in your Task List Kanban.
 
-By adding tags to your tasks using '#', you can allocate tasks to specific columns in your kanban, as well as add additional tags that you can use to filter. From the kanban view, you can easily move your tasks between columns, archive tasks, apply or change filters, and even jump straight to the file where the task sits. Any change made to a task from the kanban view will also update the task in its file, and visa versa.
+By adding tags to your tasks using '#', you can allocate tasks to specific columns in your kanban, as well as add additional tags for filtering. From the kanban view, you can easily move tasks between columns, archive tasks, apply or change filters, and even jump straight to the file where the task sits. Any change made to a task from the kanban view will also update the task in its file, and vice versa.
 
-![Image 3-6-2024 at 7 19 PM](https://github.com/ErikaRS/task-list-kanban/assets/80379257/ddde01aa-3098-4cfc-8860-6af34f0ece57)
+![Task List Kanban Screenshot](https://github.com/ErikaRS/task-list-kanban/assets/80379257/ddde01aa-3098-4cfc-8860-6af34f0ece57)
 
+## Getting Started
 
-## How to use the Task List Kanban
-
-### How to add a Task List Kanban within Obsidian
+### Creating Your First Kanban
 
 Right click on the folder in which you want your Task List Kanban to appear. Choose 'New kanban'. Your new Task List Kanban file has been created!
 
-![Image 3-6-2024 at 7 21 PM](https://github.com/ErikaRS/task-list-kanban/assets/80379257/fbe25c3f-824f-4feb-b1b3-5acbdf1c8901)
+![Creating a new kanban](https://github.com/ErikaRS/task-list-kanban/assets/80379257/fbe25c3f-824f-4feb-b1b3-5acbdf1c8901)
 
+### Adding Tasks
 
-### Managing columns
+Create a 'task' in any Obsidian file. Tasks will automatically appear in your kanban under the 'Uncategorised' column. To assign a task to a specific column:
 
-Default kanban columns will be provided for you. You can either keep using these or set up your own, including change the number of columns in the kanban.
+1. **In the file**: Add `#[column-name]` to your task text
+2. **In the kanban**: Drag and drop the task to the desired column
 
-Select the settings icon in the top right corner of your kanban file. You will see the section 'Columns', here you can add/edit/remove columns as you like. Separate the column names with a ','.
+The `#[column-name]` text won't be visible in the kanban view, keeping your tasks clean!
 
-**Column Colors**
-You can assign colors to columns by adding a hex color code in parentheses after the column name. Supported formats include:
-- `#RRGGBB` format (e.g., `To Do(#FF5733)`)
-- `0xRRGGBB` format (e.g., `In Progress(0x3498DB)`)
+### Basic Task Management
 
-Both formats require exactly 6 hexadecimal digits. The color will be applied as a background to the column header.
+**Editing tasks**: Click any task text in the kanban view to edit it directly. Changes sync to the original file.
 
-**Done Status Markers**
-You can customize which characters mark tasks as completed in the settings. By default, tasks marked with 'x' or 'X' are considered done, but you can configure any combination of single character done markers (including unicode).
+**Moving tasks**: Drag and drop between columns, or use the task's settings menu to select a column.
 
-You will be able to rename/add/remove these columns at anytime. However! Please think carefully when naming your columns, as any tasks you add to that column will be associated with the exact column name. This means that if you change a column name in the future, all the tasks associated with the old version of that column will end up in 'uncategorised'. These tasks are NOT automatically applied to the new naming of the column.
+**Completing tasks**: Check the task checkbox or use the archive feature to mark tasks as done.
 
+## Configuration
 
-### Defining the folder scope of the kanban
+### Setting Up Columns
 
-I.e. Where should we try to find tasks for this Kanban?
+Access settings via the settings icon in the top right corner of your kanban.
 
-Place the kanban in the folder in which you are listing the tasks that you want to appear in the kanban. These tasks can be spread over multiple files within that folder.
+**Basic Columns**: Add, edit, or remove columns in the 'Columns' section. Separate column names with commas.
 
-Alternatively, if you would prefer for every task within your entire Obsidian to appear in the kanban, choose 'Every folder' in the Folder scope kanban settings. This is found in the settings menu in the top right of the kanban.
+**Column Colors**: Assign colors by adding hex codes after column names:
+- `To Do(#FF5733)` - Standard hex format
+- `In Progress(0x3498DB)` - Alternative hex format
 
+⚠️ **Important**: Think carefully when naming columns. Changing a column name later will move associated tasks to 'Uncategorised' since tasks are linked to exact column names.
 
-### Adding a task to your kanban
+### Folder Scope
 
-Create a 'task' in any Obsidian file. You can do this by highlighting any text, right clicking, and then selling Paragraph > Task list.
+**This folder** (default): The kanban shows tasks from files in the same folder as the kanban file.
 
-This task will now automatically appear in your kanban, under the 'Uncategorised' column. (Note this Uncategorised column will only display if you have uncategorised tasks.)
+**Every folder**: The kanban shows tasks from your entire Obsidian vault.
 
-To place the task in a specific kanban column you have two choices to do this:
+Change this setting in the kanban's settings menu.
 
-1. From within the Obsidian file, add text to the task that reads '#[name of column]'
-2. From within the Kanban view, drag the task from uncategorised to whichever column you desire. This will automatically add to the task file the text, '#[name of column]'
+## Advanced Features
 
-The text '#[name of column]' will not be visible in the kanban view, so it won't clog up your tasks! You can only assign each task to one column within your kanban.
+### Task Status Customization
 
+**Done Status Markers**: Customize which characters mark tasks as completed. By default, tasks marked with 'x' or 'X' are considered done, but you can configure any combination of single character markers (including Unicode/emoji).
 
-### Managing tasks within your kanban
+Examples:
+- `xX` (default) - Recognizes `[x]` and `[X]` as done
+- `xX✓` - Also recognizes `[✓]` as done
+- `✅👍` - Use emoji markers
 
-From within the kanban view, you have a range of options when managing your tasks.
+**Ignored Status Markers**: Configure characters that mark tasks to be completely ignored by the kanban. This is useful for cancelled or irrelevant tasks.
 
-**Editing tasks**
-You can edit the text of your tasks, as well as add or edit any tags, from within the kanban view. Click the task text and start editing! This will update the task within its file also.
+Examples:
+- Leave empty (default) - All task-like strings are processed
+- `-` - Tasks like `[−] Cancelled task` are ignored
+- `-~` - Tasks with `[-]` or `[~]` are ignored
+- `❌` - Tasks like `[❌] Not relevant` are ignored
 
-**Moving tasks between columns**
-To move tasks between kanban columns, either drag and drop the task, or click the task's settings icon and select the desired column.
+### Tagging and Filtering
 
-**Archive tasks**
-You can archive any tasks by clicking the task's settings icon, and choosing archive. This will mark the task as completed and move it out of the active kanban view while preserving it in the original file.
+**Adding tags**: Add `#[tag-name]` anywhere in your task text. Tags appear in both the kanban and original files.
 
-**Done column**
-The final column in the kanban has an additional settings menu. This allows you to quickly and easily delete/archive all tasks within this column. The idea is that if tasks have made it to this column, they have been completed, and you will likely want to delete or archive these completed tasks at some stage!
+**Filtering**: Use the filter bar at the top of the kanban to show only tasks with specific tags. You can select multiple tags.
 
+**Tag consolidation**: Enable "Consolidate tags" in settings to move all non-column tags to the task footer for cleaner display.
 
-### Tagging tasks & filtering tasks within your kanban
+### Advanced Task Management
 
-You may wish to add tags to tasks in order to enable filtering within your kanban. For example, you could add a tag with the name of the project it relates to, which would allow you to then filter your kanban by project name.
+**Archive tasks**: Use the task settings menu to archive completed tasks. This marks them as done and removes them from the active kanban while preserving them in the original file.
 
-**Tagging a task**
-To add a tag to a task, add the text, '#[tag name]' to anywhere within your task. If you have created this tag previously, you will be prompted to autocomplete the tag with that text. This '#[tag name]' will be visible within the kanban view as well as the text file.
+**Bulk operations**: The rightmost "Done" column has additional settings to quickly archive or delete all tasks in that column.
 
-**Filtering tasks within the kanban view**
-To filter tasks when in the kanban view, type the tag name into the filter bar at the top of the kanban. You can select as many tags as you like.Your kanban will now only display tasks that include that tag.
+**Task formatting**: The plugin preserves original indentation and formatting when moving tasks between columns.
 
-**Task Formatting Preservation**
-The plugin preserves the original indentation and formatting of your tasks when moving them between the columns of the kanban view.
+### Visibility Controls
 
-## Development instructions
+**Uncategorised column**: Choose when to show tasks without column assignments:
+- Hide when empty (default)
+- Always show
+- Never show
+
+**Done column**: Control visibility of the completed tasks column with the same options.
+
+## Development
 
 ### Prerequisites
 - Node.js and npm
@@ -109,18 +117,19 @@ For detailed Obsidian plugin development guidance, see the [official plugin deve
 
 ### Deployment
 
-When you are ready to make a new deployment, following the following steps.
+When ready to make a new deployment:
 
-1. Update the version number (using semver) in the following locations:
-   - package.json
-   - manifest.json
-   - versions.json
-2. Commit this change.
-3. Create a new tag for the target version number by:
-	1. `$: git tag -a 1.0.1 -m "1.0.1"` (replace `1.0.1` in all places with the actual target version)
-	2. `$: git push origin 1.0.1`
-4. Push everything to GitHub.
-5. Wait while a github action creates a new Release.
-6. Go to `https://github.com/ErikaRS/task-list-kanban/releases`
-7. Edit the new Draft release which has been created to add release notes, and the click Publish.
-
+1. Update the version number (using semver) in:
+   - `package.json`
+   - `manifest.json`
+   - `versions.json`
+2. Commit this change
+3. Create and push a new tag:
+   ```bash
+   git tag -a 1.2.10 -m "1.2.10"
+   git push origin 1.2.10
+   ```
+4. Push everything to GitHub
+5. Wait for the GitHub Action to create a new Release
+6. Go to the [releases page](https://github.com/ErikaRS/task-list-kanban/releases)
+7. Edit the draft release to add release notes and publish

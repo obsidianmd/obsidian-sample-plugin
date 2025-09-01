@@ -34,31 +34,48 @@ export type DoneStatusMarkers = Brand<string, "DoneStatusMarkers">;
 export const DEFAULT_DONE_STATUS_MARKERS: DoneStatusMarkers = "xX" as DoneStatusMarkers;
 
 /**
- * Validates that a done status markers string contains only valid characters.
+ * A string containing characters that mark tasks as non-tasks (ignored).
+ * Each character represents a checkbox status that should be completely ignored by the kanban.
+ */
+export type IgnoredStatusMarkers = Brand<string, "IgnoredStatusMarkers">;
+
+/**
+ * Default characters that mark a task as ignored/non-task in checkbox notation.
+ * 
+ * By default, no tasks are ignored (empty string). Users can customize this via 
+ * settings to include characters like '-', '~', or emoji that should be ignored.
+ * 
+ * These characters are recognized as "ignored" status when parsing task checkboxes.
+ * Tasks with these markers are not processed as kanban tasks at all.
+ * 
+ * @example
+ * ```typescript
+ * // With default settings, all these would be processed normally:
+ * "- [ ] Regular task"
+ * "- [x] Completed task" 
+ * "- [-] This would also be processed"
+ * 
+ * // If configured with ignored markers like "-~":
+ * "- [-] Cancelled task"    // ignored
+ * "- [~] Irrelevant task"   // ignored
+ * "- [ ] Regular task"      // processed normally
+ * ```
+ */
+export const DEFAULT_IGNORED_STATUS_MARKERS: IgnoredStatusMarkers = "" as IgnoredStatusMarkers;
+
+/**
+ * Common validation logic for status marker strings.
  * 
  * Valid markers must:
  * - Be single Unicode code points (properly handles emoji and accented characters)
  * - Not contain whitespace, newlines, or control characters
- * - Not be empty
+ * - Not contain duplicates
  * 
  * @param markers - The string to validate
  * @returns Array of validation errors, empty if valid
- * 
- * @example
- * ```typescript
- * validateDoneStatusMarkers("xX✓") // []
- * validateDoneStatusMarkers("x X") // ["Marker at position 2 is whitespace"]
- * validateDoneStatusMarkers("") // ["Done status markers cannot be empty"]
- * ```
  */
-export function validateDoneStatusMarkers(markers: string): string[] {
+function validateStatusMarkers(markers: string): string[] {
 	const errors: string[] = [];
-	
-	if (!markers || markers.length === 0) {
-		errors.push("Done status markers cannot be empty");
-		return errors;
-	}
-	
 	const chars = Array.from(markers);
 	const seen = new Set<string>();
 	
@@ -88,6 +105,32 @@ export function validateDoneStatusMarkers(markers: string): string[] {
 }
 
 /**
+ * Validates that a done status markers string contains only valid characters.
+ * 
+ * Valid markers must:
+ * - Be single Unicode code points (properly handles emoji and accented characters)
+ * - Not contain whitespace, newlines, or control characters
+ * - Not be empty
+ * 
+ * @param markers - The string to validate
+ * @returns Array of validation errors, empty if valid
+ * 
+ * @example
+ * ```typescript
+ * validateDoneStatusMarkers("xX✓") // []
+ * validateDoneStatusMarkers("x X") // ["Marker at position 2 is whitespace"]
+ * validateDoneStatusMarkers("") // ["Done status markers cannot be empty"]
+ * ```
+ */
+export function validateDoneStatusMarkers(markers: string): string[] {
+	if (!markers || markers.length === 0) {
+		return ["Done status markers cannot be empty"];
+	}
+	
+	return validateStatusMarkers(markers);
+}
+
+/**
  * Creates a validated DoneStatusMarkers type from a string.
  * 
  * @param markers - The string to convert
@@ -103,15 +146,52 @@ export function createDoneStatusMarkers(markers: string): DoneStatusMarkers {
 }
 
 /**
- * Checks if a checkbox status is marked as done based on the configured markers.
+ * Validates that an ignored status markers string contains only valid characters.
+ * Unlike done status markers, ignored status markers can be empty (no tasks ignored).
+ * 
+ * Valid markers must:
+ * - Be single Unicode code points (properly handles emoji and accented characters)
+ * - Not contain whitespace, newlines, or control characters
+ * - Can be empty (meaning no tasks are ignored)
+ * 
+ * @param markers - The string to validate
+ * @returns Array of validation errors, empty if valid
+ */
+export function validateIgnoredStatusMarkers(markers: string): string[] {
+	// Empty string is valid for ignored status markers (means no tasks are ignored)
+	if (!markers || markers.length === 0) {
+		return [];
+	}
+	
+	// For non-empty strings, use common validation logic
+	return validateStatusMarkers(markers);
+}
+
+/**
+ * Creates a validated IgnoredStatusMarkers type from a string.
+ * 
+ * @param markers - The string to convert
+ * @returns Validated IgnoredStatusMarkers or throws if invalid
+ * @throws Error if validation fails
+ */
+export function createIgnoredStatusMarkers(markers: string): IgnoredStatusMarkers {
+	const errors = validateIgnoredStatusMarkers(markers);
+	if (errors.length > 0) {
+		throw new Error(`Invalid ignored status markers: ${errors.join(', ')}`);
+	}
+	return markers as IgnoredStatusMarkers;
+}
+
+/**
+ * Common helper to check if a checkbox status matches any of the provided markers.
  * Properly handles multi-codepoint Unicode characters using Array.from.
  */
-function isDoneStatus(statusContent: string | undefined, doneStatusMarkers: string): boolean {
-	if (!statusContent || !doneStatusMarkers) return false;
+function isStatusMatch(statusContent: string | undefined, markers: string): boolean {
+	if (!statusContent || !markers) return false;
 	
 	// Convert to arrays of Unicode code points to handle multi-codepoint chars
 	const contentChars = Array.from(statusContent);
-	const markersChars = Array.from(doneStatusMarkers);
+	const markersChars = Array.from(markers);
 	
 	// Valid checkbox content must be exactly one code point
 	// Note: This will work correctly for most emoji and Unicode characters
@@ -123,8 +203,24 @@ function isDoneStatus(statusContent: string | undefined, doneStatusMarkers: stri
 	const singleChar = contentChars[0];
 	if (!singleChar) return false;
 	
-	// Check if the checkbox content matches any of the done status markers
+	// Check if the checkbox content matches any of the provided markers
 	return markersChars.includes(singleChar);
+}
+
+/**
+ * Checks if a checkbox status is marked as done based on the configured markers.
+ * Properly handles multi-codepoint Unicode characters using Array.from.
+ */
+function isDoneStatus(statusContent: string | undefined, doneStatusMarkers: string): boolean {
+	return isStatusMatch(statusContent, doneStatusMarkers);
+}
+
+/**
+ * Checks if a checkbox status should be ignored (not processed as a task).
+ * Properly handles multi-codepoint Unicode characters using Array.from.
+ */
+function isIgnoredStatus(statusContent: string | undefined, ignoredStatusMarkers: string): boolean {
+	return isStatusMatch(statusContent, ignoredStatusMarkers);
 }
 
 export class Task {
@@ -134,7 +230,8 @@ export class Task {
 		readonly rowIndex: number,
 		columnTagTable: ColumnTagTable,
 		private readonly consolidateTags: boolean,
-		private readonly doneStatusMarkers: string = DEFAULT_DONE_STATUS_MARKERS
+		private readonly doneStatusMarkers: string = DEFAULT_DONE_STATUS_MARKERS,
+		private readonly ignoredStatusMarkers: string = DEFAULT_IGNORED_STATUS_MARKERS
 	) {
 		const [, blockLink] = rawContent.match(blockLinkRegexp) ?? [];
 		this.blockLink = blockLink;
@@ -267,11 +364,25 @@ export class Task {
 
 type TaskString = Brand<string, "TaskString">;
 
-export function isTaskString(input: string): input is TaskString {
+export function isTrackedTaskString(input: string, ignoredStatusMarkers: string = DEFAULT_IGNORED_STATUS_MARKERS): input is TaskString {
 	if (input.includes("#archived")) {
 		return false;
 	}
-	return taskStringRegex.test(input);
+	
+	if (!taskStringRegex.test(input)) {
+		return false;
+	}
+	
+	// Extract the checkbox status and check if it's ignored
+	const match = input.match(taskStringRegex);
+	if (match) {
+		const [, , status] = match;
+		if (isIgnoredStatus(status, ignoredStatusMarkers)) {
+			return false;
+		}
+	}
+	
+	return true;
 }
 
 // begins with 0 or more whitespace chars

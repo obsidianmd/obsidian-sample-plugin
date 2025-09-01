@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 import { z } from "zod";
-import { DEFAULT_DONE_STATUS_MARKERS } from "../tasks/task";
+import { DEFAULT_DONE_STATUS_MARKERS, DEFAULT_IGNORED_STATUS_MARKERS } from "../tasks/task";
 
 export enum VisibilityOption {
 	Auto = "auto",
@@ -27,6 +27,7 @@ const settingsObject = z.object({
 		.default(VisibilityOption.AlwaysShow)
 		.optional(),
 	doneStatusMarkers: z.string().default(DEFAULT_DONE_STATUS_MARKERS).optional(),
+	ignoredStatusMarkers: z.string().default(DEFAULT_IGNORED_STATUS_MARKERS).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;
@@ -39,6 +40,7 @@ export const defaultSettings: SettingValues = {
 	uncategorizedVisibility: VisibilityOption.Auto,
 	doneVisibility: VisibilityOption.AlwaysShow,
 	doneStatusMarkers: DEFAULT_DONE_STATUS_MARKERS,
+	ignoredStatusMarkers: DEFAULT_IGNORED_STATUS_MARKERS,
 };
 
 export const createSettingsStore = () =>
