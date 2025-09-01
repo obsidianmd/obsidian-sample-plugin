@@ -522,3 +522,97 @@ describe("Done Status Markers Validation", () => {
 		});
 	});
 });
+
+describe("Task archiving", () => {
+	const columnTags: ColumnTagTable = {
+		[kebab<ColumnTag>("column")]: "column",
+	};
+
+	describe("retains original done markers when archiving", () => {
+		it("retains uppercase X marker when archiving", () => {
+			let task: Task | undefined;
+			const taskString = "- [X] Already done task #column";
+			if (isTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				task.archive();
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe("archived");
+			expect(task?.serialise()).toBe("- [X] Already done task #archived");
+		});
+
+		it("retains lowercase x marker when archiving", () => {
+			let task: Task | undefined;
+			const taskString = "- [x] Already done task #column";
+			if (isTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				task.archive();
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe("archived");
+			expect(task?.serialise()).toBe("- [x] Already done task #archived");
+		});
+
+		it("retains custom Unicode done marker when archiving", () => {
+			let task: Task | undefined;
+			const taskString = "- [✓] Custom done marker task #column";
+			if (isTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✓");
+				task.archive();
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe("archived");
+			expect(task?.serialise()).toBe("- [✓] Custom done marker task #archived");
+		});
+
+		it("retains emoji done marker when archiving", () => {
+			let task: Task | undefined;
+			const taskString = "- [✅] Emoji done marker task #column";
+			if (isTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX✅");
+				task.archive();
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe("archived");
+			expect(task?.serialise()).toBe("- [✅] Emoji done marker task #archived");
+		});
+	});
+
+	describe("applies default done marker when archiving incomplete tasks", () => {
+		it("uses default 'x' marker when archiving incomplete task", () => {
+			let task: Task | undefined;
+			const taskString = "- [ ] Incomplete task #column";
+			if (isTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				task.archive();
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe("archived");
+			expect(task?.serialise()).toBe("- [x] Incomplete task #archived");
+		});
+
+		it("uses default 'x' marker when archiving task with unknown status", () => {
+			let task: Task | undefined;
+			const taskString = "- [?] Unknown status task #column";
+			if (isTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX");
+				task.archive();
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe("archived");
+			expect(task?.serialise()).toBe("- [x] Unknown status task #archived");
+		});
+	});
+});

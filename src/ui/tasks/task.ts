@@ -158,7 +158,8 @@ export class Task {
 
 		this._id = sha256(content + fileHandle.path + rowIndex).toString();
 		this.content = content;
-		this._done = isDoneStatus(status || " ", this.doneStatusMarkers);
+		this._displayStatus = status || " ";
+		this._done = isDoneStatus(this._displayStatus, this.doneStatusMarkers);
 		this._path = fileHandle.path;
 		this._indentation = indentation || "";
 
@@ -204,6 +205,8 @@ export class Task {
 		this._column = undefined;
 	}
 
+	private _displayStatus: string;
+
 	private _deleted: boolean = false;
 
 	private readonly _path: string;
@@ -235,7 +238,7 @@ export class Task {
 
 		return [
 			this.indentation,
-			`- [${this.done ? "x" : " "}] `,
+			`- [${this._displayStatus}] `,
 			this.content.trim(),
 			this.consolidateTags && this.tags.size > 0
 				? ` ${Array.from(this.tags)
@@ -250,6 +253,9 @@ export class Task {
 	}
 
 	archive() {
+		if (!this._done) {
+			this._displayStatus = "x";
+		}
 		this._done = true;
 		this._column = "archived";
 	}
