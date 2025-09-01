@@ -404,7 +404,7 @@ describe("Task", () => {
 		});
 	});
 
-	describe("obsidian backlinks", () => {
+	describe("obsidian links", () => {
 		it("should not identify backlink as a task", () => {
 			const backlink = "- [[x]]";
 			expect(isTaskString(backlink)).toBe(false);
@@ -418,6 +418,11 @@ describe("Task", () => {
 		it("should not identify indented backlink as a task", () => {
 			const backlink = "  - [[x]]";
 			expect(isTaskString(backlink)).toBe(false);
+		});
+
+		it("should not identify a link as a task", () => {
+			const notTask = "- [x](foo)";
+			expect(isTaskString(notTask)).toBe(false);
 		});
 	});
 });
