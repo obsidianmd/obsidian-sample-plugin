@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
     "inlineSourceMap": true,
     "inlineSources": true,
-    "module": "ESNext",
+    "module": "NodeNext",
     "target": "ES6",
     "allowJs": true,
+    "noEmit": true,
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "importHelpers": true,
     "isolatedModules": true,
     "strictNullChecks": true,
