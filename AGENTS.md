@@ -13,8 +13,7 @@
 - **Bundler: esbuild** (required for this sample - `esbuild.config.mjs` and build scripts depend on it). Alternative bundlers like Rollup or webpack are acceptable for other projects if they bundle all external dependencies into `main.js`.
 - Types: `obsidian` type definitions.
 
-**Note**: This sample project has specific technical dependencies on npm and esbuild. If you're creating a plugin from scratch, you could choose different tools, but you'll need to replace the build configuration accordingly.
-
+**Note**: This sample project has specific technical dependencies on npm and esbuild. If you're creating a plugin from scratch, you can choose different tools, but you'll need to replace the build configuration accordingly.
 
 ### Install
 
