@@ -45,7 +45,7 @@ npm run build
 
 - **Organize code into multiple files**: Split functionality across separate modules rather than putting everything in `main.ts`.
 - Source lives in `src/`. Keep `main.ts` small and focused on plugin lifecycle (loading, unloading, registering commands).
-- **Recommended file structure**:
+- **Example file structure**:
   ```
   src/
     main.ts           # Plugin entry point, lifecycle management
@@ -77,8 +77,9 @@ npm run build
   - Optional: `author`, `authorUrl`, `fundingUrl` (string or map)
 - Never change `id` after release. Treat it as stable API.
 - Keep `minAppVersion` accurate when using newer APIs.
+- Canonical requirements are coded here: https://github.com/obsidianmd/obsidian-releases/blob/master/.github/workflows/validate-plugin-entry.yml
 
-## Building & running in Obsidian
+## Testing
 
 - Manual install for testing: copy `main.js`, `manifest.json`, `styles.css` (if any) to:
   ```
