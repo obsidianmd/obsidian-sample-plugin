@@ -63,7 +63,7 @@ Quick starting guide for new plugin devs:
   - `eslint main.ts`
   - eslint will then create a report with suggestions for code improvement by file and line number.
 - If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+  - `eslint ./src/`
 
 ## Funding URL
 
