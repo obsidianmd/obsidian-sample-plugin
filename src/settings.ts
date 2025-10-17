@@ -22,12 +22,6 @@ export class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h1', {text: 'Settings'});
-
-		new Setting(containerEl).setName("Settings for Sample plugin").setHeading();
-
-		new Setting(containerEl).setName("General settings").setHeading();
-
 		new Setting(containerEl)
 			.setName('Settings #1')
 			.setDesc('It\'s a secret')

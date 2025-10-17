@@ -1,6 +1,5 @@
 import {App, Editor, MarkdownView, Modal, moment, Notice, Plugin} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
-import {readFile} from "fs/promises";
 
 // Remember to rename these classes and interfaces!
 
@@ -13,43 +12,33 @@ export default class MyPlugin extends Plugin {
 		// This creates an icon in the left ribbon.
 		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a Notice!');
-			const content = readFile('test');
-			this.app.workspace.activeLeaf?.detach();
-			const el = document.createDiv();
-			el.style.color = 'white';
-			el.style.backgroundColor = 'red';
-
-			localStorage.setItem('test', 'hello');
+			new Notice('This is a notice!');
 		});
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.innerHTML = "Hello world";
-		statusBarItemEl.innerHTML = "<span>" + this.settings.mySetting + "</span>"
 		statusBarItemEl.setText('Status bar text');
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-sample-plugin-modal-simple',
-			name: 'Open sample plugin modal (simple)',
+			id: 'open-modal-simple',
+			name: 'Open modal (simple)',
 			callback: () => {
 				new SampleModal(this.app).open();
 			}
 		});
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample plugin editor command',
+			id: 'replace-selected',
+			name: 'Replace selected content',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				editor.replaceSelection('Sample editor command');
 			}
 		});
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
 		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			hotkeys: [{modifiers: ['Mod'], key: 'a'}],
+			id: 'open-modal-complex',
+			name: 'Open modal (complex)',
 			checkCallback: (checking: boolean) => {
 				// Conditions to check
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -73,26 +62,20 @@ export default class MyPlugin extends Plugin {
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("click");
-			"test".replace(/(?<=([ab]+)([bc]+))$/, "test");
+			new Notice("Click");
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
-		moment().format('YYYY-MM-DD HH:mm:ss');
 	}
 
 	onunload() {
-		const {workspace} = this.app;
-		workspace.detachLeavesOfType('test');
+
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		this.settings = Object.assign(DEFAULT_SETTINGS, await this.loadData());
-
-		const result = await fetch("https://github.com");
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
 	}
 
 	async saveSettings() {
@@ -111,7 +94,7 @@ class SampleModal extends Modal {
 	}
 
 	onClose() {
-		var {contentEl} = this;
+		const {contentEl} = this;
 		contentEl.empty();
 	}
 }
