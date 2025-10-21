@@ -31,7 +31,48 @@
 	let selectedTags: string[] = [];
 	$: selectedTagsSet = new Set(selectedTags);
 
+	let activeContentFilterId: string | undefined = undefined;
+	let activeTagFilterId: string | undefined = undefined;
+
 	$: savedFilters = $settingsStore.savedFilters ?? [];
+
+	$: {
+		if (activeContentFilterId !== undefined) {
+			const savedFilter = savedFilters.find(f => f.id === activeContentFilterId);
+			if (!savedFilter || savedFilter.content?.text !== filterText.trim()) {
+				activeContentFilterId = undefined;
+			}
+		}
+	}
+
+	$: contentFilterMatches = activeContentFilterId !== undefined && 
+		savedFilters.find(f => f.id === activeContentFilterId)?.content?.text === filterText.trim();
+
+	$: {
+		if (activeTagFilterId !== undefined) {
+			const activeFilter = savedFilters.find(f => f.id === activeTagFilterId);
+			if (activeFilter?.tag) {
+				const sortedCurrent = [...selectedTags].sort();
+				const sortedSaved = [...activeFilter.tag.tags].sort();
+				if (sortedCurrent.length !== sortedSaved.length || 
+					!sortedCurrent.every((tag, i) => tag === sortedSaved[i])) {
+					activeTagFilterId = undefined;
+				}
+			} else {
+				activeTagFilterId = undefined;
+			}
+		}
+	}
+
+	$: tagFilterMatches = (() => {
+		if (activeTagFilterId === undefined) return false;
+		const activeFilter = savedFilters.find(f => f.id === activeTagFilterId);
+		if (!activeFilter?.tag) return false;
+		const sortedCurrent = [...selectedTags].sort();
+		const sortedSaved = [...activeFilter.tag.tags].sort();
+		if (sortedCurrent.length !== sortedSaved.length) return false;
+		return sortedCurrent.every((tag, i) => tag === sortedSaved[i]);
+	})();
 	$: contentFilters = savedFilters
 		.filter((f) => f.content !== undefined)
 		.sort((a, b) => {
@@ -79,8 +120,9 @@
 		requestSave();
 	}
 
-	function loadContentFilter(text: string) {
+	function loadContentFilter(filterId: string, text: string) {
 		filterText = text;
+		activeContentFilterId = filterId;
 	}
 
 	function addTagFilter() {
@@ -196,9 +238,6 @@
 					</datalist>
 				{/if}
 			</div>
-			{#if filterText.trim() !== "" && !contentFilterExists}
-				<button class="add-filter-btn" on:click={addContentFilter}>Add</button>
-			{/if}
 			{#if contentFilters.length > 0}
 				<div class="saved-filters">
 					<details>
@@ -206,7 +245,7 @@
 						<ul>
 							{#each contentFilters as filter}
 								<li>
-									<button on:click={() => loadContentFilter(filter.content?.text ?? "")}>
+									<button on:click={() => loadContentFilter(filter.id, filter.content?.text ?? "")}>
 										{filter.content?.text}
 									</button>
 								</li>
@@ -215,12 +254,23 @@
 					</details>
 				</div>
 			{/if}
+			{#if contentFilterMatches}
+				<div class="filter-status">Using saved</div>
+			{/if}
+			{#if filterText.trim() !== "" && !contentFilterExists}
+				<button class="add-filter-btn" on:click={addContentFilter}>Add</button>
+			{/if}
 		</div>
 		<div class="tag-filter">
-			<SelectTag tags={[...tags]} savedFilters={tagFilters} bind:value={selectedTags} />
-			{#if selectedTags.length > 0 && !tagFilterExists}
-				<button class="add-filter-btn" on:click={addTagFilter}>Add</button>
-			{/if}
+			<SelectTag 
+				tags={[...tags]} 
+				savedFilters={tagFilters} 
+				bind:value={selectedTags}
+				onLoadFilter={(filterId) => { activeTagFilterId = filterId; }}
+				showUsingStatus={tagFilterMatches}
+				showAddButton={selectedTags.length > 0 && !tagFilterExists}
+				onAddClick={addTagFilter}
+			/>
 		</div>
 	</div>
 
@@ -307,6 +357,13 @@
 					}
 				}
 
+				.filter-status {
+					margin-top: var(--size-4-1);
+					font-size: var(--font-ui-small);
+					color: var(--text-muted);
+					align-self: flex-start;
+				}
+
 				.add-filter-btn {
 					margin-top: var(--size-4-1);
 					padding: var(--size-4-1) var(--size-4-2);
@@ -372,22 +429,6 @@
 				display: flex;
 				flex-direction: column;
 				flex-grow: 1;
-
-				.add-filter-btn {
-					margin-top: var(--size-4-1);
-					padding: var(--size-4-1) var(--size-4-2);
-					background: var(--interactive-accent);
-					color: var(--text-on-accent);
-					border: none;
-					border-radius: var(--radius-s);
-					cursor: pointer;
-					font-size: var(--font-ui-small);
-					align-self: flex-start;
-
-					&:hover {
-						background: var(--interactive-accent-hover);
-					}
-				}
 			}
 		}
 

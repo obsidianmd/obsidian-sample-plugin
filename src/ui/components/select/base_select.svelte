@@ -8,6 +8,9 @@
 	export let value: string[];
 	export let savedFilters: SavedFilter[] = [];
 	export let loadSavedFilter: ((filter: SavedFilter) => void) | undefined = undefined;
+	export let showUsingStatus: boolean = false;
+	export let showAddButton: boolean = false;
+	export let onAddClick: (() => void) | undefined = undefined;
 
 	$: fieldName = `field=${label}`;
 
@@ -79,6 +82,14 @@
 			</details>
 		</div>
 	{/if}
+	
+	{#if showUsingStatus}
+		<div class="filter-status">Using saved</div>
+	{/if}
+	
+	{#if showAddButton}
+		<button class="add-filter-btn" on:click={onAddClick}>Add</button>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -128,6 +139,27 @@
 					}
 				}
 			}
+		}
+	}
+
+	.filter-status {
+		margin-top: var(--size-4-1);
+		font-size: var(--font-ui-small);
+		color: var(--text-muted);
+	}
+
+	.add-filter-btn {
+		margin-top: var(--size-4-1);
+		padding: var(--size-4-1) var(--size-4-2);
+		background: var(--interactive-accent);
+		color: var(--text-on-accent);
+		border: none;
+		border-radius: var(--radius-s);
+		cursor: pointer;
+		font-size: var(--font-ui-small);
+
+		&:hover {
+			background: var(--interactive-accent-hover);
 		}
 	}
 
