@@ -19,6 +19,7 @@
 	export let columnTagTableStore: Readable<ColumnTagTable>;
 	export let columnColourTableStore: Readable<ColumnColourTable>;
 	export let settingsStore: Writable<SettingValues>;
+	export let requestSave: () => void;
 
 	$: tags = $tasksStore.reduce((acc, curr) => {
 		for (const tag of curr.tags) {
@@ -29,6 +30,31 @@
 
 	let selectedTags: string[] = [];
 	$: selectedTagsSet = new Set(selectedTags);
+
+	$: savedFilters = $settingsStore.savedFilters ?? [];
+	$: contentFilters = savedFilters
+		.filter((f) => f.content !== undefined)
+		.sort((a, b) => {
+			const textA = a.content?.text.toLowerCase() ?? "";
+			const textB = b.content?.text.toLowerCase() ?? "";
+			return textA.localeCompare(textB);
+		});
+
+	function addContentFilter() {
+		const normalized = filterText.trim();
+		const existingFilterIndex = savedFilters.findIndex(
+			(f) => f.content?.text === normalized
+		);
+		if (existingFilterIndex >= 0) {
+			return;
+		}
+		const newFilter = {
+			id: crypto.randomUUID(),
+			content: { text: normalized },
+		};
+		$settingsStore.savedFilters = [...savedFilters, newFilter];
+		requestSave();
+	}
 
 	function groupByColumnTag(
 		tasks: Task[],
@@ -103,12 +129,25 @@
 	<div class="controls">
 		<div class="text-filter">
 			<label for="filter">Filter by content:</label>
-			<input
-				name="filter"
-				type="search"
-				bind:value={filterText}
-				placeholder="Type to search..."
-			/>
+			<div class="filter-input-container">
+				<input
+					name="filter"
+					type="search"
+					bind:value={filterText}
+					placeholder="Type to search..."
+					list="content-filters"
+				/>
+				{#if contentFilters.length > 0}
+					<datalist id="content-filters">
+						{#each contentFilters as filter}
+							<option value={filter.content?.text}>{filter.content?.text}</option>
+						{/each}
+					</datalist>
+				{/if}
+			</div>
+			{#if filterText.trim() !== ""}
+				<button class="add-filter-btn" on:click={addContentFilter}>Add</button>
+			{/if}
 		</div>
 		<SelectTag tags={[...tags]} bind:value={selectedTags} />
 	</div>
@@ -179,11 +218,34 @@
 				label {
 					display: inline-block;
 					margin-bottom: var(--size-4-1);
+				}
 
-					~ input[type="search"] {
+				.filter-input-container {
+					input[type="search"] {
 						display: block;
-						flex-grow: 1;
+						width: 100%;
 						background: var(--background-primary);
+
+						&::-webkit-calendar-picker-indicator {
+							opacity: 1;
+							cursor: pointer;
+						}
+					}
+				}
+
+				.add-filter-btn {
+					margin-top: var(--size-4-1);
+					padding: var(--size-4-1) var(--size-4-2);
+					background: var(--interactive-accent);
+					color: var(--text-on-accent);
+					border: none;
+					border-radius: var(--radius-s);
+					cursor: pointer;
+					font-size: var(--font-ui-small);
+					align-self: flex-start;
+
+					&:hover {
+						background: var(--interactive-accent-hover);
 					}
 				}
 			}

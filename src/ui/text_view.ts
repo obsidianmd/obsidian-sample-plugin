@@ -142,6 +142,7 @@ ${parsed.body}
 				columnColourTableStore: this.columnColourTableStore,
 				openSettings: () => this.openSettingsModal(),
 				settingsStore: this.settingsStore,
+				requestSave: () => this.requestSave(),
 			},
 		});
 	}

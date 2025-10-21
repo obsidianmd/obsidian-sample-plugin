@@ -13,6 +13,34 @@ export enum ScopeOption {
 	Everywhere = "everywhere",
 }
 
+export interface ContentValue {
+	text: string;
+}
+
+export interface TagValue {
+	tags: string[];
+}
+
+export interface SavedFilter {
+	id: string;
+	content?: ContentValue;
+	tag?: TagValue;
+}
+
+const contentValueSchema = z.object({
+	text: z.string(),
+});
+
+const tagValueSchema = z.object({
+	tags: z.array(z.string()),
+});
+
+const savedFilterSchema = z.object({
+	id: z.string(),
+	content: contentValueSchema.optional(),
+	tag: tagValueSchema.optional(),
+});
+
 const settingsObject = z.object({
 	columns: z.array(z.string()),
 	scope: z.nativeEnum(ScopeOption).default(ScopeOption.Folder),
@@ -28,6 +56,7 @@ const settingsObject = z.object({
 		.optional(),
 	doneStatusMarkers: z.string().default(DEFAULT_DONE_STATUS_MARKERS).optional(),
 	ignoredStatusMarkers: z.string().default(DEFAULT_IGNORED_STATUS_MARKERS).optional(),
+	savedFilters: z.array(savedFilterSchema).default([]).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;
@@ -41,6 +70,7 @@ export const defaultSettings: SettingValues = {
 	doneVisibility: VisibilityOption.AlwaysShow,
 	doneStatusMarkers: DEFAULT_DONE_STATUS_MARKERS,
 	ignoredStatusMarkers: DEFAULT_IGNORED_STATUS_MARKERS,
+	savedFilters: [],
 };
 
 export const createSettingsStore = () =>

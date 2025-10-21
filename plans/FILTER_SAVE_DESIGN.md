@@ -71,7 +71,6 @@ interface SavedFilter {
   id: string;                    // UUID for saved filter
   content?: ContentValue;        // Content filter (optional)
   tag?: TagValue;                // Tag filter (optional)
-  lastUsed?: number;             // Timestamp for sorting
 }
 
 interface FilterState {
@@ -111,7 +110,6 @@ interface FilterState {
 - Filter is applied immediately
 - Input box shows the saved filter's value
 - The saved filter ID is tracked internally
-- `lastUsed` timestamp is updated
 
 **State tracking:**
 - If the input matches a saved filter AND that filter was loaded → show "Using saved"
@@ -132,7 +130,6 @@ interface FilterState {
 3. System creates new `SavedFilter` with:
    - Unique ID (UUID)
    - Current filter value(s)
-   - Current timestamp as `lastUsed`
 4. Filter appears in dropdown immediately
 5. Current filter is marked as "using this saved filter"
 6. Persisted to frontmatter automatically
@@ -140,10 +137,10 @@ interface FilterState {
 **Display in Dropdown:**
 - Content filters: Show the search text in quotes (e.g., `"frontend"`)
 - Tag filters: Show comma-separated tag list (e.g., `frontend, ui, bug`)
-- Sorted by `lastUsed` (most recent first)
+- Sorted alphabetically by filter text
 
 **Duplicate Handling:**
-- If exact same filter already exists, update its `lastUsed` timestamp
+- If exact same filter already exists, do not create a duplicate
 - No duplicate filters with identical values
 
 ### 3. Editing Saved Filters
@@ -234,20 +231,16 @@ Or for tag filters:
 
 **On board close/save:**
 - Persist all `savedFilters` to frontmatter
-- Persist which saved filter was last loaded (by ID)
 - Do NOT persist current filter values if they differ from saved
 
 **On board open/load:**
 - Load `savedFilters` from frontmatter
-- If a saved filter ID is stored for "last used":
-  - Load that filter's value
-  - Track it as the active saved filter
-- Otherwise, start with empty filters
+- Start with empty filters
 
 **Storage location:**
 ```yaml
 ---
-kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"id":"uuid-1","tag":{"tags":["frontend","ui"]},"lastUsed":1234567890},{"id":"uuid-2","content":{"text":"bug report"},"lastUsed":1234567891}],"lastContentFilterId":"uuid-2","lastTagFilterId":"uuid-1"}'
+kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"id":"uuid-1","tag":{"tags":["frontend","ui"]}},{"id":"uuid-2","content":{"text":"bug report"}}]}'
 ---
 ```
 
@@ -317,10 +310,9 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 ### Phase 6: Polish
 **Goal:** Refinements and UX improvements
 
-1. Sort saved filters by `lastUsed` (most recent first)
-2. Handle duplicate detection (update `lastUsed` instead of creating duplicate)
+1. Sort saved filters alphabetically
+2. Handle duplicate detection (do not create duplicate)
 3. Truncate long filter text in dropdown with ellipsis
-4. Update `lastUsed` timestamp when filter is selected
 
 **Deliverable:** Polished, production-ready feature
 
