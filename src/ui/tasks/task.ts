@@ -386,8 +386,8 @@ export function isTrackedTaskString(input: string, ignoredStatusMarkers: string 
 }
 
 // begins with 0 or more whitespace chars
-// then follows the pattern "- [single_char_or_space]"
+// then follows the pattern "- [ ]", "* [ ]", or "+ [ ]" with checkbox content
 // then contains an additional whitespace before any trailing content
 // excludes backlinks by ensuring brackets don't contain nested brackets
-const taskStringRegex = /^(\s*)-\s\[([^\[\]]*)\]\s(.+)/;
+const taskStringRegex = /^(\s*)[-*+]\s\[([^\[\]]*)\]\s(.+)/;
 const blockLinkRegexp = /\s\^([a-zA-Z0-9-]+)$/;

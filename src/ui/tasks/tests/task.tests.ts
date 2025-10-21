@@ -17,9 +17,33 @@ describe("Task", () => {
 		[kebab<ColumnTag>("column")]: "column",
 	};
 
-	it("parses a basic task string", () => {
+	it("parses a basic task string, -", () => {
 		let task: Task | undefined;
 		const taskString = "- [ ] Something #tag";
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+		}
+
+		expect(task).toBeTruthy();
+		expect(task?.content).toBe("Something #tag");
+		expect(task?.tags.has("tag")).toBeTruthy();
+	});
+
+	it("parses a basic task string, *", () => {
+		let task: Task | undefined;
+		const taskString = "* [ ] Something #tag";
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+		}
+
+		expect(task).toBeTruthy();
+		expect(task?.content).toBe("Something #tag");
+		expect(task?.tags.has("tag")).toBeTruthy();
+	});
+
+	it("parses a basic task string, +", () => {
+		let task: Task | undefined;
+		const taskString = "+ [ ] Something #tag";
 		if (isTrackedTaskString(taskString)) {
 			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
 		}
