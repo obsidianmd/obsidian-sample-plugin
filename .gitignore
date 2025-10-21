@@ -24,6 +24,9 @@ data.json
 # tmp directory
 tmp/
 
+# temporary planning artifacts
+tmp_plans/
+
 # beads
 .beads/
 
