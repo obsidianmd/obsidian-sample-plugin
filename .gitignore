@@ -24,5 +24,8 @@ data.json
 # tmp directory
 tmp/
 
+# beads
+.beads/
+
 # AI agent configuration
 AGENTS.md
