@@ -24,37 +24,51 @@ Users want to save their filter configurations (both content and tag filters) so
 #### Content Filter Box
 ```
 ┌─────────────────────────────────────────┐
-│ Filter by content: [▼]                  │
+│ Filter by content:                      │
 │ ┌─────────────────────────────────────┐ │
-│ │ Type to search...                ▼  │ │  ← Editable with dropdown
+│ │ Type to search...                   │ │  ← Native input with datalist autocomplete
 │ └─────────────────────────────────────┘ │
 │   [Add]                                 │  ← Add button (only visible when text entered)
+│                                         │
+│ > Saved filters                         │  ← Collapsible section
+│   • "frontend"                      [×] │
+│   • "bug report"                    [×] │
+│   • "review"                        [×] │
+│   • "this is a very long filter..." [×] │
 └─────────────────────────────────────────┘
-
-Dropdown shows recently used saved filters (truncated with ellipsis if long):
-  - "frontend"                              [×]
-  - "bug report"                            [×]
-  - "review"                                [×]
-  - "TODO:"                                 [×]
-  - "this is a very long filter te..."      [×]
 ```
+
+**Content Filter Behavior:**
+- **Prefix typing autocomplete**: While typing, native `<datalist>` dropdown shows saved filters matching the current prefix
+  - Datalist is read-only (no delete buttons in autocomplete dropdown)
+  - Selecting from datalist populates the input immediately
+- **Saved filters section**: Collapsible `<details>` section below the input shows ALL saved filters
+  - Each filter is a clickable button that populates the input
+  - Each filter has a [×] delete button
+  - Deletion only available in this section, NOT in the datalist autocomplete
 
 #### Tag Filter Box
 ```
 ┌─────────────────────────────────────────┐
-│ Filter by tag: [▼]                      │
+│ Filter by tag:                          │
 │ ┌─────────────────────────────────────┐ │
-│ │ [frontend] [x]  [bug] [x]        ▼  │ │  ← Multi-select with dropdown
+│ │ [frontend] [x]  [bug] [x]        ▼  │ │  ← Multi-select dropdown (svelte-select)
 │ └─────────────────────────────────────┘ │
 │   [Add]                                 │  ← Add button (only visible when tags selected)
+│                                         │
+│ > Saved filters                         │  ← Collapsible section (already exists)
+│   • frontend, ui                    [×] │
+│   • bug, urgent                     [×] │
+│   • docs                            [×] │
 └─────────────────────────────────────────┘
-
-Dropdown shows recently used saved filters (truncated with ellipsis if long):
-  - frontend, ui                            [×]
-  - bug, urgent                             [×]
-  - docs                                    [×]
-  - frontend, ui, bug, urgent, critical...  [×]
 ```
+
+**Tag Filter Behavior:**
+- **Multi-select dropdown**: Uses `svelte-select` component for selecting multiple tags
+- **Saved filters section**: Collapsible `<details>` section below the select (already implemented)
+  - Each filter is a clickable button that loads those tags
+  - Each filter has a [×] delete button
+  - Deletion only available in this section
 
 ### Data Model
 
@@ -192,8 +206,12 @@ interface FilterState {
 
 ### 4. Deleting Saved Filters
 
-**Inline delete in dropdown:**
-- Each saved filter has a [×] icon on the right
+**Location:**
+- Delete functionality ONLY available in the "Saved filters" collapsible section
+- NOT available in the datalist autocomplete dropdown (content filter)
+- Each saved filter in the collapsible section has a [×] button on the right
+
+**Delete behavior:**
 - Clicking [×] opens a confirmation modal
 - Confirmation required because delete is destructive
 
@@ -225,7 +243,7 @@ Or for tag filters:
   - Filtering continues with current values
   - "Using saved" indicator is removed
   - Filter is now treated as unsaved (shows [Add] button)
-- Dropdown closes after deletion
+- Collapsible section remains open after deletion
 
 ### 5. Persistence
 

@@ -40,6 +40,29 @@
 			return textA.localeCompare(textB);
 		});
 
+	$: tagFilters = savedFilters
+		.filter((f) => f.tag !== undefined)
+		.sort((a, b) => {
+			const tagsA = (a.tag?.tags ?? []).join(", ").toLowerCase();
+			const tagsB = (b.tag?.tags ?? []).join(", ").toLowerCase();
+			return tagsA.localeCompare(tagsB);
+		});
+
+	$: contentFilterExists = contentFilters.some(
+		(f) => f.content?.text === filterText.trim()
+	);
+
+	$: tagFilterExists = (() => {
+		if (selectedTags.length === 0) return false;
+		const sortedTags = [...selectedTags].sort();
+		return savedFilters.some((f) => {
+			const filterTags = f.tag?.tags ?? [];
+			if (filterTags.length !== sortedTags.length) return false;
+			const sortedFilterTags = [...filterTags].sort();
+			return sortedFilterTags.every((tag, i) => tag === sortedTags[i]);
+		});
+	})();
+
 	function addContentFilter() {
 		const normalized = filterText.trim();
 		const existingFilterIndex = savedFilters.findIndex(
@@ -51,6 +74,34 @@
 		const newFilter = {
 			id: crypto.randomUUID(),
 			content: { text: normalized },
+		};
+		$settingsStore.savedFilters = [...savedFilters, newFilter];
+		requestSave();
+	}
+
+	function loadContentFilter(text: string) {
+		filterText = text;
+	}
+
+	function addTagFilter() {
+		if (selectedTags.length === 0) {
+			return;
+		}
+		const sortedTags = [...selectedTags].sort();
+		const existingFilterIndex = savedFilters.findIndex(
+			(f) => {
+				const filterTags = f.tag?.tags ?? [];
+				if (filterTags.length !== sortedTags.length) return false;
+				const sortedFilterTags = [...filterTags].sort();
+				return sortedFilterTags.every((tag, i) => tag === sortedTags[i]);
+			}
+		);
+		if (existingFilterIndex >= 0) {
+			return;
+		}
+		const newFilter = {
+			id: crypto.randomUUID(),
+			tag: { tags: sortedTags },
 		};
 		$settingsStore.savedFilters = [...savedFilters, newFilter];
 		requestSave();
@@ -145,11 +196,32 @@
 					</datalist>
 				{/if}
 			</div>
-			{#if filterText.trim() !== ""}
+			{#if filterText.trim() !== "" && !contentFilterExists}
 				<button class="add-filter-btn" on:click={addContentFilter}>Add</button>
 			{/if}
+			{#if contentFilters.length > 0}
+				<div class="saved-filters">
+					<details>
+						<summary>Saved filters</summary>
+						<ul>
+							{#each contentFilters as filter}
+								<li>
+									<button on:click={() => loadContentFilter(filter.content?.text ?? "")}>
+										{filter.content?.text}
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</details>
+				</div>
+			{/if}
 		</div>
-		<SelectTag tags={[...tags]} bind:value={selectedTags} />
+		<div class="tag-filter">
+			<SelectTag tags={[...tags]} savedFilters={tagFilters} bind:value={selectedTags} />
+			{#if selectedTags.length > 0 && !tagFilterExists}
+				<button class="add-filter-btn" on:click={addTagFilter}>Add</button>
+			{/if}
+		</div>
 	</div>
 
 	<div class="columns">
@@ -226,12 +298,80 @@
 						width: 100%;
 						background: var(--background-primary);
 
-						&::-webkit-calendar-picker-indicator {
-							opacity: 1;
-							cursor: pointer;
+						&::-webkit-calendar-picker-indicator,
+						&::-webkit-list-button {
+							display: none !important;
+							opacity: 0 !important;
+							pointer-events: none !important;
 						}
 					}
 				}
+
+				.add-filter-btn {
+					margin-top: var(--size-4-1);
+					padding: var(--size-4-1) var(--size-4-2);
+					background: var(--interactive-accent);
+					color: var(--text-on-accent);
+					border: none;
+					border-radius: var(--radius-s);
+					cursor: pointer;
+					font-size: var(--font-ui-small);
+					align-self: flex-start;
+
+					&:hover {
+						background: var(--interactive-accent-hover);
+					}
+				}
+
+				.saved-filters {
+					margin-top: var(--size-4-1);
+					font-size: var(--font-ui-small);
+					align-self: flex-start;
+
+					details {
+						summary {
+							cursor: pointer;
+							color: var(--text-muted);
+							padding: var(--size-2-1) 0;
+							user-select: none;
+
+							&:hover {
+								color: var(--text-normal);
+							}
+						}
+
+						ul {
+							margin: 0;
+							padding: 0;
+							list-style: none;
+
+							li {
+								margin: 0;
+
+								button {
+									text-align: left;
+									padding: var(--size-2-1) var(--size-2-2);
+									background: transparent;
+									border: none;
+									cursor: pointer;
+									color: var(--text-normal);
+									border-radius: var(--radius-s);
+									white-space: nowrap;
+
+									&:hover {
+										background: var(--background-modifier-hover);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			.tag-filter {
+				display: flex;
+				flex-direction: column;
+				flex-grow: 1;
 
 				.add-filter-btn {
 					margin-top: var(--size-4-1);
