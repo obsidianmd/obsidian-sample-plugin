@@ -8,6 +8,8 @@
 	export let onLoadFilter: ((filterId: string) => void) | undefined = undefined;
 	export let addButtonDisabled: boolean = false;
 	export let onAddClick: (() => void) | undefined = undefined;
+	export let clearButtonDisabled: boolean = false;
+	export let onClearClick: (() => void) | undefined = undefined;
 	export let activeFilterId: string | undefined = undefined;
 	export let onDeleteClick: ((filterId: string, filterText: string) => void) | undefined = undefined;
 
@@ -18,6 +20,11 @@
 			value = [...filter.tag.tags];
 			onLoadFilter?.(filter.id);
 		}
+	}
+	
+	function handleClear() {
+		baseSelectRef?.clearSelection();
+		onClearClick?.();
 	}
 </script>
 
@@ -31,6 +38,8 @@
 		{loadSavedFilter}
 		{addButtonDisabled}
 		{onAddClick}
+		{clearButtonDisabled}
+		onClearClick={handleClear}
 		{activeFilterId}
 		{onDeleteClick}
 	/>

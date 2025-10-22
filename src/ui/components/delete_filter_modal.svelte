@@ -1,16 +1,56 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	
 	export let filterText: string;
 	export let onConfirm: () => void;
 	export let onCancel: () => void;
+	
+	let modalElement: HTMLDivElement;
+	let deleteButton: HTMLButtonElement;
+	
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			onCancel();
+		}
+	}
+	
+	onMount(() => {
+		// Focus the delete button when modal opens
+		deleteButton?.focus();
+		
+		// Trap focus within modal
+		const focusableElements = modalElement.querySelectorAll<HTMLElement>(
+			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+		);
+		const firstElement = focusableElements[0];
+		const lastElement = focusableElements[focusableElements.length - 1];
+		
+		const handleTabKey = (e: KeyboardEvent) => {
+			if (e.key === 'Tab') {
+				if (e.shiftKey && document.activeElement === firstElement) {
+					e.preventDefault();
+					lastElement?.focus();
+				} else if (!e.shiftKey && document.activeElement === lastElement) {
+					e.preventDefault();
+					firstElement?.focus();
+				}
+			}
+		};
+		
+		modalElement.addEventListener('keydown', handleTabKey);
+		return () => modalElement.removeEventListener('keydown', handleTabKey);
+	});
 </script>
 
-<div class="modal-backdrop" on:click={onCancel} role="presentation">
-	<div class="modal" on:click|stopPropagation role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<svelte:window on:keydown={handleKeydown} />
+
+<div class="modal-backdrop" on:click={(e) => e.target === e.currentTarget && onCancel()} role="presentation">
+	<div bind:this={modalElement} class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
 		<h3 id="modal-title">Delete saved filter?</h3>
 		<div class="filter-preview">{filterText}</div>
 		<div class="modal-actions">
 			<button class="cancel-btn" on:click={onCancel}>Cancel</button>
-			<button class="delete-btn" on:click={onConfirm}>Delete</button>
+			<button bind:this={deleteButton} class="delete-btn" on:click={onConfirm}>Delete</button>
 		</div>
 	</div>
 </div>
@@ -24,8 +64,9 @@
 		bottom: 0;
 		background: rgba(0, 0, 0, 0.5);
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: center;
+		padding-top: 20vh;
 		z-index: 1000;
 	}
 

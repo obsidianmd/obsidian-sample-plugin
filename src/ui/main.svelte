@@ -126,6 +126,11 @@
 		activeContentFilterId = filterId;
 	}
 
+	function clearContentFilter() {
+		filterText = "";
+		activeContentFilterId = undefined;
+	}
+
 	function addTagFilter() {
 		if (selectedTags.length === 0) {
 			return;
@@ -148,6 +153,11 @@
 		};
 		$settingsStore.savedFilters = [...savedFilters, newFilter];
 		requestSave();
+	}
+
+	function clearTagFilter() {
+		selectedTags = [];
+		activeTagFilterId = undefined;
 	}
 
 	function openDeleteModal(filterId: string, filterText: string, type: 'content' | 'tag') {
@@ -288,19 +298,21 @@
 				<div class="saved-filters">
 					<details>
 						<summary>Saved filters</summary>
-						<ul>
+						<ul role="list">
 							{#each contentFilters as filter}
 								<li>
 									<button 
 										class="delete-btn"
 										on:click={() => openDeleteModal(filter.id, filter.content?.text ?? "", 'content')}
-										aria-label="Delete filter"
+										aria-label="Delete filter: {filter.content?.text}"
 									>
 										×
 									</button>
 									<button 
 										class:active={filter.id === activeContentFilterId}
 										on:click={() => loadContentFilter(filter.id, filter.content?.text ?? "")}
+										aria-label="Load saved filter: {filter.content?.text}"
+										aria-pressed={filter.id === activeContentFilterId}
 									>
 										{filter.content?.text}
 									</button>
@@ -310,21 +322,34 @@
 					</details>
 				</div>
 			{/if}
-			<button 
-				class="add-filter-btn" 
-				disabled={filterText.trim() === "" || contentFilterExists}
-				on:click={addContentFilter}
-			>
-				Add
-			</button>
 			<div class="filter-input-container">
 				<input
+					id="filter"
 					name="filter"
 					type="search"
 					bind:value={filterText}
 					placeholder="Type to search..."
 					list="content-filters"
+					aria-describedby={contentFilters.length > 0 ? "content-filters" : undefined}
 				/>
+				<div class="inline-actions">
+					<button 
+						class="inline-action-btn" 
+						disabled={filterText.trim() === "" || contentFilterExists}
+						on:click={addContentFilter}
+						aria-label="Add filter"
+					>
+						Add
+					</button>
+					<button 
+						class="inline-action-btn" 
+						disabled={filterText.trim() === ""}
+						on:click={clearContentFilter}
+						aria-label="Clear filter"
+					>
+						Clear
+					</button>
+				</div>
 				{#if contentFilters.length > 0}
 					<datalist id="content-filters">
 						{#each contentFilters as filter}
@@ -342,6 +367,8 @@
 				onLoadFilter={(filterId) => { activeTagFilterId = filterId; }}
 				addButtonDisabled={selectedTags.length === 0 || tagFilterExists}
 				onAddClick={addTagFilter}
+				clearButtonDisabled={selectedTags.length === 0}
+				onClearClick={clearTagFilter}
 				activeFilterId={activeTagFilterId}
 				onDeleteClick={(filterId, filterText) => openDeleteModal(filterId, filterText, 'tag')}
 			/>
@@ -411,8 +438,8 @@
 		.controls {
 			margin-bottom: var(--size-4-4);
 			display: grid;
-			gap: var(--size-4-8);
-			grid-template-columns: 1fr 1fr;
+			gap: 120px;
+			grid-template-columns: 3fr 3fr 2fr;
 
 			.text-filter {
 				display: flex;
@@ -425,11 +452,13 @@
 				}
 
 				.filter-input-container {
+					position: relative;
+					
 					input[type="search"] {
 						display: block;
 						width: 100%;
 						background: var(--background-primary);
-						padding: var(--size-2-2) var(--size-4-1);
+						padding: var(--size-4-2) 120px var(--size-4-2) var(--size-4-2);
 						min-height: 54px;
 						box-sizing: border-box;
 
@@ -440,19 +469,27 @@
 							pointer-events: none !important;
 						}
 					}
+					
+					.inline-actions {
+						position: absolute;
+						right: var(--size-4-1);
+						top: 50%;
+						transform: translateY(-50%);
+						display: flex;
+						gap: var(--size-4-2);
+					}
 				}
 
-				.add-filter-btn {
-					margin-top: var(--size-4-1);
-					margin-bottom: var(--size-4-1);
-					padding: var(--size-4-1) var(--size-4-2);
+				.inline-action-btn {
+					padding: var(--size-2-1) var(--size-4-2);
 					background: var(--interactive-accent);
 					color: var(--text-on-accent);
 					border: none;
 					border-radius: var(--radius-s);
 					cursor: pointer;
-					font-size: var(--font-ui-small);
-					align-self: flex-start;
+					font-size: var(--font-ui-smaller);
+					white-space: nowrap;
+					transition: background 0.15s ease, opacity 0.15s ease;
 
 					&:hover:not(:disabled) {
 						background: var(--interactive-accent-hover);
@@ -475,6 +512,7 @@
 							color: var(--text-muted);
 							padding: var(--size-2-1) 0;
 							user-select: none;
+							transition: color 0.15s ease;
 
 							&:hover {
 								color: var(--text-normal);
@@ -501,6 +539,7 @@
 									color: var(--text-normal);
 									border-radius: var(--radius-s);
 									white-space: nowrap;
+									transition: background 0.15s ease, color 0.15s ease;
 
 									&:hover {
 										background: var(--background-modifier-hover);

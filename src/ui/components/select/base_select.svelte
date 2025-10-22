@@ -10,6 +10,8 @@
 	export let loadSavedFilter: ((filter: SavedFilter) => void) | undefined = undefined;
 	export let addButtonDisabled: boolean = false;
 	export let onAddClick: (() => void) | undefined = undefined;
+	export let clearButtonDisabled: boolean = false;
+	export let onClearClick: (() => void) | undefined = undefined;
 	export let activeFilterId: string | undefined = undefined;
 	export let onDeleteClick: ((filterId: string, filterText: string) => void) | undefined = undefined;
 
@@ -19,6 +21,10 @@
 		(item) => value.includes(item.value),
 	);
 	$: value = (selectedItems ?? []).map(({ value }) => value);
+	
+	export function clearSelection() {
+		selectedItems = [];
+	}
 
 	$: savedFilterOptions = savedFilters.map((filter) => {
 		const displayText = filter.tag ? filter.tag.tags.join(", ") : "";
@@ -45,14 +51,14 @@
 		<div class="saved-filters">
 			<details>
 				<summary>Saved filters</summary>
-				<ul>
+				<ul role="list">
 					{#each savedFilterOptions as option}
 						<li>
 							{#if onDeleteClick}
 								<button 
 									class="delete-btn"
 									on:click={() => onDeleteClick?.(option.filter.id, option.displayText)}
-									aria-label="Delete filter"
+									aria-label="Delete filter: {option.displayText}"
 								>
 									×
 								</button>
@@ -60,6 +66,8 @@
 							<button 
 								class:active={option.filter.id === activeFilterId}
 								on:click={() => handleSavedFilterSelect(option)}
+								aria-label="Load saved filter: {option.displayText}"
+								aria-pressed={option.filter.id === activeFilterId}
 							>
 								{option.displayText}
 							</button>
@@ -70,9 +78,8 @@
 		</div>
 	{/if}
 	
-	<button class="add-filter-btn" disabled={addButtonDisabled} on:click={onAddClick}>Add</button>
-
-	<Select
+	<div class="select-wrapper">
+		<Select
 		name={fieldName}
 		multiple={true}
 		closeListOnChange={false}
@@ -94,9 +101,28 @@
 		--multi-item-height="auto"
 		--multi-item-outline="var(--border-width) solid var(--pill-border-color)"
 		--multi-item-padding="var(--pill-padding-y) var(--pill-padding-x)"
-		--multi-select-input-padding="var(--size-2-2) var(--size-4-1)"
+		--multi-select-input-padding="var(--size-4-2) 120px var(--size-4-2) var(--size-4-2)"
 		--multi-select-input-margin="var(--size-2-2) var(--size-4-4) var(--size-2-2) var(--size-2-2)"
 	></Select>
+	<div class="inline-actions">
+		<button 
+			class="inline-action-btn" 
+			disabled={addButtonDisabled} 
+			on:click={onAddClick}
+			aria-label="Add filter"
+		>
+			Add
+		</button>
+		<button 
+			class="inline-action-btn" 
+			disabled={clearButtonDisabled} 
+			on:click={onClearClick}
+			aria-label="Clear filter"
+		>
+			Clear
+		</button>
+	</div>
+	</div>
 </div>
 
 <style lang="scss">
@@ -116,6 +142,7 @@
 				color: var(--text-muted);
 				padding: var(--size-2-1) 0;
 				user-select: none;
+				transition: color 0.15s ease;
 
 				&:hover {
 					color: var(--text-normal);
@@ -142,6 +169,7 @@
 						color: var(--text-normal);
 						border-radius: var(--radius-s);
 						white-space: nowrap;
+						transition: background 0.15s ease, color 0.15s ease;
 
 						&:hover {
 							background: var(--background-modifier-hover);
@@ -174,16 +202,30 @@
 		}
 	}
 
-	.add-filter-btn {
-		margin-top: var(--size-4-1);
-		margin-bottom: var(--size-4-1);
-		padding: var(--size-4-1) var(--size-4-2);
+	.select-wrapper {
+		position: relative;
+	}
+
+	.inline-actions {
+		position: absolute;
+		right: var(--size-4-1);
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		gap: var(--size-4-2);
+		z-index: 10;
+	}
+
+	.inline-action-btn {
+		padding: var(--size-2-1) var(--size-4-2);
 		background: var(--interactive-accent);
 		color: var(--text-on-accent);
 		border: none;
 		border-radius: var(--radius-s);
 		cursor: pointer;
-		font-size: var(--font-ui-small);
+		font-size: var(--font-ui-smaller);
+		white-space: nowrap;
+		transition: background 0.15s ease, opacity 0.15s ease;
 
 		&:hover:not(:disabled) {
 			background: var(--interactive-accent-hover);
