@@ -211,7 +211,7 @@ kanban_plugin: '{"columns":[...],"savedFilters":[{"id":"uuid-1","file":{"filepat
 
 **Deliverable:** Working file filter that accepts manual text input and filters tasks
 
-**Implemented by:** Not yet committed - changes ready for commit
+**Implemented by:** [67f37e6](https://github.com/ErikaRS/task-list-kanban/commit/67f37e6)
 
 ---
 
