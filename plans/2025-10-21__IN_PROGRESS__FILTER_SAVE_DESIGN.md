@@ -25,50 +25,55 @@ Users want to save their filter configurations (both content and tag filters) so
 ```
 ┌─────────────────────────────────────────┐
 │ Filter by content:                      │
+│                                         │
+│ > Saved filters                         │  ← Collapsible section
+│   • "frontend"                      [×] │  ← Active filter shown in bold + accent color
+│   • "bug report"                    [×] │
+│   • "review"                        [×] │
+│                                         │
+│   [Add]                                 │  ← Add button (always visible, disabled when empty/exists)
 │ ┌─────────────────────────────────────┐ │
 │ │ Type to search...                   │ │  ← Native input with datalist autocomplete
 │ └─────────────────────────────────────┘ │
-│   [Add]                                 │  ← Add button (only visible when text entered)
-│                                         │
-│ > Saved filters                         │  ← Collapsible section
-│   • "frontend"                      [×] │
-│   • "bug report"                    [×] │
-│   • "review"                        [×] │
-│   • "this is a very long filter..." [×] │
 └─────────────────────────────────────────┘
 ```
 
 **Content Filter Behavior:**
+- **UI order**: Saved filters → Add button → Input (prevents datalist dropdown from covering buttons)
 - **Prefix typing autocomplete**: While typing, native `<datalist>` dropdown shows saved filters matching the current prefix
   - Datalist is read-only (no delete buttons in autocomplete dropdown)
   - Selecting from datalist populates the input immediately
-- **Saved filters section**: Collapsible `<details>` section below the input shows ALL saved filters
+- **Saved filters section**: Collapsible `<details>` section above the input shows ALL saved filters
   - Each filter is a clickable button that populates the input
+  - Active filter (currently in use) shown in **bold + accent color**
   - Each filter has a [×] delete button
-  - Deletion only available in this section, NOT in the datalist autocomplete
+- **Add button**: Always visible but disabled (grayed out) when input is empty or filter already exists
 
 #### Tag Filter Box
 ```
 ┌─────────────────────────────────────────┐
 │ Filter by tag:                          │
+│                                         │
+│ > Saved filters                         │  ← Collapsible section
+│   • frontend, ui                    [×] │  ← Active filter shown in bold + accent color
+│   • bug, urgent                     [×] │
+│   • docs                            [×] │
+│                                         │
+│   [Add]                                 │  ← Add button (always visible, disabled when empty/exists)
 │ ┌─────────────────────────────────────┐ │
 │ │ [frontend] [x]  [bug] [x]        ▼  │ │  ← Multi-select dropdown (svelte-select)
 │ └─────────────────────────────────────┘ │
-│   [Add]                                 │  ← Add button (only visible when tags selected)
-│                                         │
-│ > Saved filters                         │  ← Collapsible section (already exists)
-│   • frontend, ui                    [×] │
-│   • bug, urgent                     [×] │
-│   • docs                            [×] │
 └─────────────────────────────────────────┘
 ```
 
 **Tag Filter Behavior:**
+- **UI order**: Saved filters → Add button → Select (matches content filter layout)
 - **Multi-select dropdown**: Uses `svelte-select` component for selecting multiple tags
-- **Saved filters section**: Collapsible `<details>` section below the select (already implemented)
+- **Saved filters section**: Collapsible `<details>` section above the select
   - Each filter is a clickable button that loads those tags
+  - Active filter (currently in use) shown in **bold + accent color**
   - Each filter has a [×] delete button
-  - Deletion only available in this section
+- **Add button**: Always visible but disabled (grayed out) when no tags selected or filter already exists
 
 ### Data Model
 
@@ -120,32 +125,34 @@ interface FilterState {
 
 ### 1. Using Saved Filters
 
-**When user selects a saved filter from dropdown:**
+**When user selects a saved filter from list or types exact match:**
 - Filter is applied immediately
 - Input box shows the saved filter's value
 - The saved filter ID is tracked internally
+- Active filter shown in **bold + accent color** in the saved filters list
 
 **State tracking:**
-- If the input matches a saved filter AND that filter was loaded → show "Using saved"
-- If the input differs from the loaded saved filter → show "Modified from: {filter values} \*"
-- If no saved filter was loaded → no status indicator (just show Add button)
+- Auto-detects when current filter values exactly match any saved filter
+- Works whether filter is clicked from list OR typed/selected manually
+- Active filter visually highlighted in saved filters list (when expanded)
 
 ### 2. Saving Filters
 
-**Add Button Visibility:**
-- Show "Add" button when:
-  - Content filter: text is entered
-  - Tag filter: one or more tags selected
-  - Hide when filters are empty
+**Add Button Behavior:**
+- Always visible (provides stable layout)
+- Disabled (grayed out) when:
+  - Content filter: input is empty OR filter already exists
+  - Tag filter: no tags selected OR filter already exists
+- Enabled when there's a new filter to save
 
 **Add Flow:**
-1. User clicks "Add" button
+1. User clicks "Add" button (when enabled)
 2. Filter is immediately saved (no modal)
 3. System creates new `SavedFilter` with:
    - Unique ID (UUID)
    - Current filter value(s)
-4. Filter appears in dropdown immediately
-5. Current filter is marked as "using this saved filter"
+4. Filter appears in saved filters list immediately
+5. Current filter is auto-detected as active and highlighted
 6. Persisted to frontmatter automatically
 
 **Display in Dropdown:**
@@ -159,50 +166,10 @@ interface FilterState {
 
 ### 3. Editing Saved Filters
 
-**Scenario:** User loads saved filter `frontend, ui`, then adds `bug` tag
-
-**Behavior:**
-- The saved filter ID is tracked internally
-- User can see they're modifying a saved filter (visual indicator - see UI clarity section below)
-- User has two options:
-  - **Replace**: Update the existing saved filter with new values (immediate)
-  - **Add**: Create a new saved filter, leaving original unchanged (immediate)
-
-**UI States:**
-
-#### State 1: Using Unmodified Saved Filter
-```
-┌─────────────────────────────────────────┐
-│ Filter by tag: [▼]                      │
-│ ┌─────────────────────────────────────┐ │
-│ │ [frontend] [x]  [ui] [x]         ▼  │ │
-│ └─────────────────────────────────────┘ │
-│ Using saved                             │  ← Simple indicator
-└─────────────────────────────────────────┘
-```
-
-#### State 2: Modified Saved Filter
-```
-┌─────────────────────────────────────────┐
-│ Filter by tag: [▼]                      │
-│ ┌─────────────────────────────────────┐ │
-│ │ [frontend] [x] [ui] [x] [bug] [x] ▼ │ │  ← Modified (added "bug")
-│ └─────────────────────────────────────┘ │
-│ Modified from: frontend, ui *           │  ← Clear indicator
-│   [Replace]  [Add]                      │  ← Two clear options
-└─────────────────────────────────────────┘
-```
-
-#### State 3: Unsaved Filter
-```
-┌─────────────────────────────────────────┐
-│ Filter by tag: [▼]                      │
-│ ┌─────────────────────────────────────┐ │
-│ │ [urgent] [x]  [review] [x]       ▼  │ │
-│ └─────────────────────────────────────┘ │
-│   [Add]                                 │  ← No status text, just Add button
-└─────────────────────────────────────────┘
-```
+**Note:** Phase 4 feature - not yet implemented. Current behavior:
+- Modifying a saved filter clears its active state
+- User can save the modified filter as a new saved filter using Add button
+- Replace functionality to update existing filters planned for Phase 4
 
 ### 4. Deleting Saved Filters
 
