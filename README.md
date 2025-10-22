@@ -88,7 +88,7 @@ Examples:
 3. Your saved filters appear under "Saved filters" and can be activated with one click
 4. Remove saved filters by clicking the ✕ button next to each one
 
-![Saved filters feature](https://github.com/user-attachments/assets/PLACEHOLDER)
+![Saved filters feature](https://github.com/user-attachments/assets/7b57601d-9fdb-4ade-9472-881661840323)
 
 **Tag consolidation**: Enable "Consolidate tags" in settings to move all non-column tags to the task footer for cleaner display.
 
