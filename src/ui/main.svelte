@@ -37,42 +37,38 @@
 	$: savedFilters = $settingsStore.savedFilters ?? [];
 
 	$: {
-		if (activeContentFilterId !== undefined) {
-			const savedFilter = savedFilters.find(f => f.id === activeContentFilterId);
-			if (!savedFilter || savedFilter.content?.text !== filterText.trim()) {
+		const trimmedText = filterText.trim();
+		if (trimmedText) {
+			const matchingFilter = savedFilters.find(f => f.content?.text === trimmedText);
+			if (matchingFilter) {
+				activeContentFilterId = matchingFilter.id;
+			} else {
 				activeContentFilterId = undefined;
 			}
+		} else {
+			activeContentFilterId = undefined;
 		}
 	}
 
-	$: contentFilterMatches = activeContentFilterId !== undefined && 
-		savedFilters.find(f => f.id === activeContentFilterId)?.content?.text === filterText.trim();
-
 	$: {
-		if (activeTagFilterId !== undefined) {
-			const activeFilter = savedFilters.find(f => f.id === activeTagFilterId);
-			if (activeFilter?.tag) {
-				const sortedCurrent = [...selectedTags].sort();
-				const sortedSaved = [...activeFilter.tag.tags].sort();
-				if (sortedCurrent.length !== sortedSaved.length || 
-					!sortedCurrent.every((tag, i) => tag === sortedSaved[i])) {
-					activeTagFilterId = undefined;
-				}
+		if (selectedTags.length > 0) {
+			const sortedCurrent = [...selectedTags].sort();
+			const matchingFilter = savedFilters.find(f => {
+				if (!f.tag) return false;
+				const sortedSaved = [...f.tag.tags].sort();
+				return sortedCurrent.length === sortedSaved.length &&
+					sortedCurrent.every((tag, i) => tag === sortedSaved[i]);
+			});
+			if (matchingFilter) {
+				activeTagFilterId = matchingFilter.id;
 			} else {
 				activeTagFilterId = undefined;
 			}
+		} else {
+			activeTagFilterId = undefined;
 		}
 	}
 
-	$: tagFilterMatches = (() => {
-		if (activeTagFilterId === undefined) return false;
-		const activeFilter = savedFilters.find(f => f.id === activeTagFilterId);
-		if (!activeFilter?.tag) return false;
-		const sortedCurrent = [...selectedTags].sort();
-		const sortedSaved = [...activeFilter.tag.tags].sort();
-		if (sortedCurrent.length !== sortedSaved.length) return false;
-		return sortedCurrent.every((tag, i) => tag === sortedSaved[i]);
-	})();
 	$: contentFilters = savedFilters
 		.filter((f) => f.content !== undefined)
 		.sort((a, b) => {
@@ -222,6 +218,32 @@
 	<div class="controls">
 		<div class="text-filter">
 			<label for="filter">Filter by content:</label>
+			{#if contentFilters.length > 0}
+				<div class="saved-filters">
+					<details>
+						<summary>Saved filters</summary>
+						<ul>
+							{#each contentFilters as filter}
+								<li>
+									<button 
+										class:active={filter.id === activeContentFilterId}
+										on:click={() => loadContentFilter(filter.id, filter.content?.text ?? "")}
+									>
+										{filter.content?.text}
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</details>
+				</div>
+			{/if}
+			<button 
+				class="add-filter-btn" 
+				disabled={filterText.trim() === "" || contentFilterExists}
+				on:click={addContentFilter}
+			>
+				Add
+			</button>
 			<div class="filter-input-container">
 				<input
 					name="filter"
@@ -238,28 +260,6 @@
 					</datalist>
 				{/if}
 			</div>
-			{#if contentFilters.length > 0}
-				<div class="saved-filters">
-					<details>
-						<summary>Saved filters</summary>
-						<ul>
-							{#each contentFilters as filter}
-								<li>
-									<button on:click={() => loadContentFilter(filter.id, filter.content?.text ?? "")}>
-										{filter.content?.text}
-									</button>
-								</li>
-							{/each}
-						</ul>
-					</details>
-				</div>
-			{/if}
-			{#if contentFilterMatches}
-				<div class="filter-status">Using saved</div>
-			{/if}
-			{#if filterText.trim() !== "" && !contentFilterExists}
-				<button class="add-filter-btn" on:click={addContentFilter}>Add</button>
-			{/if}
 		</div>
 		<div class="tag-filter">
 			<SelectTag 
@@ -267,9 +267,9 @@
 				savedFilters={tagFilters} 
 				bind:value={selectedTags}
 				onLoadFilter={(filterId) => { activeTagFilterId = filterId; }}
-				showUsingStatus={tagFilterMatches}
-				showAddButton={selectedTags.length > 0 && !tagFilterExists}
+				addButtonDisabled={selectedTags.length === 0 || tagFilterExists}
 				onAddClick={addTagFilter}
+				activeFilterId={activeTagFilterId}
 			/>
 		</div>
 	</div>
@@ -347,6 +347,9 @@
 						display: block;
 						width: 100%;
 						background: var(--background-primary);
+						padding: var(--size-2-2) var(--size-4-1);
+						min-height: 54px;
+						box-sizing: border-box;
 
 						&::-webkit-calendar-picker-indicator,
 						&::-webkit-list-button {
@@ -357,15 +360,9 @@
 					}
 				}
 
-				.filter-status {
-					margin-top: var(--size-4-1);
-					font-size: var(--font-ui-small);
-					color: var(--text-muted);
-					align-self: flex-start;
-				}
-
 				.add-filter-btn {
 					margin-top: var(--size-4-1);
+					margin-bottom: var(--size-4-1);
 					padding: var(--size-4-1) var(--size-4-2);
 					background: var(--interactive-accent);
 					color: var(--text-on-accent);
@@ -375,8 +372,13 @@
 					font-size: var(--font-ui-small);
 					align-self: flex-start;
 
-					&:hover {
+					&:hover:not(:disabled) {
 						background: var(--interactive-accent-hover);
+					}
+
+					&:disabled {
+						opacity: 0.5;
+						cursor: not-allowed;
 					}
 				}
 
@@ -417,6 +419,11 @@
 
 									&:hover {
 										background: var(--background-modifier-hover);
+									}
+
+									&.active {
+										font-weight: 700;
+										color: var(--interactive-accent);
 									}
 								}
 							}

@@ -6,9 +6,9 @@
 	export let value: string[];
 	export let savedFilters: SavedFilter[] = [];
 	export let onLoadFilter: ((filterId: string) => void) | undefined = undefined;
-	export let showUsingStatus: boolean = false;
-	export let showAddButton: boolean = false;
+	export let addButtonDisabled: boolean = false;
 	export let onAddClick: (() => void) | undefined = undefined;
+	export let activeFilterId: string | undefined = undefined;
 
 	let baseSelectRef: BaseSelect;
 
@@ -28,8 +28,8 @@
 		label="Filter by tag"
 		{savedFilters}
 		{loadSavedFilter}
-		{showUsingStatus}
-		{showAddButton}
+		{addButtonDisabled}
 		{onAddClick}
+		{activeFilterId}
 	/>
 {/if}

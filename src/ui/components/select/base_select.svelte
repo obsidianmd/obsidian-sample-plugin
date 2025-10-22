@@ -8,9 +8,9 @@
 	export let value: string[];
 	export let savedFilters: SavedFilter[] = [];
 	export let loadSavedFilter: ((filter: SavedFilter) => void) | undefined = undefined;
-	export let showUsingStatus: boolean = false;
-	export let showAddButton: boolean = false;
+	export let addButtonDisabled: boolean = false;
 	export let onAddClick: (() => void) | undefined = undefined;
+	export let activeFilterId: string | undefined = undefined;
 
 	$: fieldName = `field=${label}`;
 
@@ -40,6 +40,28 @@
 		{label}:
 	</label>
 
+	{#if savedFilterOptions.length > 0}
+		<div class="saved-filters">
+			<details>
+				<summary>Saved filters</summary>
+				<ul>
+					{#each savedFilterOptions as option}
+						<li>
+							<button 
+								class:active={option.filter.id === activeFilterId}
+								on:click={() => handleSavedFilterSelect(option)}
+							>
+								{option.displayText}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			</details>
+		</div>
+	{/if}
+	
+	<button class="add-filter-btn" disabled={addButtonDisabled} on:click={onAddClick}>Add</button>
+
 	<Select
 		name={fieldName}
 		multiple={true}
@@ -65,31 +87,6 @@
 		--multi-select-input-padding="var(--size-2-2) var(--size-4-1)"
 		--multi-select-input-margin="var(--size-2-2) var(--size-4-4) var(--size-2-2) var(--size-2-2)"
 	></Select>
-
-	{#if savedFilterOptions.length > 0}
-		<div class="saved-filters">
-			<details>
-				<summary>Saved filters</summary>
-				<ul>
-					{#each savedFilterOptions as option}
-						<li>
-							<button on:click={() => handleSavedFilterSelect(option)}>
-								{option.displayText}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</details>
-		</div>
-	{/if}
-	
-	{#if showUsingStatus}
-		<div class="filter-status">Using saved</div>
-	{/if}
-	
-	{#if showAddButton}
-		<button class="add-filter-btn" on:click={onAddClick}>Add</button>
-	{/if}
 </div>
 
 <style lang="scss">
@@ -136,20 +133,20 @@
 						&:hover {
 							background: var(--background-modifier-hover);
 						}
+
+						&.active {
+							font-weight: 700;
+							color: var(--interactive-accent);
+						}
 					}
 				}
 			}
 		}
 	}
 
-	.filter-status {
-		margin-top: var(--size-4-1);
-		font-size: var(--font-ui-small);
-		color: var(--text-muted);
-	}
-
 	.add-filter-btn {
 		margin-top: var(--size-4-1);
+		margin-bottom: var(--size-4-1);
 		padding: var(--size-4-1) var(--size-4-2);
 		background: var(--interactive-accent);
 		color: var(--text-on-accent);
@@ -158,8 +155,13 @@
 		cursor: pointer;
 		font-size: var(--font-ui-small);
 
-		&:hover {
+		&:hover:not(:disabled) {
 			background: var(--interactive-accent-hover);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
 		}
 	}
 
