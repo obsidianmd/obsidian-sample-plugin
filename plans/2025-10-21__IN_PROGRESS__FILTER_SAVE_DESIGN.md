@@ -245,7 +245,7 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Deliverable:** Working save/load for content filters
 
-**Implemented by:** Commit 99a67b6
+**Implemented by:** [99a67b6](https://github.com/ErikaRS/task-list-kanban/commit/99a67b6)
 
 ### Phase 2: Extend to Tag Filters ✅ COMPLETE
 **Goal:** Same Add & Load functionality for tag filters
@@ -258,7 +258,7 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Deliverable:** Working save/load for both content and tag filters
 
-**Implemented by:** Commit 99a67b6
+**Implemented by:** [99a67b6](https://github.com/ErikaRS/task-list-kanban/commit/99a67b6)
 
 ### Phase 3: Track Active Filter State ✅ COMPLETE
 **Goal:** Highlight active filter when current values match a saved filter
@@ -270,7 +270,7 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Deliverable:** User can see which saved filter (if any) matches current values
 
-**Implemented by:** Commits 1bebe7d, 4eb05ba
+**Implemented by:** [1bebe7d](https://github.com/ErikaRS/task-list-kanban/commit/1bebe7d), [4eb05ba](https://github.com/ErikaRS/task-list-kanban/commit/4eb05ba)
 
 ### Phase 4: Filter Persistence on Reload ✅ COMPLETE
 **Goal:** Remember last used filter values across board close/reopen
@@ -283,7 +283,7 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Deliverable:** Filters persist across board reloads
 
-**Implemented by:** Commit 8cd2091
+**Implemented by:** [8cd2091](https://github.com/ErikaRS/task-list-kanban/commit/8cd2091)
 
 ### Phase 5: Delete Functionality
 **Goal:** User can delete saved filters
