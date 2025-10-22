@@ -131,6 +131,10 @@
 		activeContentFilterId = undefined;
 	}
 
+	function clearFileFilter() {
+		fileFilter = "";
+	}
+
 	function addTagFilter() {
 		if (selectedTags.length === 0) {
 			return;
@@ -216,6 +220,7 @@
 	$: columns = Object.keys($columnTagTableStore) as ColumnTag[];
 
 	let filterText = "";
+	let fileFilter = "";
 	let hasInitialized = false;
 
 	onMount(() => {
@@ -265,7 +270,13 @@
 			})
 		: filteredByText;
 
-	$: tasksByColumn = groupByColumnTag(filteredByTag);
+	$: filteredByFile = fileFilter
+		? filteredByTag.filter((task) =>
+				task.path.toLowerCase().includes(fileFilter.toLowerCase()),
+			)
+		: filteredByTag;
+
+	$: tasksByColumn = groupByColumnTag(filteredByFile);
 
 	$: ({ 
 		showFilepath = true, 
@@ -372,6 +383,29 @@
 				activeFilterId={activeTagFilterId}
 				onDeleteClick={(filterId, filterText) => openDeleteModal(filterId, filterText, 'tag')}
 			/>
+		</div>
+		<div class="file-filter">
+			<label for="file-filter">Filter by file:</label>
+			<div class="filter-input-container">
+				<input
+					id="file-filter"
+					name="file-filter"
+					type="search"
+					bind:value={fileFilter}
+					placeholder="Type to search files..."
+					aria-label="Filter by file path"
+				/>
+				<div class="inline-actions">
+					<button 
+						class="inline-action-btn" 
+						disabled={fileFilter.trim() === ""}
+						on:click={clearFileFilter}
+						aria-label="Clear file filter"
+					>
+						Clear
+					</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -574,11 +608,72 @@
 			}
 
 			.tag-filter {
-				display: flex;
-				flex-direction: column;
-				flex-grow: 1;
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+			}
+
+		.file-filter {
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+
+			label {
+				display: inline-block;
+				margin-bottom: var(--size-4-1);
+			}
+
+			.filter-input-container {
+				position: relative;
+				
+				input[type="search"] {
+					display: block;
+					width: 100%;
+					background: var(--background-primary);
+					padding: var(--size-4-2) 100px var(--size-4-2) var(--size-4-2);
+					min-height: 54px;
+					box-sizing: border-box;
+
+					&::-webkit-calendar-picker-indicator,
+					&::-webkit-list-button {
+						display: none !important;
+						opacity: 0 !important;
+						pointer-events: none !important;
+					}
+				}
+				
+				.inline-actions {
+					position: absolute;
+					right: var(--size-4-1);
+					top: 50%;
+					transform: translateY(-50%);
+					display: flex;
+					gap: var(--size-4-2);
+				}
+			}
+
+			.inline-action-btn {
+				padding: var(--size-2-1) var(--size-4-2);
+				background: var(--interactive-accent);
+				color: var(--text-on-accent);
+				border: none;
+				border-radius: var(--radius-s);
+				cursor: pointer;
+				font-size: var(--font-ui-smaller);
+				white-space: nowrap;
+				transition: background 0.15s ease, opacity 0.15s ease;
+
+				&:hover:not(:disabled) {
+					background: var(--interactive-accent-hover);
+				}
+
+				&:disabled {
+					opacity: 0.5;
+					cursor: not-allowed;
+				}
 			}
 		}
+	}
 
 		.columns {
 			height: 100%;
