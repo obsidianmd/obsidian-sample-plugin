@@ -245,6 +245,8 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Deliverable:** Working save/load for content filters
 
+**Implemented by:** Commit 99a67b6
+
 ### Phase 2: Extend to Tag Filters ✅ COMPLETE
 **Goal:** Same Add & Load functionality for tag filters
 
@@ -256,6 +258,8 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Deliverable:** Working save/load for both content and tag filters
 
+**Implemented by:** Commit 99a67b6
+
 ### Phase 3: Track Active Filter State ✅ COMPLETE
 **Goal:** Highlight active filter when current values match a saved filter
 
@@ -265,6 +269,8 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 4. ✅ Test: Load filter, verify it's highlighted; manually type matching values, verify highlight
 
 **Deliverable:** User can see which saved filter (if any) matches current values
+
+**Implemented by:** Commits 1bebe7d, 4eb05ba
 
 ### Phase 4: Filter Persistence on Reload ✅ COMPLETE
 **Goal:** Remember last used filter values across board close/reopen
@@ -276,6 +282,8 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 5. ✅ Test: Set filters, close board, reopen, verify filters restored
 
 **Deliverable:** Filters persist across board reloads
+
+**Implemented by:** Commit 8cd2091
 
 ### Phase 5: Delete Functionality
 **Goal:** User can delete saved filters
