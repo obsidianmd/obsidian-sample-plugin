@@ -30,15 +30,14 @@ Users want to save their filter configurations (both content and tag filters) so
 │   • "bug report"                    [×] │
 │   • "review"                        [×] │
 │                                         │
-│   [Add]                                 │  ← Add button (always visible, disabled when empty/exists)
 │ ┌─────────────────────────────────────┐ │
-│ │ Type to search...                   │ │  ← Native input with datalist autocomplete
+│ │ Type to search...      [Add] [Clear]│ │  ← Native input with inline action buttons
 │ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
 
 **Content Filter Behavior:**
-- **UI order**: Saved filters → Add button → Input (prevents datalist dropdown from covering buttons)
+- **UI order**: Saved filters → Input with inline action buttons
 - **Prefix typing autocomplete**: While typing, native `<datalist>` dropdown shows saved filters matching the current prefix
   - Datalist is read-only (no delete buttons in autocomplete dropdown)
   - Selecting from datalist populates the input immediately
@@ -46,7 +45,9 @@ Users want to save their filter configurations (both content and tag filters) so
   - Each filter is a clickable button that populates the input
   - Active filter (currently in use) shown in **bold + accent color**
   - Each filter has a [×] delete button
-- **Add button**: Always visible but disabled (grayed out) when input is empty or filter already exists
+- **Inline action buttons**: [Add] and [Clear] buttons positioned on the right inside the input box
+  - **Add button**: Disabled when input is empty or filter already exists
+  - **Clear button**: Disabled when filter is empty
 
 #### Tag Filter Box
 ```
@@ -58,21 +59,22 @@ Users want to save their filter configurations (both content and tag filters) so
 │   • bug, urgent                     [×] │
 │   • docs                            [×] │
 │                                         │
-│   [Add]                                 │  ← Add button (always visible, disabled when empty/exists)
 │ ┌─────────────────────────────────────┐ │
-│ │ [frontend] [x]  [bug] [x]        ▼  │ │  ← Multi-select dropdown (svelte-select)
+│ │ [frontend][x] [bug][x]  [Add][Clear]│ │  ← Multi-select with inline action buttons
 │ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
 
 **Tag Filter Behavior:**
-- **UI order**: Saved filters → Add button → Select (matches content filter layout)
+- **UI order**: Saved filters → Select with inline action buttons (matches content filter layout)
 - **Multi-select dropdown**: Uses `svelte-select` component for selecting multiple tags
 - **Saved filters section**: Collapsible `<details>` section above the select
   - Each filter is a clickable button that loads those tags
   - Active filter (currently in use) shown in **bold + accent color**
   - Each filter has a [×] delete button
-- **Add button**: Always visible but disabled (grayed out) when no tags selected or filter already exists
+- **Inline action buttons**: [Add] and [Clear] buttons positioned on the right inside the select box
+  - **Add button**: Disabled when no tags selected or filter already exists
+  - **Clear button**: Disabled when no tags are selected
 
 ### Data Model
 
