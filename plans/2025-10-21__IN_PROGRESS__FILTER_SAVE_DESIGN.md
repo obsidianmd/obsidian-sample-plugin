@@ -296,7 +296,7 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Deliverable:** Full CRUD operations on saved filters
 
-**Implemented by:** Phase 5 implementation
+**Implemented by:** [d206fda](https://github.com/ErikaRS/task-list-kanban/commit/d206fda)
 
 ### Phase 6: Polish
 **Goal:** Refinements and UX improvements
