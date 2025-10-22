@@ -11,6 +11,7 @@
 	export let addButtonDisabled: boolean = false;
 	export let onAddClick: (() => void) | undefined = undefined;
 	export let activeFilterId: string | undefined = undefined;
+	export let onDeleteClick: ((filterId: string, filterText: string) => void) | undefined = undefined;
 
 	$: fieldName = `field=${label}`;
 
@@ -47,6 +48,15 @@
 				<ul>
 					{#each savedFilterOptions as option}
 						<li>
+							{#if onDeleteClick}
+								<button 
+									class="delete-btn"
+									on:click={() => onDeleteClick?.(option.filter.id, option.displayText)}
+									aria-label="Delete filter"
+								>
+									×
+								</button>
+							{/if}
 							<button 
 								class:active={option.filter.id === activeFilterId}
 								on:click={() => handleSavedFilterSelect(option)}
@@ -119,6 +129,9 @@
 
 				li {
 					margin: 0;
+					display: flex;
+					align-items: center;
+					gap: var(--size-2-1);
 
 					button {
 						text-align: left;
@@ -137,6 +150,23 @@
 						&.active {
 							font-weight: 700;
 							color: var(--interactive-accent);
+						}
+
+						&.delete-btn {
+							padding: 0;
+							width: 20px;
+							height: 20px;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							font-size: 18px;
+							line-height: 1;
+							color: var(--text-muted);
+
+							&:hover {
+								color: var(--color-red);
+								background: var(--background-modifier-error-hover);
+							}
 						}
 					}
 				}

@@ -9,6 +9,7 @@
 	import Column from "./components/column.svelte";
 	import SelectTag from "./components/select/select_tag.svelte";
 	import IconButton from "./components/icon_button.svelte";
+	import DeleteFilterModal from "./components/delete_filter_modal.svelte";
 	import type { Writable, Readable } from "svelte/store";
 	import type { TaskActions } from "./tasks/actions";
 	import { type SettingValues, VisibilityOption } from "./settings/settings_store";
@@ -34,6 +35,9 @@
 
 	let activeContentFilterId: string | undefined = undefined;
 	let activeTagFilterId: string | undefined = undefined;
+
+	let deleteModalOpen = false;
+	let filterToDelete: { id: string; text: string; type: 'content' | 'tag' } | null = null;
 
 	$: savedFilters = $settingsStore.savedFilters ?? [];
 
@@ -144,6 +148,37 @@
 		};
 		$settingsStore.savedFilters = [...savedFilters, newFilter];
 		requestSave();
+	}
+
+	function openDeleteModal(filterId: string, filterText: string, type: 'content' | 'tag') {
+		filterToDelete = { id: filterId, text: filterText, type };
+		deleteModalOpen = true;
+	}
+
+	function closeDeleteModal() {
+		deleteModalOpen = false;
+		filterToDelete = null;
+	}
+
+	function confirmDelete() {
+		if (!filterToDelete) return;
+		
+		const wasActive = filterToDelete.type === 'content' 
+			? activeContentFilterId === filterToDelete.id
+			: activeTagFilterId === filterToDelete.id;
+		
+		$settingsStore.savedFilters = savedFilters.filter(f => f.id !== filterToDelete.id);
+		
+		if (wasActive) {
+			if (filterToDelete.type === 'content') {
+				activeContentFilterId = undefined;
+			} else {
+				activeTagFilterId = undefined;
+			}
+		}
+		
+		requestSave();
+		closeDeleteModal();
 	}
 
 	function groupByColumnTag(
@@ -257,6 +292,13 @@
 							{#each contentFilters as filter}
 								<li>
 									<button 
+										class="delete-btn"
+										on:click={() => openDeleteModal(filter.id, filter.content?.text ?? "", 'content')}
+										aria-label="Delete filter"
+									>
+										×
+									</button>
+									<button 
 										class:active={filter.id === activeContentFilterId}
 										on:click={() => loadContentFilter(filter.id, filter.content?.text ?? "")}
 									>
@@ -301,6 +343,7 @@
 				addButtonDisabled={selectedTags.length === 0 || tagFilterExists}
 				onAddClick={addTagFilter}
 				activeFilterId={activeTagFilterId}
+				onDeleteClick={(filterId, filterText) => openDeleteModal(filterId, filterText, 'tag')}
 			/>
 		</div>
 	</div>
@@ -345,6 +388,14 @@
 		</div>
 	</div>
 </div>
+
+{#if deleteModalOpen && filterToDelete}
+	<DeleteFilterModal
+		filterText={filterToDelete.text}
+		onConfirm={confirmDelete}
+		onCancel={closeDeleteModal}
+	/>
+{/if}
 
 <style lang="scss">
 	.main {
@@ -437,6 +488,9 @@
 
 							li {
 								margin: 0;
+								display: flex;
+								align-items: center;
+								gap: var(--size-2-1);
 
 								button {
 									text-align: left;
@@ -455,6 +509,23 @@
 									&.active {
 										font-weight: 700;
 										color: var(--interactive-accent);
+									}
+
+									&.delete-btn {
+										padding: 0;
+										width: 20px;
+										height: 20px;
+										display: flex;
+										align-items: center;
+										justify-content: center;
+										font-size: 18px;
+										line-height: 1;
+										color: var(--text-muted);
+
+										&:hover {
+											color: var(--color-red);
+											background: var(--background-modifier-error-hover);
+										}
 									}
 								}
 							}

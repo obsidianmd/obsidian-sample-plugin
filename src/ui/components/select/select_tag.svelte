@@ -9,6 +9,7 @@
 	export let addButtonDisabled: boolean = false;
 	export let onAddClick: (() => void) | undefined = undefined;
 	export let activeFilterId: string | undefined = undefined;
+	export let onDeleteClick: ((filterId: string, filterText: string) => void) | undefined = undefined;
 
 	let baseSelectRef: BaseSelect;
 
@@ -31,5 +32,6 @@
 		{addButtonDisabled}
 		{onAddClick}
 		{activeFilterId}
+		{onDeleteClick}
 	/>
 {/if}
