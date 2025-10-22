@@ -298,14 +298,40 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Implemented by:** [d206fda](https://github.com/ErikaRS/task-list-kanban/commit/d206fda)
 
-### Phase 6: Polish
+### Phase 6: Polish ✅ COMPLETE
 **Goal:** Refinements and UX improvements
 
-1. Sort saved filters alphabetically
-2. Handle duplicate detection (do not create duplicate)
-3. Truncate long filter text in dropdown with ellipsis
+1. ✅ **Clear button functionality**: Add clear button to both filter boxes
+   - Content filter: Clear text input
+   - Tag filter: Clear all selected tags
+   - Button disabled when filter is already empty
+2. ✅ **Inline action buttons**: Move Add and Clear buttons to the right side of filter input/select boxes
+   - Use text buttons: "Add" and "Clear"
+   - Position inside the input box border for both content and tag filters
+   - Buttons should be compact with proper padding
+   - Text labels for better clarity
+3. ✅ **Layout improvements**:
+   - Reduced filter box width to 3/4 of original (3fr 3fr 2fr grid)
+   - Comfortable spacing between filter boxes (120px gap)
+   - Increased padding in filter input boxes for better usability
+4. ✅ **Visual refinements**:
+   - Proper hover states for all interactive elements
+   - Spacing and alignment of inline buttons
+   - Collapsible sections have smooth transitions (0.15s ease)
+5. ✅ **Accessibility**:
+   - ARIA labels on all action buttons (Add, Clear, Delete, Load filter)
+   - Descriptive ARIA labels that include filter names
+   - `aria-pressed` state on active filter buttons
+   - Proper `role` attributes on lists and dialog
+   - Input properly linked to label with `id` and `for`
+   - Keyboard navigation: Escape to close modal, Tab to cycle focus
+   - Focus management: Modal auto-focuses delete button, traps focus within modal
+   - Screen reader support: Proper semantic HTML and ARIA attributes
+   - Fixed A11y build warnings by removing stopPropagation
 
-**Deliverable:** Polished, production-ready feature
+**Deliverable:** Polished, production-ready feature with improved UX
+
+**Implemented by:** [28c03e5](https://github.com/ErikaRS/task-list-kanban/commit/28c03e5)
 
 ---
 
