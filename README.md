@@ -16,7 +16,9 @@ Right click on the folder in which you want your Task List Kanban to appear. Cho
 
 ### Adding Tasks
 
-Create a 'task' in any Obsidian file. Tasks will automatically appear in your kanban under the 'Uncategorised' column. To assign a task to a specific column:
+Create a 'task' in any Obsidian file. Tasks will automatically appear in your kanban under the 'Uncategorised' column. The plugin supports tasks standard Markdown task markers (`-`, `*`, and `+`).
+
+To assign a task to a specific column:
 
 1. **In the file**: Add `#[column-name]` to your task text
 2. **In the kanban**: Drag and drop the task to the desired column
@@ -76,7 +78,17 @@ Examples:
 
 **Adding tags**: Add `#[tag-name]` anywhere in your task text. Tags appear in both the kanban and original files.
 
-**Filtering**: Use the filter bar at the top of the kanban to show only tasks with specific tags. You can select multiple tags.
+**Filtering**: Use the filter bar at the top of the kanban to show only tasks with specific tags or content. You can filter by:
+- **Content**: Search for tasks containing specific text
+- **Tags**: Select one or multiple tags to filter tasks
+
+**Saved Filters**: Save frequently used filter combinations for quick access:
+1. Set up your desired content and/or tag filters
+2. Click the "Add" button next to the filter input
+3. Your saved filters appear under "Saved filters" and can be activated with one click
+4. Remove saved filters by clicking the ✕ button next to each one
+
+![Saved filters feature](https://github.com/user-attachments/assets/PLACEHOLDER)
 
 **Tag consolidation**: Enable "Consolidate tags" in settings to move all non-column tags to the task footer for cleaner display.
 

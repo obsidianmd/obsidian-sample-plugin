@@ -1,5 +1,5 @@
 # Saved Filters Feature Design
-State: IN PROGRESS
+Status: COMPLETE
 
 ## Feature Request Summary
 Users want to save their filter configurations (both content and tag filters) so they persist across kanban board reopening. Currently, filters reset every time a board is closed and reopened.
