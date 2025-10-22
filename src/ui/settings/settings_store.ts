@@ -57,6 +57,8 @@ const settingsObject = z.object({
 	doneStatusMarkers: z.string().default(DEFAULT_DONE_STATUS_MARKERS).optional(),
 	ignoredStatusMarkers: z.string().default(DEFAULT_IGNORED_STATUS_MARKERS).optional(),
 	savedFilters: z.array(savedFilterSchema).default([]).optional(),
+	lastContentFilter: z.string().optional(),
+	lastTagFilter: z.array(z.string()).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;

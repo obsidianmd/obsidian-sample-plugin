@@ -86,4 +86,48 @@ describe("SavedFilter persistence", () => {
 		expect(parsed.savedFilters?.[0]?.content?.text).toBe("search term");
 		expect(parsed.savedFilters?.[0]?.tag?.tags).toEqual(["frontend", "bug"]);
 	});
+
+	it("parses settings with lastContentFilter", () => {
+		const settingsJson = JSON.stringify({
+			...defaultSettings,
+			lastContentFilter: "test search",
+		});
+
+		const parsed = parseSettingsString(settingsJson);
+
+		expect(parsed.lastContentFilter).toBe("test search");
+	});
+
+	it("parses settings with lastTagFilter", () => {
+		const settingsJson = JSON.stringify({
+			...defaultSettings,
+			lastTagFilter: ["frontend", "bug"],
+		});
+
+		const parsed = parseSettingsString(settingsJson);
+
+		expect(parsed.lastTagFilter).toEqual(["frontend", "bug"]);
+	});
+
+	it("serializes settings with last filter values", () => {
+		const settings = {
+			...defaultSettings,
+			lastContentFilter: "search term",
+			lastTagFilter: ["tag1", "tag2"],
+		};
+
+		const serialized = toSettingsString(settings);
+		const parsed = JSON.parse(serialized);
+
+		expect(parsed.lastContentFilter).toBe("search term");
+		expect(parsed.lastTagFilter).toEqual(["tag1", "tag2"]);
+	});
+
+	it("handles missing last filter values", () => {
+		const settingsJson = JSON.stringify(defaultSettings);
+		const parsed = parseSettingsString(settingsJson);
+
+		expect(parsed.lastContentFilter).toBeUndefined();
+		expect(parsed.lastTagFilter).toBeUndefined();
+	});
 });

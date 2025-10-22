@@ -12,6 +12,7 @@
 	import type { Writable, Readable } from "svelte/store";
 	import type { TaskActions } from "./tasks/actions";
 	import { type SettingValues, VisibilityOption } from "./settings/settings_store";
+	import { onMount } from "svelte";
 
 	export let tasksStore: Writable<Task[]>;
 	export let taskActions: TaskActions;
@@ -170,6 +171,36 @@
 	$: columns = Object.keys($columnTagTableStore) as ColumnTag[];
 
 	let filterText = "";
+	let hasInitialized = false;
+
+	onMount(() => {
+		const unsubscribe = settingsStore.subscribe(settings => {
+			if (!hasInitialized && (settings.lastContentFilter || settings.lastTagFilter)) {
+				filterText = settings.lastContentFilter ?? "";
+				selectedTags = settings.lastTagFilter ?? [];
+				hasInitialized = true;
+			}
+		});
+
+		return unsubscribe;
+	});
+
+	function saveFilterState() {
+		if (hasInitialized) {
+			settingsStore.update(settings => ({
+				...settings,
+				lastContentFilter: filterText,
+				lastTagFilter: selectedTags,
+			}));
+			requestSave();
+		}
+	}
+
+	$: if (hasInitialized) {
+		filterText;
+		selectedTags;
+		saveFilterState();
+	}
 
 	$: filteredByText = filterText
 		? $tasksStore.filter((task) =>

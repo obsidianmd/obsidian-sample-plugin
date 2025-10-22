@@ -8,12 +8,11 @@ Users want to save their filter configurations (both content and tag filters) so
 
 ## User Requirements
 1. Filters should be saveable but not auto-saved
-2. Saved filters should appear in a dropdown menu in the same input boxes
-3. Input boxes should remain directly editable (hybrid input/dropdown approach)
-4. The last used saved filter should persist on restart
-5. Editing a saved filter should not auto-update it
-6. Saving an edited filter creates a new saved filter (non-destructive)
-7. Users can delete saved filters they no longer need
+2. Saved filters should appear in a collapsible section above the input
+3. Input boxes should remain directly editable with autocomplete from saved filters
+4. The last used filter values should persist on restart (whether saved or not)
+5. Users can save new filter configurations
+6. Users can delete saved filters they no longer need
 
 ---
 
@@ -92,16 +91,11 @@ interface SavedFilter {
   tag?: TagValue;                // Tag filter (optional)
 }
 
-interface FilterState {
-  savedFilters: SavedFilter[];
-  activeContentFilter: {
-    savedFilterId?: string;      // ID if loaded from saved
-    currentValue: string;        // Current filter text
-  };
-  activeTagFilter: {
-    savedFilterId?: string;      // ID if loaded from saved
-    currentValue: string[];      // Current selected tags
-  };
+interface SettingValues {
+  // ... existing fields ...
+  savedFilters?: SavedFilter[];
+  lastContentFilter?: string;    // Last used content filter text
+  lastTagFilter?: string[];      // Last used tag filter values
 }
 ```
 
@@ -164,12 +158,13 @@ interface FilterState {
 - If exact same filter already exists, do not create a duplicate
 - No duplicate filters with identical values
 
-### 3. Editing Saved Filters
+### 3. Editing Filters
 
-**Note:** Phase 4 feature - not yet implemented. Current behavior:
-- Modifying a saved filter clears its active state
-- User can save the modified filter as a new saved filter using Add button
-- Replace functionality to update existing filters planned for Phase 4
+**Current behavior:**
+- Users can manually edit filter values at any time
+- The active filter indicator updates if the new values match a different saved filter
+- If values don't match any saved filter, no filter is highlighted as active
+- Users can save the current filter values as a new saved filter using the Add button
 
 ### 4. Deleting Saved Filters
 
@@ -216,16 +211,17 @@ Or for tag filters:
 
 **On board close/save:**
 - Persist all `savedFilters` to frontmatter
-- Do NOT persist current filter values if they differ from saved
+- Persist current filter values (content text and selected tags) to frontmatter
 
 **On board open/load:**
 - Load `savedFilters` from frontmatter
-- Start with empty filters
+- Load and restore last used filter values (both content and tags)
+- Auto-detect if restored values match any saved filter (highlight if so)
 
 **Storage location:**
 ```yaml
 ---
-kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"id":"uuid-1","tag":{"tags":["frontend","ui"]}},{"id":"uuid-2","content":{"text":"bug report"}}]}'
+kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"id":"uuid-1","tag":{"tags":["frontend","ui"]}},{"id":"uuid-2","content":{"text":"bug report"}}],"lastContentFilter":"bug","lastTagFilter":["frontend","ui"]}'
 ---
 ```
 
@@ -235,51 +231,51 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 
 **Strategy:** Build end-to-end vertical slices, getting basic functionality working before adding complexity.
 
-### Phase 1: Basic Add & Load (Content Filters Only)
+### Phase 1: Basic Add & Load (Content Filters Only) ✅ COMPLETE
 **Goal:** User can save a content filter and reload it from dropdown
 
-1. Add `SavedFilter`, `ContentValue`, `TagValue` types to settings store
-2. Update `parseSettingsString` and `toSettingsString` to handle `savedFilters` array
-3. Add state to track saved filters in main.svelte
-4. Add simple [Add] button below content filter input (visible when text entered)
-5. Implement Add logic: create new SavedFilter, add to list, persist to frontmatter
-6. Modify content filter dropdown to show saved filters (just text, no [×] yet)
-7. Implement selection: clicking saved filter loads it into input
-8. Test: Add filter, close/reopen board, verify it persists
+1. ✅ Add `SavedFilter`, `ContentValue`, `TagValue` types to settings store
+2. ✅ Update `parseSettingsString` and `toSettingsString` to handle `savedFilters` array
+3. ✅ Add state to track saved filters in main.svelte
+4. ✅ Add simple [Add] button below content filter input (visible when text entered)
+5. ✅ Implement Add logic: create new SavedFilter, add to list, persist to frontmatter
+6. ✅ Modify content filter dropdown to show saved filters (just text, no [×] yet)
+7. ✅ Implement selection: clicking saved filter loads it into input
+8. ✅ Test: Add filter, close/reopen board, verify it persists
 
 **Deliverable:** Working save/load for content filters
 
-### Phase 2: Extend to Tag Filters
+### Phase 2: Extend to Tag Filters ✅ COMPLETE
 **Goal:** Same Add & Load functionality for tag filters
 
-1. Add [Add] button below tag filter input
-2. Wire up Add logic for tag filters (create SavedFilter with TagValue)
-3. Show saved tag filters in tag filter dropdown
-4. Implement selection for tag filters
-5. Test: Add tag filter, close/reopen board, verify it persists
+1. ✅ Add [Add] button below tag filter input
+2. ✅ Wire up Add logic for tag filters (create SavedFilter with TagValue)
+3. ✅ Show saved tag filters in tag filter dropdown
+4. ✅ Implement selection for tag filters
+5. ✅ Test: Add tag filter, close/reopen board, verify it persists
 
 **Deliverable:** Working save/load for both content and tag filters
 
-### Phase 3: Track Active Filter State
-**Goal:** Show "Using saved" indicator when filter is loaded
+### Phase 3: Track Active Filter State ✅ COMPLETE
+**Goal:** Highlight active filter when current values match a saved filter
 
-1. Add `activeContentFilter` and `activeTagFilter` state (track savedFilterId)
-2. When filter selected from dropdown, track its ID
-3. Show "Using saved" text when active filter matches saved filter
-4. Test: Load filter, see "Using saved" indicator
+1. ✅ Add `activeContentFilterId` and `activeTagFilterId` state
+2. ✅ Auto-detect when current filter values match any saved filter
+3. ✅ Highlight matching saved filter in the saved filters list (bold + accent color)
+4. ✅ Test: Load filter, verify it's highlighted; manually type matching values, verify highlight
 
-**Deliverable:** User knows when they're using a saved filter
+**Deliverable:** User can see which saved filter (if any) matches current values
 
-### Phase 4: Modified Filter Detection & Replace
-**Goal:** Detect modifications and add Replace button
+### Phase 4: Filter Persistence on Reload ✅ COMPLETE
+**Goal:** Remember last used filter values across board close/reopen
 
-1. Detect when active filter values differ from saved filter values
-2. Show "Modified from: {values} \*" status text
-3. Add [Replace] button (alongside [Add]) when filter is modified
-4. Implement Replace logic: update existing SavedFilter, persist
-5. Test: Load filter, modify it, Replace, verify saved filter updated
+1. ✅ Add `lastContentFilter` and `lastTagFilter` fields to settings
+2. ✅ Update `toSettingsString` to persist current filter values on save
+3. ✅ Update `parseSettingsString` to load persisted filter values
+4. ✅ On mount, restore filter values from settings
+5. ✅ Test: Set filters, close board, reopen, verify filters restored
 
-**Deliverable:** Replace functionality working
+**Deliverable:** Filters persist across board reloads
 
 ### Phase 5: Delete Functionality
 **Goal:** User can delete saved filters
