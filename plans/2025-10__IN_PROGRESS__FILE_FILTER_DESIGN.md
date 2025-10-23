@@ -231,20 +231,20 @@ kanban_plugin: '{"columns":[...],"savedFilters":[{"id":"uuid-1","file":{"filepat
 
 ---
 
-### Phase 3: Persistence
+### Phase 3: Persistence ✅ COMPLETE
 **Goal:** File filter value persists across board close/reopen
 
-1. ☐ Add `lastFileFilter?: string[]` to `SettingValues` type
-2. ☐ Update `parseSettingsString` to handle `lastFileFilter`
-3. ☐ Update `toSettingsString` to persist `lastFileFilter`
-4. ☐ Persist `lastFileFilter` to frontmatter on board save
-5. ☐ Load `lastFileFilter` from frontmatter on board open
-6. ☐ Restore file filter input on board open
-7. ☐ Test: Set file filter, close/reopen board, verify filter persists
+1. ✅ Add `lastFileFilter?: string[]` to `SettingValues` type
+2. ✅ Update `parseSettingsString` to handle `lastFileFilter`
+3. ✅ Update `toSettingsString` to persist `lastFileFilter`
+4. ✅ Persist `lastFileFilter` to frontmatter on board save
+5. ✅ Load `lastFileFilter` from frontmatter on board open
+6. ✅ Restore file filter input on board open
+7. ✅ Test: Set file filter, close/reopen board, verify filter persists
 
 **Deliverable:** File filter value survives board reopen
 
-**Implemented by:** [commit-hash](link)
+**Implemented by:** [5b6230d](https://github.com/ErikaRS/task-list-kanban/commit/5b6230d)
 
 ---
 
