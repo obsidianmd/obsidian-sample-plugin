@@ -140,25 +140,44 @@ Polish the filter controls UI. Currently functional but visually flat - needs be
 ---
 
 ### Phase 3: Interactive Elements & Polish ☐ TODO
-**Goal:** Improve all interactive states and visual feedback
+**Goal:** Improve all interactive states and visual feedback for vertical sidebar layout
 
-1. ☐ Style saved filters `<details>` summary with subtle background and hover state
-2. ☐ Add inset styling to expanded saved filters list
-3. ☐ Enhance active filter indication (pill/badge style)
-4. ☐ Update Clear button to ghost/outline style (transparent background, border, muted text)
-5. ☐ Add focus box-shadow to text inputs: `0 0 0 2px var(--background-modifier-border-focus)`
-6. ☐ Update multi-select focus styling (tag filter)
-7. ☐ Fix tag filter placeholder text overflow
-8. ☐ Ensure consistent button sizing across all filter types
-9. ☐ Improve disabled state opacity on all buttons
-10. ☐ Add smooth transitions: `150ms ease` to all interactive elements
-11. ☐ Test all interactive states: hover, focus, active, disabled
-12. ☐ Test keyboard navigation (Tab, Enter, Escape)
-13. ☐ Verify focus indicators meet accessibility standards
-14. ☐ Final cross-theme testing (light, dark, high contrast)
-15. ☐ Verify saved filter [×] delete buttons remain aligned in horizontal layout
+**Context:** With vertical layout, we have more horizontal space but need tighter vertical spacing.
+Focus on clean, compact polish that works well in a narrow vertical panel.
 
-**Deliverable:** Polished interactive elements with clear feedback
+1. ☐ Style saved filters `<details>` summary:
+   - Add subtle background on hover (not always visible - keeps it clean)
+   - Ensure adequate spacing for vertical layout
+   - Consider slightly smaller font/padding to maximize vertical space
+2. ☐ Enhance active filter indication:
+   - Keep bold + accent color (current style works well)
+   - Consider subtle background highlight for better visibility
+   - Ensure sufficient contrast in both light and dark themes
+3. ☐ Refine button styling for vertical layout:
+   - Update Clear button to ghost/outline style (transparent bg, border, muted text)
+   - Ensure Save/Clear buttons have consistent sizing
+   - Verify buttons don't make inputs too tall (vertical space is precious)
+   - Improve disabled state visual feedback
+4. ☐ Polish input focus states:
+   - Add focus box-shadow to text inputs: `0 0 0 2px var(--background-modifier-border-focus)`
+   - Update multi-select (tag filter) focus styling
+   - Ensure focus indicators are visible but not overwhelming
+5. ☐ Fix spacing and overflow issues:
+   - Verify saved filter list items have comfortable but compact spacing
+   - Fix tag filter placeholder text overflow if present
+   - Ensure long filter names wrap or truncate appropriately in narrow width
+6. ☐ Add smooth transitions:
+   - Apply `150ms ease` to all interactive elements
+   - Ensure transitions feel responsive, not sluggish
+7. ☐ Comprehensive testing:
+   - Test all interactive states: hover, focus, active, disabled
+   - Test keyboard navigation (Tab, Enter, Escape)
+   - Test with long filter names, many saved filters
+   - Verify layout at various viewport widths (especially narrow)
+   - Final cross-theme testing (light, dark, high contrast)
+   - Verify focus indicators meet WCAG AA accessibility standards
+
+**Deliverable:** Polished, accessible vertical filter panel with clear interactive feedback
 
 **Implemented by:** [commit-hash](link)
 
