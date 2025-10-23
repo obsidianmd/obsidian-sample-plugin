@@ -597,6 +597,77 @@
 			gap: 120px;
 			grid-template-columns: 1fr 1fr 1fr;
 
+			.saved-filters {
+				margin-top: var(--size-4-1);
+				font-size: var(--font-ui-small);
+				align-self: flex-start;
+
+				details {
+					summary {
+						cursor: pointer;
+						color: var(--text-muted);
+						padding: var(--size-2-1) 0;
+						user-select: none;
+						transition: color 0.15s ease;
+
+						&:hover {
+							color: var(--text-normal);
+						}
+					}
+
+					ul {
+						margin: 0;
+						padding: 0;
+						list-style: none;
+
+						li {
+							margin: 0;
+							display: flex;
+							align-items: center;
+							gap: var(--size-2-1);
+
+							button {
+								text-align: left;
+								padding: var(--size-2-1) var(--size-2-2);
+								background: transparent;
+								border: none;
+								cursor: pointer;
+								color: var(--text-normal);
+								border-radius: var(--radius-s);
+								white-space: nowrap;
+								transition: background 0.15s ease, color 0.15s ease;
+
+								&:hover {
+									background: var(--background-modifier-hover);
+								}
+
+								&.active {
+									font-weight: 700;
+									color: var(--interactive-accent);
+								}
+
+								&.delete-btn {
+									padding: 0;
+									width: 20px;
+									height: 20px;
+									display: flex;
+									align-items: center;
+									justify-content: center;
+									font-size: 18px;
+									line-height: 1;
+									color: var(--text-muted);
+
+									&:hover {
+										color: var(--color-red);
+										background: var(--background-modifier-error-hover);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
 			.text-filter {
 				display: flex;
 				flex-direction: column;
@@ -654,77 +725,6 @@
 					&:disabled {
 						opacity: 0.5;
 						cursor: not-allowed;
-					}
-				}
-
-				.saved-filters {
-					margin-top: var(--size-4-1);
-					font-size: var(--font-ui-small);
-					align-self: flex-start;
-
-					details {
-						summary {
-							cursor: pointer;
-							color: var(--text-muted);
-							padding: var(--size-2-1) 0;
-							user-select: none;
-							transition: color 0.15s ease;
-
-							&:hover {
-								color: var(--text-normal);
-							}
-						}
-
-						ul {
-							margin: 0;
-							padding: 0;
-							list-style: none;
-
-							li {
-								margin: 0;
-								display: flex;
-								align-items: center;
-								gap: var(--size-2-1);
-
-								button {
-									text-align: left;
-									padding: var(--size-2-1) var(--size-2-2);
-									background: transparent;
-									border: none;
-									cursor: pointer;
-									color: var(--text-normal);
-									border-radius: var(--radius-s);
-									white-space: nowrap;
-									transition: background 0.15s ease, color 0.15s ease;
-
-									&:hover {
-										background: var(--background-modifier-hover);
-									}
-
-									&.active {
-										font-weight: 700;
-										color: var(--interactive-accent);
-									}
-
-									&.delete-btn {
-										padding: 0;
-										width: 20px;
-										height: 20px;
-										display: flex;
-										align-items: center;
-										justify-content: center;
-										font-size: 18px;
-										line-height: 1;
-										color: var(--text-muted);
-
-										&:hover {
-											color: var(--color-red);
-											background: var(--background-modifier-error-hover);
-										}
-									}
-								}
-							}
-						}
 					}
 				}
 			}
