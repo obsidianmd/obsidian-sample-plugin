@@ -59,9 +59,10 @@
 
 	let activeContentFilterId: string | undefined = undefined;
 	let activeTagFilterId: string | undefined = undefined;
+	let activeFileFilterId: string | undefined = undefined;
 
 	let deleteModalOpen = false;
-	let filterToDelete: { id: string; text: string; type: 'content' | 'tag' } | null = null;
+	let filterToDelete: { id: string; text: string; type: 'content' | 'tag' | 'file' } | null = null;
 
 	$: savedFilters = $settingsStore.savedFilters ?? [];
 
@@ -98,6 +99,20 @@
 		}
 	}
 
+	$: {
+		const trimmedPath = fileFilter.trim();
+		if (trimmedPath) {
+			const matchingFilter = savedFilters.find(f => f.file?.filepaths[0] === trimmedPath);
+			if (matchingFilter) {
+				activeFileFilterId = matchingFilter.id;
+			} else {
+				activeFileFilterId = undefined;
+			}
+		} else {
+			activeFileFilterId = undefined;
+		}
+	}
+
 	$: contentFilters = savedFilters
 		.filter((f) => f.content !== undefined)
 		.sort((a, b) => {
@@ -114,6 +129,14 @@
 			return tagsA.localeCompare(tagsB);
 		});
 
+	$: fileFilters = savedFilters
+		.filter((f) => f.file !== undefined)
+		.sort((a, b) => {
+			const pathA = a.file?.filepaths[0] ?? "";
+			const pathB = b.file?.filepaths[0] ?? "";
+			return pathA.localeCompare(pathB);
+		});
+
 	$: contentFilterExists = contentFilters.some(
 		(f) => f.content?.text === filterText.trim()
 	);
@@ -128,6 +151,10 @@
 			return sortedFilterTags.every((tag, i) => tag === sortedTags[i]);
 		});
 	})();
+
+	$: fileFilterExists = savedFilters.some(
+		(f) => f.file?.filepaths[0] === fileFilter.trim()
+	);
 
 	function addContentFilter() {
 		const normalized = filterText.trim();
@@ -157,6 +184,30 @@
 
 	function clearFileFilter() {
 		fileFilter = "";
+		activeFileFilterId = undefined;
+	}
+
+	function addFileFilter() {
+		const normalized = fileFilter.trim();
+		if (!normalized) return;
+		
+		const existingFilterIndex = savedFilters.findIndex(
+			(f) => f.file?.filepaths[0] === normalized
+		);
+		if (existingFilterIndex >= 0) {
+			return;
+		}
+		const newFilter = {
+			id: crypto.randomUUID(),
+			file: { filepaths: [normalized] },
+		};
+		$settingsStore.savedFilters = [...savedFilters, newFilter];
+		requestSave();
+	}
+
+	function loadFileFilter(filterId: string, filepath: string) {
+		fileFilter = filepath;
+		activeFileFilterId = filterId;
 	}
 
 	function addTagFilter() {
@@ -188,7 +239,7 @@
 		activeTagFilterId = undefined;
 	}
 
-	function openDeleteModal(filterId: string, filterText: string, type: 'content' | 'tag') {
+	function openDeleteModal(filterId: string, filterText: string, type: 'content' | 'tag' | 'file') {
 		filterToDelete = { id: filterId, text: filterText, type };
 		deleteModalOpen = true;
 	}
@@ -203,15 +254,19 @@
 		
 		const wasActive = filterToDelete.type === 'content' 
 			? activeContentFilterId === filterToDelete.id
-			: activeTagFilterId === filterToDelete.id;
+			: filterToDelete.type === 'tag'
+			? activeTagFilterId === filterToDelete.id
+			: activeFileFilterId === filterToDelete.id;
 		
 		$settingsStore.savedFilters = savedFilters.filter(f => f.id !== filterToDelete.id);
 		
 		if (wasActive) {
 			if (filterToDelete.type === 'content') {
 				activeContentFilterId = undefined;
-			} else {
+			} else if (filterToDelete.type === 'tag') {
 				activeTagFilterId = undefined;
+			} else {
+				activeFileFilterId = undefined;
 			}
 		}
 		
@@ -413,6 +468,34 @@
 		</div>
 		<div class="file-filter">
 			<label for="file-filter">Filter by file:</label>
+			{#if fileFilters.length > 0}
+				<div class="saved-filters">
+					<details>
+						<summary>Saved filters</summary>
+						<ul role="list">
+							{#each fileFilters as filter}
+								<li>
+									<button 
+										class="delete-btn"
+										on:click={() => openDeleteModal(filter.id, filter.file?.filepaths[0] ?? "", 'file')}
+										aria-label="Delete filter: {filter.file?.filepaths[0]}"
+									>
+										×
+									</button>
+									<button 
+										class:active={filter.id === activeFileFilterId}
+										on:click={() => loadFileFilter(filter.id, filter.file?.filepaths[0] ?? "")}
+										aria-label="Load saved filter: {filter.file?.filepaths[0]}"
+										aria-pressed={filter.id === activeFileFilterId}
+									>
+										{filter.file?.filepaths[0]}
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</details>
+				</div>
+			{/if}
 			<div class="filter-input-container">
 				<input
 					id="file-filter"
@@ -424,6 +507,14 @@
 					aria-label="Filter by file path"
 				/>
 				<div class="inline-actions">
+					<button 
+						class="inline-action-btn" 
+						disabled={fileFilter.trim() === "" || fileFilterExists}
+						on:click={addFileFilter}
+						aria-label="Add filter"
+					>
+						Add
+					</button>
 					<button 
 						class="inline-action-btn" 
 						disabled={fileFilter.trim() === ""}

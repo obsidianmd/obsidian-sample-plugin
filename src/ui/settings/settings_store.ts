@@ -21,10 +21,15 @@ export interface TagValue {
 	tags: string[];
 }
 
+export interface FileValue {
+	filepaths: string[];
+}
+
 export interface SavedFilter {
 	id: string;
 	content?: ContentValue;
 	tag?: TagValue;
+	file?: FileValue;
 }
 
 const contentValueSchema = z.object({
@@ -35,10 +40,15 @@ const tagValueSchema = z.object({
 	tags: z.array(z.string()),
 });
 
+const fileValueSchema = z.object({
+	filepaths: z.array(z.string()),
+});
+
 const savedFilterSchema = z.object({
 	id: z.string(),
 	content: contentValueSchema.optional(),
 	tag: tagValueSchema.optional(),
+	file: fileValueSchema.optional(),
 });
 
 const settingsObject = z.object({
