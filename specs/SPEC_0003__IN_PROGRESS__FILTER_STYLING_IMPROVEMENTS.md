@@ -33,6 +33,7 @@ Transformed filter controls from a horizontal collapsible panel into a modern, r
 - **Active state**: Highlighted with accent color and bold text
 - **Delete action**: Small × button next to each saved filter
 - **Load action**: Click saved filter to apply it
+- **Deselect action**: Click currently selected saved filter to deselect and clear the input box
 
 ## Implementation History
 
@@ -111,6 +112,21 @@ Added drag-to-resize functionality with width constraints and persistence.
 - `e.preventDefault()` to avoid button click behavior
 
 **Implemented by:** [887a3d0](https://github.com/ErikaRS/task-list-kanban/commit/887a3d0)
+
+---
+
+### Phase 6: Saved Filter Toggle (Deselect) 🚧 IN_PROGRESS
+Add ability to deselect active saved filter by clicking it again, which clears the associated input field.
+
+**Key Changes:**
+- Clicking active saved filter deselects it
+- Deselecting clears the input box for that filter type
+- Visual feedback shows filter is no longer active
+- Maintains consistency with selection behavior
+
+**Deliverable:** Click active saved filter → input clears and filter deactivates
+
+**Implemented by:** [TBD]
 
 ## Future Enhancements
 

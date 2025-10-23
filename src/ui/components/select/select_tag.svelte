@@ -17,7 +17,11 @@
 
 	function loadSavedFilter(filter: SavedFilter) {
 		if (filter.tag) {
-			value = [...filter.tag.tags];
+			if (activeFilterId === filter.id) {
+				baseSelectRef?.clearSelection();
+			} else {
+				value = [...filter.tag.tags];
+			}
 			onLoadFilter?.(filter.id);
 		}
 	}

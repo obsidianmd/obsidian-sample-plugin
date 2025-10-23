@@ -176,8 +176,12 @@
 	}
 
 	function loadContentFilter(filterId: string, text: string) {
-		filterText = text;
-		activeContentFilterId = filterId;
+		if (activeContentFilterId === filterId) {
+			clearContentFilter();
+		} else {
+			filterText = text;
+			activeContentFilterId = filterId;
+		}
 	}
 
 	function clearContentFilter() {
@@ -209,8 +213,12 @@
 	}
 
 	function loadFileFilter(filterId: string, filepath: string) {
-		fileFilter = filepath;
-		activeFileFilterId = filterId;
+		if (activeFileFilterId === filterId) {
+			clearFileFilter();
+		} else {
+			fileFilter = filepath;
+			activeFileFilterId = filterId;
+		}
 	}
 
 	function addTagFilter() {
@@ -511,7 +519,13 @@
 				tags={[...tags]} 
 				savedFilters={tagFilters} 
 				bind:value={selectedTags}
-				onLoadFilter={(filterId) => { activeTagFilterId = filterId; }}
+				onLoadFilter={(filterId) => { 
+					if (activeTagFilterId === filterId) {
+						clearTagFilter();
+					} else {
+						activeTagFilterId = filterId;
+					}
+				}}
 				addButtonDisabled={selectedTags.length === 0 || tagFilterExists}
 				onAddClick={addTagFilter}
 				clearButtonDisabled={selectedTags.length === 0}
