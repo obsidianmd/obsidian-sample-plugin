@@ -82,7 +82,7 @@
 		multiple={true}
 		closeListOnChange={false}
 		listAutoWidth={true}
-		placeholderAlwaysShow={true}
+		placeholder=""
 		{items}
 		bind:value={selectedItems}
 		--background="var(--background-primary)"
@@ -101,6 +101,8 @@
 		--multi-item-padding="var(--pill-padding-y) var(--pill-padding-x)"
 		--multi-select-input-padding="var(--size-4-2) 120px var(--size-4-2) var(--size-4-2)"
 		--multi-select-input-margin="var(--size-2-2) var(--size-4-4) var(--size-2-2) var(--size-2-2)"
+		--input-color="var(--text-normal)"
+		--placeholder-color="var(--text-muted)"
 	></Select>
 	<div class="inline-actions">
 		<button 
@@ -216,17 +218,30 @@
 
 	.inline-action-btn {
 		padding: var(--size-2-1) var(--size-4-2);
-		background: var(--interactive-accent);
-		color: var(--text-on-accent);
 		border: none;
 		border-radius: var(--radius-s);
 		cursor: pointer;
 		font-size: var(--font-ui-smaller);
 		white-space: nowrap;
-		transition: background 0.15s ease, opacity 0.15s ease;
+		transition: background 150ms ease, opacity 150ms ease;
 
-		&:hover:not(:disabled) {
-			background: var(--interactive-accent-hover);
+		&:first-child {
+			background: var(--interactive-accent);
+			color: var(--text-on-accent);
+
+			&:hover:not(:disabled) {
+				background: var(--interactive-accent-hover);
+			}
+		}
+
+		&:last-child {
+			background: transparent;
+			color: var(--text-muted);
+			border: 1px solid var(--background-modifier-border);
+
+			&:hover:not(:disabled) {
+				background: var(--background-modifier-hover);
+			}
 		}
 
 		&:disabled {
@@ -243,5 +258,21 @@
 	:global(.svelte-select .multi-item) {
 		border: var(--border-width) solid var(--pill-border-color) !important;
 		outline: none !important;
+	}
+
+	:global(.svelte-select .svelte-select-list) {
+		z-index: 5;
+	}
+
+	:global(.svelte-select .clear-select) {
+		display: none !important;
+	}
+
+	:global(.svelte-select.focused) {
+		transition: box-shadow 150ms ease;
+	}
+
+	:global(.svelte-select input:focus-visible) {
+		outline: none;
 	}
 </style>

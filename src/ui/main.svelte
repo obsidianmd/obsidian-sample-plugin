@@ -751,6 +751,11 @@
 						padding: var(--size-4-2) 120px var(--size-4-2) var(--size-4-2);
 						min-height: 54px;
 						box-sizing: border-box;
+						transition: box-shadow 150ms ease;
+
+						&:focus-visible {
+							box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+						}
 
 						&::-webkit-calendar-picker-indicator,
 						&::-webkit-list-button {
@@ -772,17 +777,30 @@
 
 				.inline-action-btn {
 					padding: var(--size-2-1) var(--size-4-2);
-					background: var(--interactive-accent);
-					color: var(--text-on-accent);
 					border: none;
 					border-radius: var(--radius-s);
 					cursor: pointer;
 					font-size: var(--font-ui-smaller);
 					white-space: nowrap;
-					transition: background 0.15s ease, opacity 0.15s ease;
+					transition: background 150ms ease, opacity 150ms ease;
 
-					&:hover:not(:disabled) {
-						background: var(--interactive-accent-hover);
+					&:first-child {
+						background: var(--interactive-accent);
+						color: var(--text-on-accent);
+
+						&:hover:not(:disabled) {
+							background: var(--interactive-accent-hover);
+						}
+					}
+
+					&:last-child {
+						background: transparent;
+						color: var(--text-muted);
+						border: 1px solid var(--background-modifier-border);
+
+						&:hover:not(:disabled) {
+							background: var(--background-modifier-hover);
+						}
 					}
 
 					&:disabled {
@@ -816,6 +834,11 @@
 						padding: var(--size-4-2) 100px var(--size-4-2) var(--size-4-2);
 						min-height: 54px;
 						box-sizing: border-box;
+						transition: box-shadow 150ms ease;
+
+						&:focus-visible {
+							box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+						}
 
 						&::-webkit-calendar-picker-indicator,
 						&::-webkit-list-button {
@@ -837,17 +860,30 @@
 
 				.inline-action-btn {
 					padding: var(--size-2-1) var(--size-4-2);
-					background: var(--interactive-accent);
-					color: var(--text-on-accent);
 					border: none;
 					border-radius: var(--radius-s);
 					cursor: pointer;
 					font-size: var(--font-ui-smaller);
 					white-space: nowrap;
-					transition: background 0.15s ease, opacity 0.15s ease;
+					transition: background 150ms ease, opacity 150ms ease;
 
-					&:hover:not(:disabled) {
-						background: var(--interactive-accent-hover);
+					&:first-child {
+						background: var(--interactive-accent);
+						color: var(--text-on-accent);
+
+						&:hover:not(:disabled) {
+							background: var(--interactive-accent-hover);
+						}
+					}
+
+					&:last-child {
+						background: transparent;
+						color: var(--text-muted);
+						border: 1px solid var(--background-modifier-border);
+
+						&:hover:not(:disabled) {
+							background: var(--background-modifier-hover);
+						}
 					}
 
 					&:disabled {
