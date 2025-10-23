@@ -387,34 +387,32 @@
 	<div class="controls">
 		<div class="text-filter">
 			<label for="filter">Filter by content:</label>
-			{#if contentFilters.length > 0}
-				<div class="saved-filters">
-					<details>
-						<summary>Saved filters</summary>
-						<ul role="list">
-							{#each contentFilters as filter}
-								<li>
-									<button 
-										class="delete-btn"
-										on:click={() => openDeleteModal(filter.id, filter.content?.text ?? "", 'content')}
-										aria-label="Delete filter: {filter.content?.text}"
-									>
-										×
-									</button>
-									<button 
-										class:active={filter.id === activeContentFilterId}
-										on:click={() => loadContentFilter(filter.id, filter.content?.text ?? "")}
-										aria-label="Load saved filter: {filter.content?.text}"
-										aria-pressed={filter.id === activeContentFilterId}
-									>
-										{filter.content?.text}
-									</button>
-								</li>
-							{/each}
-						</ul>
-					</details>
-				</div>
-			{/if}
+			<div class="saved-filters">
+				<details>
+					<summary>Saved filters</summary>
+					<ul role="list">
+						{#each contentFilters as filter}
+							<li>
+								<button 
+									class="delete-btn"
+									on:click={() => openDeleteModal(filter.id, filter.content?.text ?? "", 'content')}
+									aria-label="Delete filter: {filter.content?.text}"
+								>
+									×
+								</button>
+								<button 
+									class:active={filter.id === activeContentFilterId}
+									on:click={() => loadContentFilter(filter.id, filter.content?.text ?? "")}
+									aria-label="Load saved filter: {filter.content?.text}"
+									aria-pressed={filter.id === activeContentFilterId}
+								>
+									{filter.content?.text}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				</details>
+			</div>
 			<div class="filter-input-container">
 				<input
 					id="filter"
@@ -468,34 +466,32 @@
 		</div>
 		<div class="file-filter">
 			<label for="file-filter">Filter by file:</label>
-			{#if fileFilters.length > 0}
-				<div class="saved-filters">
-					<details>
-						<summary>Saved filters</summary>
-						<ul role="list">
-							{#each fileFilters as filter}
-								<li>
-									<button 
-										class="delete-btn"
-										on:click={() => openDeleteModal(filter.id, filter.file?.filepaths[0] ?? "", 'file')}
-										aria-label="Delete filter: {filter.file?.filepaths[0]}"
-									>
-										×
-									</button>
-									<button 
-										class:active={filter.id === activeFileFilterId}
-										on:click={() => loadFileFilter(filter.id, filter.file?.filepaths[0] ?? "")}
-										aria-label="Load saved filter: {filter.file?.filepaths[0]}"
-										aria-pressed={filter.id === activeFileFilterId}
-									>
-										{filter.file?.filepaths[0]}
-									</button>
-								</li>
-							{/each}
-						</ul>
-					</details>
-				</div>
-			{/if}
+			<div class="saved-filters">
+				<details>
+					<summary>Saved filters</summary>
+					<ul role="list">
+						{#each fileFilters as filter}
+							<li>
+								<button 
+									class="delete-btn"
+									on:click={() => openDeleteModal(filter.id, filter.file?.filepaths[0] ?? "", 'file')}
+									aria-label="Delete filter: {filter.file?.filepaths[0]}"
+								>
+									×
+								</button>
+								<button 
+									class:active={filter.id === activeFileFilterId}
+									on:click={() => loadFileFilter(filter.id, filter.file?.filepaths[0] ?? "")}
+									aria-label="Load saved filter: {filter.file?.filepaths[0]}"
+									aria-pressed={filter.id === activeFileFilterId}
+								>
+									{filter.file?.filepaths[0]}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				</details>
+			</div>
 			<div class="filter-input-container">
 				<input
 					id="file-filter"

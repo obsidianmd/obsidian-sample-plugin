@@ -47,36 +47,34 @@
 		{label}:
 	</label>
 
-	{#if savedFilterOptions.length > 0}
-		<div class="saved-filters">
-			<details>
-				<summary>Saved filters</summary>
-				<ul role="list">
-					{#each savedFilterOptions as option}
-						<li>
-							{#if onDeleteClick}
-								<button 
-									class="delete-btn"
-									on:click={() => onDeleteClick?.(option.filter.id, option.displayText)}
-									aria-label="Delete filter: {option.displayText}"
-								>
-									×
-								</button>
-							{/if}
+	<div class="saved-filters">
+		<details>
+			<summary>Saved filters</summary>
+			<ul role="list">
+				{#each savedFilterOptions as option}
+					<li>
+						{#if onDeleteClick}
 							<button 
-								class:active={option.filter.id === activeFilterId}
-								on:click={() => handleSavedFilterSelect(option)}
-								aria-label="Load saved filter: {option.displayText}"
-								aria-pressed={option.filter.id === activeFilterId}
+								class="delete-btn"
+								on:click={() => onDeleteClick?.(option.filter.id, option.displayText)}
+								aria-label="Delete filter: {option.displayText}"
 							>
-								{option.displayText}
+								×
 							</button>
-						</li>
-					{/each}
-				</ul>
-			</details>
-		</div>
-	{/if}
+						{/if}
+						<button 
+							class:active={option.filter.id === activeFilterId}
+							on:click={() => handleSavedFilterSelect(option)}
+							aria-label="Load saved filter: {option.displayText}"
+							aria-pressed={option.filter.id === activeFilterId}
+						>
+							{option.displayText}
+						</button>
+					</li>
+				{/each}
+			</ul>
+		</details>
+	</div>
 	
 	<div class="select-wrapper">
 		<Select
