@@ -129,6 +129,7 @@
 	label {
 		display: inline-block;
 		margin-bottom: var(--size-4-1);
+		font-weight: 600;
 	}
 
 	.saved-filters {

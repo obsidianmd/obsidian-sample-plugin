@@ -71,6 +71,8 @@ const settingsObject = z.object({
 	lastTagFilter: z.array(z.string()).optional(),
 	lastFileFilter: z.array(z.string()).optional(),
 	filtersExpanded: z.boolean().default(true).optional(),
+	filtersSidebarExpanded: z.boolean().default(true).optional(),
+	filtersSidebarWidth: z.number().default(280).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;

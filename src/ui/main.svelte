@@ -371,7 +371,8 @@
 		consolidateTags = false, 
 		uncategorizedVisibility = VisibilityOption.Auto,
 		doneVisibility = VisibilityOption.AlwaysShow,
-		filtersExpanded = true
+		filtersSidebarExpanded = true,
+		filtersSidebarWidth = 280
 	} = $settingsStore);
 
 	$: showUncategorizedColumn =
@@ -382,10 +383,36 @@
 		doneVisibility === VisibilityOption.AlwaysShow ||
 		(doneVisibility === VisibilityOption.Auto && tasksByColumn["done"]?.length > 0);
 	
-	function toggleFiltersExpanded(event: Event) {
-		const detailsElement = event.currentTarget as HTMLDetailsElement;
-		$settingsStore.filtersExpanded = detailsElement.open;
+	function toggleSidebar() {
+		$settingsStore.filtersSidebarExpanded = !filtersSidebarExpanded;
 		requestSave();
+	}
+
+	let isResizing = false;
+	let resizeStartX = 0;
+	let resizeStartWidth = 0;
+	const MIN_SIDEBAR_WIDTH = 200;
+	const MAX_SIDEBAR_WIDTH = 600;
+
+	function startResize(e: MouseEvent) {
+		e.preventDefault();
+		isResizing = true;
+		resizeStartX = e.clientX;
+		resizeStartWidth = filtersSidebarWidth;
+	}
+
+	function handleMouseMove(e: MouseEvent) {
+		if (!isResizing) return;
+		const delta = e.clientX - resizeStartX;
+		const newWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, resizeStartWidth + delta));
+		$settingsStore.filtersSidebarWidth = newWidth;
+	}
+
+	function stopResize() {
+		if (isResizing) {
+			isResizing = false;
+			requestSave();
+		}
 	}
 		
 	async function handleOpenSettings() {
@@ -393,13 +420,27 @@
 	}
 </script>
 
+<svelte:window on:mousemove={handleMouseMove} on:mouseup={stopResize} />
+
 <div class="main">
-	<div class="settings">
-		<IconButton icon="lucide-settings" on:click={handleOpenSettings} />
-	</div>
-	<details class="filters-section" open={filtersExpanded} on:toggle={toggleFiltersExpanded}>
-		<summary class="filters-summary">Filters</summary>
-		<div class="controls">
+	<button 
+		class="sidebar-toggle-btn" 
+		on:click={toggleSidebar} 
+		aria-label={filtersSidebarExpanded ? "Hide filters" : "Show filters"}
+	>
+		<span class="toggle-icon">{filtersSidebarExpanded ? '◂' : '▸'}</span>
+		<span class="toggle-label">Filters</span>
+	</button>
+
+	<div class="board-container" class:sidebar-expanded={filtersSidebarExpanded} style="--sidebar-width: {filtersSidebarWidth}px;">
+		{#if filtersSidebarExpanded}
+		<aside class="filters-sidebar">
+			<button 
+				class="resize-handle" 
+				on:mousedown={startResize}
+				aria-label="Resize sidebar"
+			></button>
+			<div class="controls">
 		<div class="text-filter">
 			<label for="filter">Filter by content:</label>
 			<div class="saved-filters">
@@ -544,10 +585,16 @@
 				{/if}
 			</div>
 		</div>
-		</div>
-	</details>
+			</div>
+		</aside>
+		{/if}
 
-	<div class="columns">
+		<div class="board-content">
+			<div class="settings">
+				<IconButton icon="lucide-settings" on:click={handleOpenSettings} />
+			</div>
+			
+			<div class="columns">
 		<div>
 			{#if showUncategorizedColumn}
 			<Column
@@ -585,6 +632,8 @@
 			/>
 			{/if}
 		</div>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -602,63 +651,96 @@
 		display: flex;
 		flex-direction: column;
 
+		.sidebar-toggle-btn {
+			position: fixed;
+			top: 50px;
+			left: 8px;
+			padding: var(--size-2-1) var(--size-2-2);
+			background: var(--background-primary);
+			border: 1px solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			cursor: pointer;
+			color: var(--text-muted);
+			font-size: var(--font-ui-small);
+			display: flex;
+			align-items: center;
+			gap: var(--size-2-1);
+			z-index: 100;
+			transition: color 0.15s ease;
+
+			&:hover {
+				background: var(--background-modifier-hover);
+				color: var(--text-normal);
+			}
+
+			.toggle-icon {
+				font-size: 16px;
+			}
+
+			.toggle-label {
+				font-weight: 500;
+			}
+		}
+
+		.board-container {
+			display: grid;
+			grid-template-columns: 1fr;
+			height: 100%;
+			
+			&.sidebar-expanded {
+				grid-template-columns: var(--sidebar-width, 280px) 1fr;
+			}
+		}
+
+		.filters-sidebar {
+			background: var(--background-primary);
+			border-right: 1px solid var(--background-modifier-border);
+			overflow-y: auto;
+			display: flex;
+			flex-direction: column;
+			position: relative;
+
+			.resize-handle {
+				position: absolute;
+				top: 0;
+				right: 0;
+				width: 4px;
+				height: 100%;
+				cursor: col-resize;
+				background: transparent;
+				border: none;
+				padding: 0;
+				z-index: 10;
+
+				&:hover {
+					background: var(--interactive-accent);
+					opacity: 0.5;
+				}
+			}
+
+
+		}
+
+		.board-content {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+			overflow: hidden;
+			padding-left: var(--size-4-4);
+		}
+
 		.settings {
 			display: flex;
 			justify-content: flex-end;
-		}
-
-		.filters-section {
-			margin-bottom: var(--size-4-4);
-			background: var(--background-secondary);
-			padding: var(--size-4-4) var(--size-4-4) var(--size-4-4) var(--size-4-4);
-			border-radius: var(--radius-m);
-			border-bottom: 1px solid var(--background-modifier-border);
-
-			.filters-summary {
-				cursor: pointer;
-				user-select: none;
-				font-weight: 600;
-				color: var(--text-normal);
-				list-style: none;
-				transition: color 0.15s ease;
-				margin-bottom: var(--size-4-4);
-				position: relative;
-				padding-left: var(--size-4-3);
-
-				&:hover {
-					color: var(--text-muted);
-				}
-
-				&::-webkit-details-marker {
-					display: none;
-				}
-
-				&::before {
-					content: "▸";
-					position: absolute;
-					left: 0;
-					transition: transform 0.15s ease;
-				}
-			}
-
-			&[open] .filters-summary::before {
-				content: "▾";
-			}
-
-			&:not([open]) {
-				padding-bottom: var(--size-4-4);
-			}
-
-			&:not([open]) .filters-summary {
-				margin-bottom: 0;
-			}
+			padding: var(--size-4-2) var(--size-4-4) var(--size-4-2) 0;
 		}
 
 		.controls {
 			display: flex;
 			flex-direction: column;
-			gap: var(--size-4-3);
-			max-width: 400px;
+			gap: var(--size-4-5);
+			padding: var(--size-4-4);
+			padding-top: 50px;
 
 			.saved-filters {
 				margin-top: 0;
@@ -739,6 +821,7 @@
 				label {
 					display: inline-block;
 					margin-bottom: var(--size-2-3);
+					font-weight: 600;
 				}
 
 				.filter-input-container {
@@ -822,6 +905,7 @@
 				label {
 					display: inline-block;
 					margin-bottom: var(--size-2-3);
+					font-weight: 600;
 				}
 
 				.filter-input-container {
