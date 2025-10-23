@@ -487,24 +487,6 @@
 					list="content-filters"
 					aria-describedby={contentFilters.length > 0 ? "content-filters" : undefined}
 				/>
-				<div class="inline-actions">
-					<button 
-						class="inline-action-btn" 
-						disabled={filterText.trim() === "" || contentFilterExists}
-						on:click={addContentFilter}
-						aria-label="Save filter"
-					>
-						Save
-					</button>
-					<button 
-						class="inline-action-btn" 
-						disabled={filterText.trim() === ""}
-						on:click={clearContentFilter}
-						aria-label="Clear filter"
-					>
-						Clear
-					</button>
-				</div>
 				{#if contentFilters.length > 0}
 					<datalist id="content-filters">
 						{#each contentFilters as filter}
@@ -512,6 +494,24 @@
 						{/each}
 					</datalist>
 				{/if}
+			</div>
+			<div class="filter-actions">
+				<button 
+					class="filter-action-btn save-btn" 
+					disabled={filterText.trim() === "" || contentFilterExists}
+					on:click={addContentFilter}
+					aria-label="Save filter"
+				>
+					Save
+				</button>
+				<button 
+					class="filter-action-btn clear-btn" 
+					disabled={filterText.trim() === ""}
+					on:click={clearContentFilter}
+					aria-label="Clear filter"
+				>
+					Clear
+				</button>
 			</div>
 		</div>
 		<div class="tag-filter">
@@ -572,24 +572,6 @@
 					list="file-paths"
 					aria-label="Filter by file path"
 				/>
-				<div class="inline-actions">
-					<button 
-						class="inline-action-btn" 
-						disabled={fileFilter.trim() === "" || fileFilterExists}
-						on:click={addFileFilter}
-						aria-label="Save filter"
-					>
-						Save
-					</button>
-					<button 
-						class="inline-action-btn" 
-						disabled={fileFilter.trim() === ""}
-						on:click={clearFileFilter}
-						aria-label="Clear file filter"
-					>
-						Clear
-					</button>
-				</div>
 				{#if availableFiles.length > 0}
 					<datalist id="file-paths">
 						{#each availableFiles as filePath}
@@ -597,6 +579,24 @@
 						{/each}
 					</datalist>
 				{/if}
+			</div>
+			<div class="filter-actions">
+				<button 
+					class="filter-action-btn save-btn" 
+					disabled={fileFilter.trim() === "" || fileFilterExists}
+					on:click={addFileFilter}
+					aria-label="Save filter"
+				>
+					Save
+				</button>
+				<button 
+					class="filter-action-btn clear-btn" 
+					disabled={fileFilter.trim() === ""}
+					on:click={clearFileFilter}
+					aria-label="Clear file filter"
+				>
+					Clear
+				</button>
 			</div>
 		</div>
 			</div>
@@ -839,14 +839,11 @@
 				}
 
 				.filter-input-container {
-					position: relative;
-					
 					input[type="search"] {
 						display: block;
 						width: 100%;
 						background: var(--background-primary);
-						padding: var(--size-4-2) 120px var(--size-4-2) var(--size-4-2);
-						min-height: 54px;
+						padding: var(--size-4-2);
 						box-sizing: border-box;
 						transition: box-shadow 150ms ease;
 
@@ -861,36 +858,32 @@
 							pointer-events: none !important;
 						}
 					}
-					
-					.inline-actions {
-						position: absolute;
-						right: var(--size-4-1);
-						top: 50%;
-						transform: translateY(-50%);
-						display: flex;
-						gap: var(--size-4-2);
-					}
 				}
 
-				.inline-action-btn {
-					padding: var(--size-2-1) var(--size-4-2);
-					border: none;
+				.filter-actions {
+					display: flex;
+					gap: var(--size-4-2);
+					margin-top: var(--size-4-2);
+				}
+
+				.filter-action-btn {
+					padding: var(--size-2-2) var(--size-4-3);
 					border-radius: var(--radius-s);
 					cursor: pointer;
-					font-size: var(--font-ui-smaller);
-					white-space: nowrap;
+					font-size: var(--font-ui-small);
 					transition: background 150ms ease, opacity 150ms ease;
-
-					&:first-child {
+					
+					&.save-btn {
 						background: var(--interactive-accent);
 						color: var(--text-on-accent);
+						border: none;
 
 						&:hover:not(:disabled) {
 							background: var(--interactive-accent-hover);
 						}
 					}
 
-					&:last-child {
+					&.clear-btn {
 						background: transparent;
 						color: var(--text-muted);
 						border: 1px solid var(--background-modifier-border);
@@ -923,14 +916,11 @@
 				}
 
 				.filter-input-container {
-					position: relative;
-					
 					input[type="search"] {
 						display: block;
 						width: 100%;
 						background: var(--background-primary);
-						padding: var(--size-4-2) 100px var(--size-4-2) var(--size-4-2);
-						min-height: 54px;
+						padding: var(--size-4-2);
 						box-sizing: border-box;
 						transition: box-shadow 150ms ease;
 
@@ -945,36 +935,32 @@
 							pointer-events: none !important;
 						}
 					}
-					
-					.inline-actions {
-						position: absolute;
-						right: var(--size-4-1);
-						top: 50%;
-						transform: translateY(-50%);
-						display: flex;
-						gap: var(--size-4-2);
-					}
 				}
 
-				.inline-action-btn {
-					padding: var(--size-2-1) var(--size-4-2);
-					border: none;
+				.filter-actions {
+					display: flex;
+					gap: var(--size-4-2);
+					margin-top: var(--size-4-2);
+				}
+
+				.filter-action-btn {
+					padding: var(--size-2-2) var(--size-4-3);
 					border-radius: var(--radius-s);
 					cursor: pointer;
-					font-size: var(--font-ui-smaller);
-					white-space: nowrap;
+					font-size: var(--font-ui-small);
 					transition: background 150ms ease, opacity 150ms ease;
-
-					&:first-child {
+					
+					&.save-btn {
 						background: var(--interactive-accent);
 						color: var(--text-on-accent);
+						border: none;
 
 						&:hover:not(:disabled) {
 							background: var(--interactive-accent-hover);
 						}
 					}
 
-					&:last-child {
+					&.clear-btn {
 						background: transparent;
 						color: var(--text-muted);
 						border: 1px solid var(--background-modifier-border);
