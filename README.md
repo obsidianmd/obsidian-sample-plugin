@@ -78,17 +78,18 @@ Examples:
 
 **Adding tags**: Add `#[tag-name]` anywhere in your task text. Tags appear in both the kanban and original files.
 
-**Filtering**: Use the filter bar at the top of the kanban to show only tasks with specific tags or content. You can filter by:
+**Filtering**: Use the filters sidebar (toggle with the ◂/▸ button) to show only tasks with specific criteria. You can filter by:
 - **Content**: Search for tasks containing specific text
 - **Tags**: Select one or multiple tags to filter tasks
+- **Files**: Select specific files to show only tasks from those files
 
 **Saved Filters**: Save frequently used filter combinations for quick access:
-1. Set up your desired content and/or tag filters
-2. Click the "Add" button next to the filter input
+1. Set up your desired content, tag, and/or file filters in the sidebar
+2. Click the "Add" button to save the current filter combination
 3. Your saved filters appear under "Saved filters" and can be activated with one click
 4. Remove saved filters by clicking the ✕ button next to each one
 
-![Saved filters feature](https://github.com/user-attachments/assets/7b57601d-9fdb-4ade-9472-881661840323)
+![Filters view](https://github.com/user-attachments/assets/da40a567-d638-43a3-aedd-7ffe8112adc4)
 
 **Tag consolidation**: Enable "Consolidate tags" in settings to move all non-column tags to the task footer for cleaner display.
 
