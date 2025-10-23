@@ -59,6 +59,7 @@ const settingsObject = z.object({
 	savedFilters: z.array(savedFilterSchema).default([]).optional(),
 	lastContentFilter: z.string().optional(),
 	lastTagFilter: z.array(z.string()).optional(),
+	lastFileFilter: z.array(z.string()).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;

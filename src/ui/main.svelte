@@ -249,9 +249,10 @@
 
 	onMount(() => {
 		const unsubscribe = settingsStore.subscribe(settings => {
-			if (!hasInitialized && (settings.lastContentFilter || settings.lastTagFilter)) {
+			if (!hasInitialized && (settings.lastContentFilter || settings.lastTagFilter || settings.lastFileFilter)) {
 				filterText = settings.lastContentFilter ?? "";
 				selectedTags = settings.lastTagFilter ?? [];
+				fileFilter = settings.lastFileFilter?.[0] ?? "";
 				hasInitialized = true;
 			}
 		});
@@ -265,6 +266,7 @@
 				...settings,
 				lastContentFilter: filterText,
 				lastTagFilter: selectedTags,
+				lastFileFilter: fileFilter ? [fileFilter] : [],
 			}));
 			requestSave();
 		}
@@ -273,6 +275,7 @@
 	$: if (hasInitialized) {
 		filterText;
 		selectedTags;
+		fileFilter;
 		saveFilterState();
 	}
 

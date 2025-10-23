@@ -215,19 +215,19 @@ kanban_plugin: '{"columns":[...],"savedFilters":[{"id":"uuid-1","file":{"filepat
 
 ---
 
-### Phase 2: Autocomplete Support
+### Phase 2: Autocomplete Support ✅ COMPLETE
 **Goal:** User gets autocomplete suggestions for available file paths
 
-1. ☐ Add logic to collect available files from ALL tasks using `task.path`
-2. ☐ Deduplicate and sort files alphabetically by file path
-3. ☐ Add `<datalist>` to file filter input with available files
-4. ☐ Wire up datalist to state
-5. ☐ Test: Type partial path, verify autocomplete dropdown shows matching files
-6. ☐ Test: Select from autocomplete, verify filter applies correctly
+1. ✅ Add logic to collect available files from ALL tasks using `task.path`
+2. ✅ Deduplicate and sort files alphabetically by file path
+3. ✅ Add `<datalist>` to file filter input with available files
+4. ✅ Wire up datalist to state
+5. ✅ Test: Type partial path, verify autocomplete dropdown shows matching files
+6. ✅ Test: Select from autocomplete, verify filter applies correctly
 
 **Deliverable:** File filter with autocomplete assistance
 
-**Implemented by:** [commit-hash](link)
+**Implemented by:** [34608c7](https://github.com/ErikaRS/task-list-kanban/commit/34608c7)
 
 ---
 
