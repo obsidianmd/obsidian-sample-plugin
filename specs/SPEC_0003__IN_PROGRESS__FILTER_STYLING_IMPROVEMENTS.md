@@ -140,44 +140,35 @@ Polish the filter controls UI. Currently functional but visually flat - needs be
 ---
 
 ### Phase 3: Interactive Elements & Polish ☐ TODO
-**Goal:** Improve all interactive states and visual feedback for vertical sidebar layout
+**Goal:** Basic polish to match overall UI quality - no fancier than the rest of the app
 
-**Context:** With vertical layout, we have more horizontal space but need tighter vertical spacing.
-Focus on clean, compact polish that works well in a narrow vertical panel.
+**Context:** Keep it simple. Fix rough edges, ensure consistency, maintain accessibility.
+Don't add special styling that makes filters look more polished than other UI elements.
 
-1. ☐ Style saved filters `<details>` summary:
-   - Add subtle background on hover (not always visible - keeps it clean)
-   - Ensure adequate spacing for vertical layout
-   - Consider slightly smaller font/padding to maximize vertical space
-2. ☐ Enhance active filter indication:
-   - Keep bold + accent color (current style works well)
-   - Consider subtle background highlight for better visibility
-   - Ensure sufficient contrast in both light and dark themes
-3. ☐ Refine button styling for vertical layout:
-   - Update Clear button to ghost/outline style (transparent bg, border, muted text)
-   - Ensure Save/Clear buttons have consistent sizing
-   - Verify buttons don't make inputs too tall (vertical space is precious)
-   - Improve disabled state visual feedback
-4. ☐ Polish input focus states:
-   - Add focus box-shadow to text inputs: `0 0 0 2px var(--background-modifier-border-focus)`
-   - Update multi-select (tag filter) focus styling
-   - Ensure focus indicators are visible but not overwhelming
-5. ☐ Fix spacing and overflow issues:
-   - Verify saved filter list items have comfortable but compact spacing
-   - Fix tag filter placeholder text overflow if present
-   - Ensure long filter names wrap or truncate appropriately in narrow width
-6. ☐ Add smooth transitions:
-   - Apply `150ms ease` to all interactive elements
-   - Ensure transitions feel responsive, not sluggish
-7. ☐ Comprehensive testing:
+1. ☐ Update Clear button to ghost/outline style:
+   - Transparent background, border, muted text
+   - Matches common secondary button pattern
+   - Hover: subtle background change
+2. ☐ Add standard focus indicators:
+   - Text inputs: `0 0 0 2px var(--background-modifier-border-focus)` on focus
+   - Tag filter: ensure svelte-select has proper focus styling
+   - Follow existing Obsidian focus patterns
+3. ☐ Fix any overflow/spacing issues:
+   - Tag filter placeholder text overflow (if present)
+   - Long filter names should truncate or wrap appropriately
+   - Verify spacing looks clean and intentional
+4. ☐ Add basic transitions where missing:
+   - `150ms ease` on buttons, hover states
+   - Match transition speeds used elsewhere in the app
+   - Keep it subtle
+5. ☐ Testing:
    - Test all interactive states: hover, focus, active, disabled
-   - Test keyboard navigation (Tab, Enter, Escape)
-   - Test with long filter names, many saved filters
-   - Verify layout at various viewport widths (especially narrow)
-   - Final cross-theme testing (light, dark, high contrast)
-   - Verify focus indicators meet WCAG AA accessibility standards
+   - Keyboard navigation (Tab, Enter, Escape)
+   - Test with long filter names and many saved filters
+   - Light and dark themes
+   - Verify accessibility (focus indicators, contrast)
 
-**Deliverable:** Polished, accessible vertical filter panel with clear interactive feedback
+**Deliverable:** Clean, consistent filter panel that matches the quality of the rest of the UI
 
 **Implemented by:** [commit-hash](link)
 
