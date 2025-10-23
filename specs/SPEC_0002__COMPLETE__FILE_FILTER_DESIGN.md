@@ -1,5 +1,6 @@
 # File Filter Feature Design
 Status: COMPLETE
+Implemented: 2025-10
 
 ## Feature Request Summary
 Users want to filter tasks by which file they're sourced from. The kanban aggregates tasks from multiple files across the vault, and users need a way to show only tasks from specific source files. For example, a user might want to see only tasks from "periodic/2025-05-02.md" or "meeting-notes.md".
