@@ -45,6 +45,8 @@ Established collapsible filter section using HTML `<details>` element. Added vis
 - Styled summary with hover states and consistent padding
 - Tested with long filter names and both light/dark themes
 
+**Implemented by:** [e0aff17](https://github.com/ErikaRS/task-list-kanban/commit/e0aff17)
+
 ---
 
 ### Phase 2: Vertical Layout ✅ COMPLETE
@@ -69,6 +71,8 @@ Added button styling differentiation (solid Save, outline Clear), focus states, 
 - Transitions: 150ms ease on interactive elements
 - Accessibility improvements (keyboard navigation, ARIA labels)
 
+**Implemented by:** [e202239](https://github.com/ErikaRS/task-list-kanban/commit/e202239)
+
 ---
 
 ### Phase 4: True Sidebar ✅ COMPLETE
@@ -87,6 +91,8 @@ Transformed filter panel into true sidebar positioned on left edge. Removed `<de
 - No animations for instant response
 - Grid template: `280px 1fr` when expanded, `1fr` when collapsed
 
+**Implemented by:** [887a3d0](https://github.com/ErikaRS/task-list-kanban/commit/887a3d0)
+
 ---
 
 ### Phase 5: Resizable Sidebar ✅ COMPLETE
@@ -103,6 +109,8 @@ Added drag-to-resize functionality with width constraints and persistence.
 - Window-level mouse handlers for smooth dragging
 - CSS variable `--sidebar-width` for dynamic grid column sizing
 - `e.preventDefault()` to avoid button click behavior
+
+**Implemented by:** [887a3d0](https://github.com/ErikaRS/task-list-kanban/commit/887a3d0)
 
 ## Future Enhancements
 
