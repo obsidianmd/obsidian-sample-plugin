@@ -370,7 +370,8 @@
 		showFilepath = true, 
 		consolidateTags = false, 
 		uncategorizedVisibility = VisibilityOption.Auto,
-		doneVisibility = VisibilityOption.AlwaysShow
+		doneVisibility = VisibilityOption.AlwaysShow,
+		filtersExpanded = true
 	} = $settingsStore);
 
 	$: showUncategorizedColumn =
@@ -380,6 +381,12 @@
 	$: showDoneColumn =
 		doneVisibility === VisibilityOption.AlwaysShow ||
 		(doneVisibility === VisibilityOption.Auto && tasksByColumn["done"]?.length > 0);
+	
+	function toggleFiltersExpanded(event: Event) {
+		const detailsElement = event.currentTarget as HTMLDetailsElement;
+		$settingsStore.filtersExpanded = detailsElement.open;
+		requestSave();
+	}
 		
 	async function handleOpenSettings() {
 		openSettings();
@@ -390,7 +397,9 @@
 	<div class="settings">
 		<IconButton icon="lucide-settings" on:click={handleOpenSettings} />
 	</div>
-	<div class="controls">
+	<details class="filters-section" open={filtersExpanded} on:toggle={toggleFiltersExpanded}>
+		<summary class="filters-summary">Filters</summary>
+		<div class="controls">
 		<div class="text-filter">
 			<label for="filter">Filter by content:</label>
 			<div class="saved-filters">
@@ -535,7 +544,8 @@
 				{/if}
 			</div>
 		</div>
-	</div>
+		</div>
+	</details>
 
 	<div class="columns">
 		<div>
@@ -597,14 +607,62 @@
 			justify-content: flex-end;
 		}
 
-		.controls {
+		.filters-section {
 			margin-bottom: var(--size-4-4);
-			display: grid;
-			gap: 120px;
-			grid-template-columns: 1fr 1fr 1fr;
+			background: var(--background-secondary);
+			padding: var(--size-4-4) var(--size-4-4) var(--size-4-4) var(--size-4-4);
+			border-radius: var(--radius-m);
+			border-bottom: 1px solid var(--background-modifier-border);
+
+			.filters-summary {
+				cursor: pointer;
+				user-select: none;
+				font-weight: 600;
+				color: var(--text-normal);
+				list-style: none;
+				transition: color 0.15s ease;
+				margin-bottom: var(--size-4-4);
+				position: relative;
+				padding-left: var(--size-4-3);
+
+				&:hover {
+					color: var(--text-muted);
+				}
+
+				&::-webkit-details-marker {
+					display: none;
+				}
+
+				&::before {
+					content: "▸";
+					position: absolute;
+					left: 0;
+					transition: transform 0.15s ease;
+				}
+			}
+
+			&[open] .filters-summary::before {
+				content: "▾";
+			}
+
+			&:not([open]) {
+				padding-bottom: var(--size-4-4);
+			}
+
+			&:not([open]) .filters-summary {
+				margin-bottom: 0;
+			}
+		}
+
+		.controls {
+			display: flex;
+			flex-direction: column;
+			gap: var(--size-4-3);
+			max-width: 400px;
 
 			.saved-filters {
-				margin-top: var(--size-4-1);
+				margin-top: 0;
+				margin-bottom: var(--size-4-2);
 				font-size: var(--font-ui-small);
 				align-self: flex-start;
 
@@ -630,7 +688,7 @@
 							margin: 0;
 							display: flex;
 							align-items: center;
-							gap: var(--size-2-1);
+							gap: var(--size-4-2);
 
 							button {
 								text-align: left;
@@ -677,11 +735,10 @@
 			.text-filter {
 				display: flex;
 				flex-direction: column;
-				flex-grow: 1;
 
 				label {
 					display: inline-block;
-					margin-bottom: var(--size-4-1);
+					margin-bottom: var(--size-2-3);
 				}
 
 				.filter-input-container {
@@ -736,72 +793,70 @@
 			}
 
 			.tag-filter {
-			display: flex;
-			flex-direction: column;
-			flex-grow: 1;
+				display: flex;
+				flex-direction: column;
 			}
 
-		.file-filter {
-			display: flex;
-			flex-direction: column;
-			flex-grow: 1;
+			.file-filter {
+				display: flex;
+				flex-direction: column;
 
-			label {
-				display: inline-block;
-				margin-bottom: var(--size-4-1);
-			}
+				label {
+					display: inline-block;
+					margin-bottom: var(--size-2-3);
+				}
 
-			.filter-input-container {
-				position: relative;
-				
-				input[type="search"] {
-					display: block;
-					width: 100%;
-					background: var(--background-primary);
-					padding: var(--size-4-2) 100px var(--size-4-2) var(--size-4-2);
-					min-height: 54px;
-					box-sizing: border-box;
+				.filter-input-container {
+					position: relative;
+					
+					input[type="search"] {
+						display: block;
+						width: 100%;
+						background: var(--background-primary);
+						padding: var(--size-4-2) 100px var(--size-4-2) var(--size-4-2);
+						min-height: 54px;
+						box-sizing: border-box;
 
-					&::-webkit-calendar-picker-indicator,
-					&::-webkit-list-button {
-						display: none !important;
-						opacity: 0 !important;
-						pointer-events: none !important;
+						&::-webkit-calendar-picker-indicator,
+						&::-webkit-list-button {
+							display: none !important;
+							opacity: 0 !important;
+							pointer-events: none !important;
+						}
+					}
+					
+					.inline-actions {
+						position: absolute;
+						right: var(--size-4-1);
+						top: 50%;
+						transform: translateY(-50%);
+						display: flex;
+						gap: var(--size-4-2);
 					}
 				}
-				
-				.inline-actions {
-					position: absolute;
-					right: var(--size-4-1);
-					top: 50%;
-					transform: translateY(-50%);
-					display: flex;
-					gap: var(--size-4-2);
-				}
-			}
 
-			.inline-action-btn {
-				padding: var(--size-2-1) var(--size-4-2);
-				background: var(--interactive-accent);
-				color: var(--text-on-accent);
-				border: none;
-				border-radius: var(--radius-s);
-				cursor: pointer;
-				font-size: var(--font-ui-smaller);
-				white-space: nowrap;
-				transition: background 0.15s ease, opacity 0.15s ease;
+				.inline-action-btn {
+					padding: var(--size-2-1) var(--size-4-2);
+					background: var(--interactive-accent);
+					color: var(--text-on-accent);
+					border: none;
+					border-radius: var(--radius-s);
+					cursor: pointer;
+					font-size: var(--font-ui-smaller);
+					white-space: nowrap;
+					transition: background 0.15s ease, opacity 0.15s ease;
 
-				&:hover:not(:disabled) {
-					background: var(--interactive-accent-hover);
-				}
+					&:hover:not(:disabled) {
+						background: var(--interactive-accent-hover);
+					}
 
-				&:disabled {
-					opacity: 0.5;
-					cursor: not-allowed;
+					&:disabled {
+						opacity: 0.5;
+						cursor: not-allowed;
+					}
 				}
 			}
 		}
-	}
 
 		.columns {
 			height: 100%;
