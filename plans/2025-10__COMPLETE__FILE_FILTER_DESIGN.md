@@ -1,5 +1,5 @@
 # File Filter Feature Design
-Status: IN_PROGRESS
+Status: COMPLETE
 
 ## Feature Request Summary
 Users want to filter tasks by which file they're sourced from. The kanban aggregates tasks from multiple files across the vault, and users need a way to show only tasks from specific source files. For example, a user might want to see only tasks from "periodic/2025-05-02.md" or "meeting-notes.md".
@@ -32,7 +32,7 @@ Users want to filter tasks by which file they're sourced from. The kanban aggreg
 │   • "daily-log"                     [×] │
 │                                         │
 │ ┌─────────────────────────────────────┐ │
-│ │ Type to search files... [Add][Clear]│ │  ← Native input with inline action buttons
+│ │ Type to search files... [Save][Clear]│ │  ← Native input with inline action buttons
 │ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
@@ -47,8 +47,8 @@ Users want to filter tasks by which file they're sourced from. The kanban aggreg
   - Each filter is clickable to load that file filter
   - Active filter (currently in use) shown in **bold + accent color**
   - Each filter has a [×] delete button with confirmation
-- **Inline action buttons**: [Add] and [Clear] buttons positioned on the right inside the input box
-  - **Add button**: Disabled when input is empty or filter already exists
+- **Inline action buttons**: [Save] and [Clear] buttons positioned on the right inside the input box
+  - **Save button**: Disabled when input is empty or filter already exists
   - **Clear button**: Disabled when filter is empty
 - **Single file only**: Only one file can be filtered at a time (simplified UX)
 
@@ -142,16 +142,16 @@ Available files: ["meeting-notes.md", "periodic/2025-05-02.md"]
 
 ### 4. Saving File Filters
 
-**Add Button Behavior:**
+**Save Button Behavior:**
 - Always visible (stable layout)
 - Disabled when:
   - Input is empty
   - Filter already exists (exact basename match)
 - Enabled when there's a new file filter to save
 
-**Add Flow:**
+**Save Flow:**
 1. User types filename in input (with autocomplete assistance)
-2. User clicks "Add" button
+2. User clicks "Save" button
 3. Filter saved immediately with UUID
 4. Appears in saved filters list
 5. Current filter auto-detected as active
@@ -171,7 +171,7 @@ Available files: ["meeting-notes.md", "periodic/2025-05-02.md"]
 - Clears the file filter input
 - Removes file filtering (shows all tasks, subject to other filters)
 - Button disabled when filter already empty
-- Positioned inline next to Add button
+- Positioned inline next to Save button
 
 ### 7. Persistence
 
@@ -254,13 +254,13 @@ kanban_plugin: '{"columns":[...],"savedFilters":[{"id":"uuid-1","file":{"filepat
 1. ✅ Add `FileValue` interface with `filepaths: string[]` to settings types
 2. ✅ Add `file?: FileValue` to `SavedFilter` interface
 3. ✅ Update `parseSettingsString` and `toSettingsString` to handle `SavedFilter.file`
-4. ✅ Add [Add] button to file filter input
-5. ✅ Wire up Add button to create new `SavedFilter` with `FileValue` (single-element array)
+4. ✅ Add [Save] button to file filter input
+5. ✅ Wire up Save button to create new `SavedFilter` with `FileValue` (single-element array)
 6. ✅ Add saved filters collapsible section above input
 7. ✅ Display saved file filters in section (show file path as button text)
 8. ✅ Implement click to load saved filter
 9. ✅ Add `activeFileFilterId` state and auto-detect/highlight active filter
-10. ✅ Update disabled state logic for Add button (when empty or exists)
+10. ✅ Update disabled state logic for Save button (when empty or exists)
 11. ✅ Test: Add filter, verify it appears in saved section
 12. ✅ Test: Click saved filter, verify it loads into input and applies
 13. ✅ Test: Close/reopen board, verify saved filters persist
@@ -271,22 +271,25 @@ kanban_plugin: '{"columns":[...],"savedFilters":[{"id":"uuid-1","file":{"filepat
 
 ---
 
-### Phase 5: Delete Filters & Polish
+### Phase 5: Delete Filters & Polish ✅ COMPLETE
 **Goal:** Complete feature with delete functionality and UX refinements
 
-1. ☐ Add [×] button to each saved file filter
-2. ☐ Reuse existing delete confirmation modal
-3. ☐ Wire up delete logic for file filters
-4. ☐ Handle edge case: deleting active filter
-5. ☐ Add proper ARIA labels for accessibility
-6. ☐ Polish styling to match content/tag filters (inline buttons, active highlighting)
-7. ☐ Test: Delete saved filter, verify it's removed
-8. ☐ Test: Delete active filter, verify filtering continues but active indicator removed
-9. ☐ Test: Full workflow from adding to deleting filters
+1. ✅ Add [×] button to each saved file filter
+2. ✅ Reuse existing delete confirmation modal
+3. ✅ Wire up delete logic for file filters
+4. ✅ Handle edge case: deleting active filter (clears active ID, filtering continues with current input)
+5. ✅ Add proper ARIA labels for accessibility (`aria-label` on all buttons and inputs)
+6. ✅ Polish styling to match content/tag filters (inline buttons, active highlighting with bold + accent color)
+7. ✅ Fix TypeScript type errors in file sorting and delete logic
+8. ✅ Test: Delete saved filter, verify it's removed
+9. ✅ Test: Delete active filter, verify filtering continues but active indicator removed
+10. ✅ Test: Full workflow from adding to deleting filters
 
 **Deliverable:** Production-ready file filter feature with delete functionality
 
-**Implemented by:** [commit-hash](link)
+**Implemented by:** 
+- [59d5272](https://github.com/ErikaRS/task-list-kanban/commit/59d5272) - Initial delete functionality
+- Type safety improvements and polish in current session
 
 ---
 

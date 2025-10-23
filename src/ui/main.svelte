@@ -47,7 +47,10 @@
 			if (aIsLast && !bIsLast) return -1;
 			if (bIsLast && !aIsLast) return 1;
 			
-			const comparison = aParts[i].localeCompare(bParts[i]);
+			const aPart = aParts[i];
+			const bPart = bParts[i];
+			if (aPart === undefined || bPart === undefined) continue;
+			const comparison = aPart.localeCompare(bPart);
 			if (comparison !== 0) return comparison;
 		}
 		
@@ -252,18 +255,21 @@
 	function confirmDelete() {
 		if (!filterToDelete) return;
 		
-		const wasActive = filterToDelete.type === 'content' 
-			? activeContentFilterId === filterToDelete.id
-			: filterToDelete.type === 'tag'
-			? activeTagFilterId === filterToDelete.id
-			: activeFileFilterId === filterToDelete.id;
+		const filterId = filterToDelete.id;
+		const filterType = filterToDelete.type;
 		
-		$settingsStore.savedFilters = savedFilters.filter(f => f.id !== filterToDelete.id);
+		const wasActive = filterType === 'content' 
+			? activeContentFilterId === filterId
+			: filterType === 'tag'
+			? activeTagFilterId === filterId
+			: activeFileFilterId === filterId;
+		
+		$settingsStore.savedFilters = savedFilters.filter(f => f.id !== filterId);
 		
 		if (wasActive) {
-			if (filterToDelete.type === 'content') {
+			if (filterType === 'content') {
 				activeContentFilterId = undefined;
-			} else if (filterToDelete.type === 'tag') {
+			} else if (filterType === 'tag') {
 				activeTagFilterId = undefined;
 			} else {
 				activeFileFilterId = undefined;
@@ -428,9 +434,9 @@
 						class="inline-action-btn" 
 						disabled={filterText.trim() === "" || contentFilterExists}
 						on:click={addContentFilter}
-						aria-label="Add filter"
+						aria-label="Save filter"
 					>
-						Add
+						Save
 					</button>
 					<button 
 						class="inline-action-btn" 
@@ -507,9 +513,9 @@
 						class="inline-action-btn" 
 						disabled={fileFilter.trim() === "" || fileFilterExists}
 						on:click={addFileFilter}
-						aria-label="Add filter"
+						aria-label="Save filter"
 					>
-						Add
+						Save
 					</button>
 					<button 
 						class="inline-action-btn" 

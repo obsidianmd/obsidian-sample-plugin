@@ -107,9 +107,9 @@
 			class="inline-action-btn" 
 			disabled={addButtonDisabled} 
 			on:click={onAddClick}
-			aria-label="Add filter"
+			aria-label="Save filter"
 		>
-			Add
+			Save
 		</button>
 		<button 
 			class="inline-action-btn" 

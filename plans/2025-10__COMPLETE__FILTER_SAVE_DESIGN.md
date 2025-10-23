@@ -31,7 +31,7 @@ Users want to save their filter configurations (both content and tag filters) so
 │   • "review"                        [×] │
 │                                         │
 │ ┌─────────────────────────────────────┐ │
-│ │ Type to search...      [Add] [Clear]│ │  ← Native input with inline action buttons
+│ │ Type to search...      [Save] [Clear]│ │  ← Native input with inline action buttons
 │ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
@@ -45,8 +45,8 @@ Users want to save their filter configurations (both content and tag filters) so
   - Each filter is a clickable button that populates the input
   - Active filter (currently in use) shown in **bold + accent color**
   - Each filter has a [×] delete button
-- **Inline action buttons**: [Add] and [Clear] buttons positioned on the right inside the input box
-  - **Add button**: Disabled when input is empty or filter already exists
+- **Inline action buttons**: [Save] and [Clear] buttons positioned on the right inside the input box
+- **Save button**: Disabled when input is empty or filter already exists
   - **Clear button**: Disabled when filter is empty
 
 #### Tag Filter Box
@@ -60,7 +60,7 @@ Users want to save their filter configurations (both content and tag filters) so
 │   • docs                            [×] │
 │                                         │
 │ ┌─────────────────────────────────────┐ │
-│ │ [frontend][x] [bug][x]  [Add][Clear]│ │  ← Multi-select with inline action buttons
+│ │ [frontend][x] [bug][x]  [Save][Clear]│ │  ← Multi-select with inline action buttons
 │ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
@@ -72,8 +72,8 @@ Users want to save their filter configurations (both content and tag filters) so
   - Each filter is a clickable button that loads those tags
   - Active filter (currently in use) shown in **bold + accent color**
   - Each filter has a [×] delete button
-- **Inline action buttons**: [Add] and [Clear] buttons positioned on the right inside the select box
-  - **Add button**: Disabled when no tags selected or filter already exists
+- **Inline action buttons**: [Save] and [Clear] buttons positioned on the right inside the select box
+- **Save button**: Disabled when no tags selected or filter already exists
   - **Clear button**: Disabled when no tags are selected
 
 ### Data Model
@@ -134,7 +134,7 @@ interface SettingValues {
 
 ### 2. Saving Filters
 
-**Add Button Behavior:**
+**Save Button Behavior:**
 - Always visible (provides stable layout)
 - Disabled (grayed out) when:
   - Content filter: input is empty OR filter already exists
@@ -166,7 +166,7 @@ interface SettingValues {
 - Users can manually edit filter values at any time
 - The active filter indicator updates if the new values match a different saved filter
 - If values don't match any saved filter, no filter is highlighted as active
-- Users can save the current filter values as a new saved filter using the Add button
+- Users can save the current filter values as a new saved filter using the Save button
 
 ### 4. Deleting Saved Filters
 
@@ -206,7 +206,7 @@ Or for tag filters:
 - If the deleted filter was currently active:
   - Filtering continues with current values
   - "Using saved" indicator is removed
-  - Filter is now treated as unsaved (shows [Add] button)
+  - Filter is now treated as unsaved (shows [Save] button)
 - Collapsible section remains open after deletion
 
 ### 5. Persistence
@@ -239,7 +239,7 @@ kanban_plugin: '{"columns":["todo","in-progress","done"],...,"savedFilters":[{"i
 1. ✅ Add `SavedFilter`, `ContentValue`, `TagValue` types to settings store
 2. ✅ Update `parseSettingsString` and `toSettingsString` to handle `savedFilters` array
 3. ✅ Add state to track saved filters in main.svelte
-4. ✅ Add simple [Add] button below content filter input (visible when text entered)
+4. ✅ Add simple [Save] button below content filter input (visible when text entered)
 5. ✅ Implement Add logic: create new SavedFilter, add to list, persist to frontmatter
 6. ✅ Modify content filter dropdown to show saved filters (just text, no [×] yet)
 7. ✅ Implement selection: clicking saved filter loads it into input
