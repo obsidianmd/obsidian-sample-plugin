@@ -36,6 +36,53 @@ npm run version
 ```
 Automated script that updates version in manifest.json and versions.json, then stages the files for commit.
 
+### Commit Message Standards
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for clear, structured commit messages.
+
+**Format:** `<type>[optional scope]: <description>`
+
+**Common Types:**
+- `feat:` - New feature (MINOR version bump)
+- `fix:` - Bug fix (PATCH version bump)
+- `docs:` - Documentation changes
+- `refactor:` - Code refactoring without behavior change
+- `test:` - Adding or updating tests
+- `chore:` - Maintenance tasks (dependencies, config)
+- `perf:` - Performance improvements
+- `style:` - Code style/formatting changes
+
+**Breaking Changes:** Add `!` after type/scope to indicate breaking changes (MAJOR version bump)
+- Example: `feat!: redesign settings API`
+- Or use `BREAKING CHANGE:` footer in commit body
+
+**AI Assistance Attribution:**
+- **REQUIRED**: All commits created with AI assistance MUST include attribution in the commit body
+- Add a blank line after the description, then add: `Created in collaboration with Amp (https://ampcode.com)`
+- This applies to ALL commits, not just PRs
+
+**Examples:**
+```
+feat: add column reordering via drag and drop
+
+Created in collaboration with Amp (https://ampcode.com)
+```
+
+```
+fix(parser): handle special characters in tag names
+
+Fixed an issue where tags containing parentheses or quotes
+would break the parser.
+
+Created in collaboration with Amp (https://ampcode.com)
+```
+
+```
+docs: update installation instructions
+```
+
+Full specification: https://www.conventionalcommits.org/en/v1.0.0/
+
 ### Release Process
 
 1. **Run build & tests** to ensure everything works:
@@ -46,10 +93,10 @@ Automated script that updates version in manifest.json and versions.json, then s
 
 2. **Update version** in package.json, manifest.json, and versions.json (use semver)
 
-3. **Commit the version change**:
+3. **Commit the version change** (using conventional commit format):
    ```bash
    git add package.json manifest.json versions.json
-   git commit -m "Bump version to X.Y.Z"
+   git commit -m "chore: bump version to X.Y.Z"
    ```
 
 4. **Create and push tag**:
