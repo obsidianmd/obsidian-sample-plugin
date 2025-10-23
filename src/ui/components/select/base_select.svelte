@@ -99,14 +99,15 @@
 		--multi-item-height="auto"
 		--multi-item-outline="var(--border-width) solid var(--pill-border-color)"
 		--multi-item-padding="var(--pill-padding-y) var(--pill-padding-x)"
-		--multi-select-input-padding="var(--size-4-2) 120px var(--size-4-2) var(--size-4-2)"
+		--multi-select-input-padding="var(--size-4-2)"
 		--multi-select-input-margin="var(--size-2-2) var(--size-4-4) var(--size-2-2) var(--size-2-2)"
 		--input-color="var(--text-normal)"
 		--placeholder-color="var(--text-muted)"
 	></Select>
-	<div class="inline-actions">
+	</div>
+	<div class="filter-actions">
 		<button 
-			class="inline-action-btn" 
+			class="filter-action-btn save-btn" 
 			disabled={addButtonDisabled} 
 			on:click={onAddClick}
 			aria-label="Save filter"
@@ -114,14 +115,13 @@
 			Save
 		</button>
 		<button 
-			class="inline-action-btn" 
+			class="filter-action-btn clear-btn" 
 			disabled={clearButtonDisabled} 
 			on:click={onClearClick}
 			aria-label="Clear filter"
 		>
 			Clear
 		</button>
-	</div>
 	</div>
 </div>
 
@@ -203,39 +203,30 @@
 		}
 	}
 
-	.select-wrapper {
-		position: relative;
-	}
-
-	.inline-actions {
-		position: absolute;
-		right: var(--size-4-1);
-		top: 50%;
-		transform: translateY(-50%);
+	.filter-actions {
 		display: flex;
 		gap: var(--size-4-2);
-		z-index: 10;
+		margin-top: var(--size-4-2);
 	}
 
-	.inline-action-btn {
-		padding: var(--size-2-1) var(--size-4-2);
-		border: none;
+	.filter-action-btn {
+		padding: var(--size-2-2) var(--size-4-3);
 		border-radius: var(--radius-s);
 		cursor: pointer;
-		font-size: var(--font-ui-smaller);
-		white-space: nowrap;
+		font-size: var(--font-ui-small);
 		transition: background 150ms ease, opacity 150ms ease;
-
-		&:first-child {
+		
+		&.save-btn {
 			background: var(--interactive-accent);
 			color: var(--text-on-accent);
+			border: none;
 
 			&:hover:not(:disabled) {
 				background: var(--interactive-accent-hover);
 			}
 		}
 
-		&:last-child {
+		&.clear-btn {
 			background: transparent;
 			color: var(--text-muted);
 			border: 1px solid var(--background-modifier-border);

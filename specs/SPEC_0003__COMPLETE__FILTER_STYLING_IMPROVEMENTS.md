@@ -1,6 +1,5 @@
 # Filter Styling Improvements
 Status: COMPLETE
-Implemented: 2025-10
 
 ## Summary
 Transformed filter controls from a horizontal collapsible panel into a modern, resizable sidebar. Improved visual hierarchy, spacing, and interactive feedback while maintaining simplicity and consistency with the rest of the UI.
@@ -126,7 +125,12 @@ Add ability to deselect active saved filter by clicking it again, which clears t
 
 **Deliverable:** Click active saved filter → input clears and filter deactivates
 
-**Implemented by:** [TBD]
+**Implemented by:** [4be8e7a](https://github.com/ErikaRS/task-list-kanban/commit/4be8e7a)
+
+---
+
+All phases complete. Filter sidebar now supports collapsing, resizing, and full toggle deselect functionality.
+Implemented: 2025-10
 
 ## Future Enhancements
 
