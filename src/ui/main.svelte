@@ -30,6 +30,30 @@
 		return acc;
 	}, new Set<string>());
 
+	// Collect and sort available file paths for autocomplete
+	// Note: The native <datalist> autocomplete performs substring matching on the full path,
+	// so typing "a/b" will match "apple/banana" or "data/backup", not just paths with those exact segments.
+	// This is browser behavior and may show multiple unrelated paths with matching substrings.
+	$: availableFiles = [...new Set($tasksStore.map(task => task.path))].sort((a, b) => {
+		const aParts = a.split('/');
+		const bParts = b.split('/');
+		const minLength = Math.min(aParts.length, bParts.length);
+		
+		for (let i = 0; i < minLength; i++) {
+			// If one path ends here and the other continues, shorter (file) comes first
+			const aIsLast = (i === aParts.length - 1);
+			const bIsLast = (i === bParts.length - 1);
+			
+			if (aIsLast && !bIsLast) return -1;
+			if (bIsLast && !aIsLast) return 1;
+			
+			const comparison = aParts[i].localeCompare(bParts[i]);
+			if (comparison !== 0) return comparison;
+		}
+		
+		return aParts.length - bParts.length;
+	});
+
 	let selectedTags: string[] = [];
 	$: selectedTagsSet = new Set(selectedTags);
 
@@ -393,6 +417,7 @@
 					type="search"
 					bind:value={fileFilter}
 					placeholder="Type to search files..."
+					list="file-paths"
 					aria-label="Filter by file path"
 				/>
 				<div class="inline-actions">
@@ -405,6 +430,13 @@
 						Clear
 					</button>
 				</div>
+				{#if availableFiles.length > 0}
+					<datalist id="file-paths">
+						{#each availableFiles as filePath}
+							<option value={filePath}>{filePath}</option>
+						{/each}
+					</datalist>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -473,7 +505,7 @@
 			margin-bottom: var(--size-4-4);
 			display: grid;
 			gap: 120px;
-			grid-template-columns: 3fr 3fr 2fr;
+			grid-template-columns: 1fr 1fr 1fr;
 
 			.text-filter {
 				display: flex;
