@@ -248,26 +248,26 @@ kanban_plugin: '{"columns":[...],"savedFilters":[{"id":"uuid-1","file":{"filepat
 
 ---
 
-### Phase 4: Save & Load Filters
+### Phase 4: Save & Load Filters ✅ COMPLETE
 **Goal:** User can save file filters and load them from saved list
 
-1. ☐ Add `FileValue` interface with `filepaths: string[]` to settings types
-2. ☐ Add `file?: FileValue` to `SavedFilter` interface
-3. ☐ Update `parseSettingsString` and `toSettingsString` to handle `SavedFilter.file`
-4. ☐ Add [Add] button to file filter input
-5. ☐ Wire up Add button to create new `SavedFilter` with `FileValue` (single-element array)
-6. ☐ Add saved filters collapsible section above input
-7. ☐ Display saved file filters in section (show file path as button text)
-8. ☐ Implement click to load saved filter
-9. ☐ Add `activeFileFilterId` state and auto-detect/highlight active filter
-10. ☐ Update disabled state logic for Add button (when empty or exists)
-11. ☐ Test: Add filter, verify it appears in saved section
-12. ☐ Test: Click saved filter, verify it loads into input and applies
-13. ☐ Test: Close/reopen board, verify saved filters persist
+1. ✅ Add `FileValue` interface with `filepaths: string[]` to settings types
+2. ✅ Add `file?: FileValue` to `SavedFilter` interface
+3. ✅ Update `parseSettingsString` and `toSettingsString` to handle `SavedFilter.file`
+4. ✅ Add [Add] button to file filter input
+5. ✅ Wire up Add button to create new `SavedFilter` with `FileValue` (single-element array)
+6. ✅ Add saved filters collapsible section above input
+7. ✅ Display saved file filters in section (show file path as button text)
+8. ✅ Implement click to load saved filter
+9. ✅ Add `activeFileFilterId` state and auto-detect/highlight active filter
+10. ✅ Update disabled state logic for Add button (when empty or exists)
+11. ✅ Test: Add filter, verify it appears in saved section
+12. ✅ Test: Click saved filter, verify it loads into input and applies
+13. ✅ Test: Close/reopen board, verify saved filters persist
 
 **Deliverable:** Working save/load for file filters
 
-**Implemented by:** [commit-hash](link)
+**Implemented by:** [59d5272](https://github.com/ErikaRS/task-list-kanban/commit/59d5272)
 
 ---
 
