@@ -29,6 +29,3 @@ tmp_specs/
 
 # beads
 .beads/
-
-# AI agent configuration
-AGENTS.md
