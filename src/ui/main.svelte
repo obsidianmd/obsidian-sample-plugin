@@ -14,7 +14,9 @@
 	import type { TaskActions } from "./tasks/actions";
 	import { type SettingValues, VisibilityOption } from "./settings/settings_store";
 	import { onMount } from "svelte";
+	import type { App } from "obsidian";
 
+	export let app: App;
 	export let tasksStore: Writable<Task[]>;
 	export let taskActions: TaskActions;
 	export let openSettings: () => Promise<void>;
@@ -612,6 +614,7 @@
 		<div>
 			{#if showUncategorizedColumn}
 			<Column
+				{app}
 				column={"uncategorised"}
 				hideOnEmpty={false}
 				tasks={tasksByColumn["uncategorised"]}
@@ -624,6 +627,7 @@
 			{/if}
 			{#each columns as column}
 				<Column
+					{app}
 					{column}
 					tasks={tasksByColumn[column] ?? []}
 					{taskActions}
@@ -635,6 +639,7 @@
 			{/each}
 			{#if showDoneColumn}
 			<Column
+				{app}
 				column="done"
 				hideOnEmpty={false}
 				tasks={tasksByColumn["done"] ?? []}

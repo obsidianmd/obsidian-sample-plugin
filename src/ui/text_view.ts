@@ -136,6 +136,7 @@ ${parsed.body}
 		this.component = new Main({
 			target: this.contentEl,
 			props: {
+				app: this.app,
 				tasksStore: this.tasksStore,
 				taskActions: this.taskActions,
 				columnTagTableStore: this.columnTagTableStore,

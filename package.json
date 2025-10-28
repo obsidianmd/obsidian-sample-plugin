@@ -17,7 +17,6 @@
 		"@tsconfig/svelte": "^5.0.4",
 		"@types/crypto-js": "^4.2.2",
 		"@types/node": "^20.12.12",
-		"@types/showdown": "^2.0.6",
 		"@typescript-eslint/eslint-plugin": "7.10.0",
 		"@typescript-eslint/parser": "7.10.0",
 		"builtin-modules": "4.0.0",
@@ -37,7 +36,6 @@
 		"front-matter": "^4.0.2",
 		"gray-matter": "^4.0.3",
 		"sass": "^1.77.2",
-		"showdown": "^2.1.0",
 		"svelte-select": "^5.8.3",
 		"zod": "^3.23.8"
 	}

@@ -4,20 +4,16 @@
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
 	import TaskMenu from "./task_menu.svelte";
-	import { Converter } from "showdown";
+	import { Component, MarkdownRenderer, type App } from "obsidian";
 	import type { Readable } from "svelte/store";
+	import { onDestroy, onMount } from "svelte";
 
+	export let app: App;
 	export let task: Task;
 	export let taskActions: TaskActions;
 	export let columnTagTableStore: Readable<ColumnTagTable>;
 	export let showFilepath: boolean;
 	export let consolidateTags: boolean;
-
-	const mdConverted = new Converter({
-		simplifiedAutoLink: true,
-		openLinksInNewWindow: true,
-		emoji: true,
-	});
 
 	function handleContentBlur() {
 		isEditing = false;
@@ -61,13 +57,16 @@
 	}
 
 	let textAreaEl: HTMLTextAreaElement | undefined;
+	let previewContainerEl: HTMLDivElement | undefined;
+	let markdownComponent: Component | undefined;
 
 	function handleFocus(e?: MouseEvent) {
-		const target = (e?.target || e?.currentTarget) as
-			| HTMLElement
-			| undefined;
-		if (target?.tagName.toLowerCase() === "a") {
-			return;
+		// Check if the click was on a link by traversing the event path
+		const path = e?.composedPath() || [];
+		for (const element of path) {
+			if (element instanceof HTMLElement && element.tagName.toLowerCase() === "a") {
+				return;
+			}
 		}
 
 		isEditing = true;
@@ -77,9 +76,115 @@
 		}, 100);
 	}
 
-	$: mdContent = mdConverted.makeHtml(
-		task.content + (task.blockLink ? ` ^${task.blockLink}` : ""),
-	);
+	// Render markdown content using Obsidian's MarkdownRenderer
+	async function renderMarkdown() {
+		if (!previewContainerEl) return;
+
+		// Unload previous component before re-rendering
+		if (markdownComponent) {
+			markdownComponent.unload();
+		}
+
+		// Clear the container
+		previewContainerEl.empty();
+
+		// Create new component for this task
+		markdownComponent = new Component();
+
+		// Render the markdown with task.path as sourcePath for proper link resolution
+		// Convert <br /> tags back to newlines for proper markdown parsing
+		const contentToRender = (task.content + (task.blockLink ? ` ^${task.blockLink}` : ""))
+			.replaceAll("<br />", "\n");
+		await MarkdownRenderer.render(
+			app,
+			contentToRender,
+			previewContainerEl,
+			task.path,
+			markdownComponent
+		);
+
+		// Set up event handlers after rendering
+		setupLinkHandlers();
+		postProcessRenderedContent();
+	}
+
+	// Set up click and hover handlers for internal links
+	function setupLinkHandlers() {
+		if (!previewContainerEl) return;
+
+		const internalLinks = previewContainerEl.querySelectorAll("a.internal-link");
+		
+		internalLinks.forEach((link) => {
+			const anchorEl = link as HTMLAnchorElement;
+			
+			// Click handler
+			anchorEl.addEventListener("click", (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				const linkTarget = anchorEl.getAttribute("data-href");
+				if (linkTarget && app) {
+					app.workspace.openLinkText(
+						linkTarget,
+						task.path,
+						true, // Open in new tab
+					);
+				}
+			});
+
+			// Hover handler for preview
+			anchorEl.addEventListener("mouseover", (e) => {
+				const linkTarget = anchorEl.getAttribute("data-href");
+				if (linkTarget && app && previewContainerEl) {
+					app.workspace.trigger("hover-link", {
+						event: e,
+						source: "kanban-view",
+						hoverParent: previewContainerEl,
+						targetEl: anchorEl,
+						linktext: linkTarget,
+						sourcePath: task.path,
+					});
+				}
+			});
+		});
+	}
+
+	// Post-process rendered content for safety and compatibility
+	function postProcessRenderedContent() {
+		if (!previewContainerEl) return;
+
+		// External links: open in new tab with security attributes
+		previewContainerEl.querySelectorAll('a:not(.internal-link)').forEach((a) => {
+			const anchor = a as HTMLAnchorElement;
+			anchor.target = '_blank';
+			anchor.rel = 'noopener noreferrer';
+			// Prevent link activation from triggering edit mode
+			anchor.addEventListener('click', (e) => e.stopPropagation());
+			anchor.addEventListener('keypress', (e) => e.stopPropagation());
+		});
+
+		// Disable checkboxes to prevent unintended file edits
+		previewContainerEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+			const el = cb as HTMLInputElement;
+			el.disabled = true;
+		});
+
+		// Remove heavy/interactive embeds that don't work well in small cards
+		previewContainerEl.querySelectorAll('iframe, audio, video').forEach((el) => {
+			el.remove();
+		});
+	}
+
+	// Re-render when task content changes
+	$: if (task && !isEditing && previewContainerEl) {
+		renderMarkdown();
+	}
+
+	// Cleanup on destroy
+	onDestroy(() => {
+		if (markdownComponent) {
+			markdownComponent.unload();
+		}
+	});
 
 	$: {
 		if (textAreaEl) {
@@ -118,13 +223,12 @@
 			{:else}
 				<div
 					role="button"
-					class="content-preview"
+					class="content-preview markdown-rendered"
+					bind:this={previewContainerEl}
 					on:mouseup={handleFocus}
 					on:keypress={handleOpenKeypress}
 					tabindex="0"
-				>
-					{@html mdContent}
-				</div>
+				/>
 			{/if}
 		</div>
 		<TaskMenu {task} {taskActions} {columnTagTableStore} />
@@ -212,5 +316,19 @@
 	:global(.task-content *) {
 		word-break: break-word;
 		margin: 0;
+	}
+
+	:global(.task-content img) {
+		max-width: 100%;
+		max-height: 160px;
+		object-fit: contain;
+	}
+
+	:global(.task-content code) {
+		white-space: pre-wrap;
+	}
+
+	:global(.task-content input[type="checkbox"]) {
+		pointer-events: none;
 	}
 </style>

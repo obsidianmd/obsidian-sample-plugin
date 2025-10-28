@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Menu, setIcon } from "obsidian";
+	import { Menu, setIcon, type App } from "obsidian";
 	import {
 		type ColumnTag,
 		type DefaultColumns,
@@ -14,6 +14,7 @@
 	import { isDraggingStore } from "../dnd/store";
 	import type { Readable } from "svelte/store";
 
+	export let app: App;
 	export let column: ColumnTag | DefaultColumns;
 	export let hideOnEmpty: boolean = false;
 	export let tasks: Task[];
@@ -137,14 +138,15 @@
 		<div class="tasks-wrapper">
 			<div class="tasks">
 				{#each sortedTasks as task}
-					<TaskComponent
-						{task}
-						{taskActions}
-						{columnTagTableStore}
-						{showFilepath}
-						{consolidateTags}
-					/>
-				{/each}
+				<TaskComponent
+				{app}
+				{task}
+				{taskActions}
+				{columnTagTableStore}
+				{showFilepath}
+				 {consolidateTags}
+				 />
+			{/each}
 				{#if isColumnTag(column, columnTagTableStore)}
 					<button
 						on:click={async (e) => {
