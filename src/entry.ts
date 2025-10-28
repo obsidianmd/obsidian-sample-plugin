@@ -5,6 +5,12 @@ export default class Base extends Plugin {
 	async onload() {
 		this.registerView(KANBAN_VIEW_NAME, (leaf) => new KanbanView(leaf));
 
+		// Register hover-link source for internal link previews in task cards
+		this.registerHoverLinkSource("kanban-view", {
+			display: "Kanban",
+			defaultMod: false,
+		});
+
 		this.switchToKanbanAfterLoad();
 
 		this.registerEvent(
