@@ -32,19 +32,17 @@
 	}
 </script>
 
-{#if tags.length}
-	<BaseSelect
-		bind:this={baseSelectRef}
-		items={tags.map((tag) => ({ label: tag, value: tag }))}
-		bind:value
-		label="Filter by tag"
-		{savedFilters}
-		{loadSavedFilter}
-		{addButtonDisabled}
-		{onAddClick}
-		{clearButtonDisabled}
-		onClearClick={handleClear}
-		{activeFilterId}
-		{onDeleteClick}
-	/>
-{/if}
+<BaseSelect
+	bind:this={baseSelectRef}
+	items={tags.map((tag) => ({ label: tag, value: tag }))}
+	bind:value
+	label="Filter by tag"
+	{savedFilters}
+	{loadSavedFilter}
+	{addButtonDisabled}
+	{onAddClick}
+	{clearButtonDisabled}
+	onClearClick={handleClear}
+	{activeFilterId}
+	{onDeleteClick}
+/>
