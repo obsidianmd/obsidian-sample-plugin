@@ -26,12 +26,12 @@
 Before using this plugin, you need to have Ollama installed and running on your system:
 
 1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai)
-2. **Pull a Model**: Run `ollama pull qwen3:8b` (or your preferred model)
+2. **Pull a Model**: Run `ollama pull gpt-oss:latest` (or your preferred model)
 3. **Start Ollama**: The server should be running at `http://localhost:11434`
 
 ### Recommended Models
 
-- **qwen3:8b** - Great balance of speed and quality
+- **gpt-oss:latest** - Great balance of speed and quality (default)
 - **llama3.2:latest** - Excellent for summarization
 - **mistral:latest** - Fast and efficient
 
@@ -91,7 +91,7 @@ If you need to stop the summary generation:
 Access plugin settings via `Settings > Summarize This`:
 
 1. **Local Server URL**: The URL where Ollama is running (default: `http://localhost:11434`)
-2. **Default Model**: The Ollama model to use (default: `qwen3:8b`)
+2. **Default Model**: The Ollama model to use (default: `gpt-oss:latest`)
 3. **Available Models**: Click "Refresh Models" to see all installed models
 
 ### Testing Your Connection
@@ -172,7 +172,7 @@ The project uses:
 - Test the connection using the checkmark button
 
 **"No models found"**
-- Install a model: `ollama pull qwen3:8b`
+- Install a model: `ollama pull gpt-oss:latest`
 - Click "Refresh Models" in plugin settings
 
 **Summary is slow or incomplete**

@@ -7,7 +7,7 @@ import { Plugin, TFile, PluginSettingTab, Setting, Modal, Notice, App, MenuItem 
 interface SummarizeThisPluginSettings {
 	/** The URL of the local Ollama server (e.g., http://localhost:11434) */
 	serverUrl: string;
-	/** The default Ollama model to use for generating summaries (e.g., qwen3:8b, llama3.2:latest) */
+	/** The default Ollama model to use for generating summaries (e.g., gpt-oss:latest, llama3.2:latest) */
 	defaultModel: string;
 }
 
@@ -17,7 +17,7 @@ interface SummarizeThisPluginSettings {
  */
 const DEFAULT_SETTINGS: SummarizeThisPluginSettings = {
 	serverUrl: 'http://localhost:11434',
-	defaultModel: 'qwen3:8b'
+	defaultModel: 'gpt-oss:latest'
 };
 
 /**
