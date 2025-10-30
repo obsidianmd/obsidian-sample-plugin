@@ -1,24 +1,38 @@
 {
 	"name": "obsidian-sample-plugin",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Summarize This - An Obsidian plugin that summarizes notes using a local Ollama LLM server",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint main.ts --ext .ts",
+		"lint:fix": "eslint main.ts --ext .ts --fix",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": [
+		"obsidian",
+		"plugin",
+		"summarize",
+		"ollama",
+		"llm",
+		"ai"
+	],
+	"author": "Kevin M. Butler",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/agileresearchservices/obsidian-sample-plugin"
+	},
 	"devDependencies": {
-		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
-		"builtin-modules": "3.3.0",
-		"esbuild": "0.17.3",
+		"@types/node": "^20.11.16",
+		"@typescript-eslint/eslint-plugin": "^7.0.1",
+		"@typescript-eslint/parser": "^7.0.1",
+		"builtin-modules": "^3.3.0",
+		"esbuild": "^0.20.1",
+		"eslint": "^8.56.0",
 		"obsidian": "latest",
-		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"tslib": "^2.6.2",
+		"typescript": "^5.3.3"
 	}
 }

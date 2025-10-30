@@ -1,7 +1,10 @@
 {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "env": { "node": true },
+    "env": {
+      "node": true,
+      "es2021": true
+    },
     "plugins": [
       "@typescript-eslint"
     ],
@@ -9,15 +12,44 @@
       "eslint:recommended",
       "plugin:@typescript-eslint/eslint-recommended",
       "plugin:@typescript-eslint/recommended"
-    ], 
+    ],
     "parserOptions": {
-        "sourceType": "module"
+        "ecmaVersion": 2021,
+        "sourceType": "module",
+        "project": "./tsconfig.json"
     },
     "rules": {
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
+      "@typescript-eslint/no-unused-vars": ["error", { "args": "none", "argsIgnorePattern": "^_" }],
       "@typescript-eslint/ban-ts-comment": "off",
-      "no-prototype-builtins": "off",
-      "@typescript-eslint/no-empty-function": "off"
-    } 
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/explicit-function-return-type": ["warn", { "allowExpressions": true }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/naming-convention": [
+        "warn",
+        {
+          "selector": "default",
+          "format": ["camelCase"]
+        },
+        {
+          "selector": "variable",
+          "format": ["camelCase", "UPPER_CASE", "PascalCase"]
+        },
+        {
+          "selector": "parameter",
+          "format": ["camelCase"],
+          "leadingUnderscore": "allow"
+        },
+        {
+          "selector": "typeLike",
+          "format": ["PascalCase"]
+        },
+        {
+          "selector": "property",
+          "format": null
+        }
+      ],
+      "no-console": "off",
+      "no-prototype-builtins": "off"
+    }
   }

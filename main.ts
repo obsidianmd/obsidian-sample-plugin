@@ -1,13 +1,20 @@
 import { Plugin, TFile, PluginSettingTab, Setting, Modal, Notice, App, MenuItem } from 'obsidian';
 
 /**
- * Settings interface for the SummarizeThis plugin
+ * Configuration settings for the Summarize This plugin
+ * @interface SummarizeThisPluginSettings
  */
 interface SummarizeThisPluginSettings {
+	/** The URL of the local Ollama server (e.g., http://localhost:11434) */
 	serverUrl: string;
+	/** The default Ollama model to use for generating summaries (e.g., qwen3:8b, llama3.2:latest) */
 	defaultModel: string;
 }
 
+/**
+ * Default settings for the plugin
+ * @constant
+ */
 const DEFAULT_SETTINGS: SummarizeThisPluginSettings = {
 	serverUrl: 'http://localhost:11434',
 	defaultModel: 'qwen3:8b'
@@ -15,18 +22,48 @@ const DEFAULT_SETTINGS: SummarizeThisPluginSettings = {
 
 /**
  * Default prompt template for generating summaries
+ * This prompt instructs the LLM to create structured summaries with an overview, key information, and conclusion
+ * @constant
  */
 const DEFAULT_PROMPT = `You are a helpful assistant that summarizes notes. Think step by step to identify the main themes and key information before drafting the summary. Create an overview, key information, and a conclusion.`;
 
 /**
- * Modal for customizing the prompt before generating a summary
+ * Interface for preset prompt templates
+ * @interface PresetPrompt
+ */
+interface PresetPrompt {
+	/** Unique identifier for the preset */
+	id: string;
+	/** Display label for the preset button */
+	label: string;
+	/** The actual prompt text to use */
+	prompt: string;
+	/** Icon/emoji to display on the preset button */
+	icon: string;
+}
+
+/**
+ * Modal dialog for customizing the prompt before generating a summary
+ * Provides a rich UI with preset templates, examples, and a custom prompt editor
+ * @class PromptModal
+ * @extends {Modal}
  */
 class PromptModal extends Modal {
+  /** Reference to the parent plugin instance */
   private plugin: SummarizeThisPlugin;
+  /** The current prompt text being edited */
   private promptText: string;
+  /** The content of the note to be summarized */
   private content: string;
+  /** The file that will receive the summary */
   private file: TFile;
-  
+
+  /**
+   * Creates a new PromptModal instance
+   * @param {SummarizeThisPlugin} plugin - The parent plugin instance
+   * @param {string} content - The content to be summarized
+   * @param {TFile} file - The file where the summary will be appended
+   */
   constructor(plugin: SummarizeThisPlugin, content: string, file: TFile) {
     super(plugin.app);
     this.plugin = plugin;
@@ -34,8 +71,13 @@ class PromptModal extends Modal {
     this.content = content;
     this.file = file;
   }
-  
-  onOpen() {
+
+  /**
+   * Called when the modal is opened
+   * Builds the entire modal UI including preset buttons, examples, and custom prompt editor
+   * @returns {void}
+   */
+  onOpen(): void {
     const {contentEl} = this;
     contentEl.empty();
     
@@ -149,7 +191,7 @@ class PromptModal extends Modal {
     });
     
     // Preset prompt templates with icons
-    const presetPrompts = [
+    const presetPrompts: PresetPrompt[] = [
       {
         id: "default",
         label: "Default Summary",
@@ -176,7 +218,12 @@ class PromptModal extends Modal {
       }
     ];
     
-    const createPresetButton = (preset: {id: string, label: string, prompt: string, icon: string}) => {
+    /**
+     * Creates a preset button element with hover and click functionality
+     * @param {PresetPrompt} preset - The preset configuration object
+     * @returns {HTMLButtonElement} The created button element
+     */
+    const createPresetButton = (preset: PresetPrompt): HTMLButtonElement => {
       const btn = presetContainer.createEl('button', {
         attr: {
           style: 'display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.7rem; height: auto;'
@@ -284,7 +331,7 @@ class PromptModal extends Modal {
     });
 
     // Add examples
-    examplePrompts.forEach((example, index) => {
+    examplePrompts.forEach((example, _index) => {
       const exampleItem = examplesContainer.createDiv({
         attr: {
           style: 'display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem; margin-bottom: 0.25rem; border: 1px solid var(--background-modifier-border); border-radius: 0.5rem; background: var(--background-primary-alt); cursor: pointer; transition: all 0.2s ease;',
@@ -464,10 +511,22 @@ class PromptModal extends Modal {
   }
 }
 
+/**
+ * Main plugin class for Summarize This
+ * Provides functionality to generate AI-powered summaries of notes using a local Ollama LLM server
+ * @class SummarizeThisPlugin
+ * @extends {Plugin}
+ */
 export default class SummarizeThisPlugin extends Plugin {
-  settings: SummarizeThisPluginSettings;
+  /** Plugin settings instance */
+  settings!: SummarizeThisPluginSettings;
 
-  async onload() {
+  /**
+   * Called when the plugin is loaded
+   * Initializes settings, registers commands, and sets up the UI
+   * @returns {Promise<void>}
+   */
+  async onload(): Promise<void> {
     await this.loadSettings();
     
     // Register the command to summarize the current note
@@ -479,7 +538,7 @@ export default class SummarizeThisPlugin extends Plugin {
     
     // Add editor context menu
     this.registerEvent(
-      this.app.workspace.on('editor-menu', (menu, editor) => {
+      this.app.workspace.on('editor-menu', (menu, _editor) => {
         menu.addItem((item: MenuItem) => {
           item
             .setTitle('Summarize This Note')
@@ -531,24 +590,29 @@ export default class SummarizeThisPlugin extends Plugin {
   }
 
   /**
-   * Loads saved plugin settings or uses defaults
+   * Loads saved plugin settings from disk or initializes with defaults
+   * Merges saved settings with DEFAULT_SETTINGS to ensure all required properties exist
+   * @returns {Promise<void>}
    */
-  async loadSettings() {
+  async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
 
   /**
-   * Saves current plugin settings
+   * Persists current plugin settings to disk
+   * @returns {Promise<void>}
    */
-  async saveSettings() {
+  async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
   }
 
   /**
    * Initiates the note summarization process
-   * Gets the active file and opens the prompt customization modal
+   * Retrieves the active file, reads its content, and opens the prompt customization modal
+   * Shows an error if no file is currently active
+   * @returns {Promise<void>}
    */
-  async summarizeNote() {
+  async summarizeNote(): Promise<void> {
     const file = this.app.workspace.getActiveFile();
     if (!file) {
       new Notice("No active file to summarize");
@@ -569,10 +633,15 @@ export default class SummarizeThisPlugin extends Plugin {
   
   /**
    * Streams a summary from the LLM to the note using Ollama's streaming API
-   * 
-   * @param content - The content to summarize
-   * @param file - The file to append the summary to
-   * @param customPrompt - Optional custom prompt to override default
+   * Displays a persistent notice with a cancel button during generation
+   * Updates the note in real-time as tokens are received from the LLM
+   * Handles errors gracefully and allows user cancellation
+   *
+   * @param {string} content - The note content to summarize
+   * @param {TFile} file - The Obsidian file to append the summary to
+   * @param {string} [customPrompt] - Optional custom prompt to override DEFAULT_PROMPT
+   * @returns {Promise<void>}
+   * @throws {Error} If the API request fails or streaming encounters an error
    */
   async streamSummaryToNote(content: string, file: TFile, customPrompt?: string): Promise<void> {
     // Flag to track if generation has been canceled
@@ -698,11 +767,13 @@ export default class SummarizeThisPlugin extends Plugin {
   }
 
   /**
-   * Non-streaming version of the Ollama query for simpler implementations
-   * 
-   * @param noteContent - The content to send to the LLM
-   * @param customPrompt - Optional custom prompt to override default
-   * @returns The model's response text
+   * Non-streaming version of the Ollama API query
+   * Sends a complete request and waits for the full response
+   * Useful for simple implementations that don't need real-time streaming
+   *
+   * @param {string} noteContent - The note content to send to the LLM
+   * @param {string} [customPrompt] - Optional custom prompt to override DEFAULT_PROMPT
+   * @returns {Promise<string>} The complete model response text, or an error message if the request fails
    */
   async queryOllama(noteContent: string, customPrompt?: string): Promise<string> {
     const promptToUse = customPrompt || DEFAULT_PROMPT;
@@ -732,17 +803,32 @@ export default class SummarizeThisPlugin extends Plugin {
 }
 
 /**
- * Settings tab for configuring the SummarizeThis plugin
+ * Settings tab for configuring the Summarize This plugin
+ * Provides UI for server URL configuration, model selection, and connection testing
+ * @class SummarizeThisPluginSettingTab
+ * @extends {PluginSettingTab}
  */
 class SummarizeThisPluginSettingTab extends PluginSettingTab {
+  /** Reference to the parent plugin instance */
   plugin: SummarizeThisPlugin;
+  /** Cached list of available models from the Ollama server */
   private modelsList: string[] = [];
 
+  /**
+   * Creates a new settings tab instance
+   * @param {App} app - The Obsidian app instance
+   * @param {SummarizeThisPlugin} plugin - The parent plugin instance
+   */
   constructor(app: App, plugin: SummarizeThisPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
 
+  /**
+   * Renders the settings UI
+   * Creates input fields for server URL, default model, and a button to fetch available models
+   * @returns {Promise<void>}
+   */
   async display(): Promise<void> {
     const { containerEl } = this;
     containerEl.empty();
@@ -816,7 +902,15 @@ class SummarizeThisPluginSettingTab extends PluginSettingTab {
     // Try to fetch models on initial load
     this.refreshModelsList(modelsContainer);
   }
-  
+
+  /**
+   * Fetches the list of available models from the Ollama server
+   * Updates the UI with clickable model items that can be selected as the default
+   * Handles errors gracefully and displays appropriate messages
+   *
+   * @param {HTMLDivElement} [container] - Optional container element to render models into
+   * @returns {Promise<void>}
+   */
   async refreshModelsList(container?: HTMLDivElement): Promise<void> {
     try {
       const modelsContainer = container || document.querySelector('.models-list');
