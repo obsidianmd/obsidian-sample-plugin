@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-article-scraper",
+	"name": "Article Scraper",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Scrape article metadata from URLs and create formatted notes with frontmatter.",
+	"author": "armanh3k",
+	"authorUrl": "https://github.com/armanh3k",
 	"isDesktopOnly": false
 }

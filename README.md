@@ -1,94 +1,168 @@
-# Obsidian Sample Plugin
+# Article Scraper for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An Obsidian plugin that automatically extracts metadata from article URLs and creates formatted notes with comprehensive frontmatter.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+-   🔗 **URL Scraping**: Paste any article URL to automatically extract metadata
+-   📋 **Clipboard Support**: Quick command to scrape from clipboard
+-   🎨 **Formatted Templates**: Creates notes with structured frontmatter and sections
+-   🔧 **Customizable Settings**: Configure default values and folder locations
+-   🌐 **Smart Extraction**: Intelligently extracts:
+    -   Title
+    -   Author
+    -   Publication date
+    -   Description
+    -   Site name
+    -   Word count
+    -   And more!
 
-## First time developing plugins?
+## Usage
 
-Quick starting guide for new plugin devs:
+### Method 1: Command Palette
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. Open the Command Palette (`Cmd/Ctrl + P`)
+2. Search for "Scrape article from URL"
+3. Paste the article URL in the modal
+4. Click "Scrape & Create Note"
 
-## Releasing new releases
+### Method 2: From Clipboard
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+1. Copy an article URL to your clipboard
+2. Open the Command Palette (`Cmd/Ctrl + P`)
+3. Search for "Scrape article from clipboard URL"
+4. The plugin will automatically fetch and create the note
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### Method 3: Ribbon Icon
 
-## Adding your plugin to the community plugin list
+-   Click the link icon (🔗) in the left ribbon
+-   Enter the URL in the modal
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## Output Format
 
-## How to use
+The plugin creates notes with the following structure:
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+```markdown
+---
+Published: "2025-11-02"
+Title: Article Title
+Author: Author Name
+Rating:
+Category:
+    - Article
+Topics:
+Read_Status:
+Overview: Article description
+Source: Website Name
+Date_Started: "2025-11-02"
+Date_Finished:
+URL: https://example.com/article
+tags:
+Note_Status: baby
+Word_Count: 1500
+---
 
-## Manually installing the plugin
+#### Tags:
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+## Overview
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+Article description goes here...
 
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+## Quotes
 ```
 
-If you have multiple URLs, you can also do:
+## Settings
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+Configure the plugin in **Settings → Article Scraper**:
+
+-   **Default Category**: Default category for scraped articles (default: "Article")
+-   **Default Read Status**: Initial read status for new articles
+-   **Default Note Status**: Default note status (default: "baby")
+-   **Template Folder**: Folder where article notes will be created (leave empty for vault root)
+
+## Installation
+
+### Manual Installation
+
+1. Download `main.js`, `manifest.json`, and `styles.css` from the latest release
+2. Create a folder: `<vault>/.obsidian/plugins/obsidian-article-scraper/`
+3. Copy the files into the folder
+4. Reload Obsidian
+5. Enable the plugin in Settings → Community Plugins
+
+### Development Installation
+
+1. Clone this repository into your vault's plugins folder:
+    ```bash
+    cd <vault>/.obsidian/plugins/
+    git clone https://github.com/armanh3k/obsidian-article-scraper.git
+    cd obsidian-article-scraper
+    ```
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+3. Build the plugin:
+    ```bash
+    npm run build
+    ```
+4. Reload Obsidian and enable the plugin
+
+## Development
+
+### Prerequisites
+
+-   Node.js v16 or higher
+-   npm
+
+### Build Commands
+
+-   `npm run dev` - Start development build with watch mode
+-   `npm run build` - Production build
+
+### Project Structure
+
+```
+src/
+  settings.ts      # Settings interface and defaults
+  types.ts         # TypeScript type definitions
+  scraper.ts       # Article metadata extraction logic
+  template.ts      # Note template generation
+  modal.ts         # UI modal for URL input
+  settingsTab.ts   # Plugin settings UI
+main.ts            # Plugin entry point
 ```
 
-## API Documentation
+## How It Works
 
-See https://github.com/obsidianmd/obsidian-api
+The plugin uses Obsidian's built-in `requestUrl` API to fetch article content, then parses HTML to extract metadata from:
+
+-   Open Graph tags (`og:title`, `og:description`, etc.)
+-   Twitter Card tags
+-   Standard HTML meta tags
+-   Semantic HTML elements (`<article>`, `<time>`, etc.)
+
+## Privacy & Network Usage
+
+-   This plugin makes network requests only when you explicitly trigger article scraping
+-   No data is collected or transmitted to third parties
+-   All article data is fetched directly from the source URL you provide
+-   The plugin works entirely offline after fetching article content
+
+## Compatibility
+
+-   Works on both desktop and mobile Obsidian
+-   Requires Obsidian v0.15.0 or higher
+-   No additional dependencies required
+
+## Support
+
+Found a bug or have a feature request? Please [open an issue](https://github.com/armanh3k/obsidian-article-scraper/issues) on GitHub.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details
+
+## Credits
+
+Built with the [Obsidian Plugin API](https://github.com/obsidianmd/obsidian-api)
