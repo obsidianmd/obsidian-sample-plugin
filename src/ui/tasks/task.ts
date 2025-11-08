@@ -300,6 +300,7 @@ export class Task {
 	set done(done: true) {
 		this._done = done;
 		this._column = undefined;
+		this._displayStatus = Array.from(this.doneStatusMarkers)[0] ?? "x";
 	}
 
 	private _displayStatus: string;

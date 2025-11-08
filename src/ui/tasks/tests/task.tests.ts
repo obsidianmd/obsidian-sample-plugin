@@ -750,3 +750,77 @@ describe("Task archiving", () => {
 		});
 	});
 });
+
+describe("Task marking as done", () => {
+	const columnTags: ColumnTagTable = {
+		[kebab<ColumnTag>("column")]: "column",
+	};
+
+	describe("done setter updates display status", () => {
+		it("uses first done marker with default markers (xX)", () => {
+			let task: Task | undefined;
+			const taskString = "- [ ] Incomplete task #column";
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+				task.done = true;
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe(undefined);
+			expect(task?.serialise()).toBe("- [x] Incomplete task");
+		});
+
+		it("uses first done marker with custom markers (✓✅)", () => {
+			let task: Task | undefined;
+			const taskString = "- [ ] Incomplete task #column";
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "✓✅", "");
+				task.done = true;
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe(undefined);
+			expect(task?.serialise()).toBe("- [✓] Incomplete task");
+		});
+
+		it("uses first done marker with single custom marker", () => {
+			let task: Task | undefined;
+			const taskString = "- [ ] Incomplete task #column";
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "✅", "");
+				task.done = true;
+			}
+
+			expect(task).toBeTruthy();
+			expect(task?.done).toBe(true);
+			expect(task?.column).toBe(undefined);
+			expect(task?.serialise()).toBe("- [✅] Incomplete task");
+		});
+
+		it("clears column when marking as done", () => {
+			let task: Task | undefined;
+			const taskString = "- [ ] Task in column #column";
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+				task.done = true;
+			}
+
+			expect(task?.column).toBe(undefined);
+			expect(task?.serialise()).not.toContain("#column");
+		});
+
+		it("preserves task content when marking as done", () => {
+			let task: Task | undefined;
+			const taskString = "- [ ] Important task with #tags #column";
+			if (isTrackedTaskString(taskString)) {
+				task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+				task.done = true;
+			}
+
+			expect(task?.content).toBe("Important task with #tags");
+			expect(task?.serialise()).toBe("- [x] Important task with #tags");
+		});
+	});
+});
