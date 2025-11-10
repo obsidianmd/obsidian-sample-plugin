@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
+	"type": "module",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
@@ -15,10 +16,13 @@
 		"@types/node": "^16.11.6",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.25.5",
-		"eslint-plugin-obsidianmd": "0.1.5",
+		"eslint-plugin-obsidianmd": "file:../eslint-plugin",
 		"globals": "14.0.0",
 		"tslib": "2.4.0",
-		"typescript": "^5.8.3"
+		"typescript": "^5.8.3",
+		"typescript-eslint": "8.35.1",
+		"@eslint/js": "9.30.1",
+		"jiti": "2.6.1"
 	},
 	"dependencies": {
 		"obsidian": "latest"
