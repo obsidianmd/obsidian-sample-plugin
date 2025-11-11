@@ -1,46 +1,56 @@
 # Proper Release Steps
 
-## Why Merge to Main First?
+## Why Merge to Master First?
 
-Releases should be created from the main branch because:
-- BRAT and users expect stable code on main
+Releases should be created from the master branch because:
+- BRAT and users expect stable code on master
 - Tags should represent official releases, not feature branch work
 - Makes the repository history cleaner
 - Follows standard Git workflow conventions
 
 ## Step-by-Step Release Process
 
-### Step 1: Merge Feature Branch to Main
+### Step 1: Merge Feature Branch to Master ✅ DONE!
+
+**Your feature branch has already been merged to master via PR #1!** 🎉
+
+You can verify by running:
+```bash
+git fetch origin master:master
+git log master --oneline -5
+```
+
+If you need to merge future branches:
 
 **Option A: Create Pull Request (Recommended)**
 1. Go to https://github.com/btromm/math-referencer
-2. Create a Pull Request from `claude/obsidian-plugin-feature-011CV1vsz1jk81vTuEaFdH5j` to `main`
+2. Create a Pull Request from your feature branch to `master`
 3. Review the changes
 4. Merge the PR
 
 **Option B: Direct Merge (from your local machine)**
 ```bash
-# Switch to main branch
-git checkout main
+# Switch to master branch
+git checkout master
 
 # Pull latest changes
-git pull origin main
+git pull origin master
 
 # Merge feature branch
-git merge claude/obsidian-plugin-feature-011CV1vsz1jk81vTuEaFdH5j
+git merge your-feature-branch
 
-# Push to main
-git push origin main
+# Push to master
+git push origin master
 ```
 
-### Step 2: Create Release Tag from Main
+### Step 2: Create Release Tag from Master
 
-After merging to main:
+After merging to master (already done!):
 
 ```bash
-# Ensure you're on main branch
-git checkout main
-git pull origin main
+# Ensure you're on master branch
+git checkout master
+git pull origin master
 
 # Create the tag
 git tag -a 1.0.0 -m "Release version 1.0.0
@@ -59,7 +69,7 @@ git push origin 1.0.0
 
 The workflow will:
 1. Trigger on the tag push
-2. Build from main branch
+2. Build from master branch
 3. Create a draft release
 4. Attach `main.js`, `manifest.json`, `styles.css`
 
@@ -74,12 +84,12 @@ The workflow will:
 
 If you can't push tags, you can create the release directly on GitHub:
 
-1. **First, merge to main** (via PR or direct merge)
+1. **Code is already on master** (PR #1 merged!)
 2. Go to https://github.com/btromm/math-referencer/releases
 3. Click "Create a new release"
 4. Click "Choose a tag" → "Create new tag: 1.0.0"
-5. **Set target branch to: `main`** ← Important!
-6. Upload files from main branch:
+5. **Set target branch to: `master`** ← Important!
+6. Upload files from master branch:
    - `main.js`
    - `manifest.json`
    - `styles.css`
@@ -89,7 +99,7 @@ If you can't push tags, you can create the release directly on GitHub:
 
 **Correct Flow:**
 ```
-Feature Branch → Main Branch → Tag → Release
+Feature Branch → Master Branch → Tag → Release
 ```
 
 **Incorrect Flow:**
@@ -97,4 +107,4 @@ Feature Branch → Main Branch → Tag → Release
 Feature Branch → Tag → Release  ← Don't do this
 ```
 
-The tag should always point to a commit on main (or your primary release branch), not a feature branch.
+The tag should always point to a commit on master (or your primary release branch), not a feature branch.
