@@ -150,3 +150,27 @@ a.equation-link:hover {
 	/* Ensure proper rendering in live preview */
 	display: flex;
 }
+
+/* Live Preview equation numbering */
+.cm-line .equation-number {
+	position: relative;
+	float: right;
+	font-size: 0.9em;
+	color: var(--text-muted);
+	padding: 0 0.5em;
+	white-space: nowrap;
+	user-select: none;
+	margin-top: 0.5em;
+}
+
+/* Equation container for live preview math blocks */
+.cm-embed-block.cm-math-block {
+	position: relative;
+}
+
+.cm-embed-block.cm-math-block .equation-number {
+	position: absolute;
+	right: 0.5em;
+	top: 50%;
+	transform: translateY(-50%);
+}
