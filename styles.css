@@ -1,8 +1,95 @@
 /*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
+Math Referencer Plugin Styles
 */
+
+/* Container for equations with numbering */
+.equation-container {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 1em 0;
+	position: relative;
+	width: 100%;
+}
+
+/* The equation itself should take most of the space */
+.equation-container .math.math-block {
+	flex: 1;
+	text-align: center;
+	margin: 0;
+	padding: 0.5em 1em;
+}
+
+/* Equation number styling - positioned to the right */
+.equation-container .equation-number {
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 0.9em;
+	color: var(--text-muted);
+	padding: 0 0.5em;
+	white-space: nowrap;
+	user-select: none;
+}
+
+/* Referenced equations */
+.equation-reference {
+	display: block;
+	margin: 1em 0;
+	padding: 0.5em;
+	border-left: 3px solid var(--interactive-accent);
+	background-color: var(--background-secondary);
+	position: relative;
+}
+
+.equation-reference .math.math-block {
+	text-align: center;
+	margin: 0;
+	padding: 0.5em;
+}
+
+.equation-reference .equation-number {
+	position: absolute;
+	right: 0.5em;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 0.9em;
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+/* Ensure MathJax containers don't interfere with layout */
+.equation-container mjx-container,
+.equation-reference mjx-container {
+	display: inline-block !important;
+	margin: 0 !important;
+}
+
+/* Dark mode adjustments */
+.theme-dark .equation-reference {
+	background-color: var(--background-secondary-alt);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+	.equation-container {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.equation-container .equation-number {
+		position: static;
+		transform: none;
+		margin-top: 0.5em;
+		align-self: flex-end;
+	}
+}
+
+/* Print styles */
+@media print {
+	.equation-container,
+	.equation-reference {
+		page-break-inside: avoid;
+	}
+}
