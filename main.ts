@@ -5,19 +5,25 @@ import {
 	Setting,
 	MarkdownPostProcessorContext,
 	TFile,
-	CachedMetadata
+	CachedMetadata,
+	MarkdownView,
+	editorLivePreviewField
 } from 'obsidian';
 
 interface MathReferencerSettings {
 	enableAutoNumbering: boolean;
 	startNumberingFrom: number;
 	numberingFormat: string; // e.g., "(1)", "[1]", "Eq. 1"
+	showFileNameInEmbeds: boolean;
+	linkRenderFormat: string; // e.g., "Equation ${num}", "${file} Equation ${num}"
 }
 
 const DEFAULT_SETTINGS: MathReferencerSettings = {
 	enableAutoNumbering: true,
 	startNumberingFrom: 1,
-	numberingFormat: '(${num})'
+	numberingFormat: '(${num})',
+	showFileNameInEmbeds: true,
+	linkRenderFormat: 'Equation ${num}'
 }
 
 interface EquationInfo {
@@ -44,15 +50,22 @@ export default class MathReferencerPlugin extends Plugin {
 		await this.loadSettings();
 
 		// Register markdown post-processor for equation numbering
+		// Use priority to run early, and mark for live preview
 		this.registerMarkdownPostProcessor(
 			this.processEquations.bind(this),
 			-100 // Run early to process before other processors
 		);
 
-		// Register markdown post-processor for block references
+		// Register markdown post-processor for block references (embeds)
 		this.registerMarkdownPostProcessor(
 			this.processBlockReferences.bind(this),
 			100 // Run later to process after equations are numbered
+		);
+
+		// Register markdown post-processor for regular links to equations
+		this.registerMarkdownPostProcessor(
+			this.processEquationLinks.bind(this),
+			150 // Run after block references
 		);
 
 		// Listen for file changes to update equation cache
@@ -171,14 +184,6 @@ export default class MathReferencerPlugin extends Plugin {
 					return;
 				}
 
-				// Verify this math block matches the equation content
-				// by comparing LaTeX content
-				const mathContent = this.extractMathContent(mathEl);
-				if (mathContent && !this.contentMatches(mathContent, equation.content)) {
-					// Content mismatch, skip this one
-					return;
-				}
-
 				// Add equation number
 				const numberSpan = document.createElement('span');
 				numberSpan.className = 'equation-number';
@@ -213,35 +218,7 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
-	 * Extract math content from a rendered math element
-	 */
-	private extractMathContent(mathEl: HTMLElement): string | null {
-		// Try to find MathJax content
-		const mjxContainer = mathEl.querySelector('mjx-container');
-		if (mjxContainer) {
-			// Get the data-mjx-texclass or look for script tag
-			const scriptTag = mjxContainer.querySelector('script[type="math/tex"]');
-			if (scriptTag) {
-				return scriptTag.textContent?.trim() || null;
-			}
-		}
-
-		// Fallback: try to get text content
-		const textContent = mathEl.textContent?.trim();
-		return textContent || null;
-	}
-
-	/**
-	 * Check if two math contents match (allowing for whitespace differences)
-	 */
-	private contentMatches(content1: string, content2: string): boolean {
-		// Normalize whitespace for comparison
-		const normalize = (str: string) => str.replace(/\s+/g, ' ').trim();
-		return normalize(content1) === normalize(content2);
-	}
-
-	/**
-	 * Process block references to equations
+	 * Process block references to equations (embeds: ![[file#^block]])
 	 */
 	private async processBlockReferences(
 		element: HTMLElement,
@@ -289,22 +266,104 @@ export default class MathReferencerPlugin extends Plugin {
 
 			if (equation) {
 				// Render the equation reference
-				await this.renderEquationReference(embedEl, equation, targetFile);
+				await this.renderEquationReference(embedEl, equation, targetFile, context.sourcePath);
 			}
 		}
 	}
 
 	/**
-	 * Render an equation reference
+	 * Process regular links to equations (not embeds: [[file#^block]])
+	 */
+	private async processEquationLinks(
+		element: HTMLElement,
+		context: MarkdownPostProcessorContext
+	) {
+		// Find all internal links (not embeds)
+		const links = element.querySelectorAll('a.internal-link');
+
+		for (const link of Array.from(links)) {
+			const linkEl = link as HTMLAnchorElement;
+			const href = linkEl.getAttribute('data-href') || linkEl.getAttribute('href');
+
+			if (!href || !href.includes('^')) {
+				continue;
+			}
+
+			// Parse the link
+			const parts = href.split('#^');
+			const filePart = parts[0];
+			const blockPart = parts.slice(1).join('#^');
+
+			if (!blockPart) {
+				continue;
+			}
+
+			// Resolve the file path
+			const sourceFile = this.app.vault.getAbstractFileByPath(context.sourcePath);
+			if (!(sourceFile instanceof TFile)) {
+				continue;
+			}
+
+			const targetFile = this.app.metadataCache.getFirstLinkpathDest(
+				filePart || context.sourcePath,
+				sourceFile.path
+			);
+
+			if (!targetFile) {
+				continue;
+			}
+
+			// Check if this link points to an equation
+			const blockMap = this.blockIdToEquation.get(targetFile.path);
+			const equation = blockMap?.get(blockPart);
+
+			if (equation) {
+				// Replace link text with formatted equation reference
+				linkEl.textContent = this.formatEquationLink(equation, targetFile, context.sourcePath);
+				linkEl.addClass('equation-link');
+			}
+		}
+	}
+
+	/**
+	 * Format an equation link
+	 */
+	private formatEquationLink(equation: EquationInfo, targetFile: TFile, currentPath: string): string {
+		const fileName = targetFile.basename;
+		const isSameFile = targetFile.path === currentPath;
+
+		let format = this.settings.linkRenderFormat;
+
+		// If in different file and format doesn't include file name, add it
+		if (!isSameFile && !format.includes('${file}')) {
+			format = '${file} ' + format;
+		}
+
+		return format
+			.replace('${num}', equation.equationNumber.toString())
+			.replace('${file}', fileName);
+	}
+
+	/**
+	 * Render an equation reference (embed)
 	 */
 	private async renderEquationReference(
 		element: HTMLElement,
 		equation: EquationInfo,
-		file: TFile
+		file: TFile,
+		currentPath: string
 	) {
 		// Create a container for the referenced equation
 		const container = document.createElement('div');
 		container.className = 'equation-reference';
+
+		// Add file name badge if from different file and setting enabled
+		if (this.settings.showFileNameInEmbeds && file.path !== currentPath) {
+			const fileLabel = document.createElement('div');
+			fileLabel.className = 'equation-file-label';
+			fileLabel.textContent = file.basename;
+			container.appendChild(fileLabel);
+		}
 
 		// Create a math block for the referenced equation
 		const mathDiv = document.createElement('div');
@@ -314,10 +373,15 @@ export default class MathReferencerPlugin extends Plugin {
 		const latexContent = `\\[${equation.content}\\]`;
 		mathDiv.textContent = latexContent;
 
-		// Add equation number
+		// Add equation number with optional file prefix
 		const numberSpan = document.createElement('span');
 		numberSpan.className = 'equation-number';
-		numberSpan.textContent = this.formatEquationNumber(equation.equationNumber);
+
+		if (this.settings.showFileNameInEmbeds && file.path !== currentPath) {
+			numberSpan.textContent = `${file.basename} ${this.formatEquationNumber(equation.equationNumber)}`;
+		} else {
+			numberSpan.textContent = this.formatEquationNumber(equation.equationNumber);
+		}
 
 		container.appendChild(mathDiv);
 		container.appendChild(numberSpan);
@@ -594,6 +658,32 @@ class MathReferencerSettingTab extends PluginSettingTab {
 						return;
 					}
 					this.plugin.settings.numberingFormat = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Show file name in embeds')
+			.setDesc('Show the source file name when embedding equations from other files')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.showFileNameInEmbeds)
+				.onChange(async (value) => {
+					this.plugin.settings.showFileNameInEmbeds = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Link render format')
+			.setDesc('Format for rendering links to equations. Use ${num} for number, ${file} for file name (e.g., "Equation ${num}", "${file} Equation ${num}")')
+			.addText(text => text
+				.setPlaceholder('Equation ${num}')
+				.setValue(this.plugin.settings.linkRenderFormat)
+				.onChange(async (value) => {
+					if (!value.includes('${num}')) {
+						// Invalid format, keep current value
+						text.setValue(this.plugin.settings.linkRenderFormat);
+						return;
+					}
+					this.plugin.settings.linkRenderFormat = value;
 					await this.plugin.saveSettings();
 				}));
 	}

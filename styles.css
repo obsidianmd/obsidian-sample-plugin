@@ -33,7 +33,7 @@ Math Referencer Plugin Styles
 	user-select: none;
 }
 
-/* Referenced equations */
+/* Referenced equations (embeds) */
 .equation-reference {
 	display: block;
 	margin: 1em 0;
@@ -59,6 +59,35 @@ Math Referencer Plugin Styles
 	font-weight: 500;
 }
 
+/* File label badge for cross-file references */
+.equation-file-label {
+	position: absolute;
+	top: 0.5em;
+	left: 0.5em;
+	font-size: 0.75em;
+	padding: 0.2em 0.5em;
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-radius: 3px;
+	font-weight: 600;
+	z-index: 1;
+	opacity: 0.9;
+}
+
+/* Equation links (regular links to equations) */
+a.equation-link {
+	color: var(--link-color);
+	text-decoration: none;
+	font-weight: 500;
+	border-bottom: 1px dashed var(--link-color);
+	padding: 0 0.2em;
+}
+
+a.equation-link:hover {
+	background-color: var(--background-modifier-hover);
+	border-bottom-style: solid;
+}
+
 /* Ensure MathJax containers don't interfere with layout */
 .equation-container mjx-container,
 .equation-reference mjx-container {
@@ -69,6 +98,10 @@ Math Referencer Plugin Styles
 /* Dark mode adjustments */
 .theme-dark .equation-reference {
 	background-color: var(--background-secondary-alt);
+}
+
+.theme-dark .equation-file-label {
+	opacity: 1;
 }
 
 /* Mobile optimizations */
@@ -84,6 +117,19 @@ Math Referencer Plugin Styles
 		margin-top: 0.5em;
 		align-self: flex-end;
 	}
+
+	.equation-reference .equation-number {
+		position: static;
+		transform: none;
+		margin-top: 0.5em;
+		text-align: right;
+	}
+
+	.equation-file-label {
+		position: static;
+		display: inline-block;
+		margin-bottom: 0.5em;
+	}
 }
 
 /* Print styles */
@@ -92,4 +138,15 @@ Math Referencer Plugin Styles
 	.equation-reference {
 		page-break-inside: avoid;
 	}
+
+	.equation-file-label {
+		opacity: 1;
+	}
+}
+
+/* Live Preview mode support */
+.cm-preview-code-block .equation-container,
+.cm-preview-code-block .equation-reference {
+	/* Ensure proper rendering in live preview */
+	display: flex;
 }
