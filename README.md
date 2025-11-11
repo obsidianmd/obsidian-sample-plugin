@@ -61,10 +61,21 @@ Configure equation numbering to match your preferences:
 
 ## Installation
 
+### Using BRAT (Recommended for Beta Testing)
+
+1. Install the [BRAT plugin](https://github.com/TfTHacker/obsidian42-brat) from Obsidian Community Plugins
+2. In Obsidian, open Settings → BRAT
+3. Click "Add Beta plugin"
+4. Enter the repository: `btromm/math-referencer`
+5. Click "Add Plugin"
+6. Enable "Math Referencer" in Settings → Community Plugins
+
+BRAT will automatically check for updates and notify you when new versions are available.
+
 ### Manual Installation
 
-1. Download the latest release from the releases page
-2. Extract the files to your vault's plugins folder: `<vault>/.obsidian/plugins/math-referencer/`
+1. Download the latest release from the [releases page](https://github.com/btromm/math-referencer/releases)
+2. Extract `main.js`, `manifest.json`, and `styles.css` to your vault's plugins folder: `<vault>/.obsidian/plugins/math-referencer/`
 3. Reload Obsidian
 4. Enable the plugin in Settings → Community Plugins
 
@@ -309,6 +320,30 @@ npm run build
 npm run build -- --watch
 ```
 
+### Releasing
+
+The plugin uses GitHub Actions for automated releases. To create a new release:
+
+1. Update the version in `manifest.json` and `package.json`
+2. Update `versions.json` with the new version and minimum Obsidian version
+3. Create a git tag:
+   ```bash
+   git tag -a 1.0.1 -m "Release version 1.0.1"
+   git push origin 1.0.1
+   ```
+4. GitHub Actions will automatically:
+   - Build the plugin
+   - Create a draft release
+   - Attach `main.js`, `manifest.json`, and `styles.css`
+5. Review and publish the draft release on GitHub
+
+Alternatively, use npm version commands:
+```bash
+npm version patch  # 1.0.0 -> 1.0.1
+npm version minor  # 1.0.0 -> 1.1.0
+npm version major  # 1.0.0 -> 2.0.0
+```
+
 ### Testing
 
 See `TEST-PLAN.md` for the comprehensive testing strategy.
@@ -321,8 +356,12 @@ Test files are included:
 
 ```
 math-referencer/
+├── .github/
+│   └── workflows/
+│       └── release.yml  # GitHub Actions workflow
 ├── main.ts              # Plugin source code
 ├── manifest.json        # Plugin metadata
+├── versions.json        # Version compatibility tracking
 ├── styles.css          # Plugin styles
 ├── package.json        # NPM dependencies
 ├── tsconfig.json       # TypeScript configuration
