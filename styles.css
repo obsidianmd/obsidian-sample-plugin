@@ -174,3 +174,41 @@ a.equation-link:hover {
 	top: 50%;
 	transform: translateY(-50%);
 }
+
+/* Equation reference suggester styles */
+.equation-suggestion {
+	display: flex;
+	flex-direction: column;
+	padding: 0.5em;
+	gap: 0.25em;
+}
+
+.equation-suggestion-number {
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.equation-suggestion-blockid {
+	font-size: 0.85em;
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+}
+
+.equation-suggestion-content {
+	font-size: 0.85em;
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
+.equation-suggestion:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* Selected equation suggestion */
+.suggestion-item.is-selected .equation-suggestion {
+	background-color: var(--background-modifier-active-hover);
+}
