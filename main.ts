@@ -147,8 +147,6 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 		// Add equation number with hierarchical formatting
 		const numberSpan = container.createSpan({ cls: 'equation-suggestion-number' });
-		const formattedNumber = this.plugin.formatEquationNumber(equation);
-		numberSpan.textContent = `Equation ${formattedNumber.replace(/[()[\]]/g, '')}`;
 		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		numberSpan.textContent = `Equation ${formattedNum}`;
 
@@ -175,9 +173,6 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 		const editor = this.context.editor;
 
-		// Generate the link text with formatted equation number
-		const formattedNumber = this.plugin.formatEquationNumber(equation);
-		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNumber.replace(/[()[\]]/g, '')}]]`;
 		// Generate the link text with hierarchical number
 		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNum}]]`;
@@ -642,11 +637,6 @@ export default class MathReferencerPlugin extends Plugin {
 		}
 
 		// Get formatted equation number
-		const formattedNumber = this.formatEquationNumber(equation);
-		const numStr = formattedNumber.replace(/[()[\]]/g, ''); // Remove formatting brackets
-
-		return format
-			.replace('${num}', numStr)
 		const formattedNum = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		return format
 			.replace('${num}', formattedNum)
@@ -691,9 +681,6 @@ export default class MathReferencerPlugin extends Plugin {
 			numberSpan.textContent = `${file.basename} ${formattedNumber}`;
 		} else {
 			numberSpan.textContent = formattedNumber;
-			numberSpan.textContent = `${file.basename} ${this.formatEquationNumber(equation)}`;
-		} else {
-			numberSpan.textContent = this.formatEquationNumber(equation);
 		}
 
 		container.appendChild(mathDiv);
@@ -1007,24 +994,6 @@ export default class MathReferencerPlugin extends Plugin {
 	/**
 	 * Format equation number according to settings
 	 */
-	public formatEquationNumber(equation: EquationInfo | number): string {
-		let numStr: string;
-
-		if (typeof equation === 'number') {
-			// Backward compatibility: accept just a number
-			numStr = equation.toString();
-		} else {
-			// Use section-based numbering if enabled and available
-			if (this.settings.useSectionBasedNumbering && equation.sectionNumbers.length > 0) {
-				// Format: section.subsection.equation (e.g., "2.1.3")
-				const sectionStr = equation.sectionNumbers.join('.');
-				const eqNum = equation.equationNumber - this.settings.startNumberingFrom + 1;
-				numStr = `${sectionStr}.${eqNum}`;
-			} else {
-				numStr = equation.equationNumber.toString();
-			}
-		}
-
 	public formatEquationNumber(equation: EquationInfo): string {
 		const numStr = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		return this.settings.numberingFormat.replace('${num}', numStr);
