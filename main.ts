@@ -37,6 +37,7 @@ interface MathReferencerSettings {
 	enableAutoBlockIds: boolean; // Auto-generate block reference IDs
 	blockIdPrefix: string; // Prefix for block IDs (e.g., "eq")
 	refTrigger: string; // Trigger for equation references (e.g., "\\ref")
+	useSectionBasedNumbering: boolean; // Use section-based numbering (e.g., 2.1.3)
 }
 
 const DEFAULT_SETTINGS: MathReferencerSettings = {
@@ -47,7 +48,8 @@ const DEFAULT_SETTINGS: MathReferencerSettings = {
 	linkRenderFormat: 'Equation ${num}',
 	enableAutoBlockIds: true,
 	blockIdPrefix: 'eq',
-	refTrigger: '\\ref'
+	refTrigger: '\\ref',
+	useSectionBasedNumbering: true
 }
 
 interface EquationInfo {
@@ -145,6 +147,8 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 		// Add equation number with hierarchical formatting
 		const numberSpan = container.createSpan({ cls: 'equation-suggestion-number' });
+		const formattedNumber = this.plugin.formatEquationNumber(equation);
+		numberSpan.textContent = `Equation ${formattedNumber.replace(/[()[\]]/g, '')}`;
 		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		numberSpan.textContent = `Equation ${formattedNum}`;
 
@@ -171,6 +175,9 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 		const editor = this.context.editor;
 
+		// Generate the link text with formatted equation number
+		const formattedNumber = this.plugin.formatEquationNumber(equation);
+		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNumber.replace(/[()[\]]/g, '')}]]`;
 		// Generate the link text with hierarchical number
 		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNum}]]`;
@@ -261,8 +268,11 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 				// Extract equations from the document
 				const equations = plugin.extractEquationsFromText(text, file.path);
 
-				// Find all $$ blocks in the document
+				// Find all $$ blocks in the document using syntax tree
+				const tree = syntaxTree(view.state);
 				let equationIndex = 0;
+
+				// Fallback to manual parsing if syntax tree doesn't have math nodes
 				const lines = text.split('\n');
 				let pos = 0;
 				let inEquation = false;
@@ -286,7 +296,8 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 								widget: new EquationNumberWidget(
 									plugin.formatEquationNumber(equation)
 								),
-								side: 1
+								side: 1,
+								block: false
 							});
 							builder.add(decorationPos, decorationPos, widget);
 						}
@@ -630,6 +641,12 @@ export default class MathReferencerPlugin extends Plugin {
 			format = '${file} ' + format;
 		}
 
+		// Get formatted equation number
+		const formattedNumber = this.formatEquationNumber(equation);
+		const numStr = formattedNumber.replace(/[()[\]]/g, ''); // Remove formatting brackets
+
+		return format
+			.replace('${num}', numStr)
 		const formattedNum = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		return format
 			.replace('${num}', formattedNum)
@@ -669,7 +686,11 @@ export default class MathReferencerPlugin extends Plugin {
 		const numberSpan = document.createElement('span');
 		numberSpan.className = 'equation-number';
 
+		const formattedNumber = this.formatEquationNumber(equation);
 		if (this.settings.showFileNameInEmbeds && file.path !== currentPath) {
+			numberSpan.textContent = `${file.basename} ${formattedNumber}`;
+		} else {
+			numberSpan.textContent = formattedNumber;
 			numberSpan.textContent = `${file.basename} ${this.formatEquationNumber(equation)}`;
 		} else {
 			numberSpan.textContent = this.formatEquationNumber(equation);
@@ -986,6 +1007,24 @@ export default class MathReferencerPlugin extends Plugin {
 	/**
 	 * Format equation number according to settings
 	 */
+	public formatEquationNumber(equation: EquationInfo | number): string {
+		let numStr: string;
+
+		if (typeof equation === 'number') {
+			// Backward compatibility: accept just a number
+			numStr = equation.toString();
+		} else {
+			// Use section-based numbering if enabled and available
+			if (this.settings.useSectionBasedNumbering && equation.sectionNumbers.length > 0) {
+				// Format: section.subsection.equation (e.g., "2.1.3")
+				const sectionStr = equation.sectionNumbers.join('.');
+				const eqNum = equation.equationNumber - this.settings.startNumberingFrom + 1;
+				numStr = `${sectionStr}.${eqNum}`;
+			} else {
+				numStr = equation.equationNumber.toString();
+			}
+		}
+
 	public formatEquationNumber(equation: EquationInfo): string {
 		const numStr = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		return this.settings.numberingFormat.replace('${num}', numStr);
@@ -1198,6 +1237,16 @@ class MathReferencerSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.enableAutoNumbering)
 				.onChange(async (value) => {
 					this.plugin.settings.enableAutoNumbering = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Use section-based numbering')
+			.setDesc('Number equations based on their section hierarchy (e.g., 2.1.3 for section 2.1, equation 3)')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.useSectionBasedNumbering)
+				.onChange(async (value) => {
+					this.plugin.settings.useSectionBasedNumbering = value;
 					await this.plugin.saveSettings();
 				}));
 
