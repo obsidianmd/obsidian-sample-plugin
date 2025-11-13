@@ -145,10 +145,12 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 	renderSuggestion(equation: EquationInfo, el: HTMLElement): void {
 		const container = el.createDiv({ cls: 'equation-suggestion' });
 
-		// Add equation number
+		// Add equation number with hierarchical formatting
 		const numberSpan = container.createSpan({ cls: 'equation-suggestion-number' });
 		const formattedNumber = this.plugin.formatEquationNumber(equation);
 		numberSpan.textContent = `Equation ${formattedNumber.replace(/[()[\]]/g, '')}`;
+		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
+		numberSpan.textContent = `Equation ${formattedNum}`;
 
 		// Add block ID if available
 		if (equation.blockId) {
@@ -176,6 +178,9 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 		// Generate the link text with formatted equation number
 		const formattedNumber = this.plugin.formatEquationNumber(equation);
 		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNumber.replace(/[()[\]]/g, '')}]]`;
+		// Generate the link text with hierarchical number
+		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
+		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNum}]]`;
 
 		// Replace the trigger text with the link
 		editor.replaceRange(
@@ -316,6 +321,7 @@ export default class MathReferencerPlugin extends Plugin {
 	private fileCache: Map<string, FileCache> = new Map();
 	private blockIdToEquation: Map<string, Map<string, EquationInfo>> = new Map();
 	private updateInProgress: Set<string> = new Set();
+	private savingFiles: Set<string> = new Set();
 
 	async onload() {
 		await this.loadSettings();
@@ -396,6 +402,15 @@ export default class MathReferencerPlugin extends Plugin {
 			})
 		);
 
+		// Listen for file modifications to auto-insert block IDs
+		this.registerEvent(
+			this.app.vault.on('modify', async (file) => {
+				if (file instanceof TFile && file.extension === 'md') {
+					await this.autoInsertBlockIdsOnSave(file);
+				}
+			})
+		);
+
 		// Initial cache build
 		this.app.workspace.onLayoutReady(() => {
 			this.buildInitialCache();
@@ -412,6 +427,7 @@ export default class MathReferencerPlugin extends Plugin {
 		this.fileCache.clear();
 		this.blockIdToEquation.clear();
 		this.updateInProgress.clear();
+		this.savingFiles.clear();
 		console.log('Math Referencer plugin unloaded');
 	}
 
@@ -631,6 +647,9 @@ export default class MathReferencerPlugin extends Plugin {
 
 		return format
 			.replace('${num}', numStr)
+		const formattedNum = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
+		return format
+			.replace('${num}', formattedNum)
 			.replace('${file}', fileName);
 	}
 
@@ -672,6 +691,9 @@ export default class MathReferencerPlugin extends Plugin {
 			numberSpan.textContent = `${file.basename} ${formattedNumber}`;
 		} else {
 			numberSpan.textContent = formattedNumber;
+			numberSpan.textContent = `${file.basename} ${this.formatEquationNumber(equation)}`;
+		} else {
+			numberSpan.textContent = this.formatEquationNumber(equation);
 		}
 
 		container.appendChild(mathDiv);
@@ -865,6 +887,10 @@ export default class MathReferencerPlugin extends Plugin {
 		let equationStartLine = -1;
 		let equationContent = '';
 
+		// Track equation counter per section
+		// Key: section path (e.g., "2-3" for section 2.3), Value: equation count in that section
+		const sectionEquationCounts = new Map<string, number>();
+
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 
@@ -899,7 +925,16 @@ export default class MathReferencerPlugin extends Plugin {
 				}
 
 				// Get section numbers at this equation's position
-				const sectionNumbers = getCurrentSectionNumbers(i);
+				const baseSectionNumbers = getCurrentSectionNumbers(i);
+
+				// Track equation count within this section
+				const sectionKey = baseSectionNumbers.join('-') || 'root';
+				const eqCountInSection = (sectionEquationCounts.get(sectionKey) || 0) + 1;
+				sectionEquationCounts.set(sectionKey, eqCountInSection);
+
+				// Build hierarchical equation number by appending equation count to section numbers
+				// For section 2.3 with 2nd equation: [2, 3, 2]
+				const sectionNumbers = [...baseSectionNumbers, eqCountInSection];
 
 				// Check if next line has block ID (must be on its own line)
 				let blockId: string | null = null;
@@ -914,7 +949,7 @@ export default class MathReferencerPlugin extends Plugin {
 				// Generate block ID if auto-generation is enabled and no existing ID
 				if (!blockId && this.settings.enableAutoBlockIds) {
 					if (sectionNumbers.length > 0) {
-						blockId = `${this.settings.blockIdPrefix}-${sectionNumbers.join('-')}-${equationNumber - this.settings.startNumberingFrom + 1}`;
+						blockId = `${this.settings.blockIdPrefix}-${sectionNumbers.join('-')}`;
 					} else {
 						blockId = `${this.settings.blockIdPrefix}-${equationNumber}`;
 					}
@@ -957,6 +992,19 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
+	 * Format hierarchical equation number from section numbers
+	 */
+	public formatHierarchicalNumber(sectionNumbers: number[], equationNumber: number): string {
+		if (sectionNumbers.length === 0) {
+			// No section hierarchy, use simple sequential numbering
+			return equationNumber.toString();
+		}
+
+		// Format as hierarchical number (e.g., "2.3.4" for section 2.3.4)
+		return sectionNumbers.join('.');
+	}
+
+	/**
 	 * Format equation number according to settings
 	 */
 	public formatEquationNumber(equation: EquationInfo | number): string {
@@ -977,6 +1025,8 @@ export default class MathReferencerPlugin extends Plugin {
 			}
 		}
 
+	public formatEquationNumber(equation: EquationInfo): string {
+		const numStr = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		return this.settings.numberingFormat.replace('${num}', numStr);
 	}
 
@@ -1012,6 +1062,89 @@ export default class MathReferencerPlugin extends Plugin {
 		}
 
 		console.log(`Built equation cache for ${files.length} files`);
+	}
+
+	/**
+	 * Automatically insert block IDs when file is saved
+	 */
+	private async autoInsertBlockIdsOnSave(file: TFile) {
+		// Only proceed if auto-generation is enabled
+		if (!this.settings.enableAutoBlockIds) {
+			return;
+		}
+
+		// Prevent infinite loops from save triggering modify event
+		if (this.savingFiles.has(file.path)) {
+			return;
+		}
+
+		try {
+			this.savingFiles.add(file.path);
+
+			// Read file content
+			const content = await this.app.vault.read(file);
+			const equations = this.extractEquationsFromContent(content, null, file.path);
+
+			// Find equations that need block IDs inserted
+			const lines = content.split('\n');
+			let insertions: Array<{line: number, text: string}> = [];
+
+			for (const eq of equations) {
+				// Find the closing $$ line
+				let closingLine = -1;
+				for (let i = eq.lineNumber + 1; i < lines.length; i++) {
+					if (lines[i].trim() === '$$') {
+						closingLine = i;
+						break;
+					}
+				}
+
+				if (closingLine === -1) {
+					continue; // Skip unclosed equations
+				}
+
+				// Check if next line has a block ID
+				const nextLine = closingLine + 1;
+				if (nextLine < lines.length) {
+					const existingBlockId = lines[nextLine].match(/^\^([a-zA-Z0-9-_]+)\s*$/);
+					if (existingBlockId) {
+						continue; // Already has a block ID
+					}
+				}
+
+				// Add block ID insertion
+				if (eq.blockId) {
+					insertions.push({
+						line: closingLine + 1,
+						text: `^${eq.blockId}`
+					});
+				}
+			}
+
+			// If no insertions needed, return early
+			if (insertions.length === 0) {
+				return;
+			}
+
+			// Sort insertions in reverse order to maintain line numbers
+			insertions.sort((a, b) => b.line - a.line);
+
+			// Build new content with block IDs inserted
+			let newLines = [...lines];
+			for (const insertion of insertions) {
+				newLines.splice(insertion.line, 0, insertion.text);
+			}
+
+			const newContent = newLines.join('\n');
+
+			// Only modify if content actually changed
+			if (newContent !== content) {
+				await this.app.vault.modify(file, newContent);
+				console.log(`Auto-inserted ${insertions.length} block IDs in ${file.path}`);
+			}
+		} finally {
+			this.savingFiles.delete(file.path);
+		}
 	}
 
 	/**
