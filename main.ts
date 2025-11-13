@@ -143,9 +143,10 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 	renderSuggestion(equation: EquationInfo, el: HTMLElement): void {
 		const container = el.createDiv({ cls: 'equation-suggestion' });
 
-		// Add equation number
+		// Add equation number with hierarchical formatting
 		const numberSpan = container.createSpan({ cls: 'equation-suggestion-number' });
-		numberSpan.textContent = `Equation ${equation.equationNumber}`;
+		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
+		numberSpan.textContent = `Equation ${formattedNum}`;
 
 		// Add block ID if available
 		if (equation.blockId) {
@@ -170,8 +171,9 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 		const editor = this.context.editor;
 
-		// Generate the link text
-		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${equation.equationNumber}]]`;
+		// Generate the link text with hierarchical number
+		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
+		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNum}]]`;
 
 		// Replace the trigger text with the link
 		editor.replaceRange(
@@ -282,7 +284,7 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 							const decorationPos = pos + lineLength;
 							const widget = Decoration.widget({
 								widget: new EquationNumberWidget(
-									plugin.formatEquationNumber(equation.equationNumber)
+									plugin.formatEquationNumber(equation)
 								),
 								side: 1
 							});
@@ -476,7 +478,7 @@ export default class MathReferencerPlugin extends Plugin {
 				// Add equation number
 				const numberSpan = document.createElement('span');
 				numberSpan.className = 'equation-number';
-				numberSpan.textContent = this.formatEquationNumber(equation.equationNumber);
+				numberSpan.textContent = this.formatEquationNumber(equation);
 
 				// Wrap the math block in a container for proper layout
 				const wrapper = document.createElement('div');
@@ -628,8 +630,9 @@ export default class MathReferencerPlugin extends Plugin {
 			format = '${file} ' + format;
 		}
 
+		const formattedNum = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		return format
-			.replace('${num}', equation.equationNumber.toString())
+			.replace('${num}', formattedNum)
 			.replace('${file}', fileName);
 	}
 
@@ -667,9 +670,9 @@ export default class MathReferencerPlugin extends Plugin {
 		numberSpan.className = 'equation-number';
 
 		if (this.settings.showFileNameInEmbeds && file.path !== currentPath) {
-			numberSpan.textContent = `${file.basename} ${this.formatEquationNumber(equation.equationNumber)}`;
+			numberSpan.textContent = `${file.basename} ${this.formatEquationNumber(equation)}`;
 		} else {
-			numberSpan.textContent = this.formatEquationNumber(equation.equationNumber);
+			numberSpan.textContent = this.formatEquationNumber(equation);
 		}
 
 		container.appendChild(mathDiv);
@@ -863,6 +866,10 @@ export default class MathReferencerPlugin extends Plugin {
 		let equationStartLine = -1;
 		let equationContent = '';
 
+		// Track equation counter per section
+		// Key: section path (e.g., "2-3" for section 2.3), Value: equation count in that section
+		const sectionEquationCounts = new Map<string, number>();
+
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 
@@ -897,7 +904,16 @@ export default class MathReferencerPlugin extends Plugin {
 				}
 
 				// Get section numbers at this equation's position
-				const sectionNumbers = getCurrentSectionNumbers(i);
+				const baseSectionNumbers = getCurrentSectionNumbers(i);
+
+				// Track equation count within this section
+				const sectionKey = baseSectionNumbers.join('-') || 'root';
+				const eqCountInSection = (sectionEquationCounts.get(sectionKey) || 0) + 1;
+				sectionEquationCounts.set(sectionKey, eqCountInSection);
+
+				// Build hierarchical equation number by appending equation count to section numbers
+				// For section 2.3 with 2nd equation: [2, 3, 2]
+				const sectionNumbers = [...baseSectionNumbers, eqCountInSection];
 
 				// Check if next line has block ID (must be on its own line)
 				let blockId: string | null = null;
@@ -912,7 +928,7 @@ export default class MathReferencerPlugin extends Plugin {
 				// Generate block ID if auto-generation is enabled and no existing ID
 				if (!blockId && this.settings.enableAutoBlockIds) {
 					if (sectionNumbers.length > 0) {
-						blockId = `${this.settings.blockIdPrefix}-${sectionNumbers.join('-')}-${equationNumber - this.settings.startNumberingFrom + 1}`;
+						blockId = `${this.settings.blockIdPrefix}-${sectionNumbers.join('-')}`;
 					} else {
 						blockId = `${this.settings.blockIdPrefix}-${equationNumber}`;
 					}
@@ -955,10 +971,24 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
+	 * Format hierarchical equation number from section numbers
+	 */
+	public formatHierarchicalNumber(sectionNumbers: number[], equationNumber: number): string {
+		if (sectionNumbers.length === 0) {
+			// No section hierarchy, use simple sequential numbering
+			return equationNumber.toString();
+		}
+
+		// Format as hierarchical number (e.g., "2.3.4" for section 2.3.4)
+		return sectionNumbers.join('.');
+	}
+
+	/**
 	 * Format equation number according to settings
 	 */
-	public formatEquationNumber(num: number): string {
-		return this.settings.numberingFormat.replace('${num}', num.toString());
+	public formatEquationNumber(equation: EquationInfo): string {
+		const numStr = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
+		return this.settings.numberingFormat.replace('${num}', numStr);
 	}
 
 	/**
