@@ -308,6 +308,7 @@ export default class MathReferencerPlugin extends Plugin {
 	private fileCache: Map<string, FileCache> = new Map();
 	private blockIdToEquation: Map<string, Map<string, EquationInfo>> = new Map();
 	private updateInProgress: Set<string> = new Set();
+	private savingFiles: Set<string> = new Set();
 
 	async onload() {
 		await this.loadSettings();
@@ -388,6 +389,15 @@ export default class MathReferencerPlugin extends Plugin {
 			})
 		);
 
+		// Listen for file modifications to auto-insert block IDs
+		this.registerEvent(
+			this.app.vault.on('modify', async (file) => {
+				if (file instanceof TFile && file.extension === 'md') {
+					await this.autoInsertBlockIdsOnSave(file);
+				}
+			})
+		);
+
 		// Initial cache build
 		this.app.workspace.onLayoutReady(() => {
 			this.buildInitialCache();
@@ -404,6 +414,7 @@ export default class MathReferencerPlugin extends Plugin {
 		this.fileCache.clear();
 		this.blockIdToEquation.clear();
 		this.updateInProgress.clear();
+		this.savingFiles.clear();
 		console.log('Math Referencer plugin unloaded');
 	}
 
@@ -982,6 +993,89 @@ export default class MathReferencerPlugin extends Plugin {
 		}
 
 		console.log(`Built equation cache for ${files.length} files`);
+	}
+
+	/**
+	 * Automatically insert block IDs when file is saved
+	 */
+	private async autoInsertBlockIdsOnSave(file: TFile) {
+		// Only proceed if auto-generation is enabled
+		if (!this.settings.enableAutoBlockIds) {
+			return;
+		}
+
+		// Prevent infinite loops from save triggering modify event
+		if (this.savingFiles.has(file.path)) {
+			return;
+		}
+
+		try {
+			this.savingFiles.add(file.path);
+
+			// Read file content
+			const content = await this.app.vault.read(file);
+			const equations = this.extractEquationsFromContent(content, null, file.path);
+
+			// Find equations that need block IDs inserted
+			const lines = content.split('\n');
+			let insertions: Array<{line: number, text: string}> = [];
+
+			for (const eq of equations) {
+				// Find the closing $$ line
+				let closingLine = -1;
+				for (let i = eq.lineNumber + 1; i < lines.length; i++) {
+					if (lines[i].trim() === '$$') {
+						closingLine = i;
+						break;
+					}
+				}
+
+				if (closingLine === -1) {
+					continue; // Skip unclosed equations
+				}
+
+				// Check if next line has a block ID
+				const nextLine = closingLine + 1;
+				if (nextLine < lines.length) {
+					const existingBlockId = lines[nextLine].match(/^\^([a-zA-Z0-9-_]+)\s*$/);
+					if (existingBlockId) {
+						continue; // Already has a block ID
+					}
+				}
+
+				// Add block ID insertion
+				if (eq.blockId) {
+					insertions.push({
+						line: closingLine + 1,
+						text: `^${eq.blockId}`
+					});
+				}
+			}
+
+			// If no insertions needed, return early
+			if (insertions.length === 0) {
+				return;
+			}
+
+			// Sort insertions in reverse order to maintain line numbers
+			insertions.sort((a, b) => b.line - a.line);
+
+			// Build new content with block IDs inserted
+			let newLines = [...lines];
+			for (const insertion of insertions) {
+				newLines.splice(insertion.line, 0, insertion.text);
+			}
+
+			const newContent = newLines.join('\n');
+
+			// Only modify if content actually changed
+			if (newContent !== content) {
+				await this.app.vault.modify(file, newContent);
+				console.log(`Auto-inserted ${insertions.length} block IDs in ${file.path}`);
+			}
+		} finally {
+			this.savingFiles.delete(file.path);
+		}
 	}
 
 	/**
