@@ -87,6 +87,9 @@ export const defaultSettings: SettingValues = {
 	doneStatusMarkers: DEFAULT_DONE_STATUS_MARKERS,
 	ignoredStatusMarkers: DEFAULT_IGNORED_STATUS_MARKERS,
 	savedFilters: [],
+	lastContentFilter: "",
+	lastTagFilter: [],
+	lastFileFilter: [],
 };
 
 export const createSettingsStore = () =>
@@ -94,9 +97,9 @@ export const createSettingsStore = () =>
 
 export function parseSettingsString(str: string): SettingValues {
 	try {
-		return (
-			settingsObject.safeParse(JSON.parse(str)).data ?? defaultSettings
-		);
+		const parsed = JSON.parse(str);
+		const partial = settingsObject.partial().parse(parsed);
+		return { ...defaultSettings, ...partial };
 	} catch {
 		return defaultSettings;
 	}

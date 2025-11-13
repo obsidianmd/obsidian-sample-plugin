@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Select from "svelte-select";
-	import { tick } from "svelte";
+	import { tick, afterUpdate } from "svelte";
 	import type { SavedFilter } from "../../settings/settings_store";
 
 	export let label: string;
@@ -21,6 +21,21 @@
 		(item) => value.includes(item.value),
 	);
 	$: value = (selectedItems ?? []).map(({ value }) => value);
+	
+	// Sync selectedItems after updates when value/items change
+	let lastSyncedValue = JSON.stringify(value);
+	afterUpdate(() => {
+		const currentValueStr = JSON.stringify(value);
+		if (currentValueStr !== lastSyncedValue) {
+			const expectedItems = items.filter((item) => value.includes(item.value));
+			const currentValues = selectedItems.map(i => i.value).sort().join(',');
+			const expectedValues = expectedItems.map(i => i.value).sort().join(',');
+			if (currentValues !== expectedValues) {
+				selectedItems = expectedItems;
+			}
+			lastSyncedValue = currentValueStr;
+		}
+	});
 	
 	export function clearSelection() {
 		selectedItems = [];

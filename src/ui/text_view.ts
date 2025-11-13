@@ -118,7 +118,8 @@ ${parsed.body}
 `;
 	}
 
-	setViewData(data: string): void {
+	setViewData(data: string, clear?: boolean): void {
+		this.data = data;
 		this.settingsStore.set(this.getInitialSettings(data));
 		this.initialiseTasksStore();
 	}

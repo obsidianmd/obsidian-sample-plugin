@@ -316,15 +316,29 @@
 
 	let filterText = "";
 	let fileFilter = "";
-	let hasInitialized = false;
+	let hydrated = false;
+	let subscriptionCount = 0;
 
 	onMount(() => {
 		const unsubscribe = settingsStore.subscribe(settings => {
-			if (!hasInitialized && (settings.lastContentFilter || settings.lastTagFilter || settings.lastFileFilter)) {
+			subscriptionCount++;
+			// Skip the first call (immediate subscription with current value)
+			if (subscriptionCount === 1) {
+				return;
+			}
+			if (!hydrated) {
 				filterText = settings.lastContentFilter ?? "";
-				selectedTags = settings.lastTagFilter ?? [];
 				fileFilter = settings.lastFileFilter?.[0] ?? "";
-				hasInitialized = true;
+				// Delay tag filter hydration until tags are loaded
+				if (settings.lastTagFilter && settings.lastTagFilter.length > 0) {
+					const checkTags = setInterval(() => {
+						if (tags.size > 0) {
+							selectedTags = settings.lastTagFilter ?? [];
+							clearInterval(checkTags);
+						}
+					}, 100);
+				}
+				hydrated = true;
 			}
 		});
 
@@ -332,7 +346,7 @@
 	});
 
 	function saveFilterState() {
-		if (hasInitialized) {
+		if (hydrated) {
 			settingsStore.update(settings => ({
 				...settings,
 				lastContentFilter: filterText,
@@ -343,7 +357,7 @@
 		}
 	}
 
-	$: if (hasInitialized) {
+	$: if (hydrated) {
 		filterText;
 		selectedTags;
 		fileFilter;
