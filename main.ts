@@ -7,8 +7,21 @@ import {
 	TFile,
 	CachedMetadata,
 	MarkdownView,
-	editorLivePreviewField
+	editorLivePreviewField,
+	editorEditorField
 } from 'obsidian';
+
+import {
+	EditorView,
+	ViewPlugin,
+	ViewUpdate,
+	Decoration,
+	DecorationSet,
+	WidgetType
+} from '@codemirror/view';
+
+import { syntaxTree } from '@codemirror/language';
+import { RangeSetBuilder } from '@codemirror/state';
 
 interface MathReferencerSettings {
 	enableAutoNumbering: boolean;
@@ -40,6 +53,120 @@ interface FileCache {
 	mtime: number;
 }
 
+/**
+ * Widget to display equation numbers in Live Preview mode
+ */
+class EquationNumberWidget extends WidgetType {
+	constructor(private equationNumber: string) {
+		super();
+	}
+
+	toDOM(): HTMLElement {
+		const span = document.createElement('span');
+		span.className = 'equation-number';
+		span.textContent = this.equationNumber;
+		return span;
+	}
+
+	eq(other: EquationNumberWidget): boolean {
+		return other.equationNumber === this.equationNumber;
+	}
+
+	ignoreEvent(): boolean {
+		return true;
+	}
+}
+
+/**
+ * Creates a view plugin for Live Preview mode equation numbering
+ */
+function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: DecorationSet;
+
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+
+			buildDecorations(view: EditorView): DecorationSet {
+				if (!plugin.settings.enableAutoNumbering) {
+					return Decoration.none;
+				}
+
+				// Check if we're in Live Preview mode
+				const isLivePreview = view.state.field(editorLivePreviewField);
+				if (!isLivePreview) {
+					return Decoration.none;
+				}
+
+				const builder = new RangeSetBuilder<Decoration>();
+				const text = view.state.doc.toString();
+
+				// Get the current file
+				const editor = view.state.field(editorEditorField);
+				if (!editor) {
+					return builder.finish();
+				}
+
+				const file = plugin.app.workspace.getActiveFile();
+				if (!file) {
+					return builder.finish();
+				}
+
+				// Extract equations from the document
+				const equations = plugin.extractEquationsFromText(text, file.path);
+
+				// Find all $$ blocks in the document
+				let equationIndex = 0;
+				const lines = text.split('\n');
+				let pos = 0;
+				let inEquation = false;
+				let equationStartPos = -1;
+
+				for (let i = 0; i < lines.length; i++) {
+					const line = lines[i];
+					const lineLength = line.length;
+
+					if (line.trim() === '$$' && !inEquation) {
+						inEquation = true;
+						equationStartPos = pos;
+					} else if (line.trim() === '$$' && inEquation) {
+						inEquation = false;
+
+						// Add decoration at the end of the closing $$
+						const equation = equations[equationIndex];
+						if (equation) {
+							const decorationPos = pos + lineLength;
+							const widget = Decoration.widget({
+								widget: new EquationNumberWidget(
+									plugin.formatEquationNumber(equation.equationNumber)
+								),
+								side: 1
+							});
+							builder.add(decorationPos, decorationPos, widget);
+						}
+						equationIndex++;
+					}
+
+					pos += lineLength + 1; // +1 for newline
+				}
+
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (value) => value.decorations
+		}
+	);
+}
+
 export default class MathReferencerPlugin extends Plugin {
 	settings: MathReferencerSettings;
 	private fileCache: Map<string, FileCache> = new Map();
@@ -49,7 +176,10 @@ export default class MathReferencerPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// Register markdown post-processor for equation numbering
+		// Register EditorExtension for Live Preview mode
+		this.registerEditorExtension(createLivePreviewPlugin(this));
+
+		// Register markdown post-processor for equation numbering (Reading mode)
 		// Use priority to run early, and mark for live preview
 		this.registerMarkdownPostProcessor(
 			this.processEquations.bind(this),
@@ -465,6 +595,13 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
+	 * Public method to extract equations from text (used by Live Preview plugin)
+	 */
+	public extractEquationsFromText(text: string, filePath: string): EquationInfo[] {
+		return this.extractEquationsFromContent(text, null, filePath);
+	}
+
+	/**
 	 * Extract equations from markdown content
 	 */
 	private extractEquationsFromContent(
@@ -530,6 +667,14 @@ export default class MathReferencerPlugin extends Plugin {
 					continue;
 				}
 
+				// Check if the equation should be numbered
+				// Skip if it contains \nonumber or \notag (LaTeX commands to skip numbering)
+				const shouldNumber = !this.shouldSkipNumbering(equationContent);
+
+				if (!shouldNumber) {
+					continue;
+				}
+
 				// Check if next line has block ID (must be on its own line)
 				let blockId: string | null = null;
 				if (i + 1 < lines.length) {
@@ -540,6 +685,8 @@ export default class MathReferencerPlugin extends Plugin {
 					}
 				}
 
+				// Each $$ $$ block is ONE equation, even if it contains
+				// align or other multi-line environments
 				equations.push({
 					filePath: filePath,
 					blockId: blockId,
@@ -565,9 +712,18 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
+	 * Check if an equation should skip numbering based on LaTeX commands
+	 */
+	private shouldSkipNumbering(content: string): boolean {
+		// Check for \nonumber or \notag commands
+		// These are standard LaTeX commands to prevent equation numbering
+		return /\\(nonumber|notag)/.test(content);
+	}
+
+	/**
 	 * Format equation number according to settings
 	 */
-	private formatEquationNumber(num: number): string {
+	public formatEquationNumber(num: number): string {
 		return this.settings.numberingFormat.replace('${num}', num.toString());
 	}
 
