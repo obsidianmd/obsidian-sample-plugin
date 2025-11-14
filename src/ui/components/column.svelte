@@ -238,17 +238,17 @@
 				display: inline-flex;
 				background: var(--background-modifier-border-hover);
 				border: 1px solid var(--background-modifier-border);
-				border-radius: var(--radius-m);
-				padding: 3px;
+				border-radius: var(--radius-s);
+				padding: 2px;
 				gap: 0;
 
 				.segment {
-					padding: var(--size-2-1) var(--size-4-2);
+					padding: 2px var(--size-4-1);
 					border: none;
 					background: transparent;
-					border-radius: calc(var(--radius-m) - 3px);
+					border-radius: calc(var(--radius-s) - 2px);
 					cursor: pointer;
-					font-size: var(--font-ui-small);
+					font-size: var(--font-ui-smaller);
 					color: var(--text-muted);
 					transition: all 0.2s ease;
 					box-shadow: none;
@@ -270,7 +270,7 @@
 
 					&.select-segment.active {
 						background: var(--interactive-accent);
-						color: var(--text-on-accent);
+						color: white;
 					}
 				}
 			}
