@@ -282,16 +282,18 @@ No new data model changes required. Uses existing:
 
 **Design Change:** Icon placed in footer section next to file name (not in quick actions bar) for better UX
 
-### Phase 4: Selection Mode Toggle
+### Phase 4: Selection Mode Toggle ✅ COMPLETE
 **Goal:** Users can toggle columns into selection mode
 
-1. ⬜ Add mode toggle button to column header (under column name, right-aligned)
-2. ⬜ Create selection mode state store (Map<columnTag, boolean>)
-3. ⬜ Implement toggle handler to switch between mark-done and selection modes
-4. ⬜ Update task checkbox to change shape based on column mode (circle vs square)
-5. ⬜ Test: Toggle mode, verify checkboxes change from circles to squares
+1. ✅ Add mode toggle button to column header (under column name, right-aligned)
+2. ✅ Create selection mode state store (Map<columnTag, boolean>)
+3. ✅ Implement toggle handler to switch between mark-done and selection modes
+4. ✅ Update task checkbox to change shape based on column mode (circle vs square)
+5. ✅ Test: Toggle mode, verify checkboxes change from circles to squares
 
 **Deliverable:** Column mode toggle working with visual checkbox feedback
+
+**Implemented by:** [TBD - pending commit]
 
 ### Phase 5: Task Selection in Selection Mode
 **Goal:** Users can select individual tasks when in selection mode

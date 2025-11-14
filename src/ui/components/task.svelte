@@ -16,6 +16,7 @@
 	export let showFilepath: boolean;
 	export let consolidateTags: boolean;
 	export let displayColumn: ColumnTag | DefaultColumns;
+	export let isInSelectionMode: boolean = false;
 
 	function handleContentBlur() {
 		isEditing = false;
@@ -213,10 +214,6 @@
 >
 	<!-- Quick actions bar -->
 	<div class="task-quick-actions">
-		<div class="quick-actions-left">
-			<!-- Bulk selection checkbox placeholder -->
-			<div class="icon-placeholder bulk-select"></div>
-		</div>
 		<div class="quick-actions-right">
 			<TaskMenu {task} {taskActions} {columnTagTableStore} />
 		</div>
@@ -225,21 +222,36 @@
 	<!-- Task row -->
 	<div class="task-row">
 		<div class="task-row-left">
-			<!-- Mark done checkbox -->
-			<button
-				class="icon-button mark-done"
-				class:is-done={task.done}
-				aria-label={task.done ? "Mark as incomplete" : "Move to Done"}
-				title={task.done ? "Mark as incomplete" : "Move to Done"}
-				on:click={() => taskActions.toggleDone(task.id)}
-			>
-				<span class="default-icon">
-					<Icon name={task.done ? "lucide-circle-check" : "lucide-circle"} size={18} opacity={0.5} />
-				</span>
-				<span class="hover-icon">
-					<Icon name="lucide-circle-check" size={18} opacity={1} />
-				</span>
-			</button>
+			{#if isInSelectionMode}
+				<!-- Selection checkbox (square) -->
+				<button
+					class="icon-button bulk-select"
+					aria-label="Select for bulk actions"
+					title="Select for bulk actions"
+					on:click={() => {
+						// TODO: Implement selection in Phase 5
+						console.log("Select task:", task.id);
+					}}
+				>
+					<Icon name="lucide-square" size={16} opacity={0.4} />
+				</button>
+			{:else}
+				<!-- Mark done checkbox (circle) -->
+				<button
+					class="icon-button mark-done"
+					class:is-done={task.done}
+					aria-label={task.done ? "Mark as incomplete" : "Move to Done"}
+					title={task.done ? "Mark as incomplete" : "Move to Done"}
+					on:click={() => taskActions.toggleDone(task.id)}
+				>
+					<span class="default-icon">
+						<Icon name={task.done ? "lucide-circle-check" : "lucide-circle"} size={18} opacity={0.5} />
+					</span>
+					<span class="hover-icon">
+						<Icon name="lucide-circle-check" size={18} opacity={1} />
+					</span>
+				</button>
+			{/if}
 		</div>
 		<div class="task-row-content">
 			{#if isEditing}
@@ -305,17 +317,11 @@
 		// Quick actions bar (top row)
 		.task-quick-actions {
 			display: flex;
-			justify-content: space-between;
+			justify-content: flex-end;
 			align-items: center;
 			padding: var(--size-4-1) var(--size-4-2);
 			border-bottom: var(--border-width) solid var(--background-modifier-border);
 			min-height: 32px;
-
-			.quick-actions-left {
-				display: flex;
-				align-items: center;
-				gap: var(--size-4-1);
-			}
 
 			.quick-actions-right {
 				display: flex;
@@ -352,26 +358,6 @@
 							var(--background-modifier-border-focus);
 					}
 				}
-			}
-		}
-
-		// Icon placeholders (temporary for Phase 1)
-		.icon-placeholder {
-			width: 24px;
-			height: 24px;
-			border-radius: var(--radius-s);
-			background-color: var(--background-modifier-border);
-			opacity: 0.3;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-
-			&.bulk-select {
-				width: 16px;
-				height: 16px;
-				border: 1px solid var(--text-muted);
-				background-color: transparent;
-				opacity: 0.4;
 			}
 		}
 
@@ -436,6 +422,18 @@
 					.default-icon :global(svg) {
 						opacity: 1;
 						color: var(--interactive-accent);
+					}
+				}
+			}
+
+			&.bulk-select {
+				:global(svg) {
+					transition: opacity 0.2s ease;
+				}
+
+				&:hover {
+					:global(svg) {
+						opacity: 0.7 !important;
 					}
 				}
 			}

@@ -13,6 +13,7 @@
 	import IconButton from "./icon_button.svelte";
 	import { isDraggingStore } from "../dnd/store";
 	import type { Readable } from "svelte/store";
+	import { selectionModeStore, toggleSelectionMode } from "../selection/selection_mode_store";
 
 	export let app: App;
 	export let column: ColumnTag | DefaultColumns;
@@ -40,6 +41,7 @@
 
 	$: columnTitle = getColumnTitle(column, $columnTagTableStore);
 	$: columnColor = isColumnTag(column, columnTagTableStore) ? $columnColourTableStore[column] : undefined;
+	$: isInSelectionMode = $selectionModeStore.get(column) || false;
 
 	$: sortedTasks = tasks.sort((a, b) => {
 		if (a.path === b.path) {
@@ -134,6 +136,18 @@
 				<IconButton icon="lucide-more-vertical" on:click={showMenu} />
 			{/if}
 		</div>
+		<div class="mode-toggle-container">
+			<button
+				class="mode-toggle"
+				class:active={isInSelectionMode}
+				on:click={() => toggleSelectionMode(column)}
+				aria-label={isInSelectionMode ? "Exit selection mode" : "Enter selection mode"}
+				title={isInSelectionMode ? "Exit selection mode" : "Enter selection mode"}
+			>
+				<span class="toggle-icon">{isInSelectionMode ? "✓" : ""}</span>
+				Select
+			</button>
+		</div>
 		<div class="divide" />
 		<div class="tasks-wrapper">
 			<div class="tasks">
@@ -146,6 +160,7 @@
 				{showFilepath}
 				{consolidateTags}
 				displayColumn={column}
+				{isInSelectionMode}
 				/>
 			{/each}
 				{#if isColumnTag(column, columnTagTableStore)}
@@ -202,6 +217,55 @@
 				font-size: var(--font-ui-larger);
 				font-weight: var(--font-bold);
 				margin: 0;
+			}
+		}
+
+		.mode-toggle-container {
+			display: flex;
+			justify-content: flex-end;
+			margin-top: var(--size-4-2);
+			margin-bottom: var(--size-4-1);
+
+			.mode-toggle {
+				display: flex;
+				align-items: center;
+				gap: var(--size-2-1);
+				padding: var(--size-2-1) var(--size-4-1);
+				border: 1px solid var(--background-modifier-border);
+				background: transparent;
+				border-radius: var(--radius-s);
+				cursor: pointer;
+				font-size: var(--font-ui-small);
+				color: var(--text-muted);
+				transition: all 0.2s ease;
+
+				.toggle-icon {
+					display: inline-flex;
+					justify-content: center;
+					align-items: center;
+					width: 12px;
+					height: 12px;
+					border: 1px solid currentColor;
+					border-radius: 2px;
+					font-size: 10px;
+					line-height: 1;
+				}
+
+				&:hover {
+					background: var(--background-modifier-hover);
+					border-color: var(--text-muted);
+					color: var(--text-normal);
+				}
+
+				&.active {
+					background: var(--interactive-accent);
+					border-color: var(--interactive-accent);
+					color: var(--text-on-accent);
+
+					.toggle-icon {
+						border-color: var(--text-on-accent);
+					}
+				}
 			}
 		}
 
