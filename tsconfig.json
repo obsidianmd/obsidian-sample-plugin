@@ -15,6 +15,7 @@
 		"isolatedModules": true,
 		"strictNullChecks": true,
 		"strictBindCallApply": true,
+		"allowSyntheticDefaultImports": true,
 		"useUnknownInCatchVariables": true,
 		"lib": [
 			"DOM",
