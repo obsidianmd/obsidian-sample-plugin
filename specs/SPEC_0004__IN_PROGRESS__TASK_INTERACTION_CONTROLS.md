@@ -28,46 +28,39 @@ Users need quick access to common task actions directly from the kanban card vie
 #### Task Card with Action Bar
 ```
 ┌─────────────────────────────────────────────┐
-│ ☐ ↗                                     ⋮   │ ← Quick actions bar: bulk-select, go-to-file, menu
+│                                         ⋮   │ ← Quick actions bar: menu
 │ ─────────────────────────────────────────── │
-│ ☑ Test                    #gtd             │ ← Task row: mark-done, title, tags
+│ ☑ Test                    #gtd             │ ← Task row: checkbox (mode-dependent), title, tags
 │ ─────────────────────────────────────────── │
-│ periodic/2025-05-01.md                      │ ← File path
+│ ↗ periodic/2025-05-01.md                   │ ← File path with go-to-file
 └─────────────────────────────────────────────┘
 ```
 
 **Card Structure:**
-- **Top row (Quick actions bar)**: Bulk-select checkbox (left) + go-to-file icon + three-dot menu (right)
-- **Second row (Task row)**: Mark-done checkbox (left) + task title/tags (right)
-- **Bottom row**: File path (existing)
+- **Top row (Quick actions bar)**: Three-dot menu (right)
+- **Second row (Task row)**: Mode-dependent checkbox (left) + task title/tags (right)
+- **Bottom row**: Go-to-file arrow + file path (clickable)
 
-**Visual Distinction Between Checkboxes:**
+**Mode-Dependent Checkbox:**
 
-To prevent confusion between bulk-select and mark-as-done checkboxes:
+The checkbox on each task changes based on the column's current mode:
 
-1. **Icon Shape:**
-   - **Bulk-select**: Square checkbox (`lucide-square` / `lucide-check-square`) - traditional checkbox
-   - **Mark-done**: Circle checkmark (`lucide-circle` / `lucide-circle-check`) - action button
+1. **Mark-Done Mode (Default):**
+   - **Icon Shape**: Circle (`lucide-circle` / `lucide-circle-check`)
+   - **Function**: Marks task as complete and moves to Done column
+   - **Visual**: Accent color on hover, opacity 0.5 default
+   - **Size**: 18px
 
-2. **Visual Weight:**
-   - **Bulk-select**: Subtle outline, only fills when checked, lower opacity (0.4 default)
-   - **Mark-done**: More prominent, slightly higher opacity (0.5 default)
+2. **Selection Mode (When Enabled):**
+   - **Icon Shape**: Square (`lucide-square` / `lucide-check-square`)
+   - **Function**: Selects task for bulk operations
+   - **Visual**: Traditional checkbox appearance, opacity 0.4 default
+   - **Size**: 16px
 
-3. **Size:**
-   - **Bulk-select**: Slightly smaller (14px)
-   - **Mark-done**: Standard size (16-18px)
-
-4. **Position + Context:**
-   - **Bulk-select**: Top row with utility actions (navigate, menu)
-   - **Mark-done**: Next to task title (familiar todo list pattern - moves task to Done)
-
-5. **Interaction Feedback:**
-   - **Bulk-select**: Standard checkbox toggle (binary state)
-   - **Mark-done**: Button-like with hover accent color
-
-6. **Tooltips:**
-   - **Bulk-select**: "Select for bulk actions" (on hover)
-   - **Mark-done**: "Move to Done" (on hover)
+**Visual Reinforcement:**
+- Shape change (circle → square) makes mode switch obvious
+- Only one checkbox visible at a time reduces clutter
+- Mode toggle at column level makes intent clear
 
 **Icon Design Notes:**
 - Icons should be subtle but discoverable (light gray, darken on hover)
@@ -75,18 +68,30 @@ To prevent confusion between bulk-select and mark-as-done checkboxes:
 - Adequate touch target size (24px minimum for touch targets, even if icon is smaller)
 - Spacing between icons for easy clicking
 
-#### Column Header with Bulk Actions
+#### Column Header with Mode Toggle
 ```
 ┌─────────────────────────────────────────────┐
-│ Today                              2 selected│ ← Shows count when tasks selected
-│ ───────────────────────────────────────────────
-│ [Move to...▼] [Done]                       │ ← Bulk action bar (only when items selected)
+│ Today                           [✓ Select]  │ ← Mode toggle (off by default)
+└─────────────────────────────────────────────┘
+
+When selection mode is ON:
+┌─────────────────────────────────────────────┐
+│ Today                           [✓ Select]  │ ← Mode toggle (on)
+│ 2 selected                                  │ ← Count of selected tasks
+│ [Move to...▼] [Done]                       │ ← Bulk action buttons
 └─────────────────────────────────────────────┘
 ```
 
+**Mode Toggle:**
+- Located under column name, right-aligned
+- Toggle button with "Select" label
+- **Off (Default)**: Checkboxes are circles for marking done
+- **On**: Checkboxes become squares for multi-selection
+- Toggle state is per-column (each column can be in different mode)
+
 **Bulk Actions Visibility:**
-- Hidden by default
-- Appears at top of column when one or more tasks in that column are selected
+- Hidden when selection mode is off
+- Appears when selection mode is on AND tasks are selected
 - Shows count of selected tasks
 - Actions apply only to selected tasks in that column
 
@@ -94,10 +99,10 @@ To prevent confusion between bulk-select and mark-as-done checkboxes:
 - **Move to...** - Dropdown menu listing all columns (excluding current column)
 - **Done** - Moves all selected tasks to Done column (quick action)
 
-**Cross-Column Selection:**
-- Each column shows its own bulk action bar when it has selected tasks
+**Per-Column State:**
+- Each column has its own mode toggle
+- Each column tracks its own selection state
 - Bulk actions only affect tasks selected within that specific column
-- Selection state is per-column, not global
 
 ### Data Model
 
@@ -277,53 +282,51 @@ No new data model changes required. Uses existing:
 
 **Design Change:** Icon placed in footer section next to file name (not in quick actions bar) for better UX
 
-### Phase 4: Selection Infrastructure
-**Goal:** Users can select individual tasks
+### Phase 4: Selection Mode Toggle
+**Goal:** Users can toggle columns into selection mode
 
-1. ⬜ Add selection checkbox to quick actions bar (top-left)
-2. ⬜ Create selection state store (Map<taskId, boolean>)
-3. ⬜ Implement checkbox toggle handler
-4. ⬜ Add visual selected state to card
-5. ⬜ Test: Select/deselect tasks, verify state updates
+1. ⬜ Add mode toggle button to column header (under column name, right-aligned)
+2. ⬜ Create selection mode state store (Map<columnTag, boolean>)
+3. ⬜ Implement toggle handler to switch between mark-done and selection modes
+4. ⬜ Update task checkbox to change shape based on column mode (circle vs square)
+5. ⬜ Test: Toggle mode, verify checkboxes change from circles to squares
 
-**Deliverable:** Tasks can be selected individually
+**Deliverable:** Column mode toggle working with visual checkbox feedback
 
-### Phase 5: Bulk Action Bar
-**Goal:** Display bulk action controls when tasks selected
+### Phase 5: Task Selection in Selection Mode
+**Goal:** Users can select individual tasks when in selection mode
 
-1. ⬜ Add bulk action bar component to column header
-2. ⬜ Show/hide bar based on selection count
-3. ⬜ Display selected count in column header
-4. ⬜ Add Move to... dropdown (non-functional initially)
-5. ⬜ Add Done button (non-functional initially)
-6. ⬜ Test: Select tasks, verify bar appears with correct count
+1. ⬜ Create task selection state store (Map<taskId, boolean>)
+2. ⬜ Update checkbox click handler to select/deselect when in selection mode
+3. ⬜ Add visual selected state to task card (checkmark in square)
+4. ⬜ Display selection count in column header when tasks selected
+5. ⬜ Test: Toggle to selection mode, select tasks, verify state and count
 
-**Deliverable:** Bulk action UI appears when tasks selected
+**Deliverable:** Tasks can be selected in selection mode with visual feedback
 
-### Phase 6: Bulk Move Implementation
-**Goal:** Move multiple selected tasks to another column
+### Phase 6: Bulk Action Buttons
+**Goal:** Display and wire up bulk action controls
 
-1. ⬜ Populate Move to... dropdown with available columns (excluding current column)
-2. ⬜ Implement bulk move logic
-3. ⬜ Update all selected task files (preserve checkbox state)
-4. ⬜ Clear selection after move
-5. ⬜ Add success notification
-6. ⬜ Test: Select multiple tasks, move to different column
+1. ⬜ Add bulk action bar component to column header (below mode toggle)
+2. ⬜ Show/hide bar based on selection mode AND selection count
+3. ⬜ Add Move to... dropdown with available columns (excluding current column)
+4. ⬜ Add Done button
+5. ⬜ Test: Select tasks, verify buttons appear and are clickable
 
-**Deliverable:** Working bulk move functionality
+**Deliverable:** Bulk action UI appears when in selection mode with tasks selected
 
-### Phase 7: Bulk Move to Done
-**Goal:** Move multiple tasks to Done at once
+### Phase 7: Bulk Operations Implementation
+**Goal:** Implement bulk move and bulk done functionality
 
-1. ⬜ Add "Done" button to bulk action bar
-2. ⬜ Implement bulk move to Done handler
-3. ⬜ Update all selected task files (mark checkboxes as `[x]`)
-4. ⬜ Remove column label tags from all selected tasks
-5. ⬜ Add success notification
-6. ⬜ Clear selection after action
-7. ⬜ Test: Select multiple tasks, click Done, verify all display in Done column
+1. ⬜ Implement bulk move logic (Move to... dropdown)
+2. ⬜ Update all selected task files (preserve checkbox state)
+3. ⬜ Implement bulk move to Done handler (Done button)
+4. ⬜ Update all selected task files (mark checkboxes as `[x]`)
+5. ⬜ Clear selection and exit selection mode after action
+6. ⬜ Add success notification
+7. ⬜ Test: Select multiple tasks, use both Move to... and Done buttons
 
-**Deliverable:** Complete bulk operations
+**Deliverable:** Complete bulk operations functionality
 
 ### Phase 8: Polish & Accessibility
 **Goal:** Refinements, edge cases, and accessibility
