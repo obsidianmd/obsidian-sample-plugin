@@ -147,7 +147,7 @@
 					Done
 				</button>
 				<button
-					class="segment"
+					class="segment select-segment"
 					class:active={isInSelectionMode}
 					on:click={() => !isInSelectionMode && toggleSelectionMode(column)}
 					aria-label="Selection mode"
@@ -231,31 +231,34 @@
 		.mode-toggle-container {
 			display: flex;
 			justify-content: flex-start;
-			margin-top: var(--size-4-2);
-			margin-bottom: var(--size-4-1);
+			margin-top: var(--size-4-3);
+			margin-bottom: var(--size-4-2);
 
 			.segmented-control {
 				display: inline-flex;
-				background: var(--interactive-accent);
+				background: var(--background-modifier-border-hover);
+				border: 1px solid var(--background-modifier-border);
 				border-radius: var(--radius-m);
-				padding: 2px;
-				gap: 2px;
+				padding: 3px;
+				gap: 0;
 
 				.segment {
 					padding: var(--size-2-1) var(--size-4-2);
 					border: none;
 					background: transparent;
-					border-radius: calc(var(--radius-m) - 2px);
+					border-radius: calc(var(--radius-m) - 3px);
 					cursor: pointer;
 					font-size: var(--font-ui-small);
-					color: var(--text-on-accent);
+					color: var(--text-muted);
 					transition: all 0.2s ease;
 					box-shadow: none;
 					position: relative;
 					z-index: 1;
+					white-space: nowrap;
 
 					&:hover:not(.active) {
-						background: rgba(255, 255, 255, 0.1);
+						color: var(--text-normal);
+						background: var(--background-modifier-hover);
 					}
 
 					&.active {
@@ -263,6 +266,11 @@
 						color: var(--text-normal);
 						box-shadow: none;
 						cursor: default;
+					}
+
+					&.select-segment.active {
+						background: var(--interactive-accent);
+						color: var(--text-on-accent);
 					}
 				}
 			}

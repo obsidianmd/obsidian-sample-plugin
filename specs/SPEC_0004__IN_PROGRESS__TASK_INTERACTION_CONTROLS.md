@@ -86,19 +86,23 @@ When selection mode is ON:
 
 **Mode Toggle:**
 - Located under column name, left-aligned
+- Generous spacing between column title and toggle (more unobtrusive)
 - Segmented control with two options: "Done" and "Select"
 - Flat design (no shadows or 3D effects)
-- Container: Accent color background with rounded rectangle border
-- Active segment: White/light background pill that slides between positions
-- Inactive segment: Transparent background, white text
+- Container: Subtle neutral background with light border
+- Active segment: Accent color background pill (only when in Select mode to draw attention)
+- Active "Done" segment: Light/neutral background (default, unobtrusive)
+- Inactive segment: Transparent background, normal text color
+- Even padding around active segment (3-4px on all sides)
 - Default state: "Done" selected (mark-done mode)
 - Toggle state is per-column (each column can be in different mode)
 
 **Visual Style:**
 - Inspired by iOS segmented controls / pill toggles
 - Rounded rectangle container (--radius-m)
-- Sliding pill animation between states
-- Active state has elevated appearance (lighter background)
+- Subtle, unobtrusive appearance when in default Done mode
+- Accent color only used for Select mode (to draw attention to bulk actions)
+- Even border spacing around active segment
 - Follows existing task list kanban design language
 - Flat, modern appearance
 
