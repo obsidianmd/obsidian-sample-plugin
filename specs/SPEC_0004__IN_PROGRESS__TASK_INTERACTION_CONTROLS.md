@@ -310,7 +310,10 @@ No new data model changes required. Uses existing:
 
 **Deliverable:** Column mode toggle working with visual checkbox feedback
 
-**Implemented by:** [10be9dc](https://github.com/ErikaRS/task-list-kanban/commit/10be9dc)
+**Implemented by:** 
+- [10be9dc](https://github.com/ErikaRS/task-list-kanban/commit/10be9dc) - Initial implementation
+- [782e1bd](https://github.com/ErikaRS/task-list-kanban/commit/782e1bd) - Segmented control design
+- [9b5b2ae](https://github.com/ErikaRS/task-list-kanban/commit/9b5b2ae) - Final refinements (unified styling, toggle behavior)
 
 ### Phase 5: Task Selection in Selection Mode
 **Goal:** Users can select individual tasks when in selection mode
