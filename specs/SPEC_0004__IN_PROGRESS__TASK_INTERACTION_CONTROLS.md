@@ -245,16 +245,23 @@ No new data model changes required. Uses existing:
 
 **Implemented by:** [1c3cb40](https://github.com/ErikaRS/task-list-kanban/commit/1c3cb40)
 
-### Phase 2: Move to Done Action
+### Phase 2: Move to Done Action ✅ COMPLETE
 **Goal:** Users can click checkmark to move tasks to Done
 
-1. ⬜ Add mark-done icon button to task row
-2. ⬜ Implement click handler that updates task checkbox in file to `[x]`
-3. ⬜ Remove current column label tag from task
-4. ⬜ Verify task appears in Done column after update
-5. ⬜ Test: Click checkmark, verify file updated and task displays in Done column
+1. ✅ Add mark-done icon button to task row
+2. ✅ Implement click handler that updates task checkbox in file to `[x]`
+3. ✅ Remove current column label tag from task
+4. ✅ Verify task appears in Done column after update
+5. ✅ Test: Click checkmark, verify file updated and task displays in Done column
 
-**Deliverable:** Working quick move-to-done functionality
+**Deliverable:** Working quick move-to-done functionality with toggle support
+
+**Implemented by:** [2d40c23](https://github.com/ErikaRS/task-list-kanban/commit/2d40c23)
+
+**Additional features implemented:**
+- Toggle functionality: clicking done tasks unchecks them and moves back to original column
+- Fixed bug preventing tasks from being dragged from done column
+- Flat hover effect with accent color (no 3D styling)
 
 ### Phase 3: Navigate to File Action
 **Goal:** Users can click arrow to navigate to task in file
