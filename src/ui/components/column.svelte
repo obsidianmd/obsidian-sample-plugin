@@ -140,7 +140,7 @@
 			<div 
 				class="segmented-control"
 				class:has-color={!!columnColor}
-				style:--toggle-bg-color={columnColor ? `${columnColor}20` : undefined}
+				style:--toggle-bg-color={columnColor ? `color-mix(in srgb, ${columnColor} 15%, transparent)` : undefined}
 				style:--toggle-active-color={columnColor || undefined}
 			>
 				<button
