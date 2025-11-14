@@ -137,7 +137,8 @@
 			{/if}
 		</div>
 		<div class="mode-toggle-container">
-			<div class="segmented-control">
+			<div class="segmented-control" class:select-mode={isInSelectionMode}>
+				<div class="sliding-background"></div>
 				<button
 					class="segment"
 					class:active={!isInSelectionMode}
@@ -241,6 +242,24 @@
 				border-radius: var(--radius-s);
 				padding: 2px;
 				gap: 0;
+				position: relative;
+
+				.sliding-background {
+					position: absolute;
+					top: 2px;
+					left: 2px;
+					width: calc(50% - 2px);
+					height: calc(100% - 4px);
+					background: var(--background-primary);
+					border: var(--border-width) solid var(--background-modifier-border);
+					border-radius: calc(var(--radius-s) - 2px);
+					transition: transform 0.2s ease;
+					z-index: 0;
+				}
+
+				&.select-mode .sliding-background {
+					transform: translateX(100%);
+				}
 
 				.segment {
 					padding: 2px var(--size-4-1);
@@ -250,17 +269,15 @@
 					cursor: pointer;
 					font-size: var(--font-ui-smaller);
 					color: var(--text-muted);
-					transition: all 0.2s ease;
+					transition: color 0.2s ease;
 					box-shadow: none;
 					position: relative;
 					z-index: 1;
 					white-space: nowrap;
+					flex: 1;
 
 					&.active {
-						background: var(--background-primary);
-						border: var(--border-width) solid var(--background-modifier-border);
 						color: var(--text-normal);
-						box-shadow: none;
 					}
 				}
 			}
