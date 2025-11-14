@@ -72,13 +72,13 @@ The checkbox on each task changes based on the column's current mode:
 ```
 ┌─────────────────────────────────────────────┐
 │ Today                                       │
-│ [Select]                                    │ ← Mode toggle (off by default), left-aligned
+│ [ Done | Select ]                           │ ← Segmented control, left-aligned
 └─────────────────────────────────────────────┘
 
 When selection mode is ON:
 ┌─────────────────────────────────────────────┐
 │ Today                                       │
-│ [Select]                                    │ ← Mode toggle (on), left-aligned
+│ [ Done | Select ]                           │ ← Segmented control (Select active)
 │ 2 selected                                  │ ← Count of selected tasks
 │ [Move to...▼] [Done]                       │ ← Bulk action buttons
 └─────────────────────────────────────────────┘
@@ -86,18 +86,21 @@ When selection mode is ON:
 
 **Mode Toggle:**
 - Located under column name, left-aligned
-- Toggle button with "Select" label
-- Flat design (no shadows, gradients, or 3D effects)
-- **Off (Default)**: Light background, subtle border, text in muted color
-- **On**: Accent background color, white text, no border
+- Segmented control with two options: "Done" and "Select"
+- Flat design (no shadows or 3D effects)
+- Container: Accent color background with rounded rectangle border
+- Active segment: White/light background pill that slides between positions
+- Inactive segment: Transparent background, white text
+- Default state: "Done" selected (mark-done mode)
 - Toggle state is per-column (each column can be in different mode)
-- Rounded rectangle shape (consistent with kanban card styling)
 
 **Visual Style:**
-- Uses rounded rectangles (moderate border-radius, not overly round)
-- Follows existing task list kanban button conventions
+- Inspired by iOS segmented controls / pill toggles
+- Rounded rectangle container (--radius-m)
+- Sliding pill animation between states
+- Active state has elevated appearance (lighter background)
+- Follows existing task list kanban design language
 - Flat, modern appearance
-- Clear visual distinction between on/off states
 
 **Bulk Actions Visibility:**
 - Hidden when selection mode is off
