@@ -241,15 +241,14 @@
 
 			.segmented-control {
 				display: inline-flex;
-				background: transparent;
-				border: 1.5px solid var(--background-modifier-border);
+				background: var(--background-modifier-border-hover);
+				border: none;
 				border-radius: var(--radius-s);
 				padding: 2px;
 				gap: 0;
 
 				&.has-color {
 					background: var(--toggle-bg-color);
-					border-color: var(--toggle-bg-color);
 				}
 
 				.segment {
@@ -268,16 +267,16 @@
 					flex: 1;
 
 					&.active {
-						background: var(--background-primary);
-						border: var(--border-width) solid var(--background-modifier-border);
+						background: var(--background-modifier-border);
+						border: none;
 						color: var(--text-normal);
 					}
 				}
 
 				&.has-color .segment.active {
 					background: var(--toggle-active-color);
-					border-color: var(--toggle-active-color);
-					color: white;
+					border: none;
+					color: var(--text-on-accent);
 				}
 			}
 		}
