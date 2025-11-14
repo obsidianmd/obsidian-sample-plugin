@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ColumnTagTable } from "../columns/columns";
+	import type { ColumnTag, ColumnTagTable, DefaultColumns } from "../columns/columns";
 	import { isDraggingStore } from "../dnd/store";
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
@@ -7,7 +7,7 @@
 	import Icon from "./icon.svelte";
 	import { Component, MarkdownRenderer, type App } from "obsidian";
 	import type { Readable } from "svelte/store";
-	import { onDestroy, onMount } from "svelte";
+	import { onDestroy } from "svelte";
 
 	export let app: App;
 	export let task: Task;
@@ -15,6 +15,7 @@
 	export let columnTagTableStore: Readable<ColumnTagTable>;
 	export let showFilepath: boolean;
 	export let consolidateTags: boolean;
+	export let displayColumn: ColumnTag | DefaultColumns;
 
 	function handleContentBlur() {
 		isEditing = false;
@@ -45,7 +46,7 @@
 	function handleDragStart(e: DragEvent) {
 		handleContentBlur();
 		isDragging = true;
-		isDraggingStore.set({ fromColumn: task.column });
+		isDraggingStore.set({ fromColumn: displayColumn });
 		if (e.dataTransfer) {
 			e.dataTransfer.setData("text/plain", task.id);
 			e.dataTransfer.dropEffect = "move";
@@ -228,8 +229,21 @@
 	<!-- Task row -->
 	<div class="task-row">
 		<div class="task-row-left">
-			<!-- Mark done checkbox placeholder -->
-			<div class="icon-placeholder mark-done"></div>
+			<!-- Mark done checkbox -->
+			<button
+				class="icon-button mark-done"
+				class:is-done={task.done}
+				aria-label={task.done ? "Mark as incomplete" : "Move to Done"}
+				title={task.done ? "Mark as incomplete" : "Move to Done"}
+				on:click={() => taskActions.toggleDone(task.id)}
+			>
+				<span class="default-icon">
+					<Icon name={task.done ? "lucide-circle-check" : "lucide-circle"} size={18} opacity={0.5} />
+				</span>
+				<span class="hover-icon">
+					<Icon name="lucide-circle-check" size={18} opacity={1} />
+				</span>
+			</button>
 		</div>
 		<div class="task-row-content">
 			{#if isEditing}
@@ -360,14 +374,71 @@
 				background-color: transparent;
 				opacity: 0.4;
 			}
+		}
+
+		// Icon button styling
+		.icon-button {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 24px;
+			height: 24px;
+			padding: 0;
+			border: none;
+			background: transparent;
+			cursor: pointer;
+			border-radius: var(--radius-s);
+			transition: opacity 0.2s ease;
+			position: relative;
+			box-shadow: none;
+			outline: none;
+
+			&:hover,
+			&:active,
+			&:focus {
+				background: transparent;
+				box-shadow: none;
+				outline: none;
+			}
+
+			.default-icon,
+			.hover-icon {
+				position: absolute;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: opacity 0.2s ease;
+			}
+
+			// Hide hover icon by default
+			.hover-icon {
+				opacity: 0;
+			}
 
 			&.mark-done {
-				width: 18px;
-				height: 18px;
-				border-radius: 50%;
-				border: 2px solid var(--text-muted);
-				background-color: transparent;
-				opacity: 0.7;
+				// Show hover checkmark on hover
+				&:hover {
+					.hover-icon {
+						opacity: 1;
+
+						:global(svg) {
+							color: var(--interactive-accent);
+						}
+					}
+
+					// Hide default icon on hover
+					.default-icon {
+						opacity: 0;
+					}
+				}
+
+				// If already done, show checkmark with accent color
+				&.is-done {
+					.default-icon :global(svg) {
+						opacity: 1;
+						color: var(--interactive-accent);
+					}
+				}
 			}
 		}
 

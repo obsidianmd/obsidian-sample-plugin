@@ -12,6 +12,7 @@ import type { ColumnTag } from "../columns/columns";
 export type TaskActions = {
 	changeColumn: (id: string, column: ColumnTag) => Promise<void>;
 	markDone: (id: string) => Promise<void>;
+	toggleDone: (id: string) => Promise<void>;
 	updateContent: (id: string, content: string) => Promise<void>;
 	viewFile: (id: string) => Promise<void>;
 	archiveTasks: (ids: string[]) => Promise<void>;
@@ -59,6 +60,16 @@ export function createTaskActions({
 
 		async markDone(id) {
 			await updateRowWithTask(id, (task) => (task.done = true));
+		},
+
+		async toggleDone(id) {
+			await updateRowWithTask(id, (task) => {
+				if (task.done) {
+					task.undone();
+				} else {
+					task.done = true;
+				}
+			});
 		},
 
 		async updateContent(id, content) {

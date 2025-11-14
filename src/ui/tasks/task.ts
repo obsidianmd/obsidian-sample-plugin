@@ -303,6 +303,11 @@ export class Task {
 		this._displayStatus = Array.from(this.doneStatusMarkers)[0] ?? "x";
 	}
 
+	undone() {
+		this._done = false;
+		this._displayStatus = " ";
+	}
+
 	private _displayStatus: string;
 
 	private _deleted: boolean = false;
@@ -324,6 +329,7 @@ export class Task {
 	set column(column: ColumnTag) {
 		this._column = column;
 		this._done = false;
+		this._displayStatus = " ";
 	}
 
 	readonly blockLink: string | undefined;

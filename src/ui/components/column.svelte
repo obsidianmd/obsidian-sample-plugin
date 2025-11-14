@@ -144,8 +144,9 @@
 				{taskActions}
 				{columnTagTableStore}
 				{showFilepath}
-				 {consolidateTags}
-				 />
+				{consolidateTags}
+				displayColumn={column}
+				/>
 			{/each}
 				{#if isColumnTag(column, columnTagTableStore)}
 					<button
