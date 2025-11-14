@@ -241,7 +241,7 @@
 
 			.segmented-control {
 				display: inline-flex;
-				background: var(--background-modifier-border-hover);
+				background: var(--background-primary);
 				border: none;
 				border-radius: var(--radius-s);
 				padding: 2px;
@@ -267,7 +267,7 @@
 					flex: 1;
 
 					&.active {
-						background: var(--background-primary);
+						background: var(--background-secondary);
 						border: none;
 						color: var(--text-normal);
 					}
