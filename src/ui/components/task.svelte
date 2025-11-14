@@ -216,10 +216,6 @@
 		<div class="quick-actions-left">
 			<!-- Bulk selection checkbox placeholder -->
 			<div class="icon-placeholder bulk-select"></div>
-			<!-- Go to file icon -->
-			<span class="icon-wrapper go-to-file" aria-label="Go to file">
-				<Icon name="lucide-arrow-up-right" size={16} opacity={0.5} />
-			</span>
 		</div>
 		<div class="quick-actions-right">
 			<TaskMenu {task} {taskActions} {columnTagTableStore} />
@@ -270,7 +266,15 @@
 
 	{#if showFilepath}
 		<div class="task-footer">
-			<p>{task.path}</p>
+			<button
+				class="go-to-file-button"
+				aria-label="Go to file"
+				title="Go to file"
+				on:click={() => taskActions.viewFile(task.id)}
+			>
+				<Icon name="lucide-arrow-up-right" size={18} opacity={0.5} />
+				<span class="file-path">{task.path}</span>
+			</button>
 		</div>
 	{/if}
 	{#if shouldconsolidateTags}
@@ -335,11 +339,6 @@
 			.task-row-content {
 				flex: 1;
 				min-width: 0; // Allow text to wrap properly
-
-				p {
-					word-break: break-word;
-					margin: 0;
-				}
 
 				textarea {
 					cursor: text;
@@ -442,24 +441,48 @@
 			}
 		}
 
-		// Icon wrapper (no button styling, just holds icons)
-		.icon-wrapper {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			width: 24px;
-			height: 24px;
-		}
-
 		.task-footer {
 			border-top: var(--border-width) solid
 				var(--background-modifier-border);
 			padding: var(--size-4-2);
 			padding-top: var(--size-4-1);
 
-			p {
-				margin: 0;
-				font-size: var(--font-ui-smaller);
+			.go-to-file-button {
+				display: flex;
+				align-items: center;
+				justify-content: flex-start;
+				gap: var(--size-2-1);
+				width: 100%;
+				padding: 0;
+				border: none;
+				background: transparent;
+				cursor: pointer;
+				text-align: left;
+				box-shadow: none;
+				outline: none;
+				transition: opacity 0.2s ease;
+
+				&:hover {
+					background: transparent;
+					box-shadow: none;
+					outline: none;
+
+					:global(svg) {
+						opacity: 1 !important;
+						color: var(--interactive-accent);
+					}
+
+					.file-path {
+						color: var(--interactive-accent);
+					}
+				}
+
+				.file-path {
+					margin: 0;
+					font-size: var(--font-ui-smaller);
+					color: var(--text-muted);
+					transition: color 0.2s ease;
+				}
 			}
 		}
 
