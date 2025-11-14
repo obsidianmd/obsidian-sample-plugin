@@ -267,7 +267,7 @@
 					flex: 1;
 
 					&.active {
-						background: var(--background-modifier-border);
+						background: var(--background-primary);
 						border: none;
 						color: var(--text-normal);
 					}
@@ -276,7 +276,7 @@
 				&.has-color .segment.active {
 					background: var(--toggle-active-color);
 					border: none;
-					color: var(--text-on-accent);
+					color: var(--text-normal);
 				}
 			}
 		}
