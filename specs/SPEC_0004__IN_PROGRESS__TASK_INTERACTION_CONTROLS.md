@@ -54,8 +54,8 @@ The checkbox on each task changes based on the column's current mode:
 2. **Selection Mode (When Enabled):**
    - **Icon Shape**: Square (`lucide-square` / `lucide-check-square`)
    - **Function**: Selects task for bulk operations
-   - **Visual**: Traditional checkbox appearance, opacity 0.4 default
-   - **Size**: 16px
+   - **Visual**: Matches mark-done circle outline color and weight
+   - **Size**: 18px (same as mark-done for visual consistency)
 
 **Visual Reinforcement:**
 - Shape change (circle → square) makes mode switch obvious
@@ -71,23 +71,33 @@ The checkbox on each task changes based on the column's current mode:
 #### Column Header with Mode Toggle
 ```
 ┌─────────────────────────────────────────────┐
-│ Today                           [✓ Select]  │ ← Mode toggle (off by default)
+│ Today                                       │
+│ [Select]                                    │ ← Mode toggle (off by default), left-aligned
 └─────────────────────────────────────────────┘
 
 When selection mode is ON:
 ┌─────────────────────────────────────────────┐
-│ Today                           [✓ Select]  │ ← Mode toggle (on)
+│ Today                                       │
+│ [Select]                                    │ ← Mode toggle (on), left-aligned
 │ 2 selected                                  │ ← Count of selected tasks
 │ [Move to...▼] [Done]                       │ ← Bulk action buttons
 └─────────────────────────────────────────────┘
 ```
 
 **Mode Toggle:**
-- Located under column name, right-aligned
+- Located under column name, left-aligned
 - Toggle button with "Select" label
-- **Off (Default)**: Checkboxes are circles for marking done
-- **On**: Checkboxes become squares for multi-selection
+- Flat design (no shadows, gradients, or 3D effects)
+- **Off (Default)**: Light background, subtle border, text in muted color
+- **On**: Accent background color, white text, no border
 - Toggle state is per-column (each column can be in different mode)
+- Rounded rectangle shape (consistent with kanban card styling)
+
+**Visual Style:**
+- Uses rounded rectangles (moderate border-radius, not overly round)
+- Follows existing task list kanban button conventions
+- Flat, modern appearance
+- Clear visual distinction between on/off states
 
 **Bulk Actions Visibility:**
 - Hidden when selection mode is off
