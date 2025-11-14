@@ -88,21 +88,24 @@ When selection mode is ON:
 - Located under column name, left-aligned
 - Generous spacing between column title and toggle (more unobtrusive)
 - Segmented control with two options: "Done" and "Select"
-- Flat design (no shadows or 3D effects)
-- Container: Subtle neutral background with light border
-- Active segment: Accent color background pill (only when in Select mode to draw attention)
-- Active "Done" segment: Light/neutral background (default, unobtrusive)
-- Inactive segment: Transparent background, normal text color
-- Even padding around active segment (3-4px on all sides)
+- Flat design (no shadows or 3D effects, no borders)
+- Container background: Lighter shade (white/primary in default, 25% tint for colored columns)
+- Active segment: Matches column color (--background-secondary for default, full column color for custom)
+- Inactive segment: Transparent background, muted text color
+- Even padding around segments (2px)
 - Default state: "Done" selected (mark-done mode)
 - Toggle state is per-column (each column can be in different mode)
+- True toggle behavior: clicking either segment switches modes
 
 **Visual Style:**
 - Inspired by iOS segmented controls / pill toggles
-- Rounded rectangle container (--radius-m)
-- Subtle, unobtrusive appearance when in default Done mode
-- Accent color only used for Select mode (to draw attention to bulk actions)
-- Even border spacing around active segment
+- Rounded rectangle container (--radius-s)
+- No borders - clean, minimal appearance
+- Adapts to column colors using CSS color-mix
+- Default columns: white container with column-grey active state
+- Colored columns: light tint container (25% color + white) with full color active state
+- Dark text on light colors for readability
+- Smooth fade transitions (0.2s ease)
 - Follows existing task list kanban design language
 - Flat, modern appearance
 
@@ -313,7 +316,22 @@ No new data model changes required. Uses existing:
 **Implemented by:** 
 - [10be9dc](https://github.com/ErikaRS/task-list-kanban/commit/10be9dc) - Initial implementation
 - [782e1bd](https://github.com/ErikaRS/task-list-kanban/commit/782e1bd) - Segmented control design
-- [9b5b2ae](https://github.com/ErikaRS/task-list-kanban/commit/9b5b2ae) - Final refinements (unified styling, toggle behavior)
+- [dae4e5a](https://github.com/ErikaRS/task-list-kanban/commit/dae4e5a) - Subtle, unobtrusive styling
+- [0dcedc8](https://github.com/ErikaRS/task-list-kanban/commit/0dcedc8) - Smaller, more subordinate
+- [9b5b2ae](https://github.com/ErikaRS/task-list-kanban/commit/9b5b2ae) - Unified styling, true toggle behavior
+- [98c5202](https://github.com/ErikaRS/task-list-kanban/commit/98c5202) - Transparent background
+- [c03400f](https://github.com/ErikaRS/task-list-kanban/commit/c03400f) - Remove borders, match task card style
+- [a26c55e](https://github.com/ErikaRS/task-list-kanban/commit/a26c55e) - Adapt to column colors
+- [f65fab8](https://github.com/ErikaRS/task-list-kanban/commit/f65fab8) - Color-mix for proper tints
+- [9a5547a](https://github.com/ErikaRS/task-list-kanban/commit/9a5547a) - Unified lighter-shade pattern
+- [807cbfb](https://github.com/ErikaRS/task-list-kanban/commit/807cbfb) - Improved contrast and text color
+- [89dfeb8](https://github.com/ErikaRS/task-list-kanban/commit/89dfeb8) - Final: match default to colored pattern
+
+**Design Evolution:**
+- Started with simple toggle button, evolved to iOS-style segmented control
+- Refined to borderless design with lighter container shade
+- Added dynamic color adaptation for custom column colors
+- Final design: subtle, unobtrusive control that adapts to any column color
 
 ### Phase 5: Task Selection in Selection Mode
 **Goal:** Users can select individual tasks when in selection mode
