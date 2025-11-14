@@ -233,7 +233,12 @@
 						console.log("Select task:", task.id);
 					}}
 				>
-					<Icon name="lucide-square" size={16} opacity={0.4} />
+					<span class="default-icon">
+						<Icon name="lucide-square" size={18} opacity={0.5} />
+					</span>
+					<span class="hover-icon">
+						<Icon name="lucide-square" size={18} opacity={1} />
+					</span>
 				</button>
 			{:else}
 				<!-- Mark done checkbox (circle) -->
@@ -427,13 +432,30 @@
 			}
 
 			&.bulk-select {
-				:global(svg) {
+				.default-icon,
+				.hover-icon {
+					position: absolute;
+					display: flex;
+					align-items: center;
+					justify-content: center;
 					transition: opacity 0.2s ease;
 				}
 
+				.hover-icon {
+					opacity: 0;
+				}
+
 				&:hover {
-					:global(svg) {
-						opacity: 0.7 !important;
+					.hover-icon {
+						opacity: 1;
+						
+						:global(svg) {
+							color: var(--interactive-accent);
+						}
+					}
+
+					.default-icon {
+						opacity: 0;
 					}
 				}
 			}
