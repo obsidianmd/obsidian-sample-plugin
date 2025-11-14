@@ -137,15 +137,24 @@
 			{/if}
 		</div>
 		<div class="mode-toggle-container">
-			<button
-				class="mode-toggle"
-				class:active={isInSelectionMode}
-				on:click={() => toggleSelectionMode(column)}
-				aria-label={isInSelectionMode ? "Exit selection mode" : "Enter selection mode"}
-				title={isInSelectionMode ? "Exit selection mode" : "Enter selection mode"}
-			>
-				Select
-			</button>
+			<div class="segmented-control">
+				<button
+					class="segment"
+					class:active={!isInSelectionMode}
+					on:click={() => isInSelectionMode && toggleSelectionMode(column)}
+					aria-label="Mark as done mode"
+				>
+					Done
+				</button>
+				<button
+					class="segment"
+					class:active={isInSelectionMode}
+					on:click={() => !isInSelectionMode && toggleSelectionMode(column)}
+					aria-label="Selection mode"
+				>
+					Select
+				</button>
+			</div>
 		</div>
 		<div class="divide" />
 		<div class="tasks-wrapper">
@@ -225,30 +234,36 @@
 			margin-top: var(--size-4-2);
 			margin-bottom: var(--size-4-1);
 
-			.mode-toggle {
+			.segmented-control {
 				display: inline-flex;
-				align-items: center;
-				padding: var(--size-2-1) var(--size-4-2);
-				border: 1px solid var(--background-modifier-border);
-				background: var(--background-secondary);
+				background: var(--interactive-accent);
 				border-radius: var(--radius-m);
-				cursor: pointer;
-				font-size: var(--font-ui-small);
-				color: var(--text-muted);
-				transition: all 0.2s ease;
-				box-shadow: none;
+				padding: 2px;
+				gap: 2px;
 
-				&:hover {
-					background: var(--background-modifier-hover);
-					color: var(--text-normal);
-					box-shadow: none;
-				}
-
-				&.active {
-					background: var(--interactive-accent);
-					border-color: var(--interactive-accent);
+				.segment {
+					padding: var(--size-2-1) var(--size-4-2);
+					border: none;
+					background: transparent;
+					border-radius: calc(var(--radius-m) - 2px);
+					cursor: pointer;
+					font-size: var(--font-ui-small);
 					color: var(--text-on-accent);
+					transition: all 0.2s ease;
 					box-shadow: none;
+					position: relative;
+					z-index: 1;
+
+					&:hover:not(.active) {
+						background: rgba(255, 255, 255, 0.1);
+					}
+
+					&.active {
+						background: var(--background-primary);
+						color: var(--text-normal);
+						box-shadow: none;
+						cursor: default;
+					}
 				}
 			}
 		}
