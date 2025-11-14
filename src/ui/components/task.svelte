@@ -4,6 +4,7 @@
 	import type { TaskActions } from "../tasks/actions";
 	import type { Task } from "../tasks/task";
 	import TaskMenu from "./task_menu.svelte";
+	import Icon from "./icon.svelte";
 	import { Component, MarkdownRenderer, type App } from "obsidian";
 	import type { Readable } from "svelte/store";
 	import { onDestroy, onMount } from "svelte";
@@ -209,8 +210,28 @@
 	on:dragstart={handleDragStart}
 	on:dragend={handleDragEnd}
 >
-	<div class="task-body">
-		<div class="task-content">
+	<!-- Quick actions bar -->
+	<div class="task-quick-actions">
+		<div class="quick-actions-left">
+			<!-- Bulk selection checkbox placeholder -->
+			<div class="icon-placeholder bulk-select"></div>
+			<!-- Go to file icon -->
+			<span class="icon-wrapper go-to-file" aria-label="Go to file">
+				<Icon name="lucide-arrow-up-right" size={16} opacity={0.5} />
+			</span>
+		</div>
+		<div class="quick-actions-right">
+			<TaskMenu {task} {taskActions} {columnTagTableStore} />
+		</div>
+	</div>
+
+	<!-- Task row -->
+	<div class="task-row">
+		<div class="task-row-left">
+			<!-- Mark done checkbox placeholder -->
+			<div class="icon-placeholder mark-done"></div>
+		</div>
+		<div class="task-row-content">
 			{#if isEditing}
 				<textarea
 					class:editing={isEditing}
@@ -231,8 +252,8 @@
 				/>
 			{/if}
 		</div>
-		<TaskMenu {task} {taskActions} {columnTagTableStore} />
 	</div>
+
 	{#if showFilepath}
 		<div class="task-footer">
 			<p>{task.path}</p>
@@ -263,19 +284,48 @@
 			opacity: 0.15;
 		}
 
-		.task-body {
-			padding: var(--size-4-2);
-			display: grid;
-			gap: var(--size-4-2);
-			grid-template-columns: 1fr auto;
+		// Quick actions bar (top row)
+		.task-quick-actions {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: var(--size-4-1) var(--size-4-2);
+			border-bottom: var(--border-width) solid var(--background-modifier-border);
+			min-height: 32px;
 
-			p {
-				word-break: break-word;
-				margin: 0;
+			.quick-actions-left {
+				display: flex;
+				align-items: center;
+				gap: var(--size-4-1);
 			}
 
-			.task-content {
-				display: grid;
+			.quick-actions-right {
+				display: flex;
+				align-items: center;
+			}
+		}
+
+		// Task row (second row)
+		.task-row {
+			padding: var(--size-4-2);
+			display: flex;
+			gap: var(--size-4-1);
+			align-items: center;
+
+			.task-row-left {
+				display: flex;
+				align-items: center;
+				flex-shrink: 0;
+			}
+
+			.task-row-content {
+				flex: 1;
+				min-width: 0; // Allow text to wrap properly
+
+				p {
+					word-break: break-word;
+					margin: 0;
+				}
 
 				textarea {
 					cursor: text;
@@ -292,11 +342,49 @@
 			}
 		}
 
+		// Icon placeholders (temporary for Phase 1)
+		.icon-placeholder {
+			width: 24px;
+			height: 24px;
+			border-radius: var(--radius-s);
+			background-color: var(--background-modifier-border);
+			opacity: 0.3;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+
+			&.bulk-select {
+				width: 16px;
+				height: 16px;
+				border: 1px solid var(--text-muted);
+				background-color: transparent;
+				opacity: 0.4;
+			}
+
+			&.mark-done {
+				width: 18px;
+				height: 18px;
+				border-radius: 50%;
+				border: 2px solid var(--text-muted);
+				background-color: transparent;
+				opacity: 0.7;
+			}
+		}
+
+		// Icon wrapper (no button styling, just holds icons)
+		.icon-wrapper {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 24px;
+			height: 24px;
+		}
+
 		.task-footer {
 			border-top: var(--border-width) solid
 				var(--background-modifier-border);
 			padding: var(--size-4-2);
-			padding-top: 0;
+			padding-top: var(--size-4-1);
 
 			p {
 				margin: 0;
@@ -313,22 +401,22 @@
 		}
 	}
 
-	:global(.task-content *) {
+	:global(.task-row-content *) {
 		word-break: break-word;
 		margin: 0;
 	}
 
-	:global(.task-content img) {
+	:global(.task-row-content img) {
 		max-width: 100%;
 		max-height: 160px;
 		object-fit: contain;
 	}
 
-	:global(.task-content code) {
+	:global(.task-row-content code) {
 		white-space: pre-wrap;
 	}
 
-	:global(.task-content input[type="checkbox"]) {
+	:global(.task-row-content input[type="checkbox"]) {
 		pointer-events: none;
 	}
 </style>
