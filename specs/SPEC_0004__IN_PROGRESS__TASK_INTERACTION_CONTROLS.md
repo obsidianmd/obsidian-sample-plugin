@@ -263,15 +263,19 @@ No new data model changes required. Uses existing:
 - Fixed bug preventing tasks from being dragged from done column
 - Flat hover effect with accent color (no 3D styling)
 
-### Phase 3: Navigate to File Action
-**Goal:** Users can click arrow to navigate to task in file
+### Phase 3: Navigate to File Action ✅ COMPLETE
+**Goal:** Users can click arrow or file name to navigate to task in file
 
-1. ⬜ Add go-to-file icon button to quick actions bar
-2. ⬜ Implement click handler using Obsidian workspace API
-3. ⬜ Add file opening logic with line navigation
-4. ⬜ Test: Click arrow, verify file opens and scrolls to task
+1. ✅ Add go-to-file icon button to bottom section (next to file name)
+2. ✅ Reuse existing taskActions.viewFile() functionality from menu
+3. ✅ Make both icon and file name text clickable
+4. ✅ Test: Click arrow and file name, verify file opens and scrolls to task
 
 **Deliverable:** Working navigation from card to file
+
+**Implemented by:** [ad3e145](https://github.com/ErikaRS/task-list-kanban/commit/ad3e145)
+
+**Design Change:** Icon placed in footer section next to file name (not in quick actions bar) for better UX
 
 ### Phase 4: Selection Infrastructure
 **Goal:** Users can select individual tasks
