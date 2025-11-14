@@ -141,15 +141,15 @@
 				<button
 					class="segment"
 					class:active={!isInSelectionMode}
-					on:click={() => isInSelectionMode && toggleSelectionMode(column)}
+					on:click={() => toggleSelectionMode(column)}
 					aria-label="Mark as done mode"
 				>
 					Done
 				</button>
 				<button
-					class="segment select-segment"
+					class="segment"
 					class:active={isInSelectionMode}
-					on:click={() => !isInSelectionMode && toggleSelectionMode(column)}
+					on:click={() => toggleSelectionMode(column)}
 					aria-label="Selection mode"
 				>
 					Select
@@ -265,12 +265,6 @@
 						background: var(--background-primary);
 						color: var(--text-normal);
 						box-shadow: none;
-						cursor: default;
-					}
-
-					&.select-segment.active {
-						background: var(--interactive-accent);
-						color: white;
 					}
 				}
 			}
