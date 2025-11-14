@@ -236,7 +236,7 @@
 
 			.segmented-control {
 				display: inline-flex;
-				background: var(--background-modifier-border-hover);
+				background: var(--background-secondary);
 				border: 1px solid var(--background-modifier-border);
 				border-radius: var(--radius-s);
 				padding: 2px;
