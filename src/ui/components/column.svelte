@@ -137,7 +137,12 @@
 			{/if}
 		</div>
 		<div class="mode-toggle-container">
-			<div class="segmented-control">
+			<div 
+				class="segmented-control"
+				class:has-color={!!columnColor}
+				style:--toggle-bg-color={columnColor ? `${columnColor}20` : undefined}
+				style:--toggle-active-color={columnColor || undefined}
+			>
 				<button
 					class="segment"
 					class:active={!isInSelectionMode}
@@ -242,6 +247,11 @@
 				padding: 2px;
 				gap: 0;
 
+				&.has-color {
+					background: var(--toggle-bg-color);
+					border-color: var(--toggle-bg-color);
+				}
+
 				.segment {
 					padding: 2px var(--size-4-1);
 					border: none;
@@ -262,6 +272,12 @@
 						border: var(--border-width) solid var(--background-modifier-border);
 						color: var(--text-normal);
 					}
+				}
+
+				&.has-color .segment.active {
+					background: var(--toggle-active-color);
+					border-color: var(--toggle-active-color);
+					color: white;
 				}
 			}
 		}
