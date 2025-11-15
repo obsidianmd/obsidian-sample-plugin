@@ -31,7 +31,9 @@ The `#[column-name]` text won't be visible in the kanban view, keeping your task
 
 **Moving tasks**: Drag and drop between columns, or use the task's settings menu to select a column.
 
-**Completing tasks**: Check the task checkbox or use the archive feature to mark tasks as done.
+**Completing tasks**: Click the circle icon on each task card to quickly mark it as done and move it to the Done column. Click again on a completed task to uncheck it.
+
+**Navigate to file**: Click the arrow icon or file path at the bottom of any task card to jump directly to that task in its source file.
 
 ## Configuration
 
@@ -95,9 +97,9 @@ Examples:
 
 ### Advanced Task Management
 
-**Archive tasks**: Use the task settings menu to archive completed tasks. This marks them as done and removes them from the active kanban while preserving them in the original file.
+**Bulk operations**: Toggle any column to "Select" mode to select multiple tasks for bulk operations. Use the bulk actions menu to move, archive, or delete selected tasks at once. Switch back to "Done" mode to return to the quick complete functionality. The rightmost "Done" column has additional settings to quickly archive or delete all tasks in that column.
 
-**Bulk operations**: The rightmost "Done" column has additional settings to quickly archive or delete all tasks in that column.
+**Archive tasks**: Use the task settings menu (or bulk actions) to archive completed tasks. This marks them as done and removes them from the active kanban while preserving them in the original file.
 
 **Task formatting**: The plugin preserves original indentation and formatting when moving tasks between columns.
 
