@@ -344,7 +344,7 @@ No new data model changes required. Uses existing:
 
 **Deliverable:** Tasks can be selected in selection mode with visual feedback
 
-**Implemented by:** [TBD]
+**Implemented by:** [b920673](https://github.com/ErikaRS/task-list-kanban/commit/b920673)
 
 **Additional features implemented:**
 - Selection count always reserves space to prevent UI shift
