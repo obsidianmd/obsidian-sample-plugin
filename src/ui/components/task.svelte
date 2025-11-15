@@ -214,13 +214,6 @@
 	on:dragstart={handleDragStart}
 	on:dragend={handleDragEnd}
 >
-	<!-- Quick actions bar -->
-	<div class="task-quick-actions">
-		<div class="quick-actions-right">
-			<TaskMenu {task} {taskActions} {columnTagTableStore} />
-		</div>
-	</div>
-
 	<!-- Task row -->
 	<div class="task-row">
 		<div class="task-row-left">
@@ -230,8 +223,16 @@
 					class="icon-button bulk-select"
 					class:is-selected={isSelected}
 					aria-label="Select for bulk actions"
+					aria-pressed={isSelected}
 					title="Select for bulk actions"
 					on:click={() => toggleTaskSelection(task.id)}
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							toggleTaskSelection(task.id);
+						}
+					}}
+					tabindex="0"
 				>
 					<span class="default-icon">
 						<Icon name={isSelected ? "lucide-check-square" : "lucide-square"} size={18} opacity={isSelected ? 1 : 0.5} />
@@ -246,8 +247,16 @@
 					class="icon-button mark-done"
 					class:is-done={task.done}
 					aria-label={task.done ? "Mark as incomplete" : "Move to Done"}
+					aria-pressed={task.done}
 					title={task.done ? "Mark as incomplete" : "Move to Done"}
 					on:click={() => taskActions.toggleDone(task.id)}
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							taskActions.toggleDone(task.id);
+						}
+					}}
+					tabindex="0"
 				>
 					<span class="default-icon">
 						<Icon name={task.done ? "lucide-circle-check" : "lucide-circle"} size={18} opacity={0.5} />
@@ -279,6 +288,9 @@
 				/>
 			{/if}
 		</div>
+		<div class="task-row-right">
+			<TaskMenu {task} {taskActions} {columnTagTableStore} />
+		</div>
 	</div>
 
 	{#if showFilepath}
@@ -288,6 +300,13 @@
 				aria-label="Go to file"
 				title="Go to file"
 				on:click={() => taskActions.viewFile(task.id)}
+				on:keydown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						taskActions.viewFile(task.id);
+					}
+				}}
+				tabindex="0"
 			>
 				<Icon name="lucide-arrow-up-right" size={18} opacity={0.5} />
 				<span class="file-path">{task.path}</span>
@@ -319,22 +338,7 @@
 			opacity: 0.15;
 		}
 
-		// Quick actions bar (top row)
-		.task-quick-actions {
-			display: flex;
-			justify-content: flex-end;
-			align-items: center;
-			padding: var(--size-4-1) var(--size-4-2);
-			border-bottom: var(--border-width) solid var(--background-modifier-border);
-			min-height: 32px;
-
-			.quick-actions-right {
-				display: flex;
-				align-items: center;
-			}
-		}
-
-		// Task row (second row)
+		// Task row
 		.task-row {
 			padding: var(--size-4-2);
 			display: flex;
@@ -364,6 +368,12 @@
 					}
 				}
 			}
+
+			.task-row-right {
+				display: flex;
+				align-items: center;
+				flex-shrink: 0;
+			}
 		}
 
 		// Icon button styling
@@ -381,14 +391,16 @@
 			transition: opacity 0.2s ease;
 			position: relative;
 			box-shadow: none;
-			outline: none;
 
 			&:hover,
-			&:active,
-			&:focus {
+			&:active {
 				background: transparent;
 				box-shadow: none;
-				outline: none;
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--background-modifier-border-focus);
+				outline-offset: 2px;
 			}
 
 			.default-icon,
@@ -487,13 +499,12 @@
 				cursor: pointer;
 				text-align: left;
 				box-shadow: none;
-				outline: none;
 				transition: opacity 0.2s ease;
+				border-radius: var(--radius-s);
 
 				&:hover {
 					background: transparent;
 					box-shadow: none;
-					outline: none;
 
 					:global(svg) {
 						opacity: 1 !important;
@@ -503,6 +514,11 @@
 					.file-path {
 						color: var(--interactive-accent);
 					}
+				}
+
+				&:focus-visible {
+					outline: 2px solid var(--background-modifier-border-focus);
+					outline-offset: 2px;
 				}
 
 				.file-path {

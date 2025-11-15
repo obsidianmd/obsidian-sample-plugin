@@ -224,12 +224,24 @@
 				class:has-color={!!columnColor}
 				style:--toggle-bg-color={columnColor ? `color-mix(in srgb, ${columnColor} 25%, white)` : undefined}
 				style:--toggle-active-color={columnColor || undefined}
+				role="toolbar"
+				aria-label="Task interaction mode"
 			>
 				<button
 					class="segment"
 					class:active={!isInSelectionMode}
 					on:click={() => toggleSelectionMode(column)}
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							if (isInSelectionMode) {
+								toggleSelectionMode(column);
+							}
+						}
+					}}
 					aria-label="Mark as done mode"
+					aria-pressed={!isInSelectionMode}
+					tabindex="0"
 				>
 					Done
 				</button>
@@ -237,26 +249,34 @@
 					class="segment"
 					class:active={isInSelectionMode}
 					on:click={() => toggleSelectionMode(column)}
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							if (!isInSelectionMode) {
+								toggleSelectionMode(column);
+							}
+						}
+					}}
 					aria-label="Selection mode"
+					aria-pressed={isInSelectionMode}
+					tabindex="0"
 				>
 					Select
 				</button>
 			</div>
-			<div class="selection-info">
-				<div class="selection-count" aria-live="polite">
-					{#if isInSelectionMode && selectedCount > 0}
-						{selectedCount} selected
-					{:else}
-						&nbsp;
-					{/if}
-				</div>
+			<div class="selection-count" aria-live="polite">
 				{#if isInSelectionMode && selectedCount > 0}
-					<IconButton 
-						icon="lucide-more-vertical" 
-						on:click={showBulkActionsMenu} 
-						aria-label="Bulk actions"
-					/>
+					{selectedCount} selected
+				{:else}
+					&nbsp;
 				{/if}
+			</div>
+			<div class="bulk-actions-button" class:visible={isInSelectionMode && selectedCount > 0}>
+				<IconButton 
+					icon="lucide-more-vertical" 
+					on:click={showBulkActionsMenu} 
+					aria-label="Bulk actions"
+				/>
 			</div>
 		</div>
 		<div class="divide" />
@@ -333,11 +353,10 @@
 
 		.mode-toggle-container {
 			display: flex;
-			flex-direction: column;
-			align-items: flex-start;
+			align-items: center;
 			margin-top: var(--size-4-3);
 			margin-bottom: var(--size-4-2);
-			gap: var(--size-4-1);
+			gap: var(--size-4-2);
 
 			.segmented-control {
 				display: inline-flex;
@@ -370,6 +389,11 @@
 						border: none;
 						color: var(--text-normal);
 					}
+
+					&:focus-visible {
+						outline: 2px solid var(--background-modifier-border-focus);
+						outline-offset: 2px;
+					}
 				}
 
 				&.has-color .segment.active {
@@ -379,17 +403,20 @@
 				}
 			}
 
-			.selection-info {
-				display: flex;
-				align-items: center;
-				gap: var(--size-4-2);
-				width: 100%;
+			.selection-count {
+				font-size: var(--font-ui-smaller);
+				color: var(--text-muted);
+				flex: 1;
+			}
 
-				.selection-count {
-					font-size: var(--font-ui-smaller);
-					color: var(--text-muted);
-					padding-left: var(--size-4-1);
-					flex: 1;
+			.bulk-actions-button {
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.2s ease;
+
+				&.visible {
+					opacity: 1;
+					pointer-events: auto;
 				}
 			}
 		}

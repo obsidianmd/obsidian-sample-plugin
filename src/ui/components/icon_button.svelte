@@ -9,10 +9,22 @@
 			setIcon(element, icon);
 		}
 	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			element?.click();
+		}
+	}
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<button bind:this={element} on:click></button>
+<button 
+	bind:this={element} 
+	on:click 
+	on:keydown={handleKeydown}
+	tabindex="0"
+	{...$$restProps}
+></button>
 
 <style lang="scss">
 	button {
@@ -26,5 +38,10 @@
 		cursor: pointer;
 		background: unset;
 		padding: 0;
+
+		&:focus-visible {
+			outline: 2px solid var(--background-modifier-border-focus);
+			outline-offset: 2px;
+		}
 	}
 </style>

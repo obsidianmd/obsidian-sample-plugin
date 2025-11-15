@@ -15,6 +15,7 @@
 	import { type SettingValues, VisibilityOption } from "./settings/settings_store";
 	import { onMount } from "svelte";
 	import type { App } from "obsidian";
+	import { clearTaskSelections } from "./selection/task_selection_store";
 
 	export let app: App;
 	export let tasksStore: Writable<Task[]>;
@@ -65,6 +66,14 @@
 	let activeContentFilterId: string | undefined = undefined;
 	let activeTagFilterId: string | undefined = undefined;
 	let activeFileFilterId: string | undefined = undefined;
+
+	// Clear selections when any filter changes
+	$: {
+		void filterText;
+		void selectedTags;
+		void fileFilter;
+		clearTaskSelections();
+	}
 
 	let deleteModalOpen = false;
 	let filterToDelete: { id: string; text: string; type: 'content' | 'tag' | 'file' } | null = null;
