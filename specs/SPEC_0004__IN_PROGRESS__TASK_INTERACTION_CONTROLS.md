@@ -333,16 +333,25 @@ No new data model changes required. Uses existing:
 - Added dynamic color adaptation for custom column colors
 - Final design: subtle, unobtrusive control that adapts to any column color
 
-### Phase 5: Task Selection in Selection Mode
+### Phase 5: Task Selection in Selection Mode ✅ COMPLETE
 **Goal:** Users can select individual tasks when in selection mode
 
-1. ⬜ Create task selection state store (Map<taskId, boolean>)
-2. ⬜ Update checkbox click handler to select/deselect when in selection mode
-3. ⬜ Add visual selected state to task card (checkmark in square)
-4. ⬜ Display selection count in column header when tasks selected
-5. ⬜ Test: Toggle to selection mode, select tasks, verify state and count
+1. ✅ Create task selection state store (Map<taskId, boolean>)
+2. ✅ Update checkbox click handler to select/deselect when in selection mode
+3. ✅ Add visual selected state to task card (checkmark in square)
+4. ✅ Display selection count in column header when tasks selected
+5. ✅ Test: Toggle to selection mode, select tasks, verify state and count
 
 **Deliverable:** Tasks can be selected in selection mode with visual feedback
+
+**Implemented by:** [TBD]
+
+**Additional features implemented:**
+- Selection count always reserves space to prevent UI shift
+- Selection state clears when switching back to Done mode (ephemeral)
+- Toggle buttons use minimal width
+- Selected checkboxes use default icon color (not accent) for better visibility
+- Completed task markers use default icon color
 
 ### Phase 6: Bulk Action Buttons
 **Goal:** Display and wire up bulk action controls

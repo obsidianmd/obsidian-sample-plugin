@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
 import type { ColumnTag, DefaultColumns } from "../columns/columns";
+import { taskSelectionStore } from "./task_selection_store";
 
 /**
  * Store for tracking which columns are in selection mode.
@@ -16,7 +17,14 @@ export const selectionModeStore = writable<
 export function toggleSelectionMode(column: ColumnTag | DefaultColumns) {
 	selectionModeStore.update((map) => {
 		const current = map.get(column) || false;
-		map.set(column, !current);
+		const newMode = !current;
+		map.set(column, newMode);
+		
+		// If switching from selection mode to done mode, clear all selections
+		if (current && !newMode) {
+			taskSelectionStore.set(new Map());
+		}
+		
 		return new Map(map);
 	});
 }

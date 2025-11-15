@@ -8,6 +8,7 @@
 	import { Component, MarkdownRenderer, type App } from "obsidian";
 	import type { Readable } from "svelte/store";
 	import { onDestroy } from "svelte";
+	import { taskSelectionStore, toggleTaskSelection, isTaskSelected } from "../selection/task_selection_store";
 
 	export let app: App;
 	export let task: Task;
@@ -202,6 +203,7 @@
 	}
 
 	$: shouldconsolidateTags = consolidateTags && task.tags.size > 0;
+	$: isSelected = isTaskSelected(task.id, $taskSelectionStore);
 </script>
 
 <div
@@ -226,18 +228,16 @@
 				<!-- Selection checkbox (square) -->
 				<button
 					class="icon-button bulk-select"
+					class:is-selected={isSelected}
 					aria-label="Select for bulk actions"
 					title="Select for bulk actions"
-					on:click={() => {
-						// TODO: Implement selection in Phase 5
-						console.log("Select task:", task.id);
-					}}
+					on:click={() => toggleTaskSelection(task.id)}
 				>
 					<span class="default-icon">
-						<Icon name="lucide-square" size={18} opacity={0.5} />
+						<Icon name={isSelected ? "lucide-check-square" : "lucide-square"} size={18} opacity={isSelected ? 1 : 0.5} />
 					</span>
 					<span class="hover-icon">
-						<Icon name="lucide-square" size={18} opacity={1} />
+						<Icon name="lucide-check-square" size={18} opacity={1} />
 					</span>
 				</button>
 			{:else}
@@ -422,11 +422,11 @@
 					}
 				}
 
-				// If already done, show checkmark with accent color
+				// If already done, show checkmark with default icon color
 				&.is-done {
 					.default-icon :global(svg) {
 						opacity: 1;
-						color: var(--interactive-accent);
+						color: var(--icon-color);
 					}
 				}
 			}
@@ -456,6 +456,14 @@
 
 					.default-icon {
 						opacity: 0;
+					}
+				}
+
+				// If selected, show checkmark with default icon color
+				&.is-selected {
+					.default-icon :global(svg) {
+						opacity: 1;
+						color: var(--icon-color);
 					}
 				}
 			}

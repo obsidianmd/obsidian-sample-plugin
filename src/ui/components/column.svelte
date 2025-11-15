@@ -14,6 +14,7 @@
 	import { isDraggingStore } from "../dnd/store";
 	import type { Readable } from "svelte/store";
 	import { selectionModeStore, toggleSelectionMode } from "../selection/selection_mode_store";
+	import { taskSelectionStore, getSelectedTaskCount } from "../selection/task_selection_store";
 
 	export let app: App;
 	export let column: ColumnTag | DefaultColumns;
@@ -42,6 +43,7 @@
 	$: columnTitle = getColumnTitle(column, $columnTagTableStore);
 	$: columnColor = isColumnTag(column, columnTagTableStore) ? $columnColourTableStore[column] : undefined;
 	$: isInSelectionMode = $selectionModeStore.get(column) || false;
+	$: selectedCount = getSelectedTaskCount(tasks.map(t => t.id), $taskSelectionStore);
 
 	$: sortedTasks = tasks.sort((a, b) => {
 		if (a.path === b.path) {
@@ -160,6 +162,13 @@
 					Select
 				</button>
 			</div>
+			<div class="selection-count" aria-live="polite">
+				{#if isInSelectionMode && selectedCount > 0}
+					{selectedCount} selected
+				{:else}
+					&nbsp;
+				{/if}
+			</div>
 		</div>
 		<div class="divide" />
 		<div class="tasks-wrapper">
@@ -235,9 +244,11 @@
 
 		.mode-toggle-container {
 			display: flex;
-			justify-content: flex-start;
+			flex-direction: column;
+			align-items: flex-start;
 			margin-top: var(--size-4-3);
 			margin-bottom: var(--size-4-2);
+			gap: var(--size-4-1);
 
 			.segmented-control {
 				display: inline-flex;
@@ -252,7 +263,7 @@
 				}
 
 				.segment {
-					padding: 2px var(--size-4-1);
+					padding: 2px var(--size-4-2);
 					border: none;
 					background: transparent;
 					border-radius: calc(var(--radius-s) - 2px);
@@ -264,7 +275,6 @@
 					position: relative;
 					z-index: 1;
 					white-space: nowrap;
-					flex: 1;
 
 					&.active {
 						background: var(--background-secondary);
@@ -278,6 +288,12 @@
 					border: none;
 					color: var(--text-normal);
 				}
+			}
+
+			.selection-count {
+				font-size: var(--font-ui-smaller);
+				color: var(--text-muted);
+				padding-left: var(--size-4-1);
 			}
 		}
 
