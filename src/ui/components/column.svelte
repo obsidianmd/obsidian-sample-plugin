@@ -14,7 +14,7 @@
 	import { isDraggingStore } from "../dnd/store";
 	import type { Readable } from "svelte/store";
 	import { selectionModeStore, toggleSelectionMode } from "../selection/selection_mode_store";
-	import { taskSelectionStore, getSelectedTaskCount } from "../selection/task_selection_store";
+	import { taskSelectionStore, getSelectedTaskCount, clearTaskSelections } from "../selection/task_selection_store";
 
 	export let app: App;
 	export let column: ColumnTag | DefaultColumns;
@@ -63,6 +63,86 @@
 		});
 
 		menu.showAtMouseEvent(e);
+	}
+
+	function showBulkActionsMenu(e: MouseEvent) {
+		const menu = new Menu();
+
+		// Get selected task IDs from the current column
+		const selectedTaskIds = tasks
+			.filter(task => $taskSelectionStore.get(task.id))
+			.map(task => task.id);
+
+		if (selectedTaskIds.length === 0) {
+			return;
+		}
+
+		const target = e.target as HTMLButtonElement | undefined;
+		if (!target) {
+			return;
+		}
+
+		const boundingRect = target.getBoundingClientRect();
+		const y = boundingRect.top + boundingRect.height / 2;
+		const x = boundingRect.left + boundingRect.width / 2;
+
+		// Add "Move to [Column]" options
+		for (const [tag, label] of Object.entries($columnTagTableStore)) {
+			menu.addItem((i) => {
+				i.setTitle(`Move to ${label}`).onClick(() => {
+					// Move all selected tasks to this column
+					selectedTaskIds.forEach(taskId => {
+						taskActions.changeColumn(taskId, tag as ColumnTag);
+					});
+					// Clear selections after action (selection mode persists)
+					clearTaskSelections();
+				});
+				// Disable if this is the current column
+				if (isColumnTag(column, columnTagTableStore) && column === tag) {
+					i.setDisabled(true);
+				}
+			});
+		}
+
+		// Add "Move to Done" option
+		menu.addItem((i) => {
+			i.setTitle(`Move to Done`).onClick(() => {
+				// Mark all selected tasks as done
+				selectedTaskIds.forEach(taskId => {
+					taskActions.markDone(taskId);
+				});
+				// Clear selections after action (selection mode persists)
+				clearTaskSelections();
+			});
+			// Disable if already in Done column
+			if (column === "done") {
+				i.setDisabled(true);
+			}
+		});
+
+		menu.addSeparator();
+
+		// Add "Archive task" option
+		menu.addItem((i) => {
+			i.setTitle(`Archive task`).onClick(() => {
+				taskActions.archiveTasks(selectedTaskIds);
+				// Clear selections after action (selection mode persists)
+				clearTaskSelections();
+			});
+		});
+
+		// Add "Delete task" option
+		menu.addItem((i) => {
+			i.setTitle(`Delete task`).onClick(() => {
+				selectedTaskIds.forEach(taskId => {
+					taskActions.deleteTask(taskId);
+				});
+				// Clear selections after action (selection mode persists)
+				clearTaskSelections();
+			});
+		});
+
+		menu.showAtPosition({ x, y });
 	}
 
 	let isDraggedOver = false;
@@ -162,11 +242,20 @@
 					Select
 				</button>
 			</div>
-			<div class="selection-count" aria-live="polite">
+			<div class="selection-info">
+				<div class="selection-count" aria-live="polite">
+					{#if isInSelectionMode && selectedCount > 0}
+						{selectedCount} selected
+					{:else}
+						&nbsp;
+					{/if}
+				</div>
 				{#if isInSelectionMode && selectedCount > 0}
-					{selectedCount} selected
-				{:else}
-					&nbsp;
+					<IconButton 
+						icon="lucide-more-vertical" 
+						on:click={showBulkActionsMenu} 
+						aria-label="Bulk actions"
+					/>
 				{/if}
 			</div>
 		</div>
@@ -290,10 +379,18 @@
 				}
 			}
 
-			.selection-count {
-				font-size: var(--font-ui-smaller);
-				color: var(--text-muted);
-				padding-left: var(--size-4-1);
+			.selection-info {
+				display: flex;
+				align-items: center;
+				gap: var(--size-4-2);
+				width: 100%;
+
+				.selection-count {
+					font-size: var(--font-ui-smaller);
+					color: var(--text-muted);
+					padding-left: var(--size-4-1);
+					flex: 1;
+				}
 			}
 		}
 

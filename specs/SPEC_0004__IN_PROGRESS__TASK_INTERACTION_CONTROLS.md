@@ -353,31 +353,31 @@ No new data model changes required. Uses existing:
 - Selected checkboxes use default icon color (not accent) for better visibility
 - Completed task markers use default icon color
 
-### Phase 6: Bulk Action Buttons
+### Phase 6: Bulk Action Menu ✅ COMPLETE
 **Goal:** Display and wire up bulk action controls
 
-1. ⬜ Add bulk action bar component to column header (below mode toggle)
-2. ⬜ Show/hide bar based on selection mode AND selection count
-3. ⬜ Add Move to... dropdown with available columns (excluding current column)
-4. ⬜ Add Done button
-5. ⬜ Test: Select tasks, verify buttons appear and are clickable
+1. ✅ Add bulk action menu button to column header (next to selection count)
+2. ✅ Show/hide button based on selection mode AND selection count
+3. ✅ Create menu with Move to [Column] options (matching per-task menu design)
+4. ✅ Add Move to Done option
+5. ✅ Add Archive task and Delete task options
+6. ✅ Implement bulk operations using existing taskActions handlers
+7. ✅ Clear selections after bulk actions (selection mode persists)
+8. ✅ Test: Select tasks, verify menu appears and bulk operations work
 
-**Deliverable:** Bulk action UI appears when in selection mode with tasks selected
+**Deliverable:** Complete bulk operations functionality via menu
 
-### Phase 7: Bulk Operations Implementation
-**Goal:** Implement bulk move and bulk done functionality
+**Implemented by:** TBD
 
-1. ⬜ Implement bulk move logic (Move to... dropdown)
-2. ⬜ Update all selected task files (preserve checkbox state)
-3. ⬜ Implement bulk move to Done handler (Done button)
-4. ⬜ Update all selected task files (mark checkboxes as `[x]`)
-5. ⬜ Clear selection and exit selection mode after action
-6. ⬜ Add success notification
-7. ⬜ Test: Select multiple tasks, use both Move to... and Done buttons
+**Design Update:** Instead of dropdown buttons, implemented a three-dot menu button that matches the per-task menu design. The menu includes:
+- "Move to [Column]" options for each column (disabled for current column)
+- "Move to Done" option (disabled if already in Done column)
+- Separator
+- "Archive task" option
+- "Delete task" option
+- Selections are automatically cleared after any bulk action, but selection mode persists so users can continue selecting and performing bulk operations
 
-**Deliverable:** Complete bulk operations functionality
-
-### Phase 8: Polish & Accessibility
+### Phase 7: Polish & Accessibility
 **Goal:** Refinements, edge cases, and accessibility
 
 1. ⬜ Add ARIA labels to all interactive elements
