@@ -367,7 +367,7 @@ No new data model changes required. Uses existing:
 
 **Deliverable:** Complete bulk operations functionality via menu
 
-**Implemented by:** TBD
+**Implemented by:** [4d31db4](https://github.com/ErikaRS/task-list-kanban/commit/4d31db4)
 
 **Design Update:** Instead of dropdown buttons, implemented a three-dot menu button that matches the per-task menu design. The menu includes:
 - "Move to [Column]" options for each column (disabled for current column)
