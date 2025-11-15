@@ -127,7 +127,7 @@ describe("SavedFilter persistence", () => {
 		const settingsJson = JSON.stringify(defaultSettings);
 		const parsed = parseSettingsString(settingsJson);
 
-		expect(parsed.lastContentFilter).toBeUndefined();
-		expect(parsed.lastTagFilter).toBeUndefined();
+		expect(parsed.lastContentFilter).toBe("");
+		expect(parsed.lastTagFilter).toEqual([]);
 	});
 });
