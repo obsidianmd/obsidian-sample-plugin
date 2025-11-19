@@ -2,6 +2,13 @@ BEFORE ANYTHING ELSE: run 'bd quickstart' and follow the instructions
 
 ## Project Information
 
+### Testing
+
+Run tests before every commit. Only commit if tests pass. Never disable tests
+to get them to pass. Only modifiy tests to get them to pass if you are SURE
+the failure is expected due to the PR. Otherwise, fix the non-test code or
+check with the human operator.
+
 ### Tech Stack
 - **Language**: TypeScript (strict mode)
 - **UI Framework**: Svelte 4
@@ -82,6 +89,21 @@ docs: update installation instructions
 ```
 
 Full specification: https://www.conventionalcommits.org/en/v1.0.0/
+
+### Landing the plane
+
+Before completig any spec, after completing any issue in Beads, and before
+cutting a release, make sure to "land the plane". This means:
+
+- Make sure tests and other quality gates pass
+- Remove debugging code and temp artifacts
+- Check for leftover git stashes
+- Check for unmerged git branches
+- Update and close GH and Beads
+- Update documentation
+- Perform git operations
+- Deal with untracked files and edge cases
+- Choose work and create a prompt for next session
 
 ### Release Process
 
