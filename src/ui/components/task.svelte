@@ -362,6 +362,11 @@
 				}
 
 				.content-preview {
+					min-height: 1.5rem;
+					display: flex;
+					flex-direction: column;
+					justify-content: center;
+
 					&:focus-within {
 						box-shadow: 0 0 0 3px
 							var(--background-modifier-border-focus);

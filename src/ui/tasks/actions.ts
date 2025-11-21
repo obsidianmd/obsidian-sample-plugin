@@ -136,7 +136,7 @@ export function createTaskActions({
 									vault,
 									folderItem,
 									undefined,
-									`- [ ]  #${column}`
+									`- [ ] TODO #${column}`
 								);
 							} else {
 								createMenu(folderItem, menu);
