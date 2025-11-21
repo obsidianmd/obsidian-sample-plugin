@@ -526,6 +526,11 @@
 					font-size: var(--font-ui-smaller);
 					color: var(--text-muted);
 					transition: color 0.2s ease;
+					overflow-wrap: anywhere;
+					white-space: normal;
+					flex: 1;
+					min-width: 0;
+					line-height: 1.3;
 				}
 			}
 		}
