@@ -13,7 +13,7 @@ const validCases: TestCase[] = [
 	["has spaces", "has-spaces"],
 	["PascalCase", "pascal-case"],
 	["snake_case", "snake-case"],
-	["top/nested", "top-nested"],
+	["top/nested", "top/nested"],
 	["foo", "foo"],
 	["Foo", "foo"],
 	["Foo Column", "foo-column"],

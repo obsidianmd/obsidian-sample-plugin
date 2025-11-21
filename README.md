@@ -49,6 +49,10 @@ Access settings via the settings icon in the top right corner of your kanban.
 
 ⚠️ **Important**: Think carefully when naming columns. Changing a column name later will move associated tasks to 'Uncategorised' since tasks are linked to exact column names.
 
+**Tag Mapping**: Column names are case-insensitive and ignore spaces when matching tags.
+- "In Progress" matches tags like `#InProgress`, `#in-progress`, and `#In-Progress`.
+- Nested tags like `#Parent/Child` are preserved and will map to a column named "Parent/Child".
+
 ### Folder Scope
 
 **This folder** (default): The kanban shows tasks from files in the same folder as the kanban file.

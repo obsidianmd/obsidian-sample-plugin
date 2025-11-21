@@ -228,7 +228,7 @@ export class Task {
 		rawContent: TaskString,
 		fileHandle: { path: string },
 		readonly rowIndex: number,
-		columnTagTable: ColumnTagTable,
+		private readonly columnTagTable: ColumnTagTable,
 		private readonly consolidateTags: boolean,
 		private readonly doneStatusMarkers: string = DEFAULT_DONE_STATUS_MARKERS,
 		private readonly ignoredStatusMarkers: string = DEFAULT_IGNORED_STATUS_MARKERS
@@ -349,7 +349,13 @@ export class Task {
 						.map((tag) => `#${tag}`)
 						.join(" ")}`
 				: "",
-			this.column ? ` #${this.column}` : "",
+			this.column
+				? ` #${
+						this.column === "archived"
+							? this.column
+							: this.columnTagTable[this.column] ?? this.column
+				  }`
+				: "",
 			this.blockLink ? ` ^${this.blockLink}` : "",
 		]
 			.join("")
