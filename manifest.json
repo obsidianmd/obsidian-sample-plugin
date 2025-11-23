@@ -1,7 +1,7 @@
 {
 	"id": "task-list-kanban",
 	"name": "Task List Kanban",
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"minAppVersion": "1.5.3",
 	"description": "Organizes all of the tasks within your files into a kanban view. Reduce duplication of effort when managing and prioritising tasks by simply using the task format in your files to automatically appear in your Task List Kanban.",
 	"author": "Chris Kerr, Erika Rice Scherpelz",
