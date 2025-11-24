@@ -824,3 +824,94 @@ describe("Task marking as done", () => {
 		});
 	});
 });
+
+describe("Columns with spaces and special characters", () => {
+	const columnTags: ColumnTagTable = {
+		[kebab<ColumnTag>("In Progress")]: "In Progress",
+		[kebab<ColumnTag>("Waiting for review")]: "Waiting for review",
+		[kebab<ColumnTag>("Done!")]: "Done!",
+		[kebab<ColumnTag>("My-Tag")]: "My-Tag", // This one is a valid tag
+	};
+    // kebab("In Progress") -> "in-progress"
+	// kebab("Waiting for review") -> "waiting-for-review"
+	// kebab("Done!") -> "done" (special chars removed)
+	// kebab("My-Tag") -> "my-tag"
+
+	it("serialises a task in 'In Progress' column using kebab-case tag", () => {
+		let task: Task | undefined;
+		const taskString = "- [ ] Something #in-progress";
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+		}
+
+		expect(task).toBeTruthy();
+		expect(task?.column).toBe("in-progress");
+
+		const output = task?.serialise();
+		// Should fall back to kebab-case because "In Progress" has spaces
+		expect(output).toBe("- [ ] Something #in-progress"); 
+	});
+
+	it("serialises a task in 'Waiting for review' column using kebab-case tag", () => {
+		let task: Task | undefined;
+		const taskString = "- [ ] Something #waiting-for-review";
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+		}
+
+		expect(task).toBeTruthy();
+		expect(task?.column).toBe("waiting-for-review");
+
+		const output = task?.serialise();
+		// Should fall back to kebab-case because "Waiting for review" has spaces
+		expect(output).toBe("- [ ] Something #waiting-for-review"); 
+	});
+
+	it("serialises a task in 'Done!' column using kebab-case tag", () => {
+		let task: Task | undefined;
+		// kebab("Done!") -> "done". But wait, "done" is usually reserved? 
+		// In Task.ts constructor: if (kebabTag in columnTagTable || tag === "done")
+		// If "done" is in columnTagTable, it's treated as a column.
+		
+		const taskString = "- [ ] Something #done";
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+		}
+
+		expect(task).toBeTruthy();
+		// "done" maps to "Done!" which has '!' which might be invalid in tags?
+		// Obsidian tags: alphabetical letters, numbers, underscore (_), hyphen (-), forward slash (/)
+		// '!' is not allowed.
+		
+		const output = task?.serialise();
+		// Should fall back to "done"
+		expect(output).toBe("- [ ] Something #done"); 
+	});
+
+	it("serialises a task in 'My-Tag' column using the original casing because it is valid", () => {
+		let task: Task | undefined;
+		const taskString = "- [ ] Something #my-tag";
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+		}
+
+		expect(task).toBeTruthy();
+		expect(task?.column).toBe("my-tag");
+
+		const output = task?.serialise();
+		// Should use "My-Tag" because it is a valid tag
+		expect(output).toBe("- [ ] Something #My-Tag"); 
+	});
+
+	it("serialises a task after moving to 'In Progress' column", () => {
+		let task: Task | undefined;
+		const taskString = "- [ ] Something";
+		if (isTrackedTaskString(taskString)) {
+			task = new Task(taskString, { path: "/" }, 0, columnTags, false, "xX", "");
+            task.column = kebab<ColumnTag>("In Progress"); // "in-progress"
+		}
+
+		const output = task?.serialise();
+		expect(output).toBe("- [ ] Something #in-progress");
+	});
+});

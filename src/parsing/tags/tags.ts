@@ -13,6 +13,10 @@ export function getTagsFromContent(content: string): Set<string> {
 	return tags;
 }
 
+export function isValidTag(tag: string): boolean {
+	return /^[-_/\p{L}\p{N}]+$/u.test(tag);
+}
+
 // https://www.regular-expressions.info/unicode.html
 // `\p{L}` is any letter in any language
 // `\p{N}` is any numeric in any language

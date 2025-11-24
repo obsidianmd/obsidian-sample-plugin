@@ -1,7 +1,7 @@
 import sha256 from "crypto-js/sha256";
 import type { Brand } from "src/brand";
 import type { ColumnTag, ColumnTagTable } from "../columns/columns";
-import { getTagsFromContent } from "src/parsing/tags/tags";
+import { getTagsFromContent, isValidTag } from "src/parsing/tags/tags";
 import { kebab } from "src/parsing/kebab/kebab";
 
 /**
@@ -353,7 +353,10 @@ export class Task {
 				? ` #${
 						this.column === "archived"
 							? this.column
-							: this.columnTagTable[this.column] ?? this.column
+							: (() => {
+									const mapped = this.columnTagTable[this.column];
+									return mapped && isValidTag(mapped) ? mapped : this.column;
+							  })()
 				  }`
 				: "",
 			this.blockLink ? ` ^${this.blockLink}` : "",
