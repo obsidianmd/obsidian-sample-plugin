@@ -51,6 +51,10 @@ Quick starting guide for new plugin devs:
 - `npm i` or `yarn` to install dependencies.
 - `npm run dev` to start compilation in watch mode.
 
+## Root node marker
+
+Open **Settings → Community plugins → Canvas Player** to set a root node marker such as `canvas-start`. When defined, the player begins at the first text node whose content includes that marker; otherwise it falls back to automatically selecting a start node based on incoming edges.
+
 ## Manually installing the plugin
 
 - Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
