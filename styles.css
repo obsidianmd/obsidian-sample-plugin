@@ -1,8 +1,76 @@
-/*
+/* --- HUD STYLES --- */
+.canvas-player-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; 
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.canvas-hud-close {
+    pointer-events: auto;
+    align-self: flex-end;
+    margin: 20px;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    padding: 5px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
-If your plugin does not need CSS, delete this file.
+.canvas-hud-choices {
+    pointer-events: auto;
+    background-color: var(--background-primary);
+    border-top: 2px solid var(--interactive-accent);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 40%;
+    overflow-y: auto;
+    box-shadow: 0px -5px 15px rgba(0,0,0,0.3);
+}
 
-*/
+.canvas-player-btn {
+    width: 100%;
+    height: 3rem;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+/* --- READER MODE STYLES (Keep these for the other mode) --- */
+.canvas-player-container { display: flex; flex-direction: column; height: 100%; padding: 10px; }
+.canvas-player-text { font-size: 1.2em; flex-grow: 1; overflow-y: auto; margin-bottom: 20px; }
+.canvas-player-choices { display: flex; flex-direction: column; gap: 10px; }
+
+/* --- Enhanced backdrop for reader mode --- */
+body.canvas-player-reader-active .modal-bg {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 1);
+    backdrop-filter: blur(4px);
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.canvas-player-control-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.canvas-player-edit {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 1.05em;
+    line-height: 1.5;
+}
