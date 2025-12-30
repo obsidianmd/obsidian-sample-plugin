@@ -58,7 +58,7 @@ Quick starting guide for new plugin devs:
 ## Improve code quality with eslint
 - [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
 - This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/eslint-plugin) for Obsidan specific code guidelines.
+- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
 - A GitHub action is preconfigured to automatically lint every commit on all branches.
 
 ## Funding URL
