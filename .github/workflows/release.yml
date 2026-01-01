@@ -1,0 +1,80 @@
+# Creates a new GitHub Release when a tag is pushed
+# See https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin#Step+2+Create+a+release
+# Tag should be in the format of x.y.z without `v` prefix
+# For example `1.0.0` is a valid tag, but `v1.0.0` is not
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - '\d+\.\d+\.\d+'
+
+env:
+  # IMPORTANT: Update this with the name of your plugin
+  PLUGIN_NAME: my-plugin
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Build and zip
+        id: build
+        run: |
+          tag=${GITHUB_REF#refs/*/}
+          # Set tag as output for following steps
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
+          # Update version in manifest.json and package.json
+          jq --arg tag "$tag" '.version = $tag' manifest.json >> tmp.$$.json && mv tmp.$$.json manifest.json
+          jq --arg tag "$tag" '.version = $tag' package.json >> tmp.$$.json && mv tmp.$$.json package.json
+
+          # Build and zip release
+          npm install
+          npm run build
+          mkdir ${{ env.PLUGIN_NAME }}
+          cp styles.css main.js manifest.json ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+
+      - name: Commit version changes
+        uses: EndBug/add-and-commit@1bad3abcf0d6ec49a5857d124b0bfb52dc7bb081
+        with:
+          default_author: github_actor
+          add: 'manifest.json package.json package-lock.json'
+          message: 'Release v${{ steps.build.outputs.tag }}'
+          push: 'origin HEAD:${{ github.event.repository.default_branch }} --force'
+          # Override existing tag with new tag that has version bump
+          tag: '${{ steps.build.outputs.tag }} --force'
+          tag_push: '--force'
+
+      - name: Release with files
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        with:
+          name: ${{ steps.build.outputs.tag }}
+          body: "*Release of ${{ env.PLUGIN_NAME }} v${{ steps.build.outputs.tag }} auto-created by [release.yml](.github/workflows/release.yml)*"
+          files: |
+            ${{ env.PLUGIN_NAME }}.zip
+            main.js
+            manifest.json
+            styles.css
+
+      - name: Upload artifacts for debugging
+        uses: actions/upload-artifact@v3
+        with:
+          name: obsidian-sample-plugin
+          path: |
+            ${{ env.PLUGIN_NAME }}.zip
+            main.js
+            manifest.json
+            styles.css
