@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "ai-toolbox",
+	"name": "AI Toolbox",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"description": "Personal collection of AI tools to enhance the Obsidian.md workflow.",
+	"author": "dalinicus",
+	"authorUrl": "https://github.com/dalinicus",
+	"fundingUrl": "https://buymeacoffee.com/dalinicus",
+	"isDesktopOnly": true
 }

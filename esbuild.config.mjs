@@ -31,14 +31,20 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
+		"onnxruntime-node",
+		"sharp",
 		...builtinModules],
 	format: "cjs",
-	target: "es2018",
+	target: "es2020",
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
 	outfile: "main.js",
-	minify: prod,
+	//minify: prod,
+	platform: "node",
+	loader: {
+		'.node': 'empty'
+	}
 });
 
 if (prod) {

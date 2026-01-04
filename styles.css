@@ -6,3 +6,55 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.settings-tab-container {
+	width: 100%;
+}
+
+.settings-tab-header {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 20px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.settings-tab-button {
+	padding: 8px 16px;
+	background: transparent;
+	border: none;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--text-muted);
+	transition: all 0.2s ease;
+}
+
+.settings-tab-button:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+.settings-tab-button.active {
+	color: var(--text-accent);
+	border-bottom-color: var(--text-accent);
+}
+
+.settings-tab-content {
+	padding-top: 10px;
+}
+
+.settings-advanced-heading {
+	margin-top: 20px;
+	margin-bottom: 10px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.settings-advanced-heading:hover {
+	color: var(--text-accent);
+}
+
+.settings-advanced-container {
+	margin-left: 10px;
+}
