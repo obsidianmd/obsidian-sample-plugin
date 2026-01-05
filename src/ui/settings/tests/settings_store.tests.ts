@@ -131,3 +131,92 @@ describe("SavedFilter persistence", () => {
 		expect(parsed.lastTagFilter).toEqual([]);
 	});
 });
+
+describe("Column width configuration", () => {
+	it("defaults to 300px when columnWidth is missing", () => {
+		const settingsJson = JSON.stringify({
+			columns: ["Todo", "In Progress", "Done"],
+		});
+		const parsed = parseSettingsString(settingsJson);
+
+		expect(parsed.columnWidth).toBe(300);
+	});
+
+	it("parses valid columnWidth values", () => {
+		const settingsJson = JSON.stringify({
+			...defaultSettings,
+			columnWidth: 400,
+		});
+		const parsed = parseSettingsString(settingsJson);
+
+		expect(parsed.columnWidth).toBe(400);
+	});
+
+	it("accepts minimum boundary value (200)", () => {
+		const settingsJson = JSON.stringify({
+			...defaultSettings,
+			columnWidth: 200,
+		});
+		const parsed = parseSettingsString(settingsJson);
+
+		expect(parsed.columnWidth).toBe(200);
+	});
+
+	it("accepts maximum boundary value (600)", () => {
+		const settingsJson = JSON.stringify({
+			...defaultSettings,
+			columnWidth: 600,
+		});
+		const parsed = parseSettingsString(settingsJson);
+
+		expect(parsed.columnWidth).toBe(600);
+	});
+
+	it("rejects values below minimum (199)", () => {
+		const settingsJson = JSON.stringify({
+			...defaultSettings,
+			columnWidth: 199,
+		});
+
+		// Zod validation should fail and fallback to defaults
+		expect(() => parseSettingsString(settingsJson)).not.toThrow();
+		const parsed = parseSettingsString(settingsJson);
+		expect(parsed.columnWidth).toBe(300); // Falls back to default
+	});
+
+	it("rejects values above maximum (601)", () => {
+		const settingsJson = JSON.stringify({
+			...defaultSettings,
+			columnWidth: 601,
+		});
+
+		// Zod validation should fail and fallback to defaults
+		expect(() => parseSettingsString(settingsJson)).not.toThrow();
+		const parsed = parseSettingsString(settingsJson);
+		expect(parsed.columnWidth).toBe(300); // Falls back to default
+	});
+
+	it("serializes columnWidth correctly", () => {
+		const settings = {
+			...defaultSettings,
+			columnWidth: 450,
+		};
+
+		const serialized = toSettingsString(settings);
+		const parsed = JSON.parse(serialized);
+
+		expect(parsed.columnWidth).toBe(450);
+	});
+
+	it("roundtrips columnWidth through serialization", () => {
+		const original = {
+			...defaultSettings,
+			columnWidth: 350,
+		};
+
+		const serialized = toSettingsString(original);
+		const parsed = parseSettingsString(serialized);
+
+		expect(parsed.columnWidth).toBe(350);
+	});
+});
