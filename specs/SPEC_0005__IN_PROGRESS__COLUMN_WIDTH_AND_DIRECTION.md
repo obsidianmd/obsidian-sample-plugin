@@ -325,22 +325,28 @@ kanban-plugin: {"columnWidth": 300, "flowDirection": "ltr", ...}
 
 ## Implementation Plan
 
-### Phase 1: Column Width Configuration
+### Phase 1: Column Width Configuration ✅ COMPLETE
 **Goal**: Users can configure card/column width, persisted across sessions
 
-1. ☐ Add `columnWidth` to SettingValues interface in settings_store.ts
-2. ☐ Add default value (300) to default settings
-3. ☐ Add parsing logic to handle columnWidth in settings serialization
-4. ☐ Create settings UI component for width slider/input (200-600 range)
-5. ☐ Update column.svelte to use CSS variable `--column-width`
-6. ☐ Add reactive statement in main.svelte to set CSS variable from settings
-7. ☐ Test: Change width in settings, verify columns resize immediately
-8. ☐ Test: Save and reload kanban, verify width persists
-9. ☐ Test: Set invalid values, verify fallback to 300px
-10. ☐ Test: Boundary values (200, 600), verify constraints work
-11. ☐ Test: Verify column height remains auto-sized based on content
+1. ✅ Add `columnWidth` to SettingValues interface in settings_store.ts
+2. ✅ Add default value (300) to default settings
+3. ✅ Add parsing logic to handle columnWidth in settings serialization
+4. ✅ Create settings UI component for width slider/input (200-600 range)
+5. ✅ Update column.svelte to use CSS variable `--column-width`
+6. ✅ Add reactive statement in main.svelte to set CSS variable from settings
+7. ✅ Test: Change width in settings, verify columns resize immediately
+8. ✅ Test: Save and reload kanban, verify width persists
+9. ✅ Test: Set invalid values, verify fallback to 300px
+10. ✅ Test: Boundary values (200, 600), verify constraints work
+11. ✅ Test: Verify column height remains auto-sized based on content
 
-**Deliverable**: Working column width configuration with validation and persistence
+**Deliverable**: ✅ Working column width configuration with validation and persistence
+
+**Completion Summary**:
+- Implementation: settings_store.ts:76, settings.ts:39-50, column.svelte:319, main.svelte:409,637
+- Tests: 8 automated tests added (validation, boundaries, serialization, persistence)
+- Manual verification: All UI reactivity and persistence tests passed in Obsidian
+- Commits: feat:4c4ad44, test:eb85ba1
 
 **Implementation notes**:
 - Can be deployed independently before flow direction
