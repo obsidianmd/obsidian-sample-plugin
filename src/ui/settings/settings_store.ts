@@ -73,6 +73,7 @@ const settingsObject = z.object({
 	filtersExpanded: z.boolean().default(true).optional(),
 	filtersSidebarExpanded: z.boolean().default(true).optional(),
 	filtersSidebarWidth: z.number().default(280).optional(),
+	columnWidth: z.number().min(200).max(600).default(300).optional(),
 });
 
 export type SettingValues = z.infer<typeof settingsObject>;
@@ -90,6 +91,7 @@ export const defaultSettings: SettingValues = {
 	lastContentFilter: "",
 	lastTagFilter: [],
 	lastFileFilter: [],
+	columnWidth: 300,
 };
 
 export const createSettingsStore = () =>

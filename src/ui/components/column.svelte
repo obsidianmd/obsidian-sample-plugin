@@ -316,7 +316,7 @@
 		display: flex;
 		flex-direction: column;
 		align-self: flex-start;
-		width: 300px;
+		width: var(--column-width, 300px);
 		flex-shrink: 0;
 		padding: var(--size-4-3);
 		border-radius: var(--radius-m);

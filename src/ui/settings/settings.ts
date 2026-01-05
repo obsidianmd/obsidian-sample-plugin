@@ -37,6 +37,19 @@ export class SettingsModal extends Modal {
 			});
 
 		new Setting(this.contentEl)
+			.setName("Column width")
+			.setDesc("Width of task cards in pixels (200-600)")
+			.addSlider((slider) => {
+				slider
+					.setLimits(200, 600, 10)
+					.setValue(this.settings.columnWidth ?? 300)
+					.setDynamicTooltip()
+					.onChange((value) => {
+						this.settings.columnWidth = value;
+					});
+			});
+
+		new Setting(this.contentEl)
 			.setName("Folder scope")
 			.setDesc("Where should we try to find tasks for this Kanban?")
 			.addDropdown((dropdown) => {

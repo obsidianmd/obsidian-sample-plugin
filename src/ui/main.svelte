@@ -399,13 +399,14 @@
 
 	$: tasksByColumn = groupByColumnTag(filteredByFile);
 
-	$: ({ 
-		showFilepath = true, 
-		consolidateTags = false, 
+	$: ({
+		showFilepath = true,
+		consolidateTags = false,
 		uncategorizedVisibility = VisibilityOption.Auto,
 		doneVisibility = VisibilityOption.AlwaysShow,
 		filtersSidebarExpanded = true,
-		filtersSidebarWidth = 280
+		filtersSidebarWidth = 280,
+		columnWidth = 300
 	} = $settingsStore);
 
 	$: showUncategorizedColumn =
@@ -633,7 +634,7 @@
 				<IconButton icon="lucide-settings" on:click={handleOpenSettings} />
 			</div>
 			
-			<div class="columns">
+			<div class="columns" style="--column-width: {columnWidth}px;">
 		<div>
 			{#if showUncategorizedColumn}
 			<Column
