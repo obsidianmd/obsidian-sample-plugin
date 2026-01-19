@@ -8,34 +8,52 @@
 
 ## Environment & tooling
 
-- Node.js: use current LTS (Node 18+ recommended).
-- **Package manager: npm** (required for this sample - `package.json` defines npm scripts and dependencies).
+- Node.js: use current LTS (Node 18+ recommended), or **Bun** (1.0+ recommended) as an alternative runtime.
+- **Package manager: npm or bun** (`package.json` defines scripts and dependencies compatible with both).
 - **Bundler: esbuild** (required for this sample - `esbuild.config.mjs` and build scripts depend on it). Alternative bundlers like Rollup or webpack are acceptable for other projects if they bundle all external dependencies into `main.js`.
 - Types: `obsidian` type definitions.
 
-**Note**: This sample project has specific technical dependencies on npm and esbuild. If you're creating a plugin from scratch, you can choose different tools, but you'll need to replace the build configuration accordingly.
+**Note**: This sample project supports both npm/Node.js and Bun. Choose the runtime that best fits your workflow.
 
 ### Install
 
+**Using npm:**
 ```bash
 npm install
 ```
 
+**Using Bun:**
+```bash
+bun install
+```
+
 ### Dev (watch)
 
+**Using npm:**
 ```bash
 npm run dev
 ```
 
+**Using Bun:**
+```bash
+bun run bun:dev
+```
+
 ### Production build
 
+**Using npm:**
 ```bash
 npm run build
 ```
 
+**Using Bun:**
+```bash
+bun run bun:build
+```
+
 ## Linting
 
-- To use eslint install eslint from terminal: `npm install -g eslint`
+- To use eslint install eslint from terminal: `npm install -g eslint` (or `bun add -g eslint`)
 - To use eslint to analyze this project use this command: `eslint main.ts`
 - eslint will then create a report with suggestions for code improvement by file and line number.
 - If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder: `eslint ./src/`
@@ -237,7 +255,7 @@ this.registerInterval(window.setInterval(() => { /* ... */ }, 1000));
 ## Troubleshooting
 
 - Plugin doesn't load after build: ensure `main.js` and `manifest.json` are at the top level of the plugin folder under `<Vault>/.obsidian/plugins/<plugin-id>/`. 
-- Build issues: if `main.js` is missing, run `npm run build` or `npm run dev` to compile your TypeScript source code.
+- Build issues: if `main.js` is missing, run `npm run build` (or `bun run bun:build`) or `npm run dev` (or `bun run bun:dev`) to compile your TypeScript source code.
 - Commands not appearing: verify `addCommand` runs after `onload` and IDs are unique.
 - Settings not persisting: ensure `loadData`/`saveData` are awaited and you re-render the UI after changes.
 - Mobile-only issues: confirm you're not using desktop-only APIs; check `isDesktopOnly` and adjust.
