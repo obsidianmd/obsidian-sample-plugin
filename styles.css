@@ -1,8 +1,53 @@
-/*
+.oa-chat-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	gap: 8px;
+	padding: 12px;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.oa-chat-messages {
+	flex: 1;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
 
-If your plugin does not need CSS, delete this file.
+.oa-chat-message {
+	padding: 8px 10px;
+	border-radius: 10px;
+	line-height: 1.4;
+	white-space: pre-wrap;
+}
 
-*/
+.oa-chat-message.user {
+	align-self: flex-end;
+	background: var(--background-secondary);
+}
+
+.oa-chat-message.assistant {
+	align-self: flex-start;
+	background: var(--background-secondary-alt);
+}
+
+.oa-chat-input {
+	display: flex;
+	gap: 8px;
+}
+
+.oa-chat-textarea {
+	flex: 1;
+	min-height: 64px;
+	resize: vertical;
+}
+
+.oa-chat-send {
+	align-self: flex-end;
+}
+
+.oa-chat-status {
+	min-height: 18px;
+	font-size: 12px;
+	color: var(--text-muted);
+}

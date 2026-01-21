@@ -1,9 +1,9 @@
 {
-	"id": "auto-archive-fleeting-notes",
-	"name": "Auto Archive Fleeting Notes",
+	"id": "openai-chat-sidebar",
+	"name": "OpenAI Chat Sidebar",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Automatically moves Fleeting notes to an Archive folder after a set number of days.",
+	"description": "Sidebar chat UI for OpenAI-compatible endpoints.",
 	"author": "Your Name",
 	"authorUrl": "https://yourwebsite.com",
 	"fundingUrl": "https://obsidian.md/pricing",
