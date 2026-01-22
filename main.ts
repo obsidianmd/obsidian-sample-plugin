@@ -8,7 +8,6 @@ import {
 	CachedMetadata,
 	MarkdownView,
 	editorLivePreviewField,
-	editorEditorField,
 	EditorSuggest,
 	Editor,
 	EditorPosition,
@@ -25,7 +24,6 @@ import {
 	WidgetType
 } from '@codemirror/view';
 
-import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 
 interface MathReferencerSettings {
@@ -219,19 +217,108 @@ class EquationNumberWidget extends WidgetType {
 
 /**
  * Creates a view plugin for Live Preview mode equation numbering
+ * This handles both the raw text view (when cursor is in equation) and
+ * the rendered MathJax view (when cursor is outside equation)
  */
 function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 	return ViewPlugin.fromClass(
 		class {
 			decorations: DecorationSet;
+			private observer: MutationObserver | null = null;
+			private view: EditorView;
 
 			constructor(view: EditorView) {
+				this.view = view;
 				this.decorations = this.buildDecorations(view);
+				this.setupMathObserver(view);
+			}
+
+			destroy() {
+				if (this.observer) {
+					this.observer.disconnect();
+					this.observer = null;
+				}
+			}
+
+			/**
+			 * Set up a MutationObserver to detect when MathJax renders equations
+			 * and add equation numbers to the rendered output
+			 */
+			private setupMathObserver(view: EditorView) {
+				this.observer = new MutationObserver((mutations) => {
+					this.processRenderedMath(view);
+				});
+
+				// Observe the editor DOM for changes
+				this.observer.observe(view.dom, {
+					childList: true,
+					subtree: true
+				});
+
+				// Initial processing
+				setTimeout(() => this.processRenderedMath(view), 100);
+			}
+
+			/**
+			 * Process rendered math blocks and add equation numbers
+			 */
+			private processRenderedMath(view: EditorView) {
+				if (!plugin.settings.enableAutoNumbering) {
+					return;
+				}
+
+				const file = plugin.app.workspace.getActiveFile();
+				if (!file) {
+					return;
+				}
+
+				const text = view.state.doc.toString();
+				const equations = plugin.extractEquationsFromText(text, file.path);
+
+				// Find all rendered math blocks in the editor
+				const mathBlocks = view.dom.querySelectorAll('.cm-embed-block.math-block, .internal-embed .math-block');
+
+				mathBlocks.forEach((mathBlock) => {
+					// Skip if already has equation number
+					if (mathBlock.querySelector('.equation-number')) {
+						return;
+					}
+
+					// Try to determine which equation this is by position
+					const blockRect = mathBlock.getBoundingClientRect();
+					const editorRect = view.dom.getBoundingClientRect();
+
+					// Get approximate line from DOM position
+					const pos = view.posAtCoords({ x: blockRect.left, y: blockRect.top });
+					if (pos === null) {
+						return;
+					}
+
+					const line = view.state.doc.lineAt(pos);
+					const lineNumber = line.number - 1; // 0-indexed
+
+					// Find equation at or near this line
+					const matchingEquation = equations.find(eq => {
+						// Allow some tolerance for line matching
+						return Math.abs(eq.lineNumber - lineNumber) <= 3;
+					});
+
+					if (matchingEquation) {
+						const numberSpan = document.createElement('span');
+						numberSpan.className = 'equation-number';
+						numberSpan.textContent = plugin.formatEquationNumber(matchingEquation);
+
+						// Add to the math block
+						mathBlock.appendChild(numberSpan);
+					}
+				});
 			}
 
 			update(update: ViewUpdate) {
 				if (update.docChanged || update.viewportChanged) {
 					this.decorations = this.buildDecorations(update.view);
+					// Also reprocess rendered math
+					setTimeout(() => this.processRenderedMath(update.view), 50);
 				}
 			}
 
@@ -249,12 +336,6 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 				const builder = new RangeSetBuilder<Decoration>();
 				const text = view.state.doc.toString();
 
-				// Get the current file
-				const editor = view.state.field(editorEditorField);
-				if (!editor) {
-					return builder.finish();
-				}
-
 				const file = plugin.app.workspace.getActiveFile();
 				if (!file) {
 					return builder.finish();
@@ -263,15 +344,11 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 				// Extract equations from the document
 				const equations = plugin.extractEquationsFromText(text, file.path);
 
-				// Find all $$ blocks in the document using syntax tree
-				const tree = syntaxTree(view.state);
-				let equationIndex = 0;
-
-				// Fallback to manual parsing if syntax tree doesn't have math nodes
+				// Parse the document to find $$ blocks
 				const lines = text.split('\n');
 				let pos = 0;
 				let inEquation = false;
-				let equationStartPos = -1;
+				let equationIndex = 0;
 
 				for (let i = 0; i < lines.length; i++) {
 					const line = lines[i];
@@ -279,7 +356,6 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 
 					if (line.trim() === '$$' && !inEquation) {
 						inEquation = true;
-						equationStartPos = pos;
 					} else if (line.trim() === '$$' && inEquation) {
 						inEquation = false;
 
@@ -465,8 +541,11 @@ export default class MathReferencerPlugin extends Plugin {
 			// Get equations from cache or parse them
 			const equations = await this.getEquations(file);
 
+			// Get section info to determine which lines this element covers
+			const sectionInfo = context.getSectionInfo(element);
+
 			// Number the equations in the rendered output
-			let equationIndex = 0;
+			let mathBlockIndex = 0;
 			mathBlocks.forEach((mathBlock) => {
 				const mathEl = mathBlock as HTMLElement;
 
@@ -475,16 +554,37 @@ export default class MathReferencerPlugin extends Plugin {
 					return;
 				}
 
-				const equation = equations[equationIndex];
-				if (!equation) {
-					equationIndex++;
+				// Find the matching equation by line number
+				let matchingEquation: EquationInfo | null = null;
+
+				if (sectionInfo) {
+					// We have section info - find equation within this section's line range
+					// Find equations that start within the section's line range
+					const sectionEquations = equations.filter(eq =>
+						eq.lineNumber >= sectionInfo.lineStart &&
+						eq.lineNumber <= sectionInfo.lineEnd
+					);
+
+					// Match by index within this section
+					if (mathBlockIndex < sectionEquations.length) {
+						matchingEquation = sectionEquations[mathBlockIndex];
+					}
+				} else {
+					// Fallback: match by global index (less reliable)
+					if (mathBlockIndex < equations.length) {
+						matchingEquation = equations[mathBlockIndex];
+					}
+				}
+
+				if (!matchingEquation) {
+					mathBlockIndex++;
 					return;
 				}
 
 				// Add equation number
 				const numberSpan = document.createElement('span');
 				numberSpan.className = 'equation-number';
-				numberSpan.textContent = this.formatEquationNumber(equation);
+				numberSpan.textContent = this.formatEquationNumber(matchingEquation);
 
 				// Wrap the math block in a container for proper layout
 				const wrapper = document.createElement('div');
@@ -494,7 +594,7 @@ export default class MathReferencerPlugin extends Plugin {
 				const parent = mathEl.parentElement;
 				if (!parent) {
 					console.warn('Math element has no parent, skipping numbering');
-					equationIndex++;
+					mathBlockIndex++;
 					return;
 				}
 
@@ -503,11 +603,11 @@ export default class MathReferencerPlugin extends Plugin {
 				wrapper.appendChild(numberSpan);
 
 				// Store block ID reference if available
-				if (equation.blockId) {
-					wrapper.setAttribute('data-block-id', equation.blockId);
+				if (matchingEquation.blockId) {
+					wrapper.setAttribute('data-block-id', matchingEquation.blockId);
 				}
 
-				equationIndex++;
+				mathBlockIndex++;
 			});
 		} catch (error) {
 			console.error(`Error processing equations in ${sourcePath}:`, error);
@@ -1034,7 +1134,28 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
-	 * Automatically insert block IDs when file is saved
+	 * Generate the expected block ID for an equation based on its section numbers
+	 */
+	private generateExpectedBlockId(sectionNumbers: number[], equationNumber: number): string {
+		if (sectionNumbers.length > 0) {
+			return `${this.settings.blockIdPrefix}-${sectionNumbers.join('-')}`;
+		} else {
+			return `${this.settings.blockIdPrefix}-${equationNumber}`;
+		}
+	}
+
+	/**
+	 * Check if a block ID is an auto-generated one (matches our prefix pattern)
+	 */
+	private isAutoGeneratedBlockId(blockId: string): boolean {
+		const prefix = this.settings.blockIdPrefix;
+		// Matches patterns like "eq-1-2-3" or "eq-5"
+		const pattern = new RegExp(`^${prefix}-[0-9-]+$`);
+		return pattern.test(blockId);
+	}
+
+	/**
+	 * Automatically insert or update block IDs when file is saved
 	 */
 	private async autoInsertBlockIdsOnSave(file: TFile) {
 		// Only proceed if auto-generation is enabled
@@ -1052,11 +1173,18 @@ export default class MathReferencerPlugin extends Plugin {
 
 			// Read file content
 			const content = await this.app.vault.read(file);
-			const equations = this.extractEquationsFromContent(content, null, file.path);
 
-			// Find equations that need block IDs inserted
+			// Parse equations WITHOUT reading existing block IDs (to get expected IDs)
+			const equations = this.extractEquationsFromContentWithoutExistingIds(content, file.path);
+
+			// Find equations that need block IDs inserted or updated
 			const lines = content.split('\n');
-			let insertions: Array<{line: number, text: string}> = [];
+			let modifications: Array<{
+				type: 'insert' | 'update',
+				line: number,
+				oldText?: string,
+				newText: string
+			}> = [];
 
 			for (const eq of equations) {
 				// Find the closing $$ line
@@ -1072,48 +1200,199 @@ export default class MathReferencerPlugin extends Plugin {
 					continue; // Skip unclosed equations
 				}
 
+				const expectedBlockId = this.generateExpectedBlockId(eq.sectionNumbers, eq.equationNumber);
+
 				// Check if next line has a block ID
 				const nextLine = closingLine + 1;
 				if (nextLine < lines.length) {
-					const existingBlockId = lines[nextLine].match(/^\^([a-zA-Z0-9-_]+)\s*$/);
-					if (existingBlockId) {
-						continue; // Already has a block ID
+					const existingBlockIdMatch = lines[nextLine].match(/^\^([a-zA-Z0-9-_]+)\s*$/);
+					if (existingBlockIdMatch) {
+						const existingBlockId = existingBlockIdMatch[1];
+
+						// Only update if it's an auto-generated ID and doesn't match expected
+						if (this.isAutoGeneratedBlockId(existingBlockId) && existingBlockId !== expectedBlockId) {
+							modifications.push({
+								type: 'update',
+								line: nextLine,
+								oldText: lines[nextLine],
+								newText: `^${expectedBlockId}`
+							});
+						}
+						// If it's a custom block ID (not auto-generated), leave it alone
+						continue;
 					}
 				}
 
-				// Add block ID insertion
-				if (eq.blockId) {
-					insertions.push({
-						line: closingLine + 1,
-						text: `^${eq.blockId}`
-					});
-				}
+				// No block ID exists - add one
+				modifications.push({
+					type: 'insert',
+					line: closingLine + 1,
+					newText: `^${expectedBlockId}`
+				});
 			}
 
-			// If no insertions needed, return early
-			if (insertions.length === 0) {
+			// If no modifications needed, return early
+			if (modifications.length === 0) {
 				return;
 			}
 
-			// Sort insertions in reverse order to maintain line numbers
-			insertions.sort((a, b) => b.line - a.line);
+			// Sort modifications in reverse order to maintain line numbers
+			modifications.sort((a, b) => b.line - a.line);
 
-			// Build new content with block IDs inserted
+			// Apply modifications
 			let newLines = [...lines];
-			for (const insertion of insertions) {
-				newLines.splice(insertion.line, 0, insertion.text);
+			for (const mod of modifications) {
+				if (mod.type === 'insert') {
+					newLines.splice(mod.line, 0, mod.newText);
+				} else if (mod.type === 'update') {
+					newLines[mod.line] = mod.newText;
+				}
 			}
 
 			const newContent = newLines.join('\n');
 
 			// Only modify if content actually changed
 			if (newContent !== content) {
+				const insertCount = modifications.filter(m => m.type === 'insert').length;
+				const updateCount = modifications.filter(m => m.type === 'update').length;
 				await this.app.vault.modify(file, newContent);
-				console.log(`Auto-inserted ${insertions.length} block IDs in ${file.path}`);
+				console.log(`Block IDs in ${file.path}: inserted ${insertCount}, updated ${updateCount}`);
 			}
 		} finally {
 			this.savingFiles.delete(file.path);
 		}
+	}
+
+	/**
+	 * Extract equations from content without reading existing block IDs
+	 * This is used to calculate what block IDs SHOULD be based on current structure
+	 */
+	private extractEquationsFromContentWithoutExistingIds(
+		content: string,
+		filePath: string
+	): EquationInfo[] {
+		const equations: EquationInfo[] = [];
+		const lines = content.split('\n');
+
+		// Identify code block regions to skip
+		const codeBlockRegions: Array<{start: number, end: number}> = [];
+		let inCodeBlock = false;
+		let codeBlockStart = -1;
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (line.trim().startsWith('```')) {
+				if (!inCodeBlock) {
+					inCodeBlock = true;
+					codeBlockStart = i;
+				} else {
+					inCodeBlock = false;
+					codeBlockRegions.push({ start: codeBlockStart, end: i });
+				}
+			}
+		}
+
+		const isInCodeBlock = (lineNum: number): boolean => {
+			return codeBlockRegions.some(region =>
+				lineNum >= region.start && lineNum <= region.end
+			);
+		};
+
+		// Track heading hierarchy for section numbering
+		const headingLevels: Map<number, number> = new Map();
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (isInCodeBlock(i)) continue;
+
+			const headingMatch = line.match(/^(#{1,6})\s+/);
+			if (headingMatch) {
+				const level = headingMatch[1].length;
+				headingLevels.set(i, level);
+			}
+		}
+
+		const getCurrentSectionNumbers = (lineNum: number): number[] => {
+			let currentStack: number[] = [];
+			let lastLevel = 0;
+
+			for (const [headingLine, level] of headingLevels.entries()) {
+				if (headingLine >= lineNum) break;
+
+				if (level <= lastLevel) {
+					currentStack = currentStack.slice(0, level - 1);
+				}
+
+				while (currentStack.length < level - 1) {
+					currentStack.push(0);
+				}
+
+				if (currentStack.length === level - 1) {
+					currentStack.push(1);
+				} else {
+					currentStack[level - 1]++;
+				}
+
+				lastLevel = level;
+			}
+
+			return currentStack;
+		};
+
+		let equationNumber = this.settings.startNumberingFrom;
+		let inEquation = false;
+		let equationStartLine = -1;
+		let equationContent = '';
+
+		const sectionEquationCounts = new Map<string, number>();
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+
+			if (isInCodeBlock(i)) continue;
+
+			if (line.trim() === '$$' && !inEquation) {
+				inEquation = true;
+				equationStartLine = i;
+				equationContent = '';
+				continue;
+			}
+
+			if (line.trim() === '$$' && inEquation) {
+				inEquation = false;
+
+				if (equationContent.trim().length === 0) continue;
+
+				const shouldNumber = !this.shouldSkipNumbering(equationContent);
+				if (!shouldNumber) continue;
+
+				const baseSectionNumbers = getCurrentSectionNumbers(i);
+				const sectionKey = baseSectionNumbers.join('-') || 'root';
+				const eqCountInSection = (sectionEquationCounts.get(sectionKey) || 0) + 1;
+				sectionEquationCounts.set(sectionKey, eqCountInSection);
+
+				const sectionNumbers = [...baseSectionNumbers, eqCountInSection];
+
+				// DO NOT read existing block ID - we want to calculate expected ID
+				const blockId = this.generateExpectedBlockId(sectionNumbers, equationNumber);
+
+				equations.push({
+					filePath: filePath,
+					blockId: blockId,
+					equationNumber: equationNumber++,
+					content: equationContent.trim(),
+					lineNumber: equationStartLine,
+					sectionNumbers: sectionNumbers
+				});
+				continue;
+			}
+
+			if (inEquation) {
+				equationContent += line + '\n';
+			}
+		}
+
+		return equations;
 	}
 
 	/**
