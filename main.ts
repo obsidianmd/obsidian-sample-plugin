@@ -1363,7 +1363,8 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
-	 * Insert block IDs for equations that don't have them
+	 * Manual command to insert block IDs for equations
+	 * Works regardless of enableAutoBlockIds setting
 	 */
 	private async insertBlockIds(editor: Editor, view: MarkdownView) {
 		const file = view.file;
@@ -1372,16 +1373,14 @@ export default class MathReferencerPlugin extends Plugin {
 		}
 
 		const content = editor.getValue();
-		const equations = this.extractEquationsFromContent(content, null, file.path);
+		// Use the version that calculates expected IDs (doesn't depend on settings)
+		const equations = this.extractEquationsFromContentWithoutExistingIds(content, file.path);
 
 		// Find equations that need block IDs inserted
 		const lines = content.split('\n');
 		let insertions: Array<{line: number, text: string}> = [];
 
 		for (const eq of equations) {
-			// Check if block ID already exists in the file
-			const equationEndLine = eq.lineNumber;
-
 			// Find the closing $$ line
 			let closingLine = -1;
 			for (let i = eq.lineNumber + 1; i < lines.length; i++) {
@@ -1404,13 +1403,12 @@ export default class MathReferencerPlugin extends Plugin {
 				}
 			}
 
-			// Add block ID insertion
-			if (eq.blockId) {
-				insertions.push({
-					line: closingLine + 1,
-					text: `^${eq.blockId}`
-				});
-			}
+			// Generate block ID for this equation
+			const blockId = this.generateExpectedBlockId(eq.sectionNumbers, eq.equationNumber);
+			insertions.push({
+				line: closingLine + 1,
+				text: `^${blockId}`
+			});
 		}
 
 		// Sort insertions in reverse order to maintain line numbers
@@ -1419,7 +1417,7 @@ export default class MathReferencerPlugin extends Plugin {
 		// Insert block IDs
 		for (const insertion of insertions) {
 			editor.replaceRange(
-				`\n^${insertion.text.substring(1)}`,
+				`\n${insertion.text}`,
 				{ line: insertion.line - 1, ch: lines[insertion.line - 1].length }
 			);
 		}
