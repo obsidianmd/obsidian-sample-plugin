@@ -166,18 +166,6 @@ a.equation-link:hover {
 	z-index: 10;
 }
 
-/* Widget decoration equation number (when cursor is in equation raw view) */
-.cm-line .equation-number:not(.equation-number-live-preview) {
-	display: inline-block;
-	float: right;
-	font-size: 0.9em;
-	color: var(--text-muted);
-	padding: 0 0.5em;
-	white-space: nowrap;
-	user-select: none;
-	line-height: inherit;
-}
-
 /* Equation reference suggester styles */
 .equation-suggestion {
 	display: flex;

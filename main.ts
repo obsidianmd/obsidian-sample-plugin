@@ -7,7 +7,6 @@ import {
 	TFile,
 	CachedMetadata,
 	MarkdownView,
-	editorLivePreviewField,
 	EditorSuggest,
 	Editor,
 	EditorPosition,
@@ -18,13 +17,8 @@ import {
 import {
 	EditorView,
 	ViewPlugin,
-	ViewUpdate,
-	Decoration,
-	DecorationSet,
-	WidgetType
+	ViewUpdate
 } from '@codemirror/view';
-
-import { RangeSetBuilder } from '@codemirror/state';
 
 interface MathReferencerSettings {
 	enableAutoNumbering: boolean;
@@ -194,44 +188,15 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 }
 
 /**
- * Widget to display equation numbers in Live Preview mode
- */
-class EquationNumberWidget extends WidgetType {
-	constructor(private equationNumber: string) {
-		super();
-	}
-
-	toDOM(): HTMLElement {
-		const span = document.createElement('span');
-		span.className = 'equation-number';
-		span.textContent = this.equationNumber;
-		return span;
-	}
-
-	eq(other: EquationNumberWidget): boolean {
-		return other.equationNumber === this.equationNumber;
-	}
-
-	ignoreEvent(): boolean {
-		return true;
-	}
-}
-
-/**
  * Creates a view plugin for Live Preview mode equation numbering
- * This handles both the raw text view (when cursor is in equation) and
- * the rendered MathJax view (when cursor is outside equation)
+ * Uses MutationObserver to detect rendered MathJax and add equation numbers
  */
 function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 	return ViewPlugin.fromClass(
 		class {
-			decorations: DecorationSet;
 			private observer: MutationObserver | null = null;
-			private view: EditorView;
 
 			constructor(view: EditorView) {
-				this.view = view;
-				this.decorations = this.buildDecorations(view);
 				this.setupMathObserver(view);
 			}
 
@@ -247,7 +212,7 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 			 * and add equation numbers to the rendered output
 			 */
 			private setupMathObserver(view: EditorView) {
-				this.observer = new MutationObserver((mutations) => {
+				this.observer = new MutationObserver(() => {
 					this.processRenderedMath(view);
 				});
 
@@ -334,73 +299,10 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 
 			update(update: ViewUpdate) {
 				if (update.docChanged || update.viewportChanged) {
-					this.decorations = this.buildDecorations(update.view);
-					// Also reprocess rendered math
+					// Reprocess rendered math after changes
 					setTimeout(() => this.processRenderedMath(update.view), 50);
 				}
 			}
-
-			buildDecorations(view: EditorView): DecorationSet {
-				if (!plugin.settings.enableAutoNumbering) {
-					return Decoration.none;
-				}
-
-				// Check if we're in Live Preview mode
-				const isLivePreview = view.state.field(editorLivePreviewField);
-				if (!isLivePreview) {
-					return Decoration.none;
-				}
-
-				const builder = new RangeSetBuilder<Decoration>();
-				const text = view.state.doc.toString();
-
-				const file = plugin.app.workspace.getActiveFile();
-				if (!file) {
-					return builder.finish();
-				}
-
-				// Extract equations from the document
-				const equations = plugin.extractEquationsFromText(text, file.path);
-
-				// Parse the document to find $$ blocks
-				const lines = text.split('\n');
-				let pos = 0;
-				let inEquation = false;
-				let equationIndex = 0;
-
-				for (let i = 0; i < lines.length; i++) {
-					const line = lines[i];
-					const lineLength = line.length;
-
-					if (line.trim() === '$$' && !inEquation) {
-						inEquation = true;
-					} else if (line.trim() === '$$' && inEquation) {
-						inEquation = false;
-
-						// Add decoration at the end of the closing $$
-						const equation = equations[equationIndex];
-						if (equation) {
-							const decorationPos = pos + lineLength;
-							const widget = Decoration.widget({
-								widget: new EquationNumberWidget(
-									plugin.formatEquationNumber(equation)
-								),
-								side: 1,
-								block: false
-							});
-							builder.add(decorationPos, decorationPos, widget);
-						}
-						equationIndex++;
-					}
-
-					pos += lineLength + 1; // +1 for newline
-				}
-
-				return builder.finish();
-			}
-		},
-		{
-			decorations: (value) => value.decorations
 		}
 	);
 }
