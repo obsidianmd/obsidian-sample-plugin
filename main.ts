@@ -36,6 +36,7 @@ interface MathReferencerSettings {
 	blockIdPrefix: string; // Prefix for block IDs (e.g., "eq")
 	refTrigger: string; // Trigger for equation references (e.g., "\\ref")
 	useSectionBasedNumbering: boolean; // Use section-based numbering (e.g., 2.1.3)
+	baseHeadingLevel: number; // Heading level to start counting from (2 = ##)
 }
 
 const DEFAULT_SETTINGS: MathReferencerSettings = {
@@ -47,7 +48,8 @@ const DEFAULT_SETTINGS: MathReferencerSettings = {
 	enableAutoBlockIds: true,
 	blockIdPrefix: 'eq',
 	refTrigger: '\\ref',
-	useSectionBasedNumbering: true
+	useSectionBasedNumbering: true,
+	baseHeadingLevel: 2  // Start from ## by default
 }
 
 interface EquationInfo {
@@ -932,10 +934,10 @@ export default class MathReferencerPlugin extends Plugin {
 		};
 
 		// Track heading hierarchy for section numbering
-		const headingStack: number[] = []; // Stack of section counters
+		const baseLevel = this.settings.baseHeadingLevel;
 		const headingLevels: Map<number, number> = new Map(); // Maps line number to heading level
 
-		// First pass: identify all headings and their positions
+		// First pass: identify all headings at or below base level
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (isInCodeBlock(i)) {
@@ -945,44 +947,74 @@ export default class MathReferencerPlugin extends Plugin {
 			const headingMatch = line.match(/^(#{1,6})\s+/);
 			if (headingMatch) {
 				const level = headingMatch[1].length;
-				headingLevels.set(i, level);
+				// Only track headings at or below our base level
+				if (level >= baseLevel) {
+					headingLevels.set(i, level);
+				}
 			}
 		}
 
+		// Check if we have any subheadings (headings deeper than base level)
+		const hasSubheadings = Array.from(headingLevels.values()).some(level => level > baseLevel);
+
 		// Helper to get current section numbers at a given line
 		const getCurrentSectionNumbers = (lineNum: number): number[] => {
-			const sectionNumbers: number[] = [];
-			let currentStack: number[] = [];
-			let lastLevel = 0;
+			if (!this.settings.useSectionBasedNumbering) {
+				return [];
+			}
 
-			// Process all headings up to this line
-			for (const [headingLine, level] of headingLevels.entries()) {
+			// Track counters for each heading level relative to base
+			// counters[0] = base level count, counters[1] = base+1 level count, etc.
+			const counters: number[] = [];
+			let maxDepthSeen = 0;
+
+			// Sort heading lines to ensure correct order
+			const sortedHeadings = Array.from(headingLevels.entries()).sort((a, b) => a[0] - b[0]);
+
+			for (const [headingLine, level] of sortedHeadings) {
 				if (headingLine >= lineNum) {
 					break;
 				}
 
-				// Adjust stack based on heading level
-				if (level <= lastLevel) {
-					// Pop stack to current level
-					currentStack = currentStack.slice(0, level - 1);
+				// Convert absolute level to relative depth (0-indexed from base)
+				const depth = level - baseLevel;
+
+				// When we see a heading at depth N:
+				// 1. Increment counter at depth N
+				// 2. Reset all counters deeper than N
+
+				// Ensure we have enough counter slots
+				while (counters.length <= depth) {
+					counters.push(0);
 				}
 
-				// Ensure stack has enough levels
-				while (currentStack.length < level - 1) {
-					currentStack.push(0);
+				// Increment this level's counter
+				counters[depth]++;
+
+				// Reset deeper levels
+				for (let d = depth + 1; d < counters.length; d++) {
+					counters[d] = 0;
 				}
 
-				// Increment or add counter at current level
-				if (currentStack.length === level - 1) {
-					currentStack.push(1);
-				} else {
-					currentStack[level - 1]++;
-				}
-
-				lastLevel = level;
+				maxDepthSeen = Math.max(maxDepthSeen, depth);
 			}
 
-			return currentStack;
+			// If no headings found before this line, return empty
+			if (counters.length === 0) {
+				return [];
+			}
+
+			// Only include hierarchy if we have subheadings, otherwise just return base section
+			if (!hasSubheadings) {
+				return counters.slice(0, 1);
+			}
+
+			// Trim trailing zeros and return
+			while (counters.length > 1 && counters[counters.length - 1] === 0) {
+				counters.pop();
+			}
+
+			return counters;
 		};
 
 		let equationNumber = this.settings.startNumberingFrom;
@@ -1315,6 +1347,7 @@ export default class MathReferencerPlugin extends Plugin {
 		};
 
 		// Track heading hierarchy for section numbering
+		const baseLevel = this.settings.baseHeadingLevel;
 		const headingLevels: Map<number, number> = new Map();
 
 		for (let i = 0; i < lines.length; i++) {
@@ -1324,35 +1357,51 @@ export default class MathReferencerPlugin extends Plugin {
 			const headingMatch = line.match(/^(#{1,6})\s+/);
 			if (headingMatch) {
 				const level = headingMatch[1].length;
-				headingLevels.set(i, level);
+				if (level >= baseLevel) {
+					headingLevels.set(i, level);
+				}
 			}
 		}
 
+		const hasSubheadings = Array.from(headingLevels.values()).some(level => level > baseLevel);
+
 		const getCurrentSectionNumbers = (lineNum: number): number[] => {
-			let currentStack: number[] = [];
-			let lastLevel = 0;
-
-			for (const [headingLine, level] of headingLevels.entries()) {
-				if (headingLine >= lineNum) break;
-
-				if (level <= lastLevel) {
-					currentStack = currentStack.slice(0, level - 1);
-				}
-
-				while (currentStack.length < level - 1) {
-					currentStack.push(0);
-				}
-
-				if (currentStack.length === level - 1) {
-					currentStack.push(1);
-				} else {
-					currentStack[level - 1]++;
-				}
-
-				lastLevel = level;
+			if (!this.settings.useSectionBasedNumbering) {
+				return [];
 			}
 
-			return currentStack;
+			const counters: number[] = [];
+			const sortedHeadings = Array.from(headingLevels.entries()).sort((a, b) => a[0] - b[0]);
+
+			for (const [headingLine, level] of sortedHeadings) {
+				if (headingLine >= lineNum) break;
+
+				const depth = level - baseLevel;
+
+				while (counters.length <= depth) {
+					counters.push(0);
+				}
+
+				counters[depth]++;
+
+				for (let d = depth + 1; d < counters.length; d++) {
+					counters[d] = 0;
+				}
+			}
+
+			if (counters.length === 0) {
+				return [];
+			}
+
+			if (!hasSubheadings) {
+				return counters.slice(0, 1);
+			}
+
+			while (counters.length > 1 && counters[counters.length - 1] === 0) {
+				counters.pop();
+			}
+
+			return counters;
 		};
 
 		let equationNumber = this.settings.startNumberingFrom;
@@ -1511,6 +1560,19 @@ class MathReferencerSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.useSectionBasedNumbering)
 				.onChange(async (value) => {
 					this.plugin.settings.useSectionBasedNumbering = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Base heading level')
+			.setDesc('Heading level to start section counting from (2 = ##, 1 = #)')
+			.addDropdown(dropdown => dropdown
+				.addOption('1', '# (H1)')
+				.addOption('2', '## (H2)')
+				.addOption('3', '### (H3)')
+				.setValue(this.plugin.settings.baseHeadingLevel.toString())
+				.onChange(async (value) => {
+					this.plugin.settings.baseHeadingLevel = parseInt(value);
 					await this.plugin.saveSettings();
 				}));
 
