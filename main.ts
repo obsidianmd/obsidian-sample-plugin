@@ -14,6 +14,16 @@ import {
 	EditorSuggestContext,
 } from "obsidian";
 
+import {
+	EditorView,
+	Decoration,
+	DecorationSet,
+	WidgetType,
+	ViewPlugin,
+	ViewUpdate,
+} from "@codemirror/view";
+import { RangeSetBuilder } from "@codemirror/state";
+
 interface MathReferencerSettings {
 	enableAutoNumbering: boolean;
 	startNumberingFrom: number;
@@ -236,6 +246,187 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 	}
 }
 
+/**
+ * Widget that displays an equation number in Live Preview
+ */
+class EquationNumberWidget extends WidgetType {
+	constructor(
+		readonly equationNumber: number,
+		readonly format: string,
+	) {
+		super();
+	}
+
+	toDOM(): HTMLElement {
+		const span = document.createElement("span");
+		span.className = "equation-number equation-number-live-preview";
+		span.textContent = this.format.replace(
+			"${num}",
+			this.equationNumber.toString(),
+		);
+		return span;
+	}
+
+	eq(other: WidgetType): boolean {
+		return (
+			other instanceof EquationNumberWidget &&
+			other.equationNumber === this.equationNumber &&
+			other.format === this.format
+		);
+	}
+}
+
+/**
+ * Creates a view plugin for Live Preview equation numbering
+ */
+function createEquationNumberPlugin(plugin: MathReferencerPlugin) {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: DecorationSet;
+			debounceTimer: number | null = null;
+
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+				// Initial processing after a delay
+				this.scheduleNumbering(view);
+			}
+
+			destroy() {
+				if (this.debounceTimer !== null) {
+					clearTimeout(this.debounceTimer);
+				}
+			}
+
+			scheduleNumbering(view: EditorView) {
+				if (this.debounceTimer !== null) {
+					clearTimeout(this.debounceTimer);
+				}
+				this.debounceTimer = window.setTimeout(() => {
+					this.numberRenderedEquations(view);
+				}, 100);
+			}
+
+			numberRenderedEquations(view: EditorView) {
+				if (!plugin.settings.enableAutoNumbering) {
+					return;
+				}
+
+				const file = plugin.app.workspace.getActiveFile();
+				if (!file) {
+					return;
+				}
+
+				const text = view.state.doc.toString();
+				const equations = plugin.extractEquationsFromText(
+					text,
+					file.path,
+				);
+
+				// IMPORTANT: Remove ALL existing equation numbers first
+				// This fixes the bug where equations >10 show wrong numbers
+				// when the observer fires multiple times
+				view.dom
+					.querySelectorAll(".equation-number-live-preview")
+					.forEach((el) => el.remove());
+
+				// Find rendered math blocks (MathJax output in embed blocks)
+				const mathBlocks = view.dom.querySelectorAll(
+					'.cm-embed-block mjx-container[display="true"]',
+				);
+
+				mathBlocks.forEach((mathEl) => {
+					const embedBlock = mathEl.closest(".cm-embed-block");
+					if (!embedBlock) return;
+
+					// Use posAtDOM to get actual document position
+					let pos: number;
+					try {
+						pos = view.posAtDOM(embedBlock);
+					} catch {
+						return; // Skip if we can't get position
+					}
+
+					// Get line number from document position
+					const line = view.state.doc.lineAt(pos);
+					const lineNumber = line.number - 1; // Convert to 0-indexed
+
+					// Find the equation that contains this line
+					const matchingEquation = equations.find((eq) => {
+						return (
+							lineNumber >= eq.lineNumber &&
+							lineNumber <= eq.endLine
+						);
+					});
+
+					if (!matchingEquation) return;
+
+					const numberSpan = document.createElement("span");
+					numberSpan.className =
+						"equation-number equation-number-live-preview";
+					numberSpan.textContent =
+						plugin.settings.numberingFormat.replace(
+							"${num}",
+							matchingEquation.equationNumber.toString(),
+						);
+
+					embedBlock.classList.add("has-equation-number");
+					embedBlock.appendChild(numberSpan);
+				});
+			}
+
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+					this.scheduleNumbering(update.view);
+				}
+			}
+
+			buildDecorations(view: EditorView): DecorationSet {
+				if (!plugin.settings.enableAutoNumbering) {
+					return Decoration.none;
+				}
+
+				const builder = new RangeSetBuilder<Decoration>();
+				const text = view.state.doc.toString();
+				const file = plugin.app.workspace.getActiveFile();
+
+				if (!file) {
+					return Decoration.none;
+				}
+
+				const equations = plugin.extractEquationsFromText(
+					text,
+					file.path,
+				);
+
+				// Add decorations at the end of each equation's closing $$
+				for (const eq of equations) {
+					const endLineNum = eq.endLine + 1;
+					if (endLineNum <= view.state.doc.lines) {
+						const line = view.state.doc.line(endLineNum);
+						if (line.text.trim() === "$$") {
+							const widget = new EquationNumberWidget(
+								eq.equationNumber,
+								plugin.settings.numberingFormat,
+							);
+							const deco = Decoration.widget({
+								widget,
+								side: 1,
+							});
+							builder.add(line.to, line.to, deco);
+						}
+					}
+				}
+
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (v) => v.decorations,
+		},
+	);
+}
+
 export default class MathReferencerPlugin extends Plugin {
 	settings: MathReferencerSettings;
 	private fileCache: Map<string, FileCache> = new Map();
@@ -245,6 +436,9 @@ export default class MathReferencerPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+
+		// Register EditorExtension for Live Preview equation numbering
+		this.registerEditorExtension(createEquationNumberPlugin(this));
 
 		// Register EditorSuggest for equation references
 		this.registerEditorSuggest(new EquationReferenceSuggest(this));
