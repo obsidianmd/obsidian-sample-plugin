@@ -26,7 +26,6 @@ interface MathReferencerSettings {
 	numberingFormat: string; // e.g., "(1)", "[1]", "Eq. 1"
 	showFileNameInEmbeds: boolean;
 	linkRenderFormat: string; // e.g., "Equation ${num}", "${file} Equation ${num}"
-	enableAutoBlockIds: boolean; // Auto-generate block reference IDs
 	blockIdPrefix: string; // Prefix for block IDs (e.g., "eq")
 	refTrigger: string; // Trigger for equation references (e.g., "\\ref")
 	useSectionBasedNumbering: boolean; // Use section-based numbering (e.g., 2.1.3)
@@ -39,7 +38,6 @@ const DEFAULT_SETTINGS: MathReferencerSettings = {
 	numberingFormat: '(${num})',
 	showFileNameInEmbeds: true,
 	linkRenderFormat: 'Equation ${num}',
-	enableAutoBlockIds: true,
 	blockIdPrefix: 'eq',
 	refTrigger: '\\ref',
 	useSectionBasedNumbering: true,
@@ -166,22 +164,62 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 		}
 
 		const editor = this.context.editor;
+		let blockId = equation.blockId;
+		let insertedBlockId = false;
+		let blockIdInsertLine = -1;
+
+		// If equation doesn't have a block ID, generate one and insert it
+		if (!blockId) {
+			blockId = this.plugin.generateBlockIdForEquation(equation);
+
+			// Find the closing $$ line and insert block ID after it
+			const content = editor.getValue();
+			const lines = content.split('\n');
+
+			// Find the closing $$ for this equation
+			for (let i = equation.lineNumber + 1; i < lines.length; i++) {
+				if (lines[i].trim() === '$$') {
+					blockIdInsertLine = i;
+					break;
+				}
+			}
+
+			if (blockIdInsertLine !== -1) {
+				// Insert block ID on the line after closing $$
+				const insertPos = { line: blockIdInsertLine, ch: lines[blockIdInsertLine].length };
+				editor.replaceRange(`\n^${blockId}`, insertPos);
+				insertedBlockId = true;
+
+				// Update the equation info in cache
+				equation.blockId = blockId;
+			}
+		}
 
 		// Generate the link text with hierarchical number
 		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
-		const linkText = `[[${file.basename}#^${equation.blockId}|Equation ${formattedNum}]]`;
+		const linkText = `[[${file.basename}#^${blockId}|Equation ${formattedNum}]]`;
+
+		// Calculate positions, adjusting if we inserted a block ID before the trigger
+		let startPos = this.context.start;
+		let endPos = this.context.end;
+
+		if (insertedBlockId && blockIdInsertLine < this.context.start.line) {
+			// Block ID insertion added a line before our trigger, adjust positions
+			startPos = { line: this.context.start.line + 1, ch: this.context.start.ch };
+			endPos = { line: this.context.end.line + 1, ch: this.context.end.ch };
+		}
 
 		// Replace the trigger text with the link
 		editor.replaceRange(
 			linkText,
-			this.context.start,
-			this.context.end
+			startPos,
+			endPos
 		);
 
 		// Move cursor after the inserted link
 		const newCursorPos = {
-			line: this.context.start.line,
-			ch: this.context.start.ch + linkText.length
+			line: startPos.line,
+			ch: startPos.ch + linkText.length
 		};
 		editor.setCursor(newCursorPos);
 	}
@@ -312,7 +350,6 @@ export default class MathReferencerPlugin extends Plugin {
 	private fileCache: Map<string, FileCache> = new Map();
 	private blockIdToEquation: Map<string, Map<string, EquationInfo>> = new Map();
 	private updateInProgress: Set<string> = new Set();
-	private savingFiles: Set<string> = new Set();
 
 	async onload() {
 		await this.loadSettings();
@@ -341,15 +378,6 @@ export default class MathReferencerPlugin extends Plugin {
 			this.processEquationLinks.bind(this),
 			150 // Run after block references
 		);
-
-		// Add command to insert block IDs
-		this.addCommand({
-			id: 'insert-equation-block-ids',
-			name: 'Insert block IDs for equations',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				await this.insertBlockIds(editor, view);
-			}
-		});
 
 		// Listen for file changes to update equation cache
 		this.registerEvent(
@@ -393,15 +421,6 @@ export default class MathReferencerPlugin extends Plugin {
 			})
 		);
 
-		// Listen for file modifications to auto-insert block IDs
-		this.registerEvent(
-			this.app.vault.on('modify', async (file) => {
-				if (file instanceof TFile && file.extension === 'md') {
-					await this.autoInsertBlockIdsOnSave(file);
-				}
-			})
-		);
-
 		// Initial cache build
 		this.app.workspace.onLayoutReady(() => {
 			this.buildInitialCache();
@@ -418,7 +437,6 @@ export default class MathReferencerPlugin extends Plugin {
 		this.fileCache.clear();
 		this.blockIdToEquation.clear();
 		this.updateInProgress.clear();
-		this.savingFiles.clear();
 		console.log('Math Referencer plugin unloaded');
 	}
 
@@ -983,15 +1001,6 @@ export default class MathReferencerPlugin extends Plugin {
 					}
 				}
 
-				// Generate block ID if auto-generation is enabled and no existing ID
-				if (!blockId && this.settings.enableAutoBlockIds) {
-					if (sectionNumbers.length > 0) {
-						blockId = `${this.settings.blockIdPrefix}-${sectionNumbers.join('-')}`;
-					} else {
-						blockId = `${this.settings.blockIdPrefix}-${equationNumber}`;
-					}
-				}
-
 				// Each $$ $$ block is ONE equation, even if it contains
 				// align or other multi-line environments
 				equations.push({
@@ -1084,348 +1093,17 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
-	 * Generate the expected block ID for an equation based on its section numbers
+	 * Generate a block ID for an equation based on its section numbers
+	 * Public method used by EquationReferenceSuggest for on-demand generation
 	 */
-	private generateExpectedBlockId(sectionNumbers: number[], equationNumber: number): string {
-		if (sectionNumbers.length > 0) {
-			return `${this.settings.blockIdPrefix}-${sectionNumbers.join('-')}`;
+	public generateBlockIdForEquation(equation: EquationInfo): string {
+		if (equation.sectionNumbers.length > 0) {
+			return `${this.settings.blockIdPrefix}-${equation.sectionNumbers.join('-')}`;
 		} else {
-			return `${this.settings.blockIdPrefix}-${equationNumber}`;
+			return `${this.settings.blockIdPrefix}-${equation.equationNumber}`;
 		}
 	}
 
-	/**
-	 * Check if a block ID is an auto-generated one (matches our prefix pattern)
-	 */
-	private isAutoGeneratedBlockId(blockId: string): boolean {
-		const prefix = this.settings.blockIdPrefix;
-		// Matches patterns like "eq-1-2-3" or "eq-5"
-		const pattern = new RegExp(`^${prefix}-[0-9-]+$`);
-		return pattern.test(blockId);
-	}
-
-	/**
-	 * Automatically insert or update block IDs when file is saved
-	 */
-	private async autoInsertBlockIdsOnSave(file: TFile) {
-		// Only proceed if auto-generation is enabled
-		if (!this.settings.enableAutoBlockIds) {
-			return;
-		}
-
-		// Prevent infinite loops from save triggering modify event
-		if (this.savingFiles.has(file.path)) {
-			return;
-		}
-
-		try {
-			this.savingFiles.add(file.path);
-
-			// Read file content
-			const content = await this.app.vault.read(file);
-
-			// Parse equations WITHOUT reading existing block IDs (to get expected IDs)
-			const equations = this.extractEquationsFromContentWithoutExistingIds(content, file.path);
-
-			// Find equations that need block IDs inserted or updated
-			const lines = content.split('\n');
-			let modifications: Array<{
-				type: 'insert' | 'update',
-				line: number,
-				oldText?: string,
-				newText: string
-			}> = [];
-
-			for (const eq of equations) {
-				// Find the closing $$ line
-				let closingLine = -1;
-				for (let i = eq.lineNumber + 1; i < lines.length; i++) {
-					if (lines[i].trim() === '$$') {
-						closingLine = i;
-						break;
-					}
-				}
-
-				if (closingLine === -1) {
-					continue; // Skip unclosed equations
-				}
-
-				const expectedBlockId = this.generateExpectedBlockId(eq.sectionNumbers, eq.equationNumber);
-
-				// Check if next line has a block ID
-				const nextLine = closingLine + 1;
-				if (nextLine < lines.length) {
-					const existingBlockIdMatch = lines[nextLine].match(/^\^([a-zA-Z0-9-_]+)\s*$/);
-					if (existingBlockIdMatch) {
-						const existingBlockId = existingBlockIdMatch[1];
-
-						// Only update if it's an auto-generated ID and doesn't match expected
-						if (this.isAutoGeneratedBlockId(existingBlockId) && existingBlockId !== expectedBlockId) {
-							modifications.push({
-								type: 'update',
-								line: nextLine,
-								oldText: lines[nextLine],
-								newText: `^${expectedBlockId}`
-							});
-						}
-						// If it's a custom block ID (not auto-generated), leave it alone
-						continue;
-					}
-				}
-
-				// No block ID exists - add one
-				modifications.push({
-					type: 'insert',
-					line: closingLine + 1,
-					newText: `^${expectedBlockId}`
-				});
-			}
-
-			// If no modifications needed, return early
-			if (modifications.length === 0) {
-				return;
-			}
-
-			// Sort modifications in reverse order to maintain line numbers
-			modifications.sort((a, b) => b.line - a.line);
-
-			// Apply modifications
-			let newLines = [...lines];
-			for (const mod of modifications) {
-				if (mod.type === 'insert') {
-					newLines.splice(mod.line, 0, mod.newText);
-				} else if (mod.type === 'update') {
-					newLines[mod.line] = mod.newText;
-				}
-			}
-
-			const newContent = newLines.join('\n');
-
-			// Only modify if content actually changed
-			if (newContent !== content) {
-				const insertCount = modifications.filter(m => m.type === 'insert').length;
-				const updateCount = modifications.filter(m => m.type === 'update').length;
-				await this.app.vault.modify(file, newContent);
-				console.log(`Block IDs in ${file.path}: inserted ${insertCount}, updated ${updateCount}`);
-			}
-		} finally {
-			this.savingFiles.delete(file.path);
-		}
-	}
-
-	/**
-	 * Extract equations from content without reading existing block IDs
-	 * This is used to calculate what block IDs SHOULD be based on current structure
-	 */
-	private extractEquationsFromContentWithoutExistingIds(
-		content: string,
-		filePath: string
-	): EquationInfo[] {
-		const equations: EquationInfo[] = [];
-		const lines = content.split('\n');
-
-		// Identify code block regions to skip
-		const codeBlockRegions: Array<{start: number, end: number}> = [];
-		let inCodeBlock = false;
-		let codeBlockStart = -1;
-
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			if (line.trim().startsWith('```')) {
-				if (!inCodeBlock) {
-					inCodeBlock = true;
-					codeBlockStart = i;
-				} else {
-					inCodeBlock = false;
-					codeBlockRegions.push({ start: codeBlockStart, end: i });
-				}
-			}
-		}
-
-		const isInCodeBlock = (lineNum: number): boolean => {
-			return codeBlockRegions.some(region =>
-				lineNum >= region.start && lineNum <= region.end
-			);
-		};
-
-		// Track heading hierarchy for section numbering
-		const baseLevel = this.settings.baseHeadingLevel;
-		const headingLevels: Map<number, number> = new Map();
-
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			if (isInCodeBlock(i)) continue;
-
-			const headingMatch = line.match(/^(#{1,6})\s+/);
-			if (headingMatch) {
-				const level = headingMatch[1].length;
-				if (level >= baseLevel) {
-					headingLevels.set(i, level);
-				}
-			}
-		}
-
-		const hasSubheadings = Array.from(headingLevels.values()).some(level => level > baseLevel);
-
-		const getCurrentSectionNumbers = (lineNum: number): number[] => {
-			if (!this.settings.useSectionBasedNumbering) {
-				return [];
-			}
-
-			const counters: number[] = [];
-			const sortedHeadings = Array.from(headingLevels.entries()).sort((a, b) => a[0] - b[0]);
-
-			for (const [headingLine, level] of sortedHeadings) {
-				if (headingLine >= lineNum) break;
-
-				const depth = level - baseLevel;
-
-				while (counters.length <= depth) {
-					counters.push(0);
-				}
-
-				counters[depth]++;
-
-				for (let d = depth + 1; d < counters.length; d++) {
-					counters[d] = 0;
-				}
-			}
-
-			if (counters.length === 0) {
-				return [];
-			}
-
-			if (!hasSubheadings) {
-				return counters.slice(0, 1);
-			}
-
-			while (counters.length > 1 && counters[counters.length - 1] === 0) {
-				counters.pop();
-			}
-
-			return counters;
-		};
-
-		let equationNumber = this.settings.startNumberingFrom;
-		let inEquation = false;
-		let equationStartLine = -1;
-		let equationContent = '';
-
-		const sectionEquationCounts = new Map<string, number>();
-
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-
-			if (isInCodeBlock(i)) continue;
-
-			if (line.trim() === '$$' && !inEquation) {
-				inEquation = true;
-				equationStartLine = i;
-				equationContent = '';
-				continue;
-			}
-
-			if (line.trim() === '$$' && inEquation) {
-				inEquation = false;
-
-				if (equationContent.trim().length === 0) continue;
-
-				const shouldNumber = !this.shouldSkipNumbering(equationContent);
-				if (!shouldNumber) continue;
-
-				const baseSectionNumbers = getCurrentSectionNumbers(i);
-				const sectionKey = baseSectionNumbers.join('-') || 'root';
-				const eqCountInSection = (sectionEquationCounts.get(sectionKey) || 0) + 1;
-				sectionEquationCounts.set(sectionKey, eqCountInSection);
-
-				const sectionNumbers = [...baseSectionNumbers, eqCountInSection];
-
-				// DO NOT read existing block ID - we want to calculate expected ID
-				const blockId = this.generateExpectedBlockId(sectionNumbers, equationNumber);
-
-				equations.push({
-					filePath: filePath,
-					blockId: blockId,
-					equationNumber: equationNumber++,
-					content: equationContent.trim(),
-					lineNumber: equationStartLine,
-					sectionNumbers: sectionNumbers
-				});
-				continue;
-			}
-
-			if (inEquation) {
-				equationContent += line + '\n';
-			}
-		}
-
-		return equations;
-	}
-
-	/**
-	 * Manual command to insert block IDs for equations
-	 * Works regardless of enableAutoBlockIds setting
-	 */
-	private async insertBlockIds(editor: Editor, view: MarkdownView) {
-		const file = view.file;
-		if (!file) {
-			return;
-		}
-
-		const content = editor.getValue();
-		// Use the version that calculates expected IDs (doesn't depend on settings)
-		const equations = this.extractEquationsFromContentWithoutExistingIds(content, file.path);
-
-		// Find equations that need block IDs inserted
-		const lines = content.split('\n');
-		let insertions: Array<{line: number, text: string}> = [];
-
-		for (const eq of equations) {
-			// Find the closing $$ line
-			let closingLine = -1;
-			for (let i = eq.lineNumber + 1; i < lines.length; i++) {
-				if (lines[i].trim() === '$$') {
-					closingLine = i;
-					break;
-				}
-			}
-
-			if (closingLine === -1) {
-				continue; // Skip unclosed equations
-			}
-
-			// Check if next line has a block ID
-			const nextLine = closingLine + 1;
-			if (nextLine < lines.length) {
-				const existingBlockId = lines[nextLine].match(/^\^([a-zA-Z0-9-_]+)\s*$/);
-				if (existingBlockId) {
-					continue; // Already has a block ID
-				}
-			}
-
-			// Generate block ID for this equation
-			const blockId = this.generateExpectedBlockId(eq.sectionNumbers, eq.equationNumber);
-			insertions.push({
-				line: closingLine + 1,
-				text: `^${blockId}`
-			});
-		}
-
-		// Sort insertions in reverse order to maintain line numbers
-		insertions.sort((a, b) => b.line - a.line);
-
-		// Insert block IDs
-		for (const insertion of insertions) {
-			editor.replaceRange(
-				`\n${insertion.text}`,
-				{ line: insertion.line - 1, ch: lines[insertion.line - 1].length }
-			);
-		}
-
-		if (insertions.length > 0) {
-			console.log(`Inserted ${insertions.length} block IDs`);
-		}
-	}
 }
 
 class MathReferencerSettingTab extends PluginSettingTab {
@@ -1535,18 +1213,8 @@ class MathReferencerSettingTab extends PluginSettingTab {
 		containerEl.createEl('h3', {text: 'Block Reference Settings'});
 
 		new Setting(containerEl)
-			.setName('Auto-generate block IDs')
-			.setDesc('Automatically generate block reference IDs for equations based on section hierarchy')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.enableAutoBlockIds)
-				.onChange(async (value) => {
-					this.plugin.settings.enableAutoBlockIds = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
 			.setName('Block ID prefix')
-			.setDesc('Prefix for auto-generated block IDs (e.g., "eq" generates "^eq-2-1-2")')
+			.setDesc('Prefix for generated block IDs when using \\ref (e.g., "eq" generates "^eq-2-1-2")')
 			.addText(text => text
 				.setPlaceholder('eq')
 				.setValue(this.plugin.settings.blockIdPrefix)
