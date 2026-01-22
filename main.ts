@@ -10,6 +10,7 @@ import {
 	EditorPosition,
 	EditorSuggestTriggerInfo,
 	EditorSuggestContext,
+	Notice,
 } from "obsidian";
 
 import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
@@ -436,6 +437,18 @@ export default class MathReferencerPlugin extends Plugin {
 
 		// Add settings tab
 		this.addSettingTab(new MathReferencerSettingTab(this.app, this));
+
+		// Add command to generate block IDs for all equations in current file
+		this.addCommand({
+			id: "generate-all-block-ids",
+			name: "Generate block IDs for all equations in current file",
+			editorCallback: async (editor: Editor, ctx) => {
+				if (!ctx.file) {
+					return;
+				}
+				await this.generateAllBlockIds(editor, ctx.file);
+			},
+		});
 
 		console.log("Math Referencer plugin loaded");
 	}
@@ -1058,6 +1071,70 @@ export default class MathReferencerPlugin extends Plugin {
 	 */
 	public generateBlockIdForEquation(equation: EquationInfo): string {
 		return `${this.settings.blockIdPrefix}-${equation.equationNumber}`;
+	}
+
+	/**
+	 * Generate block IDs for all equations in the current file that don't already have one
+	 */
+	public async generateAllBlockIds(
+		editor: Editor,
+		file: TFile,
+	): Promise<void> {
+		const content = editor.getValue();
+		const equations = this.extractEquationsFromContent(content, file.path);
+
+		// Filter equations that don't have block IDs
+		const equationsWithoutBlockIds = equations.filter((eq) => !eq.blockId);
+
+		if (equationsWithoutBlockIds.length === 0) {
+			new Notice("All equations already have block IDs");
+			return;
+		}
+
+		// Sort by line number in descending order to insert from bottom to top
+		// This prevents line number shifts from affecting earlier insertions
+		equationsWithoutBlockIds.sort((a, b) => b.endLine - a.endLine);
+
+		// Track generated IDs to ensure uniqueness within this batch
+		const generatedIds = new Set<string>();
+
+		for (const equation of equationsWithoutBlockIds) {
+			let blockId = this.generateBlockIdForEquation(equation);
+
+			// Ensure uniqueness by appending a suffix if needed
+			let suffix = 1;
+			let uniqueBlockId = blockId;
+			while (generatedIds.has(uniqueBlockId)) {
+				uniqueBlockId = `${blockId}-${suffix}`;
+				suffix++;
+			}
+			blockId = uniqueBlockId;
+			generatedIds.add(blockId);
+
+			// Find the closing $$ line for this equation
+			const lines = editor.getValue().split("\n");
+			const closingLine = equation.endLine;
+
+			if (closingLine >= 0 && closingLine < lines.length) {
+				// Insert block ID on a new line after closing $$
+				const insertPos = {
+					line: closingLine,
+					ch: lines[closingLine].length,
+				};
+				editor.replaceRange(`\n^${blockId}`, insertPos);
+
+				// Update the equation info and register the block ID
+				equation.blockId = blockId;
+				this.registerBlockId(file.path, blockId, equation);
+			}
+		}
+
+		// Update the cache after all insertions
+		await this.updateEquationCache(file);
+
+		new Notice(
+			`Generated block IDs for ${equationsWithoutBlockIds.length} equation${equationsWithoutBlockIds.length === 1 ? "" : "s"}`,
+		);
 	}
 }
 
