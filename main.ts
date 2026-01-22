@@ -929,9 +929,14 @@ export default class MathReferencerPlugin extends Plugin {
 				return counters.slice(0, 1);
 			}
 
-			// Trim trailing zeros and return
+			// Trim trailing zeros
 			while (counters.length > 1 && counters[counters.length - 1] === 0) {
 				counters.pop();
+			}
+
+			// Trim leading zeros
+			while (counters.length > 1 && counters[0] === 0) {
+				counters.shift();
 			}
 
 			return counters;
