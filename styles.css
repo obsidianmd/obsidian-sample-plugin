@@ -145,34 +145,37 @@ a.equation-link:hover {
 }
 
 /* Live Preview mode support */
-.cm-preview-code-block .equation-container,
-.cm-preview-code-block .equation-reference {
-	/* Ensure proper rendering in live preview */
-	display: flex;
+
+/* Live Preview embed blocks with equations */
+.cm-embed-block.has-equation-number {
+	position: relative !important;
+	display: block !important;
 }
 
-/* Live Preview equation numbering */
-.cm-line .equation-number {
-	position: relative;
+/* Equation number in Live Preview - position absolutely to the right */
+.equation-number-live-preview {
+	position: absolute !important;
+	right: 0.5em !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
+	font-size: 0.9em;
+	color: var(--text-muted);
+	padding: 0 0.5em;
+	white-space: nowrap;
+	user-select: none;
+	z-index: 10;
+}
+
+/* Widget decoration equation number (when cursor is in equation raw view) */
+.cm-line .equation-number:not(.equation-number-live-preview) {
+	display: inline-block;
 	float: right;
 	font-size: 0.9em;
 	color: var(--text-muted);
 	padding: 0 0.5em;
 	white-space: nowrap;
 	user-select: none;
-	margin-top: 0.5em;
-}
-
-/* Equation container for live preview math blocks */
-.cm-embed-block.cm-math-block {
-	position: relative;
-}
-
-.cm-embed-block.cm-math-block .equation-number {
-	position: absolute;
-	right: 0.5em;
-	top: 50%;
-	transform: translateY(-50%);
+	line-height: inherit;
 }
 
 /* Equation reference suggester styles */

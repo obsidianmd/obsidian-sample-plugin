@@ -275,21 +275,34 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 				const text = view.state.doc.toString();
 				const equations = plugin.extractEquationsFromText(text, file.path);
 
-				// Find all rendered math blocks in the editor
-				const mathBlocks = view.dom.querySelectorAll('.cm-embed-block.math-block, .internal-embed .math-block');
+				// Find all rendered math blocks in the editor using multiple selectors
+				// Obsidian uses different class combinations depending on context
+				const selectors = [
+					'.cm-embed-block mjx-container[display="true"]',
+					'.cm-embed-block .MathJax_Display',
+					'.cm-embed-block .math-block',
+					'.cm-line mjx-container[display="true"]'
+				];
 
-				mathBlocks.forEach((mathBlock) => {
+				const mathBlocks = view.dom.querySelectorAll(selectors.join(', '));
+
+				mathBlocks.forEach((mathElement) => {
+					// Find the parent embed block for positioning
+					const embedBlock = mathElement.closest('.cm-embed-block') || mathElement.parentElement;
+					if (!embedBlock) {
+						return;
+					}
+
 					// Skip if already has equation number
-					if (mathBlock.querySelector('.equation-number')) {
+					if (embedBlock.querySelector('.equation-number')) {
 						return;
 					}
 
 					// Try to determine which equation this is by position
-					const blockRect = mathBlock.getBoundingClientRect();
-					const editorRect = view.dom.getBoundingClientRect();
+					const blockRect = embedBlock.getBoundingClientRect();
 
 					// Get approximate line from DOM position
-					const pos = view.posAtCoords({ x: blockRect.left, y: blockRect.top });
+					const pos = view.posAtCoords({ x: blockRect.left + 10, y: blockRect.top + 10 });
 					if (pos === null) {
 						return;
 					}
@@ -300,16 +313,19 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 					// Find equation at or near this line
 					const matchingEquation = equations.find(eq => {
 						// Allow some tolerance for line matching
-						return Math.abs(eq.lineNumber - lineNumber) <= 3;
+						return Math.abs(eq.lineNumber - lineNumber) <= 5;
 					});
 
 					if (matchingEquation) {
 						const numberSpan = document.createElement('span');
-						numberSpan.className = 'equation-number';
+						numberSpan.className = 'equation-number equation-number-live-preview';
 						numberSpan.textContent = plugin.formatEquationNumber(matchingEquation);
 
-						// Add to the math block
-						mathBlock.appendChild(numberSpan);
+						// Add equation number class to the embed block for CSS targeting
+						embedBlock.classList.add('has-equation-number');
+
+						// Add to the embed block (not the math element itself)
+						embedBlock.appendChild(numberSpan);
 					}
 				});
 			}
