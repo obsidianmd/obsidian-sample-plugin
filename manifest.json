@@ -1,7 +1,7 @@
 {
 	"id": "math-referencer",
 	"name": "Math Referencer",
-	"version": "1.0.0",
+	"version": "0.0.11",
 	"minAppVersion": "0.15.0",
 	"description": "Automatically number block equations and enable equation block references with dynamic numbering updates.",
 	"author": "Bobby Tromm",

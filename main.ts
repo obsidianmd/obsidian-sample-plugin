@@ -11,38 +11,28 @@ import {
 	Editor,
 	EditorPosition,
 	EditorSuggestTriggerInfo,
-	EditorSuggestContext
-} from 'obsidian';
-
-import {
-	EditorView,
-	ViewPlugin,
-	ViewUpdate
-} from '@codemirror/view';
+	EditorSuggestContext,
+} from "obsidian";
 
 interface MathReferencerSettings {
 	enableAutoNumbering: boolean;
 	startNumberingFrom: number;
-	numberingFormat: string; // e.g., "(1)", "[1]", "Eq. 1"
+	numberingFormat: string; // e.g., "(${num})" or "[${num}]"
 	showFileNameInEmbeds: boolean;
 	linkRenderFormat: string; // e.g., "Equation ${num}", "${file} Equation ${num}"
 	blockIdPrefix: string; // Prefix for block IDs (e.g., "eq")
 	refTrigger: string; // Trigger for equation references (e.g., "\\ref")
-	useSectionBasedNumbering: boolean; // Use section-based numbering (e.g., 2.1.3)
-	baseHeadingLevel: number; // Heading level to start counting from (2 = ##)
 }
 
 const DEFAULT_SETTINGS: MathReferencerSettings = {
 	enableAutoNumbering: true,
 	startNumberingFrom: 1,
-	numberingFormat: '(${num})',
+	numberingFormat: "(${num})",
 	showFileNameInEmbeds: true,
-	linkRenderFormat: 'Equation ${num}',
-	blockIdPrefix: 'eq',
-	refTrigger: '\\ref',
-	useSectionBasedNumbering: true,
-	baseHeadingLevel: 2  // Start from ## by default
-}
+	linkRenderFormat: "Equation ${num}",
+	blockIdPrefix: "eq",
+	refTrigger: "\\ref",
+};
 
 interface EquationInfo {
 	filePath: string;
@@ -51,7 +41,6 @@ interface EquationInfo {
 	content: string;
 	lineNumber: number;
 	endLine: number;
-	sectionNumbers: number[]; // Hierarchical section numbers [2, 1, 2] for section 2.1.2
 }
 
 interface FileCache {
@@ -71,7 +60,11 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 		this.plugin = plugin;
 	}
 
-	onTrigger(cursor: EditorPosition, editor: Editor, file: TFile | null): EditorSuggestTriggerInfo | null {
+	onTrigger(
+		cursor: EditorPosition,
+		editor: Editor,
+		file: TFile | null,
+	): EditorSuggestTriggerInfo | null {
 		if (!file) {
 			return null;
 		}
@@ -101,11 +94,13 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 		return {
 			start: { line: cursor.line, ch: triggerIndex },
 			end: cursor,
-			query: query
+			query: query,
 		};
 	}
 
-	getSuggestions(context: EditorSuggestContext): EquationInfo[] | Promise<EquationInfo[]> {
+	getSuggestions(
+		context: EditorSuggestContext,
+	): EquationInfo[] | Promise<EquationInfo[]> {
 		const file = this.app.workspace.getActiveFile();
 		if (!file) {
 			return [];
@@ -124,41 +119,52 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 			return equations;
 		}
 
-		return equations.filter(eq => {
+		return equations.filter((eq) => {
 			const eqNum = eq.equationNumber.toString();
-			const blockId = eq.blockId || '';
+			const blockId = eq.blockId || "";
 			const content = eq.content.toLowerCase();
 
-			return eqNum.includes(query) ||
-			       blockId.toLowerCase().includes(query) ||
-			       content.includes(query);
+			return (
+				eqNum.includes(query) ||
+				blockId.toLowerCase().includes(query) ||
+				content.includes(query)
+			);
 		});
 	}
 
 	renderSuggestion(equation: EquationInfo, el: HTMLElement): void {
-		const container = el.createDiv({ cls: 'equation-suggestion' });
+		const container = el.createDiv({ cls: "equation-suggestion" });
 
-		// Add equation number with hierarchical formatting
-		const numberSpan = container.createSpan({ cls: 'equation-suggestion-number' });
-		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
-		numberSpan.textContent = `Equation ${formattedNum}`;
+		// Add equation number
+		const numberSpan = container.createSpan({
+			cls: "equation-suggestion-number",
+		});
+		numberSpan.textContent = `Equation ${equation.equationNumber}`;
 
 		// Add block ID if available
 		if (equation.blockId) {
-			const blockIdSpan = container.createSpan({ cls: 'equation-suggestion-blockid' });
+			const blockIdSpan = container.createSpan({
+				cls: "equation-suggestion-blockid",
+			});
 			blockIdSpan.textContent = ` ^${equation.blockId}`;
 		}
 
 		// Add a preview of the equation content
-		const contentDiv = container.createDiv({ cls: 'equation-suggestion-content' });
+		const contentDiv = container.createDiv({
+			cls: "equation-suggestion-content",
+		});
 		// Truncate long equations
-		const preview = equation.content.length > 50
-			? equation.content.substring(0, 50) + '...'
-			: equation.content;
+		const preview =
+			equation.content.length > 50
+				? equation.content.substring(0, 50) + "..."
+				: equation.content;
 		contentDiv.textContent = preview;
 	}
 
-	selectSuggestion(equation: EquationInfo, evt: MouseEvent | KeyboardEvent): void {
+	selectSuggestion(
+		equation: EquationInfo,
+		evt: MouseEvent | KeyboardEvent,
+	): void {
 		const file = this.app.workspace.getActiveFile();
 		if (!file || !this.context) {
 			return;
@@ -175,11 +181,11 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 			// Find the closing $$ line and insert block ID after it
 			const content = editor.getValue();
-			const lines = content.split('\n');
+			const lines = content.split("\n");
 
 			// Find the closing $$ for this equation
 			for (let i = equation.lineNumber + 1; i < lines.length; i++) {
-				if (lines[i].trim() === '$$') {
+				if (lines[i].trim() === "$$") {
 					blockIdInsertLine = i;
 					break;
 				}
@@ -187,7 +193,10 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 			if (blockIdInsertLine !== -1) {
 				// Insert block ID on the line after closing $$
-				const insertPos = { line: blockIdInsertLine, ch: lines[blockIdInsertLine].length };
+				const insertPos = {
+					line: blockIdInsertLine,
+					ch: lines[blockIdInsertLine].length,
+				};
 				editor.replaceRange(`\n^${blockId}`, insertPos);
 				insertedBlockId = true;
 
@@ -196,9 +205,8 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 			}
 		}
 
-		// Generate the link text with hierarchical number
-		const formattedNum = this.plugin.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
-		const linkText = `[[${file.basename}#^${blockId}|Equation ${formattedNum}]]`;
+		// Generate the link text
+		const linkText = `[[${file.basename}#^${blockId}|Equation ${equation.equationNumber}]]`;
 
 		// Calculate positions, adjusting if we inserted a block ID before the trigger
 		let startPos = this.context.start;
@@ -206,157 +214,37 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 
 		if (insertedBlockId && blockIdInsertLine < this.context.start.line) {
 			// Block ID insertion added a line before our trigger, adjust positions
-			startPos = { line: this.context.start.line + 1, ch: this.context.start.ch };
-			endPos = { line: this.context.end.line + 1, ch: this.context.end.ch };
+			startPos = {
+				line: this.context.start.line + 1,
+				ch: this.context.start.ch,
+			};
+			endPos = {
+				line: this.context.end.line + 1,
+				ch: this.context.end.ch,
+			};
 		}
 
 		// Replace the trigger text with the link
-		editor.replaceRange(
-			linkText,
-			startPos,
-			endPos
-		);
+		editor.replaceRange(linkText, startPos, endPos);
 
 		// Move cursor after the inserted link
 		const newCursorPos = {
 			line: startPos.line,
-			ch: startPos.ch + linkText.length
+			ch: startPos.ch + linkText.length,
 		};
 		editor.setCursor(newCursorPos);
 	}
 }
 
-/**
- * Creates a view plugin for Live Preview mode equation numbering
- * Uses MutationObserver to detect rendered MathJax and add equation numbers
- */
-function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
-	return ViewPlugin.fromClass(
-		class {
-			private observer: MutationObserver | null = null;
-
-			constructor(view: EditorView) {
-				this.setupMathObserver(view);
-			}
-
-			destroy() {
-				if (this.observer) {
-					this.observer.disconnect();
-					this.observer = null;
-				}
-			}
-
-			/**
-			 * Set up a MutationObserver to detect when MathJax renders equations
-			 * and add equation numbers to the rendered output
-			 */
-			private setupMathObserver(view: EditorView) {
-				this.observer = new MutationObserver(() => {
-					this.processRenderedMath(view);
-				});
-
-				// Observe the editor DOM for changes
-				this.observer.observe(view.dom, {
-					childList: true,
-					subtree: true
-				});
-
-				// Initial processing
-				setTimeout(() => this.processRenderedMath(view), 100);
-			}
-
-			/**
-			 * Process rendered math blocks and add equation numbers
-			 */
-			private processRenderedMath(view: EditorView) {
-				if (!plugin.settings.enableAutoNumbering) {
-					return;
-				}
-
-				const file = plugin.app.workspace.getActiveFile();
-				if (!file) {
-					return;
-				}
-
-				const text = view.state.doc.toString();
-				const equations = plugin.extractEquationsFromText(text, file.path);
-
-				// Find all rendered math blocks in the editor using multiple selectors
-				// Obsidian uses different class combinations depending on context
-				const selectors = [
-					'.cm-embed-block mjx-container[display="true"]',
-					'.cm-embed-block .MathJax_Display',
-					'.cm-embed-block .math-block',
-					'.cm-line mjx-container[display="true"]'
-				];
-
-				const mathBlocks = view.dom.querySelectorAll(selectors.join(', '));
-
-				mathBlocks.forEach((mathElement) => {
-					// Find the parent embed block for positioning
-					const embedBlock = mathElement.closest('.cm-embed-block') || mathElement.parentElement;
-					if (!embedBlock) {
-						return;
-					}
-
-					// Skip if already has equation number
-					if (embedBlock.querySelector('.equation-number')) {
-						return;
-					}
-
-					// Try to determine which equation this is by position
-					const blockRect = embedBlock.getBoundingClientRect();
-
-					// Get approximate line from DOM position
-					const pos = view.posAtCoords({ x: blockRect.left + 10, y: blockRect.top + 10 });
-					if (pos === null) {
-						return;
-					}
-
-					const line = view.state.doc.lineAt(pos);
-					const lineNumber = line.number - 1; // 0-indexed
-
-					// Find equation at or near this line
-					const matchingEquation = equations.find(eq => {
-						const endLine = eq.endLine ?? eq.lineNumber;
-						return lineNumber >= eq.lineNumber && lineNumber <= endLine;
-					});
-
-					if (matchingEquation) {
-						const numberSpan = document.createElement('span');
-						numberSpan.className = 'equation-number equation-number-live-preview';
-						numberSpan.textContent = plugin.formatEquationNumber(matchingEquation);
-
-						// Add equation number class to the embed block for CSS targeting
-						embedBlock.classList.add('has-equation-number');
-
-						// Add to the embed block (not the math element itself)
-						embedBlock.appendChild(numberSpan);
-					}
-				});
-			}
-
-			update(update: ViewUpdate) {
-				if (update.docChanged || update.viewportChanged) {
-					// Reprocess rendered math after changes
-					setTimeout(() => this.processRenderedMath(update.view), 50);
-				}
-			}
-		}
-	);
-}
-
 export default class MathReferencerPlugin extends Plugin {
 	settings: MathReferencerSettings;
 	private fileCache: Map<string, FileCache> = new Map();
-	private blockIdToEquation: Map<string, Map<string, EquationInfo>> = new Map();
+	private blockIdToEquation: Map<string, Map<string, EquationInfo>> =
+		new Map();
 	private updateInProgress: Set<string> = new Set();
 
 	async onload() {
 		await this.loadSettings();
-
-		// Register EditorExtension for Live Preview mode
-		this.registerEditorExtension(createLivePreviewPlugin(this));
 
 		// Register EditorSuggest for equation references
 		this.registerEditorSuggest(new EquationReferenceSuggest(this));
@@ -365,41 +253,41 @@ export default class MathReferencerPlugin extends Plugin {
 		// Use priority to run early, and mark for live preview
 		this.registerMarkdownPostProcessor(
 			this.processEquations.bind(this),
-			-100 // Run early to process before other processors
+			-100, // Run early to process before other processors
 		);
 
 		// Register markdown post-processor for block references (embeds)
 		this.registerMarkdownPostProcessor(
 			this.processBlockReferences.bind(this),
-			100 // Run later to process after equations are numbered
+			100, // Run later to process after equations are numbered
 		);
 
 		// Register markdown post-processor for regular links to equations
 		this.registerMarkdownPostProcessor(
 			this.processEquationLinks.bind(this),
-			150 // Run after block references
+			150, // Run after block references
 		);
 
 		// Listen for file changes to update equation cache
 		this.registerEvent(
-			this.app.metadataCache.on('changed', (file: TFile) => {
+			this.app.metadataCache.on("changed", (file: TFile) => {
 				this.updateEquationCache(file);
-			})
+			}),
 		);
 
 		// Listen for file deletions to clean up cache
 		this.registerEvent(
-			this.app.vault.on('delete', (file) => {
+			this.app.vault.on("delete", (file) => {
 				if (file instanceof TFile) {
 					this.fileCache.delete(file.path);
 					this.blockIdToEquation.delete(file.path);
 				}
-			})
+			}),
 		);
 
 		// Listen for file renames to update cache
 		this.registerEvent(
-			this.app.vault.on('rename', (file, oldPath) => {
+			this.app.vault.on("rename", (file, oldPath) => {
 				if (file instanceof TFile) {
 					const cache = this.fileCache.get(oldPath);
 					if (cache) {
@@ -413,13 +301,13 @@ export default class MathReferencerPlugin extends Plugin {
 							this.blockIdToEquation.set(file.path, blockMap);
 
 							// Update file path in equations
-							blockMap.forEach(eq => {
+							blockMap.forEach((eq) => {
 								eq.filePath = file.path;
 							});
 						}
 					}
 				}
-			})
+			}),
 		);
 
 		// Initial cache build
@@ -430,7 +318,7 @@ export default class MathReferencerPlugin extends Plugin {
 		// Add settings tab
 		this.addSettingTab(new MathReferencerSettingTab(this.app, this));
 
-		console.log('Math Referencer plugin loaded');
+		console.log("Math Referencer plugin loaded");
 	}
 
 	onunload() {
@@ -438,11 +326,15 @@ export default class MathReferencerPlugin extends Plugin {
 		this.fileCache.clear();
 		this.blockIdToEquation.clear();
 		this.updateInProgress.clear();
-		console.log('Math Referencer plugin unloaded');
+		console.log("Math Referencer plugin unloaded");
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData(),
+		);
 	}
 
 	async saveSettings() {
@@ -454,7 +346,7 @@ export default class MathReferencerPlugin extends Plugin {
 	 */
 	private async processEquations(
 		element: HTMLElement,
-		context: MarkdownPostProcessorContext
+		context: MarkdownPostProcessorContext,
 	) {
 		if (!this.settings.enableAutoNumbering) {
 			return;
@@ -464,7 +356,7 @@ export default class MathReferencerPlugin extends Plugin {
 
 		// Find all MathJax display equations (block equations)
 		// Obsidian renders math blocks as <div class="math math-block">
-		const mathBlocks = element.querySelectorAll('.math.math-block');
+		const mathBlocks = element.querySelectorAll(".math.math-block");
 
 		if (mathBlocks.length === 0) {
 			return;
@@ -489,7 +381,7 @@ export default class MathReferencerPlugin extends Plugin {
 				const mathEl = mathBlock as HTMLElement;
 
 				// Check if already in a wrapper (skip if already processed)
-				if (mathEl.closest('.equation-container')) {
+				if (mathEl.closest(".equation-container")) {
 					return;
 				}
 
@@ -499,9 +391,10 @@ export default class MathReferencerPlugin extends Plugin {
 				if (sectionInfo) {
 					// We have section info - find equation within this section's line range
 					// Find equations that start within the section's line range
-					const sectionEquations = equations.filter(eq =>
-						eq.lineNumber >= sectionInfo.lineStart &&
-						eq.lineNumber <= sectionInfo.lineEnd
+					const sectionEquations = equations.filter(
+						(eq) =>
+							eq.lineNumber >= sectionInfo.lineStart &&
+							eq.lineNumber <= sectionInfo.lineEnd,
 					);
 
 					// Match by index within this section
@@ -521,18 +414,21 @@ export default class MathReferencerPlugin extends Plugin {
 				}
 
 				// Add equation number
-				const numberSpan = document.createElement('span');
-				numberSpan.className = 'equation-number';
-				numberSpan.textContent = this.formatEquationNumber(matchingEquation);
+				const numberSpan = document.createElement("span");
+				numberSpan.className = "equation-number";
+				numberSpan.textContent =
+					this.formatEquationNumber(matchingEquation);
 
 				// Wrap the math block in a container for proper layout
-				const wrapper = document.createElement('div');
-				wrapper.className = 'equation-container';
+				const wrapper = document.createElement("div");
+				wrapper.className = "equation-container";
 
 				// Move math block into wrapper
 				const parent = mathEl.parentElement;
 				if (!parent) {
-					console.warn('Math element has no parent, skipping numbering');
+					console.warn(
+						"Math element has no parent, skipping numbering",
+					);
 					mathBlockIndex++;
 					return;
 				}
@@ -543,13 +439,19 @@ export default class MathReferencerPlugin extends Plugin {
 
 				// Store block ID reference if available
 				if (matchingEquation.blockId) {
-					wrapper.setAttribute('data-block-id', matchingEquation.blockId);
+					wrapper.setAttribute(
+						"data-block-id",
+						matchingEquation.blockId,
+					);
 				}
 
 				mathBlockIndex++;
 			});
 		} catch (error) {
-			console.error(`Error processing equations in ${sourcePath}:`, error);
+			console.error(
+				`Error processing equations in ${sourcePath}:`,
+				error,
+			);
 		}
 	}
 
@@ -558,41 +460,45 @@ export default class MathReferencerPlugin extends Plugin {
 	 */
 	private async processBlockReferences(
 		element: HTMLElement,
-		context: MarkdownPostProcessorContext
+		context: MarkdownPostProcessorContext,
 	) {
 		// Find all internal embeds (block references)
-		const embeds = element.querySelectorAll('.internal-embed');
+		const embeds = element.querySelectorAll(".internal-embed");
 
 		for (const embed of Array.from(embeds)) {
 			const embedEl = embed as HTMLElement;
-			const src = embedEl.getAttribute('src');
+			const src = embedEl.getAttribute("src");
 
-			if (!src || !src.includes('^')) {
+			if (!src || !src.includes("^")) {
 				continue;
 			}
 
 			// Parse the block reference
-			const parts = src.split('#^');
+			const parts = src.split("#^");
 			const filePart = parts[0];
-			const blockPart = parts.slice(1).join('#^');
+			const blockPart = parts.slice(1).join("#^");
 
 			if (!blockPart) {
 				continue;
 			}
 
 			// Resolve the file path
-			const sourceFile = this.app.vault.getAbstractFileByPath(context.sourcePath);
+			const sourceFile = this.app.vault.getAbstractFileByPath(
+				context.sourcePath,
+			);
 			if (!(sourceFile instanceof TFile)) {
 				continue;
 			}
 
 			const targetFile = this.app.metadataCache.getFirstLinkpathDest(
 				filePart || context.sourcePath,
-				sourceFile.path
+				sourceFile.path,
 			);
 
 			if (!targetFile) {
-				console.warn(`Could not resolve file: ${filePart || context.sourcePath}`);
+				console.warn(
+					`Could not resolve file: ${filePart || context.sourcePath}`,
+				);
 				continue;
 			}
 
@@ -602,7 +508,12 @@ export default class MathReferencerPlugin extends Plugin {
 
 			if (equation) {
 				// Render the equation reference
-				await this.renderEquationReference(embedEl, equation, targetFile, context.sourcePath);
+				await this.renderEquationReference(
+					embedEl,
+					equation,
+					targetFile,
+					context.sourcePath,
+				);
 			}
 		}
 	}
@@ -612,37 +523,40 @@ export default class MathReferencerPlugin extends Plugin {
 	 */
 	private async processEquationLinks(
 		element: HTMLElement,
-		context: MarkdownPostProcessorContext
+		context: MarkdownPostProcessorContext,
 	) {
 		// Find all internal links (not embeds)
-		const links = element.querySelectorAll('a.internal-link');
+		const links = element.querySelectorAll("a.internal-link");
 
 		for (const link of Array.from(links)) {
 			const linkEl = link as HTMLAnchorElement;
-			const href = linkEl.getAttribute('data-href') || linkEl.getAttribute('href');
+			const href =
+				linkEl.getAttribute("data-href") || linkEl.getAttribute("href");
 
-			if (!href || !href.includes('^')) {
+			if (!href || !href.includes("^")) {
 				continue;
 			}
 
 			// Parse the link
-			const parts = href.split('#^');
+			const parts = href.split("#^");
 			const filePart = parts[0];
-			const blockPart = parts.slice(1).join('#^');
+			const blockPart = parts.slice(1).join("#^");
 
 			if (!blockPart) {
 				continue;
 			}
 
 			// Resolve the file path
-			const sourceFile = this.app.vault.getAbstractFileByPath(context.sourcePath);
+			const sourceFile = this.app.vault.getAbstractFileByPath(
+				context.sourcePath,
+			);
 			if (!(sourceFile instanceof TFile)) {
 				continue;
 			}
 
 			const targetFile = this.app.metadataCache.getFirstLinkpathDest(
 				filePart || context.sourcePath,
-				sourceFile.path
+				sourceFile.path,
 			);
 
 			if (!targetFile) {
@@ -655,8 +569,12 @@ export default class MathReferencerPlugin extends Plugin {
 
 			if (equation) {
 				// Replace link text with formatted equation reference
-				linkEl.textContent = this.formatEquationLink(equation, targetFile, context.sourcePath);
-				linkEl.addClass('equation-link');
+				linkEl.textContent = this.formatEquationLink(
+					equation,
+					targetFile,
+					context.sourcePath,
+				);
+				linkEl.addClass("equation-link");
 			}
 		}
 	}
@@ -664,22 +582,25 @@ export default class MathReferencerPlugin extends Plugin {
 	/**
 	 * Format an equation link
 	 */
-	private formatEquationLink(equation: EquationInfo, targetFile: TFile, currentPath: string): string {
+	private formatEquationLink(
+		equation: EquationInfo,
+		targetFile: TFile,
+		currentPath: string,
+	): string {
 		const fileName = targetFile.basename;
 		const isSameFile = targetFile.path === currentPath;
 
 		let format = this.settings.linkRenderFormat;
 
 		// If in different file and format doesn't include file name, add it
-		if (!isSameFile && !format.includes('${file}')) {
-			format = '${file} ' + format;
+		if (!isSameFile && !format.includes("${file}")) {
+			format = "${file} " + format;
 		}
 
 		// Get formatted equation number
-		const formattedNum = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
 		return format
-			.replace('${num}', formattedNum)
-			.replace('${file}', fileName);
+			.replace("${num}", equation.equationNumber.toString())
+			.replace("${file}", fileName);
 	}
 
 	/**
@@ -689,31 +610,31 @@ export default class MathReferencerPlugin extends Plugin {
 		element: HTMLElement,
 		equation: EquationInfo,
 		file: TFile,
-		currentPath: string
+		currentPath: string,
 	) {
 		// Create a container for the referenced equation
-		const container = document.createElement('div');
-		container.className = 'equation-reference';
+		const container = document.createElement("div");
+		container.className = "equation-reference";
 
 		// Add file name badge if from different file and setting enabled
 		if (this.settings.showFileNameInEmbeds && file.path !== currentPath) {
-			const fileLabel = document.createElement('div');
-			fileLabel.className = 'equation-file-label';
+			const fileLabel = document.createElement("div");
+			fileLabel.className = "equation-file-label";
 			fileLabel.textContent = file.basename;
 			container.appendChild(fileLabel);
 		}
 
 		// Create a math block for the referenced equation
-		const mathDiv = document.createElement('div');
-		mathDiv.className = 'math math-block is-loaded';
+		const mathDiv = document.createElement("div");
+		mathDiv.className = "math math-block is-loaded";
 
 		// Wrap the LaTeX content in display math delimiters for MathJax
 		const latexContent = `\\[${equation.content}\\]`;
 		mathDiv.textContent = latexContent;
 
 		// Add equation number with optional file prefix
-		const numberSpan = document.createElement('span');
-		numberSpan.className = 'equation-number';
+		const numberSpan = document.createElement("span");
+		numberSpan.className = "equation-number";
 
 		const formattedNumber = this.formatEquationNumber(equation);
 		if (this.settings.showFileNameInEmbeds && file.path !== currentPath) {
@@ -736,7 +657,7 @@ export default class MathReferencerPlugin extends Plugin {
 				// @ts-ignore
 				await window.MathJax.typesetPromise([mathDiv]);
 			} catch (err) {
-				console.error('MathJax rendering error:', err);
+				console.error("MathJax rendering error:", err);
 			}
 		}
 	}
@@ -765,18 +686,22 @@ export default class MathReferencerPlugin extends Plugin {
 			}
 
 			const cache = this.app.metadataCache.getFileCache(file);
-			const equations = this.extractEquationsFromContent(content, cache, file.path);
+			const equations = this.extractEquationsFromContent(
+				content,
+				cache,
+				file.path,
+			);
 
 			// Store in cache
 			this.fileCache.set(file.path, {
 				equations,
 				contentHash,
-				mtime: file.stat.mtime
+				mtime: file.stat.mtime,
 			});
 
 			// Update block ID mappings
 			const blockMap = new Map<string, EquationInfo>();
-			equations.forEach(eq => {
+			equations.forEach((eq) => {
 				if (eq.blockId) {
 					blockMap.set(eq.blockId, eq);
 				}
@@ -797,7 +722,7 @@ export default class MathReferencerPlugin extends Plugin {
 		let hash = 0;
 		for (let i = 0; i < content.length; i++) {
 			const char = content.charCodeAt(i);
-			hash = ((hash << 5) - hash) + char;
+			hash = (hash << 5) - hash + char;
 			hash = hash & hash; // Convert to 32bit integer
 		}
 		return hash.toString();
@@ -806,7 +731,10 @@ export default class MathReferencerPlugin extends Plugin {
 	/**
 	 * Public method to extract equations from text (used by Live Preview plugin)
 	 */
-	public extractEquationsFromText(text: string, filePath: string): EquationInfo[] {
+	public extractEquationsFromText(
+		text: string,
+		filePath: string,
+	): EquationInfo[] {
 		return this.extractEquationsFromContent(text, null, filePath);
 	}
 
@@ -824,19 +752,19 @@ export default class MathReferencerPlugin extends Plugin {
 	private extractEquationsFromContent(
 		content: string,
 		cache: CachedMetadata | null,
-		filePath: string
+		filePath: string,
 	): EquationInfo[] {
 		const equations: EquationInfo[] = [];
-		const lines = content.split('\n');
+		const lines = content.split("\n");
 
 		// Identify code block regions to skip
-		const codeBlockRegions: Array<{start: number, end: number}> = [];
+		const codeBlockRegions: Array<{ start: number; end: number }> = [];
 		let inCodeBlock = false;
 		let codeBlockStart = -1;
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (line.trim().startsWith('```')) {
+			if (line.trim().startsWith("```")) {
 				if (!inCodeBlock) {
 					inCodeBlock = true;
 					codeBlockStart = i;
@@ -849,108 +777,15 @@ export default class MathReferencerPlugin extends Plugin {
 
 		// Helper to check if a line is in a code block
 		const isInCodeBlock = (lineNum: number): boolean => {
-			return codeBlockRegions.some(region =>
-				lineNum >= region.start && lineNum <= region.end
+			return codeBlockRegions.some(
+				(region) => lineNum >= region.start && lineNum <= region.end,
 			);
-		};
-
-		// Track heading hierarchy for section numbering
-		const baseLevel = this.settings.baseHeadingLevel;
-		const headingLevels: Map<number, number> = new Map(); // Maps line number to heading level
-
-		// First pass: identify all headings at or below base level
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			if (isInCodeBlock(i)) {
-				continue;
-			}
-
-			const headingMatch = line.match(/^(#{1,6})\s+/);
-			if (headingMatch) {
-				const level = headingMatch[1].length;
-				// Only track headings at or below our base level
-				if (level >= baseLevel) {
-					headingLevels.set(i, level);
-				}
-			}
-		}
-
-		// Check if we have any subheadings (headings deeper than base level)
-		const hasSubheadings = Array.from(headingLevels.values()).some(level => level > baseLevel);
-
-		// Helper to get current section numbers at a given line
-		const getCurrentSectionNumbers = (lineNum: number): number[] => {
-			if (!this.settings.useSectionBasedNumbering) {
-				return [];
-			}
-
-			// Track counters for each heading level relative to base
-			// counters[0] = base level count, counters[1] = base+1 level count, etc.
-			const counters: number[] = [];
-			let maxDepthSeen = 0;
-
-			// Sort heading lines to ensure correct order
-			const sortedHeadings = Array.from(headingLevels.entries()).sort((a, b) => a[0] - b[0]);
-
-			for (const [headingLine, level] of sortedHeadings) {
-				if (headingLine >= lineNum) {
-					break;
-				}
-
-				// Convert absolute level to relative depth (0-indexed from base)
-				const depth = level - baseLevel;
-
-				// When we see a heading at depth N:
-				// 1. Increment counter at depth N
-				// 2. Reset all counters deeper than N
-
-				// Ensure we have enough counter slots
-				while (counters.length <= depth) {
-					counters.push(0);
-				}
-
-				// Increment this level's counter
-				counters[depth]++;
-
-				// Reset deeper levels
-				for (let d = depth + 1; d < counters.length; d++) {
-					counters[d] = 0;
-				}
-
-				maxDepthSeen = Math.max(maxDepthSeen, depth);
-			}
-
-			// If no headings found before this line, return empty
-			if (counters.length === 0) {
-				return [];
-			}
-
-			// Only include hierarchy if we have subheadings, otherwise just return base section
-			if (!hasSubheadings) {
-				return counters.slice(0, 1);
-			}
-
-			// Trim trailing zeros
-			while (counters.length > 1 && counters[counters.length - 1] === 0) {
-				counters.pop();
-			}
-
-			// Trim leading zeros
-			while (counters.length > 1 && counters[0] === 0) {
-				counters.shift();
-			}
-
-			return counters;
 		};
 
 		let equationNumber = this.settings.startNumberingFrom;
 		let inEquation = false;
 		let equationStartLine = -1;
-		let equationContent = '';
-
-		// Track equation counter per section
-		// Key: section path (e.g., "2-3" for section 2.3), Value: equation count in that section
-		const sectionEquationCounts = new Map<string, number>();
+		let equationContent = "";
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
@@ -961,15 +796,15 @@ export default class MathReferencerPlugin extends Plugin {
 			}
 
 			// Start of display equation
-			if (line.trim() === '$$' && !inEquation) {
+			if (line.trim() === "$$" && !inEquation) {
 				inEquation = true;
 				equationStartLine = i;
-				equationContent = '';
+				equationContent = "";
 				continue;
 			}
 
 			// End of display equation
-			if (line.trim() === '$$' && inEquation) {
+			if (line.trim() === "$$" && inEquation) {
 				inEquation = false;
 
 				// Skip empty equations
@@ -985,23 +820,13 @@ export default class MathReferencerPlugin extends Plugin {
 					continue;
 				}
 
-				// Get section numbers at this equation's position
-				const baseSectionNumbers = getCurrentSectionNumbers(i);
-
-				// Track equation count within this section
-				const sectionKey = baseSectionNumbers.join('-') || 'root';
-				const eqCountInSection = (sectionEquationCounts.get(sectionKey) || 0) + 1;
-				sectionEquationCounts.set(sectionKey, eqCountInSection);
-
-				// Build hierarchical equation number by appending equation count to section numbers
-				// For section 2.3 with 2nd equation: [2, 3, 2]
-				const sectionNumbers = [...baseSectionNumbers, eqCountInSection];
-
 				// Check if next line has block ID (must be on its own line)
 				let blockId: string | null = null;
 				if (i + 1 < lines.length) {
 					const nextLine = lines[i + 1];
-					const blockIdMatch = nextLine.match(/^\^([a-zA-Z0-9-_]+)\s*$/);
+					const blockIdMatch = nextLine.match(
+						/^\^([a-zA-Z0-9-_]+)\s*$/,
+					);
 					if (blockIdMatch) {
 						blockId = blockIdMatch[1];
 					}
@@ -1016,20 +841,21 @@ export default class MathReferencerPlugin extends Plugin {
 					content: equationContent.trim(),
 					lineNumber: equationStartLine,
 					endLine: i,
-					sectionNumbers: sectionNumbers
 				});
 				continue;
 			}
 
 			// Collect equation content
 			if (inEquation) {
-				equationContent += line + '\n';
+				equationContent += line + "\n";
 			}
 		}
 
 		// Warn about unclosed equations
 		if (inEquation) {
-			console.warn(`Unclosed equation found in ${filePath} starting at line ${equationStartLine}`);
+			console.warn(
+				`Unclosed equation found in ${filePath} starting at line ${equationStartLine}`,
+			);
 		}
 
 		return equations;
@@ -1045,24 +871,13 @@ export default class MathReferencerPlugin extends Plugin {
 	}
 
 	/**
-	 * Format hierarchical equation number from section numbers
-	 */
-	public formatHierarchicalNumber(sectionNumbers: number[], equationNumber: number): string {
-		if (sectionNumbers.length === 0) {
-			// No section hierarchy, use simple sequential numbering
-			return equationNumber.toString();
-		}
-
-		// Format as hierarchical number (e.g., "2.3.4" for section 2.3.4)
-		return sectionNumbers.join('.');
-	}
-
-	/**
 	 * Format equation number according to settings
 	 */
 	public formatEquationNumber(equation: EquationInfo): string {
-		const numStr = this.formatHierarchicalNumber(equation.sectionNumbers, equation.equationNumber);
-		return this.settings.numberingFormat.replace('${num}', numStr);
+		return this.settings.numberingFormat.replace(
+			"${num}",
+			equation.equationNumber.toString(),
+		);
 	}
 
 	/**
@@ -1093,7 +908,9 @@ export default class MathReferencerPlugin extends Plugin {
 		const batchSize = 10;
 		for (let i = 0; i < files.length; i += batchSize) {
 			const batch = files.slice(i, i + batchSize);
-			await Promise.all(batch.map(file => this.updateEquationCache(file)));
+			await Promise.all(
+				batch.map((file) => this.updateEquationCache(file)),
+			);
 		}
 
 		console.log(`Built equation cache for ${files.length} files`);
@@ -1104,13 +921,8 @@ export default class MathReferencerPlugin extends Plugin {
 	 * Public method used by EquationReferenceSuggest for on-demand generation
 	 */
 	public generateBlockIdForEquation(equation: EquationInfo): string {
-		if (equation.sectionNumbers.length > 0) {
-			return `${this.settings.blockIdPrefix}-${equation.sectionNumbers.join('-')}`;
-		} else {
-			return `${this.settings.blockIdPrefix}-${equation.equationNumber}`;
-		}
+		return `${this.settings.blockIdPrefix}-${equation.equationNumber}`;
 	}
-
 }
 
 class MathReferencerSettingTab extends PluginSettingTab {
@@ -1122,133 +934,138 @@ class MathReferencerSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Math Referencer Settings'});
+		containerEl.createEl("h2", { text: "Math Referencer Settings" });
 
 		new Setting(containerEl)
-			.setName('Enable automatic numbering')
-			.setDesc('Automatically number all block equations in your notes')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.enableAutoNumbering)
-				.onChange(async (value) => {
-					this.plugin.settings.enableAutoNumbering = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Use section-based numbering')
-			.setDesc('Number equations based on their section hierarchy (e.g., 2.1.3 for section 2.1, equation 3)')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.useSectionBasedNumbering)
-				.onChange(async (value) => {
-					this.plugin.settings.useSectionBasedNumbering = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Base heading level')
-			.setDesc('Heading level to start section counting from (2 = ##, 1 = #)')
-			.addDropdown(dropdown => dropdown
-				.addOption('1', '# (H1)')
-				.addOption('2', '## (H2)')
-				.addOption('3', '### (H3)')
-				.setValue(this.plugin.settings.baseHeadingLevel.toString())
-				.onChange(async (value) => {
-					this.plugin.settings.baseHeadingLevel = parseInt(value);
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Start numbering from')
-			.setDesc('The number to start equation numbering from')
-			.addText(text => text
-				.setPlaceholder('1')
-				.setValue(this.plugin.settings.startNumberingFrom.toString())
-				.onChange(async (value) => {
-					const num = parseInt(value);
-					if (!isNaN(num) && num > 0) {
-						this.plugin.settings.startNumberingFrom = num;
+			.setName("Enable automatic numbering")
+			.setDesc("Automatically number all block equations in your notes")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.enableAutoNumbering)
+					.onChange(async (value) => {
+						this.plugin.settings.enableAutoNumbering = value;
 						await this.plugin.saveSettings();
-					}
-				}));
+					}),
+			);
 
 		new Setting(containerEl)
-			.setName('Numbering format')
-			.setDesc('Format for equation numbers. Use ${num} as placeholder (e.g., "(${num})", "[${num}]", "Eq. ${num}")')
-			.addText(text => text
-				.setPlaceholder('(${num})')
-				.setValue(this.plugin.settings.numberingFormat)
-				.onChange(async (value) => {
-					if (!value.includes('${num}')) {
-						// Invalid format, keep current value
-						text.setValue(this.plugin.settings.numberingFormat);
-						return;
-					}
-					this.plugin.settings.numberingFormat = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName("Start numbering from")
+			.setDesc("The number to start equation numbering from")
+			.addText((text) =>
+				text
+					.setPlaceholder("1")
+					.setValue(
+						this.plugin.settings.startNumberingFrom.toString(),
+					)
+					.onChange(async (value) => {
+						const num = parseInt(value);
+						if (!isNaN(num) && num > 0) {
+							this.plugin.settings.startNumberingFrom = num;
+							await this.plugin.saveSettings();
+						}
+					}),
+			);
 
 		new Setting(containerEl)
-			.setName('Show file name in embeds')
-			.setDesc('Show the source file name when embedding equations from other files')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showFileNameInEmbeds)
-				.onChange(async (value) => {
-					this.plugin.settings.showFileNameInEmbeds = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName("Numbering format")
+			.setDesc(
+				'Format for equation numbers. Use ${num} as placeholder (e.g., "(${num})", "[${num}]", "Eq. ${num}")',
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("(${num})")
+					.setValue(this.plugin.settings.numberingFormat)
+					.onChange(async (value) => {
+						if (!value.includes("${num}")) {
+							// Invalid format, keep current value
+							text.setValue(this.plugin.settings.numberingFormat);
+							return;
+						}
+						this.plugin.settings.numberingFormat = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl)
-			.setName('Link render format')
-			.setDesc('Format for rendering links to equations. Use ${num} for number, ${file} for file name (e.g., "Equation ${num}", "${file} Equation ${num}")')
-			.addText(text => text
-				.setPlaceholder('Equation ${num}')
-				.setValue(this.plugin.settings.linkRenderFormat)
-				.onChange(async (value) => {
-					if (!value.includes('${num}')) {
-						// Invalid format, keep current value
-						text.setValue(this.plugin.settings.linkRenderFormat);
-						return;
-					}
-					this.plugin.settings.linkRenderFormat = value;
-					await this.plugin.saveSettings();
-				}));
-
-		containerEl.createEl('h3', {text: 'Block Reference Settings'});
+			.setName("Show file name in embeds")
+			.setDesc(
+				"Show the source file name when embedding equations from other files",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showFileNameInEmbeds)
+					.onChange(async (value) => {
+						this.plugin.settings.showFileNameInEmbeds = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl)
-			.setName('Block ID prefix')
-			.setDesc('Prefix for generated block IDs when using \\ref (e.g., "eq" generates "^eq-2-1-2")')
-			.addText(text => text
-				.setPlaceholder('eq')
-				.setValue(this.plugin.settings.blockIdPrefix)
-				.onChange(async (value) => {
-					if (value.trim().length === 0) {
-						text.setValue(this.plugin.settings.blockIdPrefix);
-						return;
-					}
-					this.plugin.settings.blockIdPrefix = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName("Link render format")
+			.setDesc(
+				'Format for rendering links to equations. Use ${num} for number, ${file} for file name (e.g., "Equation ${num}", "${file} Equation ${num}")',
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("Equation ${num}")
+					.setValue(this.plugin.settings.linkRenderFormat)
+					.onChange(async (value) => {
+						if (!value.includes("${num}")) {
+							// Invalid format, keep current value
+							text.setValue(
+								this.plugin.settings.linkRenderFormat,
+							);
+							return;
+						}
+						this.plugin.settings.linkRenderFormat = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 
-		containerEl.createEl('h3', {text: 'Equation Reference Settings'});
+		containerEl.createEl("h3", { text: "Block Reference Settings" });
 
 		new Setting(containerEl)
-			.setName('Reference trigger')
-			.setDesc('Text to type to trigger equation reference suggestions (e.g., "\\ref")')
-			.addText(text => text
-				.setPlaceholder('\\ref')
-				.setValue(this.plugin.settings.refTrigger)
-				.onChange(async (value) => {
-					if (value.trim().length === 0) {
-						text.setValue(this.plugin.settings.refTrigger);
-						return;
-					}
-					this.plugin.settings.refTrigger = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName("Block ID prefix")
+			.setDesc(
+				'Prefix for generated block IDs when using \\ref (e.g., "eq" generates "^eq-2-1-2")',
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("eq")
+					.setValue(this.plugin.settings.blockIdPrefix)
+					.onChange(async (value) => {
+						if (value.trim().length === 0) {
+							text.setValue(this.plugin.settings.blockIdPrefix);
+							return;
+						}
+						this.plugin.settings.blockIdPrefix = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		containerEl.createEl("h3", { text: "Equation Reference Settings" });
+
+		new Setting(containerEl)
+			.setName("Reference trigger")
+			.setDesc(
+				'Text to type to trigger equation reference suggestions (e.g., "\\ref")',
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("\\ref")
+					.setValue(this.plugin.settings.refTrigger)
+					.onChange(async (value) => {
+						if (value.trim().length === 0) {
+							text.setValue(this.plugin.settings.refTrigger);
+							return;
+						}
+						this.plugin.settings.refTrigger = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 	}
 }
