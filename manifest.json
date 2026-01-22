@@ -1,10 +1,10 @@
 {
 	"id": "math-referencer",
 	"name": "Math Referencer",
-	"version": "0.0.10",
+	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Automatically number block equations and enable equation block references with dynamic numbering updates.",
-	"author": "Math Referencer Team",
+	"author": "Bobby Tromm",
 	"authorUrl": "https://github.com",
 	"isDesktopOnly": false
 }
