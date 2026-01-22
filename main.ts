@@ -50,6 +50,7 @@ interface EquationInfo {
 	equationNumber: number;
 	content: string;
 	lineNumber: number;
+	endLine: number;
 	sectionNumbers: number[]; // Hierarchical section numbers [2, 1, 2] for section 2.1.2
 }
 
@@ -317,8 +318,8 @@ function createLivePreviewPlugin(plugin: MathReferencerPlugin) {
 
 					// Find equation at or near this line
 					const matchingEquation = equations.find(eq => {
-						// Allow some tolerance for line matching
-						return Math.abs(eq.lineNumber - lineNumber) <= 5;
+						const endLine = eq.endLine ?? eq.lineNumber;
+						return lineNumber >= eq.lineNumber && lineNumber <= endLine;
 					});
 
 					if (matchingEquation) {
@@ -1014,6 +1015,7 @@ export default class MathReferencerPlugin extends Plugin {
 					equationNumber: equationNumber++,
 					content: equationContent.trim(),
 					lineNumber: equationStartLine,
+					endLine: i,
 					sectionNumbers: sectionNumbers
 				});
 				continue;
