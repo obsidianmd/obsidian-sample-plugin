@@ -2,6 +2,9 @@
 
 Automatically number block equations and reference them across your vault with LaTeX-style `\ref` commands.
 
+## TODO
+- Make `\ref` work in all files, not just the active file
+
 ## Features
 
 - **Automatic numbering**: Block equations (`$$...$$`) are numbered (1), (2), (3)...
