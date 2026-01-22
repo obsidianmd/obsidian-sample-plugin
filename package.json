@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-math-referencer",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Obsidian plugin for automatic equation numbering and block references",
 	"main": "main.js",
 	"scripts": {

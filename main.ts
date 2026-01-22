@@ -5,8 +5,6 @@ import {
 	Setting,
 	MarkdownPostProcessorContext,
 	TFile,
-	CachedMetadata,
-	MarkdownView,
 	EditorSuggest,
 	Editor,
 	EditorPosition,
@@ -14,15 +12,10 @@ import {
 	EditorSuggestContext,
 } from "obsidian";
 
-import {
-	EditorView,
-	Decoration,
-	DecorationSet,
-	WidgetType,
-	ViewPlugin,
-	ViewUpdate,
-} from "@codemirror/view";
-import { RangeSetBuilder } from "@codemirror/state";
+import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
+
+// Constants
+const DEBOUNCE_DELAY_MS = 100;
 
 interface MathReferencerSettings {
 	enableAutoNumbering: boolean;
@@ -210,8 +203,9 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 				editor.replaceRange(`\n^${blockId}`, insertPos);
 				insertedBlockId = true;
 
-				// Update the equation info in cache
+				// Update the equation info in cache and block ID map
 				equation.blockId = blockId;
+				this.plugin.registerBlockId(file.path, blockId, equation);
 			}
 		}
 
@@ -247,63 +241,34 @@ class EquationReferenceSuggest extends EditorSuggest<EquationInfo> {
 }
 
 /**
- * Widget that displays an equation number in Live Preview
- */
-class EquationNumberWidget extends WidgetType {
-	constructor(
-		readonly equationNumber: number,
-		readonly format: string,
-	) {
-		super();
-	}
-
-	toDOM(): HTMLElement {
-		const span = document.createElement("span");
-		span.className = "equation-number equation-number-live-preview";
-		span.textContent = this.format.replace(
-			"${num}",
-			this.equationNumber.toString(),
-		);
-		return span;
-	}
-
-	eq(other: WidgetType): boolean {
-		return (
-			other instanceof EquationNumberWidget &&
-			other.equationNumber === this.equationNumber &&
-			other.format === this.format
-		);
-	}
-}
-
-/**
  * Creates a view plugin for Live Preview equation numbering
  */
 function createEquationNumberPlugin(plugin: MathReferencerPlugin) {
 	return ViewPlugin.fromClass(
 		class {
-			decorations: DecorationSet;
-			debounceTimer: number | null = null;
+			debounceTimer: ReturnType<typeof setTimeout> | null = null;
+			latestView: EditorView;
 
 			constructor(view: EditorView) {
-				this.decorations = this.buildDecorations(view);
+				this.latestView = view;
 				// Initial processing after a delay
-				this.scheduleNumbering(view);
+				this.scheduleNumbering();
 			}
 
 			destroy() {
 				if (this.debounceTimer !== null) {
 					clearTimeout(this.debounceTimer);
+					this.debounceTimer = null;
 				}
 			}
 
-			scheduleNumbering(view: EditorView) {
+			scheduleNumbering() {
 				if (this.debounceTimer !== null) {
 					clearTimeout(this.debounceTimer);
 				}
-				this.debounceTimer = window.setTimeout(() => {
-					this.numberRenderedEquations(view);
-				}, 100);
+				this.debounceTimer = setTimeout(() => {
+					this.numberRenderedEquations(this.latestView);
+				}, DEBOUNCE_DELAY_MS);
 			}
 
 			numberRenderedEquations(view: EditorView) {
@@ -342,8 +307,13 @@ function createEquationNumberPlugin(plugin: MathReferencerPlugin) {
 					let pos: number;
 					try {
 						pos = view.posAtDOM(embedBlock);
-					} catch {
-						return; // Skip if we can't get position
+					} catch (e) {
+						// Can happen if DOM element is not in the editor's DOM tree
+						console.debug(
+							"Math Referencer: Could not get position for embed block",
+							e,
+						);
+						return;
 					}
 
 					// Get line number from document position
@@ -364,10 +334,7 @@ function createEquationNumberPlugin(plugin: MathReferencerPlugin) {
 					numberSpan.className =
 						"equation-number equation-number-live-preview";
 					numberSpan.textContent =
-						plugin.settings.numberingFormat.replace(
-							"${num}",
-							matchingEquation.equationNumber.toString(),
-						);
+						plugin.formatEquationNumber(matchingEquation);
 
 					embedBlock.classList.add("has-equation-number");
 					embedBlock.appendChild(numberSpan);
@@ -375,54 +342,12 @@ function createEquationNumberPlugin(plugin: MathReferencerPlugin) {
 			}
 
 			update(update: ViewUpdate) {
+				// Always update the latest view reference
+				this.latestView = update.view;
 				if (update.docChanged || update.viewportChanged) {
-					this.decorations = this.buildDecorations(update.view);
-					this.scheduleNumbering(update.view);
+					this.scheduleNumbering();
 				}
 			}
-
-			buildDecorations(view: EditorView): DecorationSet {
-				if (!plugin.settings.enableAutoNumbering) {
-					return Decoration.none;
-				}
-
-				const builder = new RangeSetBuilder<Decoration>();
-				const text = view.state.doc.toString();
-				const file = plugin.app.workspace.getActiveFile();
-
-				if (!file) {
-					return Decoration.none;
-				}
-
-				const equations = plugin.extractEquationsFromText(
-					text,
-					file.path,
-				);
-
-				// Add decorations at the end of each equation's closing $$
-				for (const eq of equations) {
-					const endLineNum = eq.endLine + 1;
-					if (endLineNum <= view.state.doc.lines) {
-						const line = view.state.doc.line(endLineNum);
-						if (line.text.trim() === "$$") {
-							const widget = new EquationNumberWidget(
-								eq.equationNumber,
-								plugin.settings.numberingFormat,
-							);
-							const deco = Decoration.widget({
-								widget,
-								side: 1,
-							});
-							builder.add(line.to, line.to, deco);
-						}
-					}
-				}
-
-				return builder.finish();
-			}
-		},
-		{
-			decorations: (v) => v.decorations,
 		},
 	);
 }
@@ -879,10 +804,8 @@ export default class MathReferencerPlugin extends Plugin {
 				return cached.equations;
 			}
 
-			const cache = this.app.metadataCache.getFileCache(file);
 			const equations = this.extractEquationsFromContent(
 				content,
-				cache,
 				file.path,
 			);
 
@@ -929,7 +852,23 @@ export default class MathReferencerPlugin extends Plugin {
 		text: string,
 		filePath: string,
 	): EquationInfo[] {
-		return this.extractEquationsFromContent(text, null, filePath);
+		return this.extractEquationsFromContent(text, filePath);
+	}
+
+	/**
+	 * Register a block ID mapping (used when generating new block IDs)
+	 */
+	public registerBlockId(
+		filePath: string,
+		blockId: string,
+		equation: EquationInfo,
+	): void {
+		let blockMap = this.blockIdToEquation.get(filePath);
+		if (!blockMap) {
+			blockMap = new Map<string, EquationInfo>();
+			this.blockIdToEquation.set(filePath, blockMap);
+		}
+		blockMap.set(blockId, equation);
 	}
 
 	/**
@@ -945,7 +884,6 @@ export default class MathReferencerPlugin extends Plugin {
 	 */
 	private extractEquationsFromContent(
 		content: string,
-		cache: CachedMetadata | null,
 		filePath: string,
 	): EquationInfo[] {
 		const equations: EquationInfo[] = [];
@@ -958,7 +896,11 @@ export default class MathReferencerPlugin extends Plugin {
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (line.trim().startsWith("```")) {
+			const trimmedLine = line.trim();
+			if (
+				trimmedLine.startsWith("```") ||
+				trimmedLine.startsWith("~~~")
+			) {
 				if (!inCodeBlock) {
 					inCodeBlock = true;
 					codeBlockStart = i;
@@ -1225,7 +1167,7 @@ class MathReferencerSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Block ID prefix")
 			.setDesc(
-				'Prefix for generated block IDs when using \\ref (e.g., "eq" generates "^eq-2-1-2")',
+				'Prefix for generated block IDs when using \\ref (e.g., "eq" generates "^eq-1", "^eq-2")',
 			)
 			.addText((text) =>
 				text
