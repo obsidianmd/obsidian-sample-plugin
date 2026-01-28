@@ -12,12 +12,195 @@ import {
 	EditorSuggestContext,
 	Notice,
 	MarkdownView,
+	ItemView,
+	WorkspaceLeaf,
 } from "obsidian";
 
 import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 
 // Constants
 const DEBOUNCE_DELAY_MS = 100;
+const EQUATION_SIDEBAR_VIEW_TYPE = "equation-sidebar-view";
+
+/**
+ * Sidebar view for displaying and navigating to equations in the active file
+ */
+class EquationSidebarView extends ItemView {
+	plugin: MathReferencerPlugin;
+	private listContainerEl: HTMLElement;
+
+	constructor(leaf: WorkspaceLeaf, plugin: MathReferencerPlugin) {
+		super(leaf);
+		this.plugin = plugin;
+	}
+
+	getViewType(): string {
+		return EQUATION_SIDEBAR_VIEW_TYPE;
+	}
+
+	getDisplayText(): string {
+		return "Equations";
+	}
+
+	getIcon(): string {
+		return "sigma";
+	}
+
+	async onOpen() {
+		const container = this.containerEl.children[1];
+		container.empty();
+		container.addClass("equation-sidebar");
+
+		// Create header
+		const header = container.createDiv({ cls: "equation-sidebar-header" });
+		header.createEl("h4", { text: "Equations" });
+
+		// Create content container for equation list
+		this.listContainerEl = container.createDiv({ cls: "equation-sidebar-content" });
+
+		// Register for active file changes
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", () => {
+				this.updateEquationList();
+			})
+		);
+
+		// Register for file modifications to update the list
+		this.registerEvent(
+			this.app.metadataCache.on("changed", (file) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (activeFile && file.path === activeFile.path) {
+					this.updateEquationList();
+				}
+			})
+		);
+
+		// Initial update
+		this.updateEquationList();
+	}
+
+	async onClose() {
+		// Cleanup if needed
+	}
+
+	/**
+	 * Update the equation list based on the active file
+	 */
+	async updateEquationList() {
+		this.listContainerEl.empty();
+
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) {
+			this.listContainerEl.createDiv({
+				cls: "equation-sidebar-empty",
+				text: "No file open",
+			});
+			return;
+		}
+
+		// Get equations from the plugin's cache
+		let equations = this.plugin.getEquationsForFile(activeFile.path);
+
+		// If not in cache, try to load them
+		if (!equations) {
+			try {
+				const content = await this.app.vault.read(activeFile);
+				equations = this.plugin.extractEquationsFromText(
+					content,
+					activeFile.path
+				);
+			} catch (e) {
+				this.listContainerEl.createDiv({
+					cls: "equation-sidebar-empty",
+					text: "Error loading equations",
+				});
+				return;
+			}
+		}
+
+		if (equations.length === 0) {
+			this.listContainerEl.createDiv({
+				cls: "equation-sidebar-empty",
+				text: "No equations in this file",
+			});
+			return;
+		}
+
+		// Create list of equations
+		const list = this.listContainerEl.createEl("ul", { cls: "equation-sidebar-list" });
+
+		for (const equation of equations) {
+			const item = list.createEl("li", { cls: "equation-sidebar-item" });
+
+			// Create clickable element
+			const link = item.createDiv({ cls: "equation-sidebar-link" });
+
+			// Display name: use custom block ID if present, otherwise "Eq. x"
+			const displayName = equation.blockId
+				? `^${equation.blockId}`
+				: `Eq. ${equation.equationNumber}`;
+
+			// Create the main label
+			const label = link.createSpan({ cls: "equation-sidebar-label" });
+			label.textContent = displayName;
+
+			// Add equation preview (truncated)
+			const preview = link.createDiv({ cls: "equation-sidebar-preview" });
+			const previewText =
+				equation.content.length > 40
+					? equation.content.substring(0, 40) + "..."
+					: equation.content;
+			preview.textContent = previewText;
+
+			// Click handler to navigate to equation
+			link.addEventListener("click", () => {
+				this.navigateToEquation(equation);
+			});
+		}
+	}
+
+	/**
+	 * Navigate to the equation's location in the editor
+	 */
+	private async navigateToEquation(equation: EquationInfo) {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) return;
+
+		// Get the active markdown view
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view) {
+			// Try to open the file if not already open
+			const leaf = this.app.workspace.getLeaf();
+			await leaf.openFile(activeFile);
+			const newView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (newView) {
+				this.scrollToLine(newView, equation.lineNumber);
+			}
+			return;
+		}
+
+		this.scrollToLine(view, equation.lineNumber);
+	}
+
+	/**
+	 * Scroll the editor to a specific line
+	 */
+	private scrollToLine(view: MarkdownView, lineNumber: number) {
+		const editor = view.editor;
+
+		// Set cursor to the start of the equation
+		editor.setCursor({ line: lineNumber, ch: 0 });
+
+		// Scroll to make the line visible and centered
+		editor.scrollIntoView(
+			{ from: { line: lineNumber, ch: 0 }, to: { line: lineNumber, ch: 0 } },
+			true
+		);
+
+		// Focus the editor
+		editor.focus();
+	}
+}
 
 interface MathReferencerSettings {
 	enableAutoNumbering: boolean;
@@ -366,6 +549,26 @@ export default class MathReferencerPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		// Register the equation sidebar view
+		this.registerView(
+			EQUATION_SIDEBAR_VIEW_TYPE,
+			(leaf) => new EquationSidebarView(leaf, this)
+		);
+
+		// Add ribbon icon to toggle equation sidebar
+		this.addRibbonIcon("sigma", "Equation Navigator", () => {
+			this.toggleEquationSidebar();
+		});
+
+		// Add command to toggle equation sidebar
+		this.addCommand({
+			id: "toggle-equation-sidebar",
+			name: "Toggle equation sidebar",
+			callback: () => {
+				this.toggleEquationSidebar();
+			},
+		});
+
 		// Register EditorExtension for Live Preview equation numbering
 		this.registerEditorExtension(createEquationNumberPlugin(this));
 
@@ -499,6 +702,8 @@ export default class MathReferencerPlugin extends Plugin {
 		this.fileCache.clear();
 		this.blockIdToEquation.clear();
 		this.updateInProgress.clear();
+		// Detach sidebar views
+		this.app.workspace.detachLeavesOfType(EQUATION_SIDEBAR_VIEW_TYPE);
 		console.log("Math Referencer plugin unloaded");
 	}
 
@@ -512,6 +717,45 @@ export default class MathReferencerPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	/**
+	 * Toggle the equation sidebar visibility
+	 */
+	async toggleEquationSidebar() {
+		const existing = this.app.workspace.getLeavesOfType(EQUATION_SIDEBAR_VIEW_TYPE);
+		if (existing.length > 0) {
+			// Close the sidebar if it's already open
+			existing.forEach((leaf) => leaf.detach());
+		} else {
+			// Open the sidebar
+			await this.activateEquationSidebar();
+		}
+	}
+
+	/**
+	 * Activate (open) the equation sidebar in the right panel
+	 */
+	async activateEquationSidebar() {
+		const { workspace } = this.app;
+
+		let leaf = workspace.getLeavesOfType(EQUATION_SIDEBAR_VIEW_TYPE)[0];
+
+		if (!leaf) {
+			// Create the leaf in the right sidebar
+			const rightLeaf = workspace.getRightLeaf(false);
+			if (rightLeaf) {
+				leaf = rightLeaf;
+				await leaf.setViewState({
+					type: EQUATION_SIDEBAR_VIEW_TYPE,
+					active: true,
+				});
+			}
+		}
+
+		if (leaf) {
+			workspace.revealLeaf(leaf);
+		}
 	}
 
 	/**

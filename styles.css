@@ -203,3 +203,78 @@ a.equation-link:hover {
 .suggestion-item.is-selected .equation-suggestion {
 	background-color: var(--background-modifier-active-hover);
 }
+
+/* Equation Sidebar View Styles */
+.equation-sidebar {
+	padding: 0;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.equation-sidebar-header {
+	padding: 10px 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.equation-sidebar-header h4 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.equation-sidebar-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px 0;
+}
+
+.equation-sidebar-empty {
+	padding: 16px;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: 13px;
+}
+
+.equation-sidebar-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.equation-sidebar-item {
+	margin: 0;
+	padding: 0;
+}
+
+.equation-sidebar-link {
+	display: block;
+	padding: 8px 16px;
+	cursor: pointer;
+	border-left: 3px solid transparent;
+	transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.equation-sidebar-link:hover {
+	background-color: var(--background-modifier-hover);
+	border-left-color: var(--interactive-accent);
+}
+
+.equation-sidebar-label {
+	display: block;
+	font-weight: 500;
+	font-size: 13px;
+	color: var(--text-normal);
+	margin-bottom: 2px;
+}
+
+.equation-sidebar-preview {
+	font-size: 11px;
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
