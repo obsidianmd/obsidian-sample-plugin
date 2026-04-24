@@ -2,9 +2,9 @@ name: Node.js build
 
 on:
     push:
-        branches: ["**"]
+        branches: ['**']
     pull_request:
-        branches: ["**"]
+        branches: ['**']
 
 jobs:
     build:
@@ -12,17 +12,16 @@ jobs:
 
         strategy:
             matrix:
-                node-version: [20.x, 22.x]
+                node-version: [20.x, 22.x, 24.x]
                 # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: ${{ matrix.node-version }}
-                  cache: "npm"
+                  cache: 'npm'
             - run: npm ci
             - run: npm run build --if-present
             - run: npm run lint
-
